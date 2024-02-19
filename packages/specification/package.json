@@ -1,0 +1,20 @@
+{
+  "name": "apim-spec",
+  "version": "0.0.1",
+  "description": "OAS (Swagger v3) API Definition for EPS Prescription Status Update",
+  "scripts": {
+    "lint": "swagger-cli validate eps-prescription-status-update-api.yaml",
+    "resolve": "swagger-cli bundle eps-prescription-status-update-api.yaml -r -o dist/eps-prescription-status-update-api.resolved.json",
+    "check-licenses": "license-checker --failOn GPL --failOn LGPL --start ../.."
+  },
+  "author": "NHS Digital",
+  "license": "MIT",
+  "engines": {
+    "node": "20.10.x",
+    "npm": "10.2.x"
+  },
+  "homepage": "https://github.com/NHSDigital/eps-prescription-status-update-api",
+  "dependencies": {
+    "@apidevtools/swagger-cli": "^4.0.4"
+  }
+}
