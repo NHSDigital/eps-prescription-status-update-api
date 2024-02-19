@@ -23,13 +23,13 @@ repos:
 
   - repo: local
     hooks:
-      # - id: oas-build-checks
-      #   name: Build OAS
-      #   entry: make
-      #   args: ["build-specification"]
-      #   language: system
-      #   files: ^(examples|packages\/specification)
-      #   types_or: [json, yaml]
+      - id: oas-build-checks
+        name: Build OAS
+        entry: make
+        args: ["build-specification"]
+        language: system
+        files: ^(examples|packages\/specification)
+        types_or: [json, yaml]
 
       - id: lint-githubactions
         name: Lint github actions
