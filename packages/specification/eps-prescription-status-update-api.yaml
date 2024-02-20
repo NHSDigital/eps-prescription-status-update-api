@@ -88,13 +88,14 @@ servers:
     description: "Production"
 
 paths:
-  /Bundle:
-    get:
+
+  /:
+    post:
       operationId: prescription-status-update-bundle
-      summary: Get prescription status
+      summary: Post prescription status
       description: |
         ## Overview
-        Use this endpoint to get a prescription status, expressed as a FHIR Bundle.
+        Use this endpoint to post a prescription status, expressed as a FHIR Bundle.
       parameters:
         - $ref: "#/components/parameters/BearerAuthorisation"
         - $ref: "#/components/parameters/RequestID"
@@ -107,30 +108,10 @@ paths:
               schema:
                 $ref: "#/components/schemas/bundle-response"
               examples:
-                prescriptions-present:
-                  description: A successful response to a GetMyPrescriptions/Bundle request, containing one prescription.
+                multiple-tasks:
+                  description: A successful response posted to root, containing multiple Tasks.
                   value:
-                    $ref: "examples/GetMyPrescriptions/Bundle/success.json"
-                prescriptions-present-multiple:
-                  description: A successful response to a GetMyPrescriptions/Bundle request, containing multiple prescriptions.
-                  value:
-                    $ref: "examples/GetMyPrescriptions/Bundle/success-multiple.json"
-                prescriptions-not-present:
-                  description: A successful response to a GetMyPrescriptions/Bundle request, where no prescriptions were found.
-                  value:
-                    $ref: "examples/GetMyPrescriptions/Bundle/success-empty.json"
-                prescription-excluded:
-                  description: A successful response to a GetMyPrescriptions/Bundle request, with a single prescription excluded.
-                  value:
-                    $ref: "examples/GetMyPrescriptions/Bundle/success-single-exclusion.json"
-                prescriptions-excluded:
-                  description: A successful response to a GetMyPrescriptions/Bundle request, with a multiple prescriptions excluded.
-                  value:
-                    $ref: "examples/GetMyPrescriptions/Bundle/success-multiple-exclusion.json"
-                distance-selling-pharmacy:
-                  description: A successful response to a GetMyPrescriptions/Bundle request, where the performer organisation is a distance selling pharmacy.
-                  value:
-                    $ref: "examples/GetMyPrescriptions/Bundle/success-distance-selling.json"
+                    $ref: "examples/Bundle/success-multiple-tasks.json"
 
         "4XX":
           description: |
@@ -152,10 +133,59 @@ paths:
               examples:
                 example:
                   description: |
-                    An error response to a GetMyPrescriptions/Bundle request.
+                    An error response to a request.
                     Resource not found for the given NHS number.
                   value:
-                    $ref: examples/GetMyPrescriptions/Bundle/error.json
+                    $ref: examples/Bundle/error-information.json
+
+  /Task:
+    get:
+      operationId: prescription-status-update-bundle
+      summary: Get prescription status
+      description: |
+        ## Overview
+        Use this endpoint to get a prescription status, expressed as a FHIR Bundle.
+      parameters:
+        - $ref: "#/components/parameters/BearerAuthorisation"
+        - $ref: "#/components/parameters/RequestID"
+        - $ref: "#/components/parameters/CorrelationID"
+      responses:
+        "200":
+          description: Successful retrieval.
+          content:
+            application/fhir+json:
+              schema:
+                $ref: "#/components/schemas/bundle-response"
+              examples:
+                multiple-tasks:
+                  description: A successful response.
+                  value:
+                    $ref: "examples/Bundle/success-task.json"
+
+        "4XX":
+          description: |
+            An error occurred as follows:
+
+            | HTTP status | Error code          | Description                                                                                                                               |
+            | ----------- | ------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
+            | 400         | `exception`         | Missing or invalid NHS number in request                                                                                                  |
+            | 401         | `processing`        | Missing or invalid OAuth 2.0 bearer token in request                                                                                      |
+            | 404         | `not-found`         | No records found for the NHS number in the request                                                                                        |
+            | 408         | `timeout`           | Request timed out                                                                                                                         |
+            | 429         | `throttled`         | You have exceeded your application's [rate limit](https://digital.nhs.uk/developer/guides-and-documentation/reference-guide#rate-limits). |
+
+            The error code will be included in the returned OperationOutcome (below).
+          content:
+            application/fhir+json:
+              schema:
+                $ref: "#/components/schemas/operation-outcome"
+              examples:
+                example:
+                  description: |
+                    An error response to a request.
+                    Resource not found for the given NHS number.
+                  value:
+                    $ref: examples/Bundle/error.json
 
 components:
   parameters:
