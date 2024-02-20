@@ -157,10 +157,10 @@ paths:
               schema:
                 $ref: "#/components/schemas/bundle-response"
               examples:
-                multiple-tasks:
-                  description: A successful response to a PutPrescriptionStatus/Bundle request, containing multiple tasks.
+                success-task:
+                  description: A successful response to a PutPrescriptionStatus/Task request, containing single task resource with a status update.
                   value:
-                    $ref: "examples/PutPrescriptionStatus/Bundle/success-task.json"
+                    $ref: "examples/PutPrescriptionStatus/Task/success-task.json"
 
         "4XX":
           description: |
@@ -185,7 +185,7 @@ paths:
                     An error response to a request.
                     Resource not found for the given NHS number.
                   value:
-                    $ref: examples/PutPrescriptionStatus/Bundle/error.json
+                    $ref: examples/PutPrescriptionStatus/Task/error.json
 
 components:
   parameters:
