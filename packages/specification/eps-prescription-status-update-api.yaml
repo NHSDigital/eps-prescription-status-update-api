@@ -111,7 +111,7 @@ paths:
                 multiple-tasks:
                   description: A successful response posted to root, containing multiple Tasks.
                   value:
-                    $ref: "examples/Bundle/success-multiple-tasks.json"
+                    $ref: "examples/PutPrescriptionStatus/Bundle/success-multiple-tasks.json"
 
         "4XX":
           description: |
@@ -136,7 +136,7 @@ paths:
                     An error response to a request.
                     Resource not found for the given NHS number.
                   value:
-                    $ref: examples/Bundle/error-information.json
+                    $ref: examples/PutPrescriptionStatus/Bundle/error-information.json
 
   /Task:
     get:
@@ -160,7 +160,7 @@ paths:
                 multiple-tasks:
                   description: A successful response.
                   value:
-                    $ref: "examples/Bundle/success-task.json"
+                    $ref: "examples/PutPrescriptionStatus/Bundle/success-task.json"
 
         "4XX":
           description: |
@@ -185,7 +185,7 @@ paths:
                     An error response to a request.
                     Resource not found for the given NHS number.
                   value:
-                    $ref: examples/Bundle/error.json
+                    $ref: examples/PutPrescriptionStatus/Bundle/error.json
 
 components:
   parameters:
