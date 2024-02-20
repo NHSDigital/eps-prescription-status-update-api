@@ -1,30 +1,120 @@
 type: object
-description: Details of the organisation.
 properties:
   resourceType:
     type: string
-    description: FHIR resource type.
-    default: Organization
-  identifier:
-    type: array
-    description: An array containing the ODS code of the organisation.
-    items:
-      $ref: ../fragments/identifiers.yaml#/OdsOrganisationCode
-  name:
+    example: Bundle
+  type:
     type: string
-    description: Organisation name.
-  address:
+    example: transaction
+  entry:
     type: array
-    description: |
-      Organisation address.
-      One of line or text, and optionally postalCode, will be populated.
-      If postalCode is not populated, the organization's postalCode may be included in line or text, if they are populated.
-      So address will contain use and type, along with one of: line, line and postalCode, text, text and postalCode, postalCode.
-      Note: city and district will not be populated by existing prescriptions.
     items:
-      $ref: ../fragments/address.yaml
-  telecom:
-    type: array
-    description: The telephone number or Website URL associated with the organisation.
-    items:
-      $ref: ../fragments/telecom.yaml
+      type: object
+      properties:
+        fullUrl:
+          type: string
+          example: http://example.org/fhir/Task/4d70678c-81e4-4ff4-8c67-17596fd0aa46
+        resource:
+          type: object
+          properties:
+            resourceType:
+              type: string
+              example: Task
+            id:
+              type: string
+              example: 4d70678c-81e4-4ff4-8c67-17596fd0aa46
+            basedOn:
+              type: array
+              items:
+                type: object
+                properties:
+                  identifier:
+                    type: object
+                    properties:
+                      system:
+                        type: string
+                        example: https://fhir.nhs.uk/Id/prescription-order-number
+                      value:
+                        type: string
+                        example: 24F5DA-A83008-7EFE6Z
+            status:
+              type: string
+              example: in-progress
+            businessStatus:
+              type: object
+              properties:
+                coding:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      system:
+                        type: string
+                        example: https://fhir.nhs.uk/CodeSystem/task-businessStatus-nppt
+                      code:
+                        type: string
+                        format: date
+                        example: "9001"
+                      display:
+                        type: string
+                        example: Ready to Collect
+            intent:
+              type: string
+              example: order
+            focus:
+              type: object
+              properties:
+                identifier:
+                  type: object
+                  properties:
+                    system:
+                      type: string
+                      example: https://fhir.nhs.uk/Id/prescription-order-item-number
+                    value:
+                      type: string
+                      example: 6989b7bd-8db6-428c-a593-4022e3044c00
+            for:
+              type: object
+              properties:
+                identifier:
+                  type: object
+                  properties:
+                    system:
+                      type: string
+                      example: https://fhir.nhs.uk/Id/nhs-number
+                    value:
+                      type: string
+                      example: "9449304130"
+            lastModified:
+              type: string
+              format: date-time
+              example: 2024-01-30T12:01:24Z
+            owner:
+              type: object
+              properties:
+                identifier:
+                  type: object
+                  properties:
+                    system:
+                      type: string
+                      example: https://fhir.nhs.uk/Id/ods-organization-code
+                    value:
+                      type: string
+                      example: C9Z1O
+            note:
+              type: array
+              items:
+                type: object
+                properties:
+                  text:
+                    type: string
+                    example: "Locker code: 556701"
+        request:
+          type: object
+          properties:
+            method:
+              type: string
+              example: POST
+            url:
+              type: string
+              example: Task
