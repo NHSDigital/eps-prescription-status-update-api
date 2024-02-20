@@ -136,7 +136,7 @@ paths:
                     An error response to a request.
                     Resource not found for the given NHS number.
                   value:
-                    $ref: examples/PutPrescriptionStatus/Bundle/error-info.json
+                    $ref: examples/PutPrescriptionStatus/Bundle/error.json
 
   /Task:
     get:
