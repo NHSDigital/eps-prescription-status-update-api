@@ -109,7 +109,7 @@ paths:
                 $ref: "#/components/schemas/bundle-response"
               examples:
                 multiple-tasks:
-                  description: A successful response posted to root, containing multiple Tasks.
+                  description: A successful response to a PutPrescriptionStatus/Bundle request, containing multiple tasks.
                   value:
                     $ref: "examples/PutPrescriptionStatus/Bundle/success-multiple-tasks.json"
 
@@ -136,7 +136,7 @@ paths:
                     An error response to a request.
                     Resource not found for the given NHS number.
                   value:
-                    $ref: examples/PutPrescriptionStatus/Bundle/error-information.json
+                    $ref: examples/PutPrescriptionStatus/Bundle/error-info.json
 
   /Task:
     get:
@@ -158,7 +158,7 @@ paths:
                 $ref: "#/components/schemas/bundle-response"
               examples:
                 multiple-tasks:
-                  description: A successful response.
+                  description: A successful response to a PutPrescriptionStatus/Bundle request, containing multiple tasks.
                   value:
                     $ref: "examples/PutPrescriptionStatus/Bundle/success-task.json"
 
@@ -284,11 +284,18 @@ components:
                 description: A collection of resources contained within the Bundle.
                 items:
                   oneOf:
+                    - $ref: "#/components/schemas/PrescriptionStatusUpdate-Resource"
                     - $ref: "#/components/schemas/MedicationRequest-Resource"
                     - $ref: "#/components/schemas/OrganisationDispensing-Resource"
                     - $ref: "#/components/schemas/Practitioner-Resource"
                     - $ref: "#/components/schemas/PractitionerRole-Resource"
                     - $ref: "#/components/schemas/operation-outcome"
+    PrescriptionStatusUpdate-Resource:
+      type: object
+      description: PrescriptionStatusUpdate
+      properties:
+        resource:
+          $ref: schemas/resources/PrescriptionStatusUpdate.yaml
     MedicationRequest-Resource:
       type: object
       description: MedicationRequest
