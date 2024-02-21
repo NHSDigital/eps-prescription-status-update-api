@@ -1,0 +1,52 @@
+{
+  "resourceType": "Bundle",
+  "id": "08438419-7888-4be9-9490-37ffe202ae27",
+  "meta": {
+    "lastUpdated": "2024-01-30T12:01:24Z"
+  },
+  "type": "transaction-response",
+  "entry": [
+    {
+      "response": {
+        "status": "201 Created",
+        "location": "Task/4d70678c-81e4-4ff4-8c67-17596fd0aa46/_history/1",
+        "etag": "W/\"1\"",
+        "lastModified": "2024-01-30T12:01:24Z",
+        "outcome": {
+          "resourceType": "OperationOutcome",
+          "meta": {
+            "lastUpdated": "2024-01-30T12:01:24Z"
+          },
+          "issue": [
+            {
+              "severity": "information",
+              "code": "informational",
+              "diagnostics": "No issues detected during validation"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "response": {
+        "status": "201 Created",
+        "location": "Task/346d2bfe-7dc0-451b-ad0d-da81833c08da/_history/1",
+        "etag": "W/\"1\"",
+        "lastModified": "2024-01-30T12:01:24Z",
+        "outcome": {
+          "resourceType": "OperationOutcome",
+          "meta": {
+            "lastUpdated": "2024-01-30T12:01:24Z"
+          },
+          "issue": [
+            {
+              "severity": "information",
+              "code": "informational",
+              "diagnostics": "No issues detected during validation"
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

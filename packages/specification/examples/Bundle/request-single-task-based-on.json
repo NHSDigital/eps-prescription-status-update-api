@@ -1,0 +1,118 @@
+{
+    "resourceType": "Bundle",
+    "id": "155e1102-9e71-4f19-9453-b905c0bbc494",
+    "meta": {
+        "lastUpdated": "2024-01-31T13:01:24Z"
+    },
+    "type": "searchset",
+    "link": [
+        {
+            "relation": "self",
+            "url": "/Task?based-on=24F5DA-A83008-7EFE6Z"
+        }
+    ],
+    "total": 2,
+    "entry": [
+        {
+            "fullUrl": "urn:uuid:4d70678c-81e4-4ff4-8c67-17596fd0aa46",
+            "search": {
+                "mode": "match"
+            },
+            "resource": {
+                "resourceType": "Task",
+                "id": "4d70678c-81e4-4ff4-8c67-17596fd0aa46",
+                "basedOn": [
+                    {
+                        "identifier": {
+                            "system": "https://fhir.nhs.uk/Id/prescription-order-number",
+                            "value": "24F5DA-A83008-7EFE6Z"
+                        }
+                    }
+                ],
+                "status": "in-progress",
+                "businessStatus": {
+                    "coding": [
+                        {
+                            "system": "https://fhir.nhs.uk/CodeSystem/task-businessStatus-nppt",
+                            "code": "9001",
+                            "display": "Ready to Collect"
+                        }
+                    ]
+                },
+                "intent": "order",
+                "focus": {
+                    "identifier": {
+                        "system": "https://fhir.nhs.uk/Id/prescription-order-item-number",
+                        "value": "6989b7bd-8db6-428c-a593-4022e3044c00"
+                    }
+                },
+                "for": {
+                    "identifier": {
+                        "system": "https://fhir.nhs.uk/Id/nhs-number",
+                        "value": "9449304130"
+                    }
+                },
+                "lastModified": "2024-01-30T12:01:24Z",
+                "owner": {
+                    "identifier": {
+                        "system": "https://fhir.nhs.uk/Id/ods-organization-code",
+                        "value": "C9Z1O"
+                    }
+                },
+                "note": [
+                    {
+                        "text": "Locker code: 556701"
+                    }
+                ]
+            }
+        },
+        {
+            "fullUrl": "urn:uuid:0cb82cfa-76c8-4fb2-a08e-bf0e326e5487",
+            "search": {
+                "mode": "match"
+            },
+            "resource": {
+                "resourceType": "Task",
+                "id": "cb82cfa-76c8-4fb2-a08e-bf0e326e5487",
+                "basedOn": [
+                    {
+                        "identifier": {
+                            "system": "https://fhir.nhs.uk/Id/prescription-order-number",
+                            "value": "24F5DA-A83008-7EFE6Z"
+                        }
+                    }
+                ],
+                "status": "completed",
+                "businessStatus": {
+                    "coding": [
+                        {
+                            "system": "https://fhir.nhs.uk/CodeSystem/task-businessStatus-nppt",
+                            "code": "9004",
+                            "display": "Collected"
+                        }
+                    ]
+                },
+                "intent": "order",
+                "focus": {
+                    "identifier": {
+                        "system": "https://fhir.nhs.uk/Id/prescription-order-item-number",
+                        "value": "6989b7bd-8db6-428c-a593-4022e3044c00"
+                    }
+                },
+                "for": {
+                    "identifier": {
+                        "system": "https://fhir.nhs.uk/Id/nhs-number",
+                        "value": "9449304130"
+                    }
+                },
+                "lastModified": "2024-01-31T12:01:24Z",
+                "owner": {
+                    "identifier": {
+                        "system": "https://fhir.nhs.uk/Id/ods-organization-code",
+                        "value": "C9Z1O"
+                    }
+                }
+            }
+        }
+    ]
+}
