@@ -90,16 +90,28 @@ servers:
 paths:
 
   /:
-    post:
+    put:
       operationId: prescription-status-update-bundle
-      summary: Post prescription status
+      summary: Put prescription status
       description: |
         ## Overview
-        Use this endpoint to post a prescription status, expressed as a FHIR Bundle.
+        Use this endpoint to put a prescription status, expressed as a FHIR Bundle.
       parameters:
         - $ref: "#/components/parameters/BearerAuthorisation"
         - $ref: "#/components/parameters/RequestID"
         - $ref: "#/components/parameters/CorrelationID"
+      requestBody:
+        required: true
+        content:
+          application/fhir+json:
+            schema:
+              $ref: "#/components/schemas/PutPrescriptionStatus"
+            examples:
+              multiple-tasks:
+                summary: multiple-tasks
+                description: A transaction bundle, posted to root, containing multiple Tasks
+                value:
+                  $ref: examples/Bundle/request-multiple-tasks.json
       responses:
         "200":
           description: Successful retrieval.
@@ -111,7 +123,7 @@ paths:
                 multiple-tasks:
                   description: A successful response to a PutPrescriptionStatus/Bundle request, containing multiple tasks.
                   value:
-                    $ref: "examples/PutPrescriptionStatus/Bundle/success-multiple-tasks.json"
+                    $ref: "examples/Bundle/response-multiple-tasks.json"
 
         "4XX":
           description: |
@@ -136,7 +148,7 @@ paths:
                     An error response to a request.
                     Resource not found for the given NHS number.
                   value:
-                    $ref: examples/PutPrescriptionStatus/Bundle/error.json
+                    $ref: examples/Bundle/error.json
 
   /Task:
     get:
@@ -149,6 +161,18 @@ paths:
         - $ref: "#/components/parameters/BearerAuthorisation"
         - $ref: "#/components/parameters/RequestID"
         - $ref: "#/components/parameters/CorrelationID"
+      requestBody:
+        required: true
+        content:
+          application/fhir+json:
+            schema:
+              $ref: "#/components/schemas/GetPrescriptionStatus"
+            examples:
+              single-task:
+                summary: single-task
+                description: A transaction bundle, posted to root, containing multiple Tasks
+                value:
+                  $ref: examples/Task/request-single-task.json
       responses:
         "200":
           description: Successful retrieval.
@@ -160,7 +184,7 @@ paths:
                 success-task:
                   description: A successful response to a PutPrescriptionStatus/Task request, containing single task resource with a status update.
                   value:
-                    $ref: "examples/PutPrescriptionStatus/Task/success-task.json"
+                    $ref: "examples/Task/response-single-task.json"
 
         "4XX":
           description: |
@@ -185,7 +209,7 @@ paths:
                     An error response to a request.
                     Resource not found for the given NHS number.
                   value:
-                    $ref: examples/PutPrescriptionStatus/Task/error.json
+                    $ref: examples/Task/error.json
 
 components:
   parameters:
@@ -222,107 +246,56 @@ components:
         type: string
         example: 11C46F5F-CDEF-4865-94B2-0EE0EDCC26DA
   schemas:
-    operation-outcome:
-      $ref: schemas/resources/OperationOutcome.yaml
-    bundle-response:
+    PutPrescriptionStatus:
       type: object
       required:
         - entry
         - resourceType
         - type
-      description: A FHIR searchset Bundle.
+      description: A FHIR transaction Bundle.
       properties:
         resourceType:
           type: string
           description: FHIR resource type.
           default: Bundle
-        id:
-          type: string
-          description: Object ID for the Bundle.
-          example: 164996aa-29eb-4f14-a5ac-4b556a7baf6e
         type:
           type: string
           description: Denotes that the bundle is a list of resources returned as a result of a search.
-          enum: [searchset]
-        total:
-          type: number
-          description: |
-            The number of prescription bundles contained within the searchset
-
-            Note that this excludes OperationOutcomes.
+          default: transaction
         entry:
           type: array
           description: |
             A collection of resources contained within the Bundle.
-
-            Note that the presence of an OperationOutcome resource as part of the bundle implies that one
-            of a patient's prescriptions have been excluded from the response due to a processing error.
-            An OperationOutcome resource will be included for each prescription that cannot be processed.
           items:
             type: object
             required:
-              - resourceType
-              - identifier
-              - type
-              - entry
+              - fullUrl
+              - resource
+              - request
             description: A FHIR collection Bundle.
             properties:
-              resourceType:
+              fullUrl:
                 type: string
-                description: FHIR resource type.
-                default: Bundle
-              id:
-                type: string
-                description: Object ID for the Bundle.
-                example: 164996aa-29eb-4f14-a5ac-4b556a7baf6e
-              type:
-                type: string
-                description: Denotes that the bundle is a collection of resources. Representing a Prescription, in this case.
-                enum: [collection]
-              entry:
-                type: array
-                description: A collection of resources contained within the Bundle.
-                items:
-                  oneOf:
-                    - $ref: "#/components/schemas/PrescriptionStatusUpdate-Resource"
-                    - $ref: "#/components/schemas/MedicationRequest-Resource"
-                    - $ref: "#/components/schemas/OrganisationDispensing-Resource"
-                    - $ref: "#/components/schemas/Practitioner-Resource"
-                    - $ref: "#/components/schemas/PractitionerRole-Resource"
-                    - $ref: "#/components/schemas/operation-outcome"
-    PrescriptionStatusUpdate-Resource:
-      type: object
-      description: PrescriptionStatusUpdate
-      properties:
-        resource:
-          $ref: schemas/resources/PrescriptionStatusUpdate.yaml
-    MedicationRequest-Resource:
-      type: object
-      description: MedicationRequest
-      properties:
-        resource:
-          $ref: schemas/resources/MedicationRequest.yaml
-    OrganisationDispensing-Resource:
-      type: object
-      description: Dispensing Organisation
-      properties:
-        resource:
-          $ref: schemas/resources/Organisation.yaml
-    OrganisationPrescribing-Resource:
-      type: object
-      description: Prescribing Organisation
-      properties:
-        resource:
-          $ref: schemas/resources/Organisation.yaml
-    Practitioner-Resource:
-      type: object
-      description: Practitioner
-      properties:
-        resource:
-          $ref: schemas/resources/Practitioner.yaml
-    PractitionerRole-Resource:
-      type: object
-      description: PractitionerRole
-      properties:
-        resource:
-          $ref: schemas/resources/PractitionerRole.yaml
+                example: http://example.org/fhir/Task/4d70678c-81e4-4ff4-8c67-17596fd0aa46
+              resource:
+                $ref: "#/components/schemas/GetPrescriptionStatus"
+              request:
+                type: object
+                required:
+                - method
+                - url
+                properties:
+                  method:
+                    type: string
+                    default: POST
+                  url:
+                    type: string
+                    default: Task
+    GetPrescriptionStatus:
+      $ref: schemas/resources/GetPrescriptionStatus.yaml
+    bundle-response:
+      $ref: "schemas/components/BundleResponse.yaml"
+    task-response:
+      $ref: "schemas/components/TaskResponse.yaml"
+    operation-outcome:
+      $ref: schemas/resources/OperationOutcome.yaml
