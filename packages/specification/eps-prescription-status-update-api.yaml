@@ -105,11 +105,11 @@ paths:
         content:
           application/fhir+json:
             schema:
-              $ref: "#/components/schemas/PutPrescriptionStatus"
+              $ref: "#/components/schemas/PutPrescriptionStatusBundle"
             examples:
               multiple-tasks:
                 summary: multiple-tasks
-                description: A transaction bundle, posted to root, containing multiple Tasks
+                description: A transaction bundle, posted to root, containing multiple Tasks.
                 value:
                   $ref: examples/Bundle/request-multiple-tasks.json
       responses:
@@ -150,13 +150,14 @@ paths:
                   value:
                     $ref: examples/Bundle/error.json
 
+
   /Task:
-    get:
+    put:
       operationId: prescription-status-update-bundle
-      summary: Get prescription status
+      summary: Put single prescription status
       description: |
         ## Overview
-        Use this endpoint to get a prescription status, expressed as a FHIR Bundle.
+        Use this endpoint to put a prescription status, expressed as a FHIR Bundle.
       parameters:
         - $ref: "#/components/parameters/BearerAuthorisation"
         - $ref: "#/components/parameters/RequestID"
@@ -166,11 +167,11 @@ paths:
         content:
           application/fhir+json:
             schema:
-              $ref: "#/components/schemas/GetPrescriptionStatus"
+              $ref: "#/components/schemas/PutPrescriptionStatusTask"
             examples:
               single-task:
-                summary: single-task
-                description: A transaction bundle, posted to root, containing multiple Tasks
+                summary: single-tasks
+                description: A successful response to a PutPrescriptionStatus/Task request contains a single task resource with a status update.
                 value:
                   $ref: examples/Task/request-single-task.json
       responses:
@@ -179,10 +180,10 @@ paths:
           content:
             application/fhir+json:
               schema:
-                $ref: "#/components/schemas/bundle-response"
+                $ref: "#/components/schemas/task-response"
               examples:
-                success-task:
-                  description: A successful response to a PutPrescriptionStatus/Task request, containing single task resource with a status update.
+                single-task:
+                  description: A successful response to a PutPrescriptionStatus/Task request, containing a single task.
                   value:
                     $ref: "examples/Task/response-single-task.json"
 
@@ -246,7 +247,7 @@ components:
         type: string
         example: 11C46F5F-CDEF-4865-94B2-0EE0EDCC26DA
   schemas:
-    PutPrescriptionStatus:
+    PutPrescriptionStatusBundle:
       type: object
       required:
         - entry
@@ -278,7 +279,7 @@ components:
                 type: string
                 example: http://example.org/fhir/Task/4d70678c-81e4-4ff4-8c67-17596fd0aa46
               resource:
-                $ref: "#/components/schemas/GetPrescriptionStatus"
+                $ref: "#/components/schemas/PutPrescriptionStatusTask"
               request:
                 type: object
                 required:
@@ -291,6 +292,8 @@ components:
                   url:
                     type: string
                     default: Task
+    PutPrescriptionStatusTask:
+      $ref: schemas/resources/PutPrescriptionStatusTask.yaml
     GetPrescriptionStatus:
       $ref: schemas/resources/GetPrescriptionStatus.yaml
     bundle-response:
