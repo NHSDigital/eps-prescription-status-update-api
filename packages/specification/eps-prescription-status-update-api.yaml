@@ -150,7 +150,6 @@ paths:
                   value:
                     $ref: examples/Bundle/error.json
 
-
   /Task:
     put:
       operationId: prescription-status-update-bundle
@@ -294,8 +293,6 @@ components:
                     default: Task
     PutPrescriptionStatusTask:
       $ref: schemas/resources/PutPrescriptionStatusTask.yaml
-    GetPrescriptionStatus:
-      $ref: schemas/resources/GetPrescriptionStatus.yaml
     bundle-response:
       $ref: "schemas/components/BundleResponse.yaml"
     task-response:
