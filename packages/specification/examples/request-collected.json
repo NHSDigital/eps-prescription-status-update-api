@@ -18,7 +18,7 @@
         "coding": [
           {
             "system": "https://fhir.nhs.uk/CodeSystem/task-businessStatus-nppt",
-            "code": "9004",
+            "code": "4",
             "display": "Collected"
           }
         ]

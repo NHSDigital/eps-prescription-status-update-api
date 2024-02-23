@@ -107,19 +107,24 @@ paths:
             schema:
               $ref: "#/components/schemas/PostPrescriptionStatusBundle"
             examples:
-              request-ready-to-collect:
-                summary: request-ready-to-collect
-                description: A request message contains tracking status ready to collect.
+              ready-to-collect:
+                summary: ready-to-collect
+                description: A request message contains tracking status `Ready to collect`.
                 value:
                   $ref: examples/request-ready-to-collect.json
-              request-ready-to-collect-note:
-                summary: request-ready-to-collect-note
-                description: A request message contains tracking status ready to collect with note.
+              ready-to-deliver:
+                summary: ready-to-deliver
+                description: A request message contains tracking status `Ready to deliver`.
                 value:
-                  $ref: examples/request-ready-to-collect-note.json
+                  $ref: examples/request-ready-to-deliver.json
+              in-collection-locker:
+                summary: in-collection-locker
+                description: A request message contains tracking status `In Collection Locker` and a note that describes the collection process.
+                value:
+                  $ref: examples/request-in-collection-locker.json
               collected:
                 summary: collected
-                description: A request message contains tracking status collected.
+                description: A request message contains tracking status `Collected`.
                 value:
                   $ref: examples/request-collected.json
               dispatched:

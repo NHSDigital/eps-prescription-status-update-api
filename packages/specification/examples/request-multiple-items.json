@@ -20,8 +20,8 @@
           "coding": [
             {
               "system": "https://fhir.nhs.uk/CodeSystem/task-businessStatus-nppt",
-              "code": "9001",
-              "display": "Ready to Collect"
+              "code": "3",
+              "display": "In Collection Locker"
             }
           ]
         },
@@ -74,8 +74,8 @@
           "coding": [
             {
               "system": "https://fhir.nhs.uk/CodeSystem/task-businessStatus-nppt",
-              "code": "9001",
-              "display": "Ready to Collect"
+              "code": "3",
+              "display": "In Collection Locker"
             }
           ]
         },

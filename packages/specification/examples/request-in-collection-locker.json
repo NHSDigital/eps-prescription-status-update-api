@@ -18,8 +18,8 @@
         "coding": [
           {
             "system": "https://fhir.nhs.uk/CodeSystem/task-businessStatus-nppt",
-            "code": "1",
-            "display": "Ready to collect"
+            "code": "3",
+            "display": "In Collection Locker"
           }
         ]
       },
@@ -42,7 +42,12 @@
           "system": "https://fhir.nhs.uk/Id/ods-organization-code",
           "value": "C9Z1O"
         }
-      }
+      },
+      "note": [
+        {
+          "text": "Collect from Locker 6. Access code: 330984."
+        }
+      ]
     }
   ]
 }
