@@ -127,8 +127,8 @@ paths:
                 description: A request message contains tracking status dispatched.
                 value:
                   $ref: examples/request-dispatched.json
-              multiple-tasks:
-                summary: multiple-tasks
+              multiple-items:
+                summary: multiple-items
                 description: A request message contains multiple items.
                 value:
                   $ref: examples/request-multiple-items.json
@@ -140,11 +140,11 @@ paths:
               schema:
                 $ref: "#/components/schemas/bundle-response"
               examples:
-                single-task:
+                single-item:
                   description: A successful response to a UpdatePrescriptionStatus request, contains a single item.
                   value:
-                    $ref: "examples/response-single-task.json"
-                multiple-tasks:
+                    $ref: "examples/response-single-item.json"
+                multiple-items:
                   description: A successful response to a UpdatePrescriptionStatus request, contains multiple items.
                   value:
                     $ref: "examples/response-multiple-items.json"
