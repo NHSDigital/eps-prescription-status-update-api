@@ -90,12 +90,12 @@ servers:
 paths:
 
   /:
-    put:
+    post:
       operationId: prescription-status-update-bundle
-      summary: Put prescription status
+      summary: Update prescription status
       description: |
         ## Overview
-        Use this endpoint to put a prescription status, expressed as a FHIR Bundle.
+        Use this endpoint to update a prescription status, expressed as a FHIR Bundle.
       parameters:
         - $ref: "#/components/parameters/BearerAuthorisation"
         - $ref: "#/components/parameters/RequestID"
@@ -105,13 +105,38 @@ paths:
         content:
           application/fhir+json:
             schema:
-              $ref: "#/components/schemas/PutPrescriptionStatusBundle"
+              $ref: "#/components/schemas/PostPrescriptionStatusBundle"
             examples:
-              multiple-tasks:
-                summary: multiple-tasks
-                description: A transaction bundle, posted to root, containing multiple Tasks.
+              ready-to-collect:
+                summary: ready-to-collect
+                description: A request message contains tracking status `Ready to collect`.
                 value:
-                  $ref: examples/Bundle/request-multiple-tasks.json
+                  $ref: examples/request-ready-to-collect.json
+              ready-to-deliver:
+                summary: ready-to-deliver
+                description: A request message contains tracking status `Ready to deliver`.
+                value:
+                  $ref: examples/request-ready-to-deliver.json
+              in-collection-locker:
+                summary: in-collection-locker
+                description: A request message contains tracking status `In Collection Locker` and a note that describes the collection process.
+                value:
+                  $ref: examples/request-in-collection-locker.json
+              collected:
+                summary: collected
+                description: A request message contains tracking status `Collected`.
+                value:
+                  $ref: examples/request-collected.json
+              dispatched:
+                summary: dispatched
+                description: A request message contains tracking status dispatched.
+                value:
+                  $ref: examples/request-dispatched.json
+              multiple-items:
+                summary: multiple-items
+                description: A request message contains multiple items.
+                value:
+                  $ref: examples/request-multiple-items.json
       responses:
         "200":
           description: Successful retrieval.
@@ -120,10 +145,14 @@ paths:
               schema:
                 $ref: "#/components/schemas/bundle-response"
               examples:
-                multiple-tasks:
-                  description: A successful response to a PutPrescriptionStatus/Bundle request, containing multiple tasks.
+                single-item:
+                  description: A successful response to a UpdatePrescriptionStatus request, contains a single item.
                   value:
-                    $ref: "examples/Bundle/response-multiple-tasks.json"
+                    $ref: "examples/response-single-item.json"
+                multiple-items:
+                  description: A successful response to a UpdatePrescriptionStatus request, contains multiple items.
+                  value:
+                    $ref: "examples/response-multiple-items.json"
 
         "4XX":
           description: |
@@ -146,71 +175,9 @@ paths:
                 example:
                   description: |
                     An error response to a request.
-                    Resource not found for the given NHS number.
+                    ODS code already in use.
                   value:
-                    $ref: examples/Bundle/error.json
-
-
-  /Task:
-    put:
-      operationId: prescription-status-update-bundle
-      summary: Put single prescription status
-      description: |
-        ## Overview
-        Use this endpoint to put a prescription status, expressed as a FHIR Bundle.
-      parameters:
-        - $ref: "#/components/parameters/BearerAuthorisation"
-        - $ref: "#/components/parameters/RequestID"
-        - $ref: "#/components/parameters/CorrelationID"
-      requestBody:
-        required: true
-        content:
-          application/fhir+json:
-            schema:
-              $ref: "#/components/schemas/PutPrescriptionStatusTask"
-            examples:
-              single-task:
-                summary: single-tasks
-                description: A successful response to a PutPrescriptionStatus/Task request contains a single task resource with a status update.
-                value:
-                  $ref: examples/Task/request-single-task.json
-      responses:
-        "200":
-          description: Successful retrieval.
-          content:
-            application/fhir+json:
-              schema:
-                $ref: "#/components/schemas/task-response"
-              examples:
-                single-task:
-                  description: A successful response to a PutPrescriptionStatus/Task request, containing a single task.
-                  value:
-                    $ref: "examples/Task/response-single-task.json"
-
-        "4XX":
-          description: |
-            An error occurred as follows:
-
-            | HTTP status | Error code          | Description                                                                                                                               |
-            | ----------- | ------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
-            | 400         | `exception`         | Missing or invalid NHS number in request                                                                                                  |
-            | 401         | `processing`        | Missing or invalid OAuth 2.0 bearer token in request                                                                                      |
-            | 404         | `not-found`         | No records found for the NHS number in the request                                                                                        |
-            | 408         | `timeout`           | Request timed out                                                                                                                         |
-            | 429         | `throttled`         | You have exceeded your application's [rate limit](https://digital.nhs.uk/developer/guides-and-documentation/reference-guide#rate-limits). |
-
-            The error code will be included in the returned OperationOutcome (below).
-          content:
-            application/fhir+json:
-              schema:
-                $ref: "#/components/schemas/operation-outcome"
-              examples:
-                example:
-                  description: |
-                    An error response to a request.
-                    Resource not found for the given NHS number.
-                  value:
-                    $ref: examples/Task/error.json
+                    $ref: examples/error.json
 
 components:
   parameters:
@@ -247,7 +214,7 @@ components:
         type: string
         example: 11C46F5F-CDEF-4865-94B2-0EE0EDCC26DA
   schemas:
-    PutPrescriptionStatusBundle:
+    PostPrescriptionStatusBundle:
       type: object
       required:
         - entry
@@ -279,7 +246,7 @@ components:
                 type: string
                 example: http://example.org/fhir/Task/4d70678c-81e4-4ff4-8c67-17596fd0aa46
               resource:
-                $ref: "#/components/schemas/PutPrescriptionStatusTask"
+                $ref: "#/components/schemas/PostPrescriptionStatusTask"
               request:
                 type: object
                 required:
@@ -292,13 +259,11 @@ components:
                   url:
                     type: string
                     default: Task
-    PutPrescriptionStatusTask:
-      $ref: schemas/resources/PutPrescriptionStatusTask.yaml
-    GetPrescriptionStatus:
-      $ref: schemas/resources/GetPrescriptionStatus.yaml
+    PostPrescriptionStatusTask:
+      $ref: schemas/resources/PostPrescriptionStatusTask.yaml
     bundle-response:
-      $ref: "schemas/components/BundleResponse.yaml"
+      $ref: "schemas/components/MultipleResponse.yaml"
     task-response:
-      $ref: "schemas/components/TaskResponse.yaml"
+      $ref: "schemas/components/SingleResponse.yaml"
     operation-outcome:
       $ref: schemas/resources/OperationOutcome.yaml

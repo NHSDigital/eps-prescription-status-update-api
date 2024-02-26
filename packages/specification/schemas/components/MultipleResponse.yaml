@@ -1,0 +1,66 @@
+type: object
+properties:
+  resourceType:
+    type: string
+    example: Bundle
+  id:
+    type: string
+    example: 08438419-7888-4be9-9490-37ffe202ae27
+  meta:
+    type: object
+    properties:
+      lastUpdated:
+        type: string
+        format: date-time
+        example: 2024-01-30T12:01:24Z
+  type:
+    type: string
+    example: transaction-response
+  entry:
+    type: array
+    items:
+      type: object
+      properties:
+        response:
+          type: object
+          properties:
+            status:
+              type: string
+              example: 201 Created
+            location:
+              type: string
+              example: Task/4d70678c-81e4-4ff4-8c67-17596fd0aa46/_history/1
+            etag:
+              type: string
+              example: W/"1"
+            lastModified:
+              type: string
+              format: date-time
+              example: 2024-01-30T12:01:24Z
+            outcome:
+              type: object
+              properties:
+                resourceType:
+                  type: string
+                  example: OperationOutcome
+                meta:
+                  type: object
+                  properties:
+                    lastUpdated:
+                      type: string
+                      format: date-time
+                      example: 2024-01-30T12:01:24Z
+                issue:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      severity:
+                        type: string
+                        example: information
+                      code:
+                        type: string
+                        example: informational
+                      diagnostics:
+                        type: string
+                        example: No issues detected during validation

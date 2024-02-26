@@ -1,0 +1,98 @@
+type: object
+properties:
+  resourceType:
+    type: string
+    example: Task
+  basedOn:
+    type: array
+    description: Short-form Prescription ID for the parent prescription.
+    items:
+      type: object
+      properties:
+        identifier:
+          type: object
+          properties:
+            system:
+              type: string
+              example: https://fhir.nhs.uk/Id/prescription-order-number
+            value:
+              type: string
+              example: 24F5DA-A83008-7EFE6Z
+  status:
+    type: string
+    description: Indicator to identify when the prescription id status is a terminal status, one for which no further patient action is required. If the prescription item status is a terminal status, the Task.status value must be set to 'completed', otherwise the value must be set to 'in-progress'.
+    example: in-progress
+  businessStatus:
+    type: object
+    description: "The tracking status for the prescription id. Updates should only be provided when the prescription id is 'ready to collect' in which case the status value will be 'ready to collect', or when the patient has received the prescription item and there are no more actions for the patient, in this case the status value could be 'Collected' or 'Dispatched'. The dispensing system may update the prescription item status with any of the following values to correct a status update which has been made in error or where the status has since reverted: 'With Pharmacy', 'Ready to collect', 'Collected' or 'Dispatched'. Note: The 'With Pharmacy' status can be determined using the EPS record status for business as usual processing and is not required from the dispensing system unless the status needs to be rolled back."
+    properties:
+      coding:
+        type: array
+        items:
+          type: object
+          properties:
+            system:
+              type: string
+              example: https://fhir.nhs.uk/CodeSystem/task-businessStatus-nppt
+            code:
+              type: string
+              format: date
+              example: "9001"
+            display:
+              type: string
+              example: Ready to Collect
+  intent:
+    type: string
+    example: order
+  focus:
+    type: object
+    properties:
+      identifier:
+        type: object
+        properties:
+          system:
+            type: string
+            example: https://fhir.nhs.uk/Id/prescription-order-item-number
+          value:
+            type: string
+            example: 6989b7bd-8db6-428c-a593-4022e3044c00
+  for:
+    type: object
+    description: The patient's NHS number. The primary identifier of a patient, unique within NHS England and Wales. Always 10 digits and must be a valid NHS number.
+    properties:
+      identifier:
+        type: object
+        properties:
+          system:
+            type: string
+            example: https://fhir.nhs.uk/Id/nhs-number
+          value:
+            type: string
+            example: "9449304130"
+  lastModified:
+    type: string
+    description: Date and time when the prescription item status was updated.
+    format: date-time
+    example: 2024-01-30T12:01:24Z
+  owner:
+    type: object
+    description: ODS organisation code for the pharmacy that is processing the prescription.
+    properties:
+      identifier:
+        type: object
+        properties:
+          system:
+            type: string
+            example: https://fhir.nhs.uk/Id/ods-organization-code
+          value:
+            type: string
+            example: C9Z1O
+  note:
+    type: array
+    description: Enables dispensing systems to provide supplementary information relating to the prescription item status update.
+    items:
+      type: object
+      properties:
+        text:
+          type: string
+          example: "Locker code: 556701"
