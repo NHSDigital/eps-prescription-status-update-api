@@ -5,13 +5,27 @@
 			"path": ".."
 		},
 		{
+			"name": "packages/common",
+			"path": "../packages/common"
+		},
+		{
+			"name": "packages/sandbox",
+			"path": "../packages/sandbox"
+		},
+		{
 			"name": "packages/specification",
 			"path": "../packages/specification"
+		},
+		{
+			"name": "packages/statusLambda",
+			"path": "../packages/statusLambda"
 		}
 	],
 	"settings": {
 		"jest.disabledWorkspaceFolders": [
 			"eps-prescription-status-update-monorepo",
+			"packages/getSecretLayer",
+			"packages/common"
 		],
 		"files.exclude": {
 			"packages/": true,

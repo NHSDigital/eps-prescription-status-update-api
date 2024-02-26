@@ -49,3 +49,45 @@ jobs:
         id: commit_id
         run: |
           echo "commit_id=${{ github.sha }}" >> "$GITHUB_OUTPUT"
+
+  package_code:
+    needs: get_issue_number
+    uses: ./.github/workflows/sam_package_code.yml
+
+  release_code:
+    needs: [get_issue_number, package_code, get_commit_id]
+    uses: ./.github/workflows/sam_release_code.yml
+    with:
+      STACK_NAME: prescription-status-update-pr-${{needs.get_issue_number.outputs.issue_number}}
+      ARTIFACT_BUCKET_PREFIX: PR-${{needs.get_issue_number.outputs.issue_number}}
+      TARGET_ENVIRONMENT: dev-pr
+      ENABLE_MUTUAL_TLS: false
+      DEPLOY_SANDBOX: false
+      BUILD_ARTIFACT: packaged_code
+      TRUSTSTORE_FILE: prescription-status-update-truststore.pem
+      VERSION_NUMBER: PR-${{ needs.get_issue_number.outputs.issue_number }}
+      COMMIT_ID: ${{ needs.get_commit_id.outputs.commit_id }}
+      LOG_LEVEL: DEBUG
+      LOG_RETENTION_DAYS: 30
+    secrets:
+      CLOUD_FORMATION_DEPLOY_ROLE: ${{ secrets.DEV_CLOUD_FORMATION_DEPLOY_ROLE }}
+      TARGET_SPINE_SERVER: ${{ secrets.DEV_TARGET_SPINE_SERVER }}
+
+  release_sandbox_code:
+    needs: [get_issue_number, package_code, get_commit_id]
+    uses: ./.github/workflows/sam_release_code.yml
+    with:
+      STACK_NAME: prescription-status-update-sandbox-pr-${{needs.get_issue_number.outputs.issue_number}}
+      ARTIFACT_BUCKET_PREFIX: PR-sandbox-${{needs.get_issue_number.outputs.issue_number}}
+      TARGET_ENVIRONMENT: dev-pr
+      ENABLE_MUTUAL_TLS: false
+      DEPLOY_SANDBOX: true
+      BUILD_ARTIFACT: packaged_sandbox_code
+      TRUSTSTORE_FILE: prescription-status-update-sandbox-truststore.pem
+      VERSION_NUMBER: PR-${{ needs.get_issue_number.outputs.issue_number }}
+      COMMIT_ID: ${{ needs.get_commit_id.outputs.commit_id }}
+      LOG_LEVEL: DEBUG
+      LOG_RETENTION_DAYS: 30
+    secrets:
+      CLOUD_FORMATION_DEPLOY_ROLE: ${{ secrets.DEV_CLOUD_FORMATION_DEPLOY_ROLE }}
+      TARGET_SPINE_SERVER: sandbox
