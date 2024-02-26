@@ -1,5 +1,5 @@
 {
-  "jest.jestCommandLine": "/workspaces/electronic-prescription-service-clinical-prescription-tracker/node_modules/.bin/jest --no-cache",
+  "jest.jestCommandLine": "/workspaces/eps-prescription-status-update-api/node_modules/.bin/jest --no-cache",
   "jest.nodeEnv": {
     "POWERTOOLS_DEV": true,
     "NODE_OPTIONS": "--experimental-vm-modules"
