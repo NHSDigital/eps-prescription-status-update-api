@@ -27,7 +27,7 @@ The contents of this repository are protected by Crown Copyright (C).
 The GitHub Actions require a secret to exist on the repo called "SONAR_TOKEN".
 This can be obtained from [SonarCloud](https://sonarcloud.io/)
 as described [here](https://docs.sonarsource.com/sonarqube/latest/user-guide/user-account/generating-and-using-tokens/).
-You will need the "Execute Analysis" permission for the project (NHSDigital_eps-prescription-tracking-service) in order for the token to work.
+You will need the "Execute Analysis" permission for the project (NHSDigital_eps-prescription-status-update-api) in order for the token to work.
 
 ### Pre-commit hooks
 
