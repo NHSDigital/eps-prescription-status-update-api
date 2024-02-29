@@ -1,4 +1,5 @@
 type: object
+required: [resourceType, basedOn, status, businessStatus, focus, for, lastModified, owner]
 properties:
   resourceType:
     type: string
@@ -46,6 +47,7 @@ properties:
     example: order
   focus:
     type: object
+    description: Identifier for the prescription line item represented by the task resource.
     properties:
       identifier:
         type: object
