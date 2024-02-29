@@ -1,4 +1,5 @@
 type: object
+required: [resourceType, basedOn, status, businessStatus, focus, for, lastModified, owner]
 properties:
   resourceType:
     type: string
