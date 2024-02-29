@@ -46,6 +46,7 @@ properties:
     example: order
   focus:
     type: object
+    description: Identifier for the prescription line item represented by the task resource.
     properties:
       identifier:
         type: object
