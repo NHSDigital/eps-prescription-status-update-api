@@ -23,6 +23,15 @@ repos:
 
   - repo: local
     hooks:
+      - id: lint-updatePrescriptionStatus
+        name: Lint updatePrescriptionStatus
+        entry: npm
+        args: ["run", "--prefix=packages/updatePrescriptionStatus", "lint"]
+        language: system
+        files: ^packages\/updatePrescriptionStatus
+        types_or: [ts, tsx, javascript, jsx, json]
+        pass_filenames: false
+
       - id: oas-build-checks
         name: Build OAS
         entry: make

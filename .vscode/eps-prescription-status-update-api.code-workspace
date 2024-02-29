@@ -7,6 +7,10 @@
 		{
 			"name": "packages/specification",
 			"path": "../packages/specification"
+		},
+		{
+			"name": "packages/updatePrescriptionStatus",
+			"path": "../packages/updatePrescriptionStatus"
 		}
 	],
 	"settings": {
