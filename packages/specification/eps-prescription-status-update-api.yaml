@@ -13,18 +13,15 @@ info:
     email: api.management@nhs.net
   description: |
     ## Overview
-    The Prescription Status Update API allows dispensing suppliers to push status information about electronic prescriptions to patients on a national scale via the NHS App (and potential other third parties in the future). 
+    The Prescription Status Update API allows dispensing suppliers to push status information about electronic prescriptions to patients on a national scale via the NHS App (and potential other third parties in the future).
     This includes letting patients know when their prescription is ready to collect.
-    The overall aim of the service is to reduce burden to front line NHS services by reducing the number of routine patient queries about their prescriptions. 
-
-    This service is made up of the following components:  
-    (include diagram of data flow?)
+    The overall aim of the service is to reduce burden to front line NHS services by reducing the number of routine patient queries about their prescriptions.
 
     ## Who can use this API
-    The prescription status query API is intended for NHS England internal use only; however, the specification of the data stores will be required by dispensing suppliers so they can provide and push the information required a central NHS data store. 
+    The prescription status query API is intended for NHS England internal use only; however, the specification of the data stores will be required by dispensing suppliers so they can provide and push the information required a central NHS data store.
         
     ## Related APIs
-    * [Electronic Prescriptions Service](https://digital.nhs.uk/developer/api-catalogue/electronic-prescription-service-fhir): The national service for creating and dispensing prescriptions across health and social care. 
+    * [Electronic Prescriptions Service](https://digital.nhs.uk/developer/api-catalogue/electronic-prescription-service-fhir): The national service for creating and dispensing prescriptions across health and social care.
     * [Personal Demographics Service](https://digital.nhs.uk/developer/api-catalogue/personal-demographics-service-fhir): the national service for storing and retrieving NHS patient details such as name, address, date of birth, related people, registered GP and NHS number.
 
     ## API Status and Roadmap
@@ -43,7 +40,7 @@ info:
 
     You do not need to know much about FHIR to use this API. The API only supports GET requests and the responses will be FHIR.
 
-    FHIR APIs are just RESTful APIs that follow specific rules. 
+    FHIR APIs are just RESTful APIs that follow specific rules.
     These rules mean:
     * resource names are capitalised and singular, for example `/Bundle` not `/bundle`
     * array names are singular, for example `line` not `lines` for address lines
@@ -66,7 +63,7 @@ info:
     All dispenser suppliers are being asked to integrate with this new service.
 
     ## Errors
-    We use standard HTTP status codes to show whether an API request succeeded or not. 
+    We use standard HTTP status codes to show whether an API request succeeded or not.
     They are usually in the range:
 
     * 200 to 299 if it succeeded, including code 202 if it was accepted by an API that needs to wait for further action
