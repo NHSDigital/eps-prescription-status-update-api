@@ -13,7 +13,6 @@ Globals:
     Runtime: nodejs18.x
     Environment:
       Variables:
-        TargetSpineServer: !Ref TargetSpineServer
         TargetServiceSearchServer: !Ref TargetServiceSearchServer
         NODE_OPTIONS: --enable-source-maps
         SpinePrivateKeyARN: !ImportValue account-resources:SpinePrivateKey
@@ -26,10 +25,6 @@ Globals:
       - !Sub "arn:aws:lambda:${AWS::Region}:580247275435:layer:LambdaInsightsExtension:38"
 
 Parameters:
-  TargetSpineServer:
-    Type: String
-    Description: TargetSpineServer
-    Default: none
   TargetServiceSearchServer:
     Type: String
     Description: TargetServiceSearchServer
