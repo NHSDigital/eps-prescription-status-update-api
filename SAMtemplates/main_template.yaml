@@ -125,6 +125,26 @@ Resources:
         ReadCapacityUnits: 5
         WriteCapacityUnits: 5
 
+  # IAM Role for describing DynamoDB Table
+  DynamoDBDescribeTableRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: 'Allow'
+            Principal:
+              Service: 'lambda.amazonaws.com'
+            Action: 'sts:AssumeRole'
+      Policies:
+        - PolicyName: DynamoDBDescribeTablePolicy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: 'Allow'
+                Action: 'dynamodb:DescribeTable'
+                Resource: !GetAtt PrescriptionStatusTable.Arn
+
   # TLS cert for custom domain
   GenerateCertificate:
     Type: AWS::CertificateManager::Certificate
