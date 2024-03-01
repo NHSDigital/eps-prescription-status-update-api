@@ -77,11 +77,20 @@ Conditions:
 
 Resources:
   # updatePrescriptionStatus lambda
+  UpdatePrescriptionStatusFunctionResources:
+    Type: AWS::Serverless::Application
+    Properties:
+      Location: lambda_resources.yaml
+      Parameters:
+        CloudWatchKMSKey: !ImportValue account-resources:CloudwatchLogsKmsKeyArn
+        LambdaName: "updatePrescriptionStatusFunction"
+        LogRetentionDays: !Ref LogRetentionDays
   UpdatePrescriptionStatusFunction:
     Type: 'AWS::Serverless::Function'
     Properties:
       FunctionName: 'updatePrescriptionStatusFunction'
       Handler: 'lambda_function.lambda_handler'
+      Role: !GetAtt UpdatePrescriptionStatusFunctionResources.Outputs.LambdaRoleArn
       Runtime: 'python3.8'
       CodeUri: .
       MemorySize: 128
@@ -96,7 +105,8 @@ Resources:
           Properties:
             Path: '/update-prescription-status'
             Method: 'post'
-  
+
+  # Prescription Status Update table
   PrescriptionStatusTable:
     Type: 'AWS::DynamoDB::Table'
     Properties:
