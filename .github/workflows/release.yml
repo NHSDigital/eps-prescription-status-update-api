@@ -104,7 +104,7 @@ jobs:
     uses: ./.github/workflows/sam_release_code.yml
     with:
       ARTIFACT_BUCKET_PREFIX: ${{needs.tag_release.outputs.spec_version}}
-      STACK_NAME: prescription-status-update
+      STACK_NAME: psu
       TARGET_ENVIRONMENT: dev
       ENABLE_MUTUAL_TLS: true
       DEPLOY_SANDBOX: false
@@ -128,7 +128,7 @@ jobs:
     uses: ./.github/workflows/sam_release_code.yml
     with:
       ARTIFACT_BUCKET_PREFIX: ${{needs.tag_release.outputs.spec_version}}
-      STACK_NAME: prescription-status-update-sandbox
+      STACK_NAME: psu-sandbox
       TARGET_ENVIRONMENT: dev
       ENABLE_MUTUAL_TLS: true
       DEPLOY_SANDBOX: true
