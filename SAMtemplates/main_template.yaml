@@ -233,12 +233,3 @@ Resources:
       LogGroupName: !Ref ApiGwAccessLogs
       FilterPattern: "" # All logs
       DestinationArn: !ImportValue lambda-resources:SplunkDeliveryStream
-
-Outputs:
-  ConstructedDomainName:
-    Value:
-      Fn::Join:
-        - "."
-        - - !Ref "AWS::StackName"
-          - Fn::ImportValue: route53-resources:domain
-    Description: The domain name constructed for the TLS certificate
