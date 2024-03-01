@@ -1,12 +1,17 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import {Logger} from "@aws-lambda-powertools/logger"
-import {DynamoDB} from "aws-sdk" // Import DynamoDB from AWS SDK
+import {Logger, injectLambdaContext} from "@aws-lambda-powertools/logger"
+import {DynamoDBClient} from "@aws-sdk/client-dynamodb"
+import {PutItemCommand} from "@aws-sdk/client-dynamodb"
+import {marshall} from "@aws-sdk/util-dynamodb"
+import middy from "@middy/core"
+import inputOutputLogger from "@middy/input-output-logger"
+import errorHandler from "@nhs/fhir-middy-error-handler"
 
 const logger = new Logger({serviceName: "updatePrescriptionStatus"})
-const dynamodb = new DynamoDB() // Initialize DynamoDB client
+const client = new DynamoDBClient({region: "eu-west-2"})
 
-export const lambdaHandler = async (event: any, context: any) => {
+const lambdaHandler = async (event: any, context: any) => {
   try {
     // Parse request body
     const requestBody = JSON.parse(event.body)
@@ -32,20 +37,25 @@ export const lambdaHandler = async (event: any, context: any) => {
       }
     }
 
-    // Update data in DynamoDB
-    await dynamodb.putItem({
+    // Marshall the item
+    const item = marshall({
+      PrescriptionID: prescription_id,
+      PatientNHSNumber: patient_nhs_number,
+      PharmacyODSCode: pharmacy_ods_code,
+      LineItemID: line_item_id,
+      LineItemStatus: line_item_status,
+      TerminalStatusIndicator: terminal_status_indicator,
+      LastUpdated: last_updated,
+      Note: note || null // Ensuring 'null' if note is undefined or null
+    })
+
+    // Put item in DynamoDB table
+    const command = new PutItemCommand({
       TableName: "PrescriptionStatusTable",
-      Item: {
-        PrescriptionID: {S: prescription_id},
-        PatientNHSNumber: {S: patient_nhs_number},
-        PharmacyODSCode: {S: pharmacy_ods_code},
-        LineItemID: {S: line_item_id},
-        LineItemStatus: {S: line_item_status},
-        TerminalStatusIndicator: {S: terminal_status_indicator},
-        LastUpdated: {S: last_updated},
-        Note: {S: note || null} // Ensuring 'null' if note is undefined or null
-      }
-    }).promise()
+      Item: item
+    })
+
+    await client.send(command)
 
     // Return success response
     return {
@@ -63,3 +73,18 @@ export const lambdaHandler = async (event: any, context: any) => {
     }
   }
 }
+
+export const handler = middy(lambdaHandler)
+  .use(injectLambdaContext(logger, {clearState: true}))
+  .use(
+    inputOutputLogger({
+      logger: (request) => {
+        if (request.response) {
+          logger.debug(request)
+        } else {
+          logger.info(request)
+        }
+      }
+    })
+  )
+  .use(errorHandler({logger: logger}))
