@@ -156,6 +156,8 @@ Resources:
     Type: AWS::Serverless::HttpApi
     Properties:
       StageName: Prod
+      Auth:
+        ApiKeyRequired: true
       DefaultRouteSettings:
         DetailedMetricsEnabled: true
       Domain:
