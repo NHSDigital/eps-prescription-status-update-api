@@ -22,6 +22,36 @@ This code is dual licensed under the MIT license and the OGL (Open Government Li
 
 The contents of this repository are protected by Crown Copyright (C).
 
+## Development
+
+It is recommended that you use visual studio code and a devcontainer as this will install all necessary components and correct versions of tools and languages.  
+See https://code.visualstudio.com/docs/devcontainers/containers for details on how to set this up on your host machine.  
+There is also a workspace file in .vscode that should be opened once you have started the devcontainer. The workspace file can also be opened outside of a devcontainer if you wish.  
+The project uses [SAM](https://aws.amazon.com/serverless/sam/) to develop and deploy the APIs and associated resources.
+
+All commits must be made using [signed commits](https://docs.github.com/en/authentication/managing-commit-signature-verification/signing-commits).
+
+Once the steps at the link above have been completed. Add to your ~/.gnupg/gpg.conf as below:
+
+```
+use-agent
+pinentry-mode loopback
+```
+
+and to your ~/.gnupg/gpg-agent.conf as below:
+
+```
+allow-loopback-pinentry
+```
+
+As described here:
+https://stackoverflow.com/a/59170001
+
+You will need to create the files, if they do not already exist.
+This will ensure that your VSCode bash terminal prompts you for your GPG key password.
+
+You can cache the gpg key passphrase by following instructions at https://superuser.com/questions/624343/keep-gnupg-credentials-cached-for-entire-user-session
+
 ### CI Setup
 
 The GitHub Actions require a secret to exist on the repo called "SONAR_TOKEN".
