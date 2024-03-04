@@ -6,21 +6,18 @@ import {marshall} from "@aws-sdk/util-dynamodb"
 import middy from "@middy/core"
 import inputOutputLogger from "@middy/input-output-logger"
 import errorHandler from "@nhs/fhir-middy-error-handler"
+import {v4 as uuidv4} from "uuid"
 
 const logger = new Logger({serviceName: "updatePrescriptionStatus"})
 const client = new DynamoDBClient({region: "eu-west-2"})
+const tableName = "PrescriptionStatusUpdate"
 
 const lambdaHandler = async (
   event: APIGatewayProxyEvent
 ): Promise<APIGatewayProxyResult> => {
   try {
     // Parse request body
-    let requestBody
-    if (typeof event.body === "string") {
-      requestBody = JSON.parse(event.body)
-    } else {
-      throw new Error("Invalid request body")
-    }
+    const requestBody = JSON.parse(event.body || "")
 
     // Extract relevant data from request body
     const {
@@ -59,16 +56,21 @@ const lambdaHandler = async (
       LineItemStatus: line_item_status,
       TerminalStatusIndicator: terminal_status_indicator,
       LastUpdated: last_updated,
-      Note: note || null // Ensuring 'null' if note is undefined or null
+      Note: note || null, // Ensuring 'null' if note is undefined or null
+      RequestID: uuidv4(), // Adding a unique request ID
+      Timestamp: new Date().toISOString() // Adding timestamp
     })
 
     // Put item in DynamoDB table
     const command = new PutItemCommand({
-      TableName: "PrescriptionStatusTable",
+      TableName: tableName,
       Item: item
     })
 
     await client.send(command)
+
+    // Log audit for request
+    logger.info("updatePrescriptionStatus request", {requestBody})
 
     // Return success response
     return {
@@ -78,6 +80,9 @@ const lambdaHandler = async (
   } catch (error) {
     // Log error using powertools logger
     logger.error("Error occurred: ", error as Error) // Cast error to Error type
+
+    // Log audit for request error
+    logger.error("updatePrescriptionStatus request error", {event})
 
     // Return error response
     if (error instanceof SyntaxError) {
