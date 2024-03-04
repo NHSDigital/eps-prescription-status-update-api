@@ -40,10 +40,11 @@ describe("Unit test for app handler", () => {
   })
 
   it("should update data in DynamoDB and return success response", async () => {
-    const response = await handler(
-      generateMockEvent(requestBody),
-      {} as any
-    )
+    const response = await handler(generateMockEvent(requestBody), {} as any)
+    expect(response.headers).toEqual({
+      "Content-Type": "application/fhir+json",
+      "Cache-Control": "no-cache"
+    })
     expect(response.statusCode).toBe(201)
     expect(JSON.parse(response.body!)).toEqual({
       message: "Prescription status updated successfully"
@@ -56,6 +57,10 @@ describe("Unit test for app handler", () => {
       generateMockEvent(invalidRequestBody),
       {} as any
     )
+    expect(response.headers).toEqual({
+      "Content-Type": "application/fhir+json",
+      "Cache-Control": "no-cache"
+    })
     expect(response.statusCode).toBe(400)
     expect(JSON.parse(response.body!)).toEqual({
       error: "Missing required fields"
@@ -68,6 +73,10 @@ describe("Unit test for app handler", () => {
       generateMockEvent(invalidRequestBody),
       {} as any
     )
+    expect(response.headers).toEqual({
+      "Content-Type": "application/fhir+json",
+      "Cache-Control": "no-cache"
+    })
     expect(response.statusCode).toBe(400)
     expect(JSON.parse(response.body!)).toEqual({
       error: "Missing required fields"
@@ -80,6 +89,10 @@ describe("Unit test for app handler", () => {
       generateMockEvent(requestBody),
       {} as any
     )
+    expect(response.headers).toEqual({
+      "Content-Type": "application/fhir+json",
+      "Cache-Control": "no-cache"
+    })
     expect(response.statusCode).toBe(500)
     expect(JSON.parse(response.body!)).toEqual({
       error: "Internal server error"
