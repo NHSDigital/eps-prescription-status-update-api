@@ -94,7 +94,7 @@ Resources:
       Role: !GetAtt UpdatePrescriptionStatusResources.Outputs.LambdaRoleArn
       Environment:
         Variables:
-          TABLE_NAME: 'PrescriptionStatusUpdate'
+          TABLE_NAME: !Sub '${AWS::StackName}-PrescriptionStatusUpdate'
           LOG_LEVEL: !Ref LogLevel
       Events:
         updatePrescriptionStatus:
@@ -117,7 +117,7 @@ Resources:
   PrescriptionStatusUpdate:
     Type: 'AWS::DynamoDB::Table'
     Properties:
-      TableName: 'PrescriptionStatusUpdate'
+      TableName: !Sub '${AWS::StackName}-PrescriptionStatusUpdate'
       AttributeDefinitions:
         - AttributeName: 'PrescriptionID'
           AttributeType: 'S'
@@ -141,15 +141,15 @@ Resources:
         Fn::Join:
           - "."
           - - !Ref "AWS::StackName"
-            - Fn::ImportValue: route53-resources:domain
+            - Fn::ImportValue: eps-route53-resources:domain
       DomainValidationOptions:
         - DomainName:
             Fn::Join:
               - "."
               - - !Ref "AWS::StackName"
-                - Fn::ImportValue: route53-resources:domain
+                - Fn::ImportValue: eps-route53-resources:domain
           HostedZoneId:
-            Fn::ImportValue: route53-resources:ZoneID
+            Fn::ImportValue: eps-route53-resources:ZoneID
 
   # Http api
   HttpApiGateway:
@@ -163,11 +163,11 @@ Resources:
           Fn::Join:
             - "."
             - - !Ref "AWS::StackName"
-              - Fn::ImportValue: route53-resources:domain
+              - Fn::ImportValue: eps-route53-resources:domain
         CertificateArn: !Ref GenerateCertificate
         Route53:
           HostedZoneId:
-            Fn::ImportValue: route53-resources:ZoneID
+            Fn::ImportValue: eps-route53-resources:ZoneID
         EndpointConfiguration: REGIONAL
         SecurityPolicy: TLS_1_2
         MutualTlsAuthentication:
