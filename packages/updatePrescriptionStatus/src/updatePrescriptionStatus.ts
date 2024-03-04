@@ -80,9 +80,21 @@ const lambdaHandler = async (
     logger.error("Error occurred: ", error as Error) // Cast error to Error type
 
     // Return error response
-    return {
-      statusCode: 500,
-      body: JSON.stringify({error: "Internal server error"})
+    if (error instanceof SyntaxError) {
+      // Return 400 Bad Request if the request body is not valid JSON
+      return {
+        statusCode: 400,
+        body: JSON.stringify({error: "Invalid request body"})
+      }
+    } else {
+      // Log other unexpected errors
+      logger.error("Unexpected error occurred: ", error as Error)
+
+      // Return 500 Internal Server Error for other errors
+      return {
+        statusCode: 500,
+        body: JSON.stringify({error: "Internal server error"})
+      }
     }
   }
 }
