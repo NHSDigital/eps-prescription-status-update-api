@@ -44,10 +44,7 @@ const lambdaHandler = async (
       return {
         statusCode: 400,
         body: JSON.stringify({error: "Missing required fields"}),
-        headers: {
-          "Content-Type": "application/fhir+json",
-          "Cache-Control": "no-cache"
-        }
+        headers: {"Content-Type": "application/fhir+json", "Cache-Control": "no-cache"}
       }
     }
 
@@ -79,13 +76,8 @@ const lambdaHandler = async (
     // Return success response
     return {
       statusCode: 201,
-      body: JSON.stringify({
-        message: "Prescription status updated successfully"
-      }),
-      headers: {
-        "Content-Type": "application/fhir+json",
-        "Cache-Control": "no-cache"
-      }
+      body: JSON.stringify({message: "Prescription status updated successfully"}),
+      headers: {"Content-Type": "application/fhir+json", "Cache-Control": "no-cache"}
     }
   } catch (error) {
     // Log error using powertools logger
@@ -123,10 +115,7 @@ const lambdaHandler = async (
       return {
         statusCode: 400,
         body: JSON.stringify(errorResponseBody),
-        headers: {
-          "Content-Type": "application/fhir+json",
-          "Cache-Control": "no-cache"
-        }
+        headers: {"Content-Type": "application/fhir+json", "Cache-Control": "no-cache"}
       }
     } else {
       // Log other unexpected errors
@@ -136,10 +125,7 @@ const lambdaHandler = async (
       return {
         statusCode: 500,
         body: JSON.stringify({error: "Internal server error"}),
-        headers: {
-          "Content-Type": "application/fhir+json",
-          "Cache-Control": "no-cache"
-        }
+        headers: {"Content-Type": "application/fhir+json", "Cache-Control": "no-cache"}
       }
     }
   }
