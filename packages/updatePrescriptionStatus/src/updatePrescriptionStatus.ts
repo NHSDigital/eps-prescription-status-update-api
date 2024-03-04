@@ -42,7 +42,7 @@ const lambdaHandler = async (
     ) {
       return {
         statusCode: 400,
-        body: JSON.stringify({error: "Missing required fields"})
+        body: JSON.stringify({requestBody:requestBody, error: "Missing required fields"})
       }
     }
 
