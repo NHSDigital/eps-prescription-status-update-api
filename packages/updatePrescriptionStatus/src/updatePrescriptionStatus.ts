@@ -75,7 +75,11 @@ const lambdaHandler = async (
     // Return success response
     return {
       statusCode: 201,
-      body: JSON.stringify({message: "Prescription status updated successfully"})
+      body: JSON.stringify({message: "Prescription status updated successfully"}),
+      headers: {
+        "Content-Type": "application/fhir+json",
+        "Cache-Control": "no-cache"
+      }
     }
   } catch (error) {
     // Log error using powertools logger
@@ -86,10 +90,37 @@ const lambdaHandler = async (
 
     // Return error response
     if (error instanceof SyntaxError) {
+      const errorResponseBody = {
+        "resourceType": "OperationOutcome",
+        "meta": {
+          "lastUpdated": "2024-01-30T12:01:24Z"
+        },
+        "issue":  [
+          {
+            "severity": "error",
+            "code": "processing",
+            "details": {
+              "coding":  [
+                {
+                  "system": "https://fhir.nhs.uk/CodeSystem/Spine-ErrorOrWarningCode",
+                  "code": "INVALID_VALUE",
+                  "display": "Invalid value"
+                }
+              ]
+            },
+            "diagnostics": "Invalid prescription ID"
+          }
+        ]
+      }
+
       // Return 400 Bad Request if the request body is not valid JSON
       return {
         statusCode: 400,
-        body: JSON.stringify({error: "Invalid request body"})
+        body: JSON.stringify(errorResponseBody),
+        headers: {
+          "Content-Type": "application/fhir+json",
+          "Cache-Control": "no-cache"
+        }
       }
     } else {
       // Log other unexpected errors
@@ -98,7 +129,11 @@ const lambdaHandler = async (
       // Return 500 Internal Server Error for other errors
       return {
         statusCode: 500,
-        body: JSON.stringify({error: "Internal server error"})
+        body: JSON.stringify({error: "Internal server error"}),
+        headers: {
+          "Content-Type": "application/fhir+json",
+          "Cache-Control": "no-cache"
+        }
       }
     }
   }
