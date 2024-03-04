@@ -23,6 +23,7 @@
     "@nhs/fhir-middy-error-handler": "^1.0.3"
   },
   "devDependencies": {
+    "@types/uuid": "^9.0.8",
     "aws-sdk-client-mock": "^3.0.1"
   }
 }
