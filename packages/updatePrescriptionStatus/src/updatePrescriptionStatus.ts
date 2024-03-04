@@ -9,7 +9,7 @@ import {v4 as uuidv4} from "uuid"
 
 const logger = new Logger({serviceName: "updatePrescriptionStatus"})
 const client = new DynamoDBClient({region: "eu-west-2"})
-const tableName = "PrescriptionStatusUpdate"
+const tableName = process.env.TABLE_NAME
 
 const lambdaHandler = async (
   event: APIGatewayProxyEvent
