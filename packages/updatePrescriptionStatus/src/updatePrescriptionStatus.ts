@@ -1,5 +1,4 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
-/* eslint-disable @typescript-eslint/no-explicit-any */
+import {APIGatewayProxyEvent, APIGatewayProxyResult} from "aws-lambda"
 import {Logger, injectLambdaContext} from "@aws-lambda-powertools/logger"
 import {DynamoDBClient} from "@aws-sdk/client-dynamodb"
 import {PutItemCommand} from "@aws-sdk/client-dynamodb"
@@ -11,10 +10,17 @@ import errorHandler from "@nhs/fhir-middy-error-handler"
 const logger = new Logger({serviceName: "updatePrescriptionStatus"})
 const client = new DynamoDBClient({region: "eu-west-2"})
 
-const lambdaHandler = async (event: any, context: any) => {
+const lambdaHandler = async (
+  event: APIGatewayProxyEvent
+): Promise<APIGatewayProxyResult> => {
   try {
     // Parse request body
-    const requestBody = JSON.parse(event.body)
+    let requestBody
+    if (typeof event.body === "string") {
+      requestBody = JSON.parse(event.body)
+    } else {
+      throw new Error("Invalid request body")
+    }
 
     // Extract relevant data from request body
     const {
@@ -29,8 +35,15 @@ const lambdaHandler = async (event: any, context: any) => {
     } = requestBody
 
     // Validate required fields
-    if (!prescription_id || !patient_nhs_number || !pharmacy_ods_code
-        || !line_item_id || !line_item_status || !terminal_status_indicator || !last_updated) {
+    if (
+      !prescription_id ||
+      !patient_nhs_number ||
+      !pharmacy_ods_code ||
+      !line_item_id ||
+      !line_item_status ||
+      !terminal_status_indicator ||
+      !last_updated
+    ) {
       return {
         statusCode: 400,
         body: JSON.stringify({error: "Missing required fields"})
