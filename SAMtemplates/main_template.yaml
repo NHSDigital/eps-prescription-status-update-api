@@ -118,31 +118,79 @@ Resources:
     Type: 'AWS::DynamoDB::Table'
     Properties:
       TableName: !Sub '${AWS::StackName}-PrescriptionStatusUpdate'
-      AttributeDefinitions:
-        - AttributeName: 'PrescriptionID'
-          AttributeType: 'S'
-        - AttributeName: 'PatientNHSNumber'
-          AttributeType: 'S'
-        - AttributeName: 'PharmacyODSCode'
-          AttributeType: 'S'
-        - AttributeName: 'LineItemID'
-          AttributeType: 'S'
-        - AttributeName: 'LineItemStatus'
-          AttributeType: 'S'
-        - AttributeName: 'TerminalStatusIndicator'
-          AttributeType: 'S'
-        - AttributeName: 'LastUpdated'
-          AttributeType: 'S'
-        - AttributeName: 'Note'
-          AttributeType: 'S'
-      KeySchema:
-        - AttributeName: 'PrescriptionID'
-          KeyType: 'HASH'
-        - AttributeName: 'PatientNHSNumber'
-          KeyType: 'RANGE'
-      ProvisionedThroughput:
-        ReadCapacityUnits: 5
-        WriteCapacityUnits: 5
+      AttributeDefinitions: 
+        - 
+          AttributeName: "PrescriptionID"
+          AttributeType: "S"
+        - 
+          AttributeName: "PatientNHSNumber"
+          AttributeType: "S"
+        - 
+          AttributeName: "LineItemID"
+          AttributeType: "N"
+        - 
+          AttributeName: "LineItemStatus"
+          AttributeType: "N"
+      KeySchema: 
+        - 
+          AttributeName: "PrescriptionID"
+          KeyType: "HASH"
+        - 
+          AttributeName: "PatientNHSNumber"
+          KeyType: "RANGE"
+      ProvisionedThroughput: 
+        ReadCapacityUnits: "5"
+        WriteCapacityUnits: "5"
+      GlobalSecondaryIndexes: 
+        - 
+          IndexName: "LineItemIDIndex"
+          KeySchema: 
+            - 
+              AttributeName: "LineItemID"
+              KeyType: "HASH"
+            - 
+              AttributeName: "PatientNHSNumber"
+              KeyType: "RANGE"
+          Projection: 
+            NonKeyAttributes: 
+              - "PrescriptionID"
+              - "LineItemStatus"
+            ProjectionType: "INCLUDE"
+          ProvisionedThroughput: 
+            ReadCapacityUnits: "5"
+            WriteCapacityUnits: "5"
+        - 
+          IndexName: "LineItemStatusIndex"
+          KeySchema: 
+            - 
+              AttributeName: "LineItemStatus"
+              KeyType: "HASH"
+            - 
+              AttributeName: "LineItemID"
+              KeyType: "RANGE"
+          Projection: 
+            NonKeyAttributes: 
+              - "PrescriptionID"
+              - "PatientNHSNumber"
+            ProjectionType: "INCLUDE"
+          ProvisionedThroughput: 
+            ReadCapacityUnits: "5"
+            WriteCapacityUnits: "5"
+      LocalSecondaryIndexes: 
+        - 
+          IndexName: "LineItemIDIndex2"
+          KeySchema: 
+            - 
+              AttributeName: "PrescriptionID"
+              KeyType: "HASH"
+            - 
+              AttributeName: "LineItemID"
+              KeyType: "RANGE"
+          Projection: 
+            NonKeyAttributes: 
+              - "PatientNHSNumber"
+              - "LineItemStatus"
+            ProjectionType: "INCLUDE"
 
   # TLS cert for custom domain
   GenerateCertificate:
