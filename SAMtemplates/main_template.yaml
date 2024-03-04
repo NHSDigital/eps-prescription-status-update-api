@@ -123,18 +123,6 @@ Resources:
           AttributeType: 'S'
         - AttributeName: 'PatientNHSNumber'
           AttributeType: 'S'
-        - AttributeName: 'PharmacyODSCode'
-          AttributeType: 'S'
-        - AttributeName: 'LineItemID'
-          AttributeType: 'S'
-        - AttributeName: 'LineItemStatus'
-          AttributeType: 'S'
-        - AttributeName: 'TerminalStatusIndicator'
-          AttributeType: 'S'
-        - AttributeName: 'LastUpdated'
-          AttributeType: 'S'
-        - AttributeName: 'Note'
-          AttributeType: 'S'
       KeySchema:
         - AttributeName: 'PrescriptionID'
           KeyType: 'HASH'
@@ -143,43 +131,6 @@ Resources:
       ProvisionedThroughput:
         ReadCapacityUnits: 5
         WriteCapacityUnits: 5
-      GlobalSecondaryIndexes:
-        - IndexName: 'PharmacyODSCodeIndex'
-          KeySchema:
-            - AttributeName: 'PharmacyODSCode'
-              KeyType: 'HASH'
-          Projection:
-            ProjectionType: 'ALL'
-        - IndexName: 'LineItemIDIndex'
-          KeySchema:
-            - AttributeName: 'LineItemID'
-              KeyType: 'HASH'
-          Projection:
-            ProjectionType: 'ALL'
-        - IndexName: 'LineItemStatusIndex'
-          KeySchema:
-            - AttributeName: 'LineItemStatus'
-              KeyType: 'HASH'
-          Projection:
-            ProjectionType: 'ALL'
-        - IndexName: 'TerminalStatusIndicatorIndex'
-          KeySchema:
-            - AttributeName: 'TerminalStatusIndicator'
-              KeyType: 'HASH'
-          Projection:
-            ProjectionType: 'ALL'
-        - IndexName: 'LastUpdatedIndex'
-          KeySchema:
-            - AttributeName: 'LastUpdated'
-              KeyType: 'HASH'
-          Projection:
-            ProjectionType: 'ALL'
-        - IndexName: 'NoteIndex'
-          KeySchema:
-            - AttributeName: 'Note'
-              KeyType: 'HASH'
-          Projection:
-            ProjectionType: 'ALL'
 
   # TLS cert for custom domain
   GenerateCertificate:
