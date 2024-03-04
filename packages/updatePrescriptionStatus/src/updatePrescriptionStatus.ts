@@ -42,11 +42,7 @@ const lambdaHandler = async (
     ) {
       return {
         statusCode: 400,
-        body: JSON.stringify({error: "Missing required fields"}),
-        headers: {
-          "Content-Type": "application/fhir+json",
-          "Cache-Control": "no-cache"
-        }
+        body: JSON.stringify({error: "Missing required fields"})
       }
     }
 
@@ -78,13 +74,7 @@ const lambdaHandler = async (
     // Return success response
     return {
       statusCode: 201,
-      body: JSON.stringify({
-        message: "Prescription status updated successfully"
-      }),
-      headers: {
-        "Content-Type": "application/fhir+json",
-        "Cache-Control": "no-cache"
-      }
+      body: JSON.stringify({message: "Prescription status updated successfully"})
     }
   } catch (error) {
     // Log error using powertools logger
@@ -128,7 +118,14 @@ const lambdaHandler = async (
         }
       }
     } else {
-      throw error
+      // Log other unexpected errors
+      logger.error("Unexpected error occurred: ", error as Error)
+
+      // Return 500 Internal Server Error for other errors
+      return {
+        statusCode: 500,
+        body: JSON.stringify({error: "Internal server error"})
+      }
     }
   }
 }

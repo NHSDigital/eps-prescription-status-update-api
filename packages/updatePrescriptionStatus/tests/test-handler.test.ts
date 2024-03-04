@@ -48,9 +48,9 @@ describe("Unit test for app handler", () => {
   })
 
   it("should return 400 status code and error message if required fields are missing", async () => {
-    const invalidRequestBody = {}
+    const requestBody = {}
     const response = await handler(
-      generateMockEvent(invalidRequestBody),
+      generateMockEvent(requestBody),
       {} as any
     )
     expect(response.statusCode).toBe(400)
@@ -60,9 +60,9 @@ describe("Unit test for app handler", () => {
   })
 
   it("should return 400 status code and error message if request body is invalid JSON", async () => {
-    const invalidRequestBody = "{ invalid: json }"
+    const requestBody = "invalid JSON"
     const response = await handler(
-      generateMockEvent(invalidRequestBody),
+      generateMockEvent(requestBody),
       {} as any
     )
     expect(response.statusCode).toBe(400)
@@ -78,6 +78,8 @@ describe("Unit test for app handler", () => {
       {} as any
     )
     expect(response.statusCode).toBe(500)
-    expect(JSON.parse(response.body).issue[0].details.coding[0].code).toEqual("SERVER_ERROR")
+    expect(JSON.parse(response.body!)).toEqual({
+      error: "Internal server error"
+    })
   })
 })
