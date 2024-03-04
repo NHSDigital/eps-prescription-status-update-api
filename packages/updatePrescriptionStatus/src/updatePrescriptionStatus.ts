@@ -43,7 +43,11 @@ const lambdaHandler = async (
     ) {
       return {
         statusCode: 400,
-        body: JSON.stringify({error: "Missing required fields"})
+        body: JSON.stringify({error: "Missing required fields"}),
+        headers: {
+          "Content-Type": "application/fhir+json",
+          "Cache-Control": "no-cache"
+        }
       }
     }
 
@@ -75,7 +79,9 @@ const lambdaHandler = async (
     // Return success response
     return {
       statusCode: 201,
-      body: JSON.stringify({message: "Prescription status updated successfully"}),
+      body: JSON.stringify({
+        message: "Prescription status updated successfully"
+      }),
       headers: {
         "Content-Type": "application/fhir+json",
         "Cache-Control": "no-cache"
@@ -91,24 +97,24 @@ const lambdaHandler = async (
     // Return error response
     if (error instanceof SyntaxError) {
       const errorResponseBody = {
-        "resourceType": "OperationOutcome",
-        "meta": {
-          "lastUpdated": "2024-01-30T12:01:24Z"
+        resourceType: "OperationOutcome",
+        meta: {
+          lastUpdated: "2024-01-30T12:01:24Z"
         },
-        "issue":  [
+        issue: [
           {
-            "severity": "error",
-            "code": "processing",
-            "details": {
-              "coding":  [
+            severity: "error",
+            code: "processing",
+            details: {
+              coding: [
                 {
-                  "system": "https://fhir.nhs.uk/CodeSystem/Spine-ErrorOrWarningCode",
-                  "code": "INVALID_VALUE",
-                  "display": "Invalid value"
+                  system: "https://fhir.nhs.uk/CodeSystem/Spine-ErrorOrWarningCode",
+                  code: "INVALID_VALUE",
+                  display: "Invalid value"
                 }
               ]
             },
-            "diagnostics": "Invalid prescription ID"
+            diagnostics: "Invalid prescription ID"
           }
         ]
       }
