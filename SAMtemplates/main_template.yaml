@@ -141,13 +141,13 @@ Resources:
         Fn::Join:
           - "."
           - - !Ref "AWS::StackName"
-            - Fn::ImportValue: eps-route53-resources:domain
+            - Fn::ImportValue: eps-route53-resources:EPS-domain
       DomainValidationOptions:
         - DomainName:
             Fn::Join:
               - "."
               - - !Ref "AWS::StackName"
-                - Fn::ImportValue: eps-route53-resources:domain
+                - Fn::ImportValue: eps-route53-resources:EPS-domain
           HostedZoneId:
             Fn::ImportValue: eps-route53-resources:EPS-ZoneID
 
@@ -163,7 +163,7 @@ Resources:
           Fn::Join:
             - "."
             - - !Ref "AWS::StackName"
-              - Fn::ImportValue: eps-route53-resources:domain
+              - Fn::ImportValue: eps-route53-resources:EPS-domain
         CertificateArn: !Ref GenerateCertificate
         Route53:
           HostedZoneId:
