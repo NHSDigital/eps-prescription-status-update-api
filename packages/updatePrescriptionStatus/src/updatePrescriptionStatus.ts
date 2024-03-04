@@ -1,7 +1,6 @@
 import {APIGatewayProxyEvent, APIGatewayProxyResult} from "aws-lambda"
 import {Logger, injectLambdaContext} from "@aws-lambda-powertools/logger"
-import {DynamoDBClient} from "@aws-sdk/client-dynamodb"
-import {PutItemCommand} from "@aws-sdk/client-dynamodb"
+import {DynamoDBClient, PutItemCommand} from "@aws-sdk/client-dynamodb"
 import {marshall} from "@aws-sdk/util-dynamodb"
 import middy from "@middy/core"
 import inputOutputLogger from "@middy/input-output-logger"
@@ -129,18 +128,7 @@ const lambdaHandler = async (
         }
       }
     } else {
-      // Log other unexpected errors
-      logger.error("Unexpected error occurred: ", error as Error)
-
-      // Return 500 Internal Server Error for other errors
-      return {
-        statusCode: 500,
-        body: JSON.stringify({error: "Internal server error"}),
-        headers: {
-          "Content-Type": "application/fhir+json",
-          "Cache-Control": "no-cache"
-        }
-      }
+      throw error
     }
   }
 }
