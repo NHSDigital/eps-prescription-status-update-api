@@ -39,7 +39,7 @@ const lambdaHandler = async (
       const line_item_status = request_entry.businessStatus.coding[0].code
       const terminal_status_indicator = request_entry.status
       const last_modified = request_entry.lastModified
-      const note = request_entry.note[0].text
+      const note = request_entry.note?.[0]?.text
 
       // Validate required fields
       if (
