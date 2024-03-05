@@ -5,7 +5,6 @@ import {marshall} from "@aws-sdk/util-dynamodb"
 import middy from "@middy/core"
 import inputOutputLogger from "@middy/input-output-logger"
 import errorHandler from "@nhs/fhir-middy-error-handler"
-import {v4 as uuidv4} from "uuid"
 
 const logger = new Logger({serviceName: "updatePrescriptionStatus"})
 const client = new DynamoDBClient({region: "eu-west-2"})
@@ -19,54 +18,65 @@ const lambdaHandler = async (
     const requestBody = JSON.parse(event.body || "")
 
     // Extract relevant data from request body
-    const {
-      prescription_id,
-      patient_nhs_number,
-      pharmacy_ods_code,
-      line_item_id,
-      line_item_status,
-      terminal_status_indicator,
-      last_updated,
-      note
-    } = requestBody
+    const entries = requestBody.entry
 
-    // Validate required fields
-    if (
-      !prescription_id ||
-      !patient_nhs_number ||
-      !pharmacy_ods_code ||
-      !line_item_id ||
-      !line_item_status ||
-      !terminal_status_indicator ||
-      !last_updated
-    ) {
+    // Validate if the entry array exists and is not empty
+    if (!entries || entries.length === 0) {
       return {
         statusCode: 400,
-        body: JSON.stringify({requestBody:requestBody, error: "Missing required fields"})
+        body: JSON.stringify({error: "Missing required fields"})
       }
     }
 
-    // Marshall the item
-    const item = marshall({
-      PrescriptionID: prescription_id,
-      PatientNHSNumber: patient_nhs_number,
-      PharmacyODSCode: pharmacy_ods_code,
-      LineItemID: line_item_id,
-      LineItemStatus: line_item_status,
-      TerminalStatusIndicator: terminal_status_indicator,
-      LastUpdated: last_updated,
-      Note: note || null, // Ensuring 'null' if note is undefined or null
-      RequestID: uuidv4(), // Adding a unique request ID
-      Timestamp: new Date().toISOString() // Adding timestamp
-    })
+    // Process each entry
+    for (const entry of entries) {
+      const request_entry = entry.resource
 
-    // Put item in DynamoDB table
-    const command = new PutItemCommand({
-      TableName: tableName,
-      Item: item
-    })
+      const prescription_id = request_entry.basedOn[0].identifier.value
+      const patient_nhs_number = request_entry.for.identifier.value
+      const pharmacy_ods_code = request_entry.owner.identifier.value
+      const line_item_id = request_entry.focus.identifier.value
+      const line_item_status = request_entry.businessStatus.coding[0].code
+      const terminal_status_indicator = request_entry.status
+      const last_modified = request_entry.lastModified
+      const note = request_entry.note[0].text
 
-    await client.send(command)
+      // Validate required fields
+      if (
+        !prescription_id ||
+        !patient_nhs_number ||
+        !pharmacy_ods_code ||
+        !line_item_id ||
+        !line_item_status ||
+        !terminal_status_indicator ||
+        !last_modified
+      ) {
+        return {
+          statusCode: 400,
+          body: JSON.stringify({requestBody, error: "Missing required fields"})
+        }
+      }
+
+      // Marshall the item
+      const item = marshall({
+        PrescriptionID: prescription_id,
+        PatientNHSNumber: patient_nhs_number,
+        PharmacyODSCode: pharmacy_ods_code,
+        LineItemID: line_item_id,
+        LineItemStatus: line_item_status,
+        TerminalStatusIndicator: terminal_status_indicator,
+        LastModified: last_modified,
+        Note: note || null // Ensuring 'null' if note is undefined or null
+      })
+
+      // Put item in DynamoDB table
+      const command = new PutItemCommand({
+        TableName: tableName,
+        Item: item
+      })
+
+      await client.send(command)
+    }
 
     // Log audit for request
     logger.info("updatePrescriptionStatus request", {requestBody})
@@ -118,14 +128,7 @@ const lambdaHandler = async (
         }
       }
     } else {
-      // Log other unexpected errors
-      logger.error("Unexpected error occurred: ", error as Error)
-
-      // Return 500 Internal Server Error for other errors
-      return {
-        statusCode: 500,
-        body: JSON.stringify({error: "Internal server error"})
-      }
+      throw error
     }
   }
 }
