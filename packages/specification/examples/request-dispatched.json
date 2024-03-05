@@ -4,44 +4,50 @@
   "entry": [
     {
       "fullUrl": "http://example.org/fhir/Task/4d70678c-81e4-4ff4-8c67-17596fd0aa46",
-      "resourceType": "Task",
-      "basedOn": [
-        {
-          "identifier": {
-            "system": "https://fhir.nhs.uk/Id/prescription-order-number",
-            "value": "24F5DA-A83008-7EFE6Z"
-          }
-        }
-      ],
-      "status": "completed",
-      "businessStatus": {
-        "coding": [
+      "resource": {
+        "resourceType": "Task",
+        "basedOn": [
           {
-            "system": "https://fhir.nhs.uk/CodeSystem/task-businessStatus-nppt",
-            "code": "5",
-            "display": "Dispatched"
+            "identifier": {
+              "system": "https://fhir.nhs.uk/Id/prescription-order-number",
+              "value": "24F5DA-A83008-7EFE6Z"
+            }
           }
-        ]
-      },
-      "intent": "order",
-      "focus": {
-        "identifier": {
-          "system": "https://fhir.nhs.uk/Id/prescription-order-item-number",
-          "value": "6989b7bd-8db6-428c-a593-4022e3044c00"
+        ],
+        "status": "completed",
+        "businessStatus": {
+          "coding": [
+            {
+              "system": "https://fhir.nhs.uk/CodeSystem/task-businessStatus-nppt",
+              "code": "5",
+              "display": "Dispatched"
+            }
+          ]
+        },
+        "intent": "order",
+        "focus": {
+          "identifier": {
+            "system": "https://fhir.nhs.uk/Id/prescription-order-item-number",
+            "value": "6989b7bd-8db6-428c-a593-4022e3044c00"
+          }
+        },
+        "for": {
+          "identifier": {
+            "system": "https://fhir.nhs.uk/Id/nhs-number",
+            "value": "9449304130"
+          }
+        },
+        "lastModified": "2024-01-30T12:01:24Z",
+        "owner": {
+          "identifier": {
+            "system": "https://fhir.nhs.uk/Id/ods-organization-code",
+            "value": "C9Z1O"
+          }
         }
       },
-      "for": {
-        "identifier": {
-          "system": "https://fhir.nhs.uk/Id/nhs-number",
-          "value": "9449304130"
-        }
-      },
-      "lastModified": "2024-01-30T12:01:24Z",
-      "owner": {
-        "identifier": {
-          "system": "https://fhir.nhs.uk/Id/ods-organization-code",
-          "value": "C9Z1O"
-        }
+      "request": {
+        "method": "POST",
+        "url": "Task"
       }
     }
   ]
