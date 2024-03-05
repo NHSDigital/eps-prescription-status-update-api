@@ -147,7 +147,7 @@ Resources:
             - "LineItemID"
             - "LineItemStatus"
             - "TerminalStatusIndicator"
-            - "LastUpdated"
+            - "LastModified"
             - "Note"
             ProjectionType: "INCLUDE"
           ProvisionedThroughput: 
