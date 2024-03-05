@@ -123,11 +123,9 @@ Resources:
           AttributeType: "S"
         - AttributeName: "PatientNHSNumber"
           AttributeType: "S"
-        - AttributeName: "LineItemID"
+        - AttributeName: "PharmacyODSCode"
           AttributeType: "S"
-        - AttributeName: "LineItemStatus"
-          AttributeType: "S"
-      KeySchema: 
+      KeySchema:
         - AttributeName: "PrescriptionID"
           KeyType: "HASH"
         - AttributeName: "PatientNHSNumber"
@@ -137,62 +135,66 @@ Resources:
         WriteCapacityUnits: "5"
       GlobalSecondaryIndexes:
         - IndexName: "PrescriptionIDIndex"
-          KeySchema: 
+          KeySchema:
             - AttributeName: "PrescriptionID"
               KeyType: "HASH"
             - AttributeName: "PatientNHSNumber"
               KeyType: "RANGE"
-          Projection: 
-            NonKeyAttributes: 
+          Projection:
+            NonKeyAttributes:
+            - "PharmacyODSCode"
             - "LineItemID"
             - "LineItemStatus"
             - "TerminalStatusIndicator"
             - "LastModified"
             - "Note"
+            - "RequestID"
+            - "Timestamp"
+            - "RequestMessage"
             ProjectionType: "INCLUDE"
           ProvisionedThroughput: 
             ReadCapacityUnits: "5"
             WriteCapacityUnits: "5"
         - IndexName: "PatientNHSNumberIndex"
-          KeySchema: 
+          KeySchema:
+            - AttributeName: "PatientNHSNumber"
+              KeyType: "HASH"
             - AttributeName: "PrescriptionID"
-              KeyType: "HASH"
-            - AttributeName: "PatientNHSNumber"
               KeyType: "RANGE"
-          Projection: 
-            NonKeyAttributes: 
-              - "LineItemID"
-              - "LineItemStatus"
+          Projection:
+            NonKeyAttributes:
+            - "PharmacyODSCode"
+            - "LineItemID"
+            - "LineItemStatus"
+            - "TerminalStatusIndicator"
+            - "LastModified"
+            - "Note"
+            - "RequestID"
+            - "Timestamp"
+            - "RequestMessage"
             ProjectionType: "INCLUDE"
-          ProvisionedThroughput: 
+          ProvisionedThroughput:
             ReadCapacityUnits: "5"
             WriteCapacityUnits: "5"
-        - IndexName: "LineItemIDIndex"
-          KeySchema: 
-            - AttributeName: "LineItemID"
+        - IndexName: "PharmacyODSCodeIndex"
+          KeySchema:
+            - AttributeName: "PharmacyODSCode"
               KeyType: "HASH"
-            - AttributeName: "PatientNHSNumber"
+            - AttributeName: "PrescriptionID"
               KeyType: "RANGE"
-          Projection: 
-            NonKeyAttributes: 
-              - "PrescriptionID"
-              - "LineItemStatus"
+          Projection:
+            NonKeyAttributes:
+            - "PatientNHSNumber"
+            - "LineItemID"
+            - "LineItemStatus"
+            - "TerminalStatusIndicator"
+            - "LastModified"
+            - "Note"
+            - "RequestID"
+            - "Timestamp"
+            - "RequestMessage"
             ProjectionType: "INCLUDE"
-          ProvisionedThroughput: 
-            ReadCapacityUnits: "5"
-            WriteCapacityUnits: "5"
-        - IndexName: "LineItemStatusIndex"
-          KeySchema: 
-            - AttributeName: "LineItemStatus"
-              KeyType: "HASH"
-            - AttributeName: "LineItemID"
-              KeyType: "RANGE"
-          Projection: 
-            NonKeyAttributes: 
-              - "PrescriptionID"
-              - "PatientNHSNumber"
-            ProjectionType: "INCLUDE"
-          ProvisionedThroughput: 
+          ProvisionedThroughput:
             ReadCapacityUnits: "5"
             WriteCapacityUnits: "5"
 

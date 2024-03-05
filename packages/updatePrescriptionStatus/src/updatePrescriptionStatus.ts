@@ -5,6 +5,7 @@ import {marshall} from "@aws-sdk/util-dynamodb"
 import middy from "@middy/core"
 import inputOutputLogger from "@middy/input-output-logger"
 import errorHandler from "@nhs/fhir-middy-error-handler"
+import {v4 as uuidv4} from "uuid"
 
 const logger = new Logger({serviceName: "updatePrescriptionStatus"})
 const client = new DynamoDBClient({region: "eu-west-2"})
@@ -30,16 +31,16 @@ const lambdaHandler = async (
 
     // Process each entry
     for (const entry of entries) {
-      const request_entry = entry.resource
+      const entry_resource = entry.resource
 
-      const prescription_id = request_entry.basedOn[0].identifier.value
-      const patient_nhs_number = request_entry.for.identifier.value
-      const pharmacy_ods_code = request_entry.owner.identifier.value
-      const line_item_id = request_entry.focus.identifier.value
-      const line_item_status = request_entry.businessStatus.coding[0].code
-      const terminal_status_indicator = request_entry.status
-      const last_modified = request_entry.lastModified
-      const note = request_entry.note?.[0]?.text
+      const prescription_id = entry_resource.basedOn[0].identifier.value
+      const patient_nhs_number = entry_resource.for.identifier.value
+      const pharmacy_ods_code = entry_resource.owner.identifier.value
+      const line_item_id = entry_resource.focus.identifier.value
+      const line_item_status = entry_resource.businessStatus.coding[0].code
+      const terminal_status_indicator = entry_resource.status
+      const last_modified = entry_resource.lastModified
+      const note = entry_resource.note?.[0]?.text
 
       // Validate required fields
       if (
@@ -66,7 +67,10 @@ const lambdaHandler = async (
         LineItemStatus: line_item_status,
         TerminalStatusIndicator: terminal_status_indicator,
         LastModified: last_modified,
-        Note: note || null // Ensuring 'null' if note is undefined or null
+        Note: note || null,
+        RequestID: uuidv4(),
+        Timestamp: new Date().toISOString(),
+        RequestMessage: entry_resource
       })
 
       // Put item in DynamoDB table
