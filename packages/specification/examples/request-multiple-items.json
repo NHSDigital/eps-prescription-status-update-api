@@ -11,7 +11,7 @@
           {
             "identifier": {
               "system": "https://fhir.nhs.uk/Id/prescription-order-number",
-              "value": "24F5DA-A83008-7EFE6Z"
+              "value": "3F8A06-A83008-3E85AX"
             }
           }
         ],
@@ -65,7 +65,7 @@
           {
             "identifier": {
               "system": "https://fhir.nhs.uk/Id/prescription-order-number",
-              "value": "24F5DA-A83008-7EFE6Z"
+              "value": "480720-A83008-57FF06"
             }
           }
         ],
