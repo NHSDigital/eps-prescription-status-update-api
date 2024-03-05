@@ -149,8 +149,6 @@ Resources:
             - "TerminalStatusIndicator"
             - "LastUpdated"
             - "Note"
-            - "RequestID"
-            - "Timestamp"
             ProjectionType: "INCLUDE"
           ProvisionedThroughput: 
             ReadCapacityUnits: "5"
