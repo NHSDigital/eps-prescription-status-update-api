@@ -73,6 +73,7 @@ const lambdaHandler = async (
 
       // Marshall the item
       const item = marshall({
+        RequestID: uuidv4(),
         PrescriptionID: prescription_id,
         PatientNHSNumber: patient_nhs_number,
         PharmacyODSCode: pharmacy_ods_code,
@@ -80,7 +81,6 @@ const lambdaHandler = async (
         LineItemID: line_item_id,
         TerminalStatusIndicator: terminal_status_indicator,
         LastModified: last_modified,
-        RequestID: uuidv4(),
         Timestamp: new Date().toISOString(),
         RequestMessage: entry_resource
       })
