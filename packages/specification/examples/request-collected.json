@@ -6,6 +6,7 @@
       "fullUrl": "http://example.org/fhir/Task/4d70678c-81e4-4ff4-8c67-17596fd0aa46",
       "resource": {
         "resourceType": "Task",
+        "id": "4d70678c-81e4-4ff4-8c67-17596fd0aa46",
         "basedOn": [
           {
             "identifier": {
