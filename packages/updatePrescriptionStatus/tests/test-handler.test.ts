@@ -31,19 +31,25 @@ describe("Unit test for app handler", () => {
   })
 
   it("should update data in DynamoDB and return success response", async () => {
-    const response = await handler(generateMockEvent(exampleInCollectionLocker), {} as any)
+    const response = await handler(
+      generateMockEvent(exampleInCollectionLocker),
+      {} as any
+    )
     expect(response.statusCode).toBe(201)
-    expect(JSON.parse(response.body!)).toEqual({
-      message: "Prescription status updated successfully"
-    })
+    expect(JSON.parse(response.body!).entry.length).toBe(
+      exampleInCollectionLocker.entry.length
+    )
   })
 
   it("should update data in DynamoDB and return success response for multiple items", async () => {
-    const response = await handler(generateMockEvent(exampleMultipleItems), {} as any)
+    const response = await handler(
+      generateMockEvent(exampleMultipleItems),
+      {} as any
+    )
     expect(response.statusCode).toBe(201)
-    expect(JSON.parse(response.body!)).toEqual({
-      message: "Prescription status updated successfully"
-    })
+    expect(JSON.parse(response.body!).entry.length).toBe(
+      exampleMultipleItems.entry.length
+    )
   })
 
   it("should return 400 status code and error message if request body is invalid JSON", async () => {

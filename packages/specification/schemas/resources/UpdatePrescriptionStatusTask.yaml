@@ -1,9 +1,13 @@
 type: object
-required: [resourceType, basedOn, status, businessStatus, focus, for, lastModified, owner]
+required: [id, resourceType, basedOn, status, businessStatus, focus, for, lastModified, owner]
 properties:
   resourceType:
     type: string
     example: Task
+  id:
+    type: string
+    description: The unique identifier for the Task resource.
+    example: 4d70678c-81e4-4ff4-8c67-17596fd0aa46
   basedOn:
     type: array
     description: Short-form Prescription ID for the parent prescription.
