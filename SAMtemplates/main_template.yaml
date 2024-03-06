@@ -143,11 +143,10 @@ Resources:
           Projection:
             NonKeyAttributes:
             - "PharmacyODSCode"
+            - "TaskID"
             - "LineItemID"
-            - "LineItemStatus"
             - "TerminalStatusIndicator"
             - "LastModified"
-            - "Note"
             - "RequestID"
             - "Timestamp"
             - "RequestMessage"
@@ -164,11 +163,10 @@ Resources:
           Projection:
             NonKeyAttributes:
             - "PharmacyODSCode"
+            - "TaskID"
             - "LineItemID"
-            - "LineItemStatus"
             - "TerminalStatusIndicator"
             - "LastModified"
-            - "Note"
             - "RequestID"
             - "Timestamp"
             - "RequestMessage"
@@ -185,11 +183,10 @@ Resources:
           Projection:
             NonKeyAttributes:
             - "PatientNHSNumber"
+            - "TaskID"
             - "LineItemID"
-            - "LineItemStatus"
             - "TerminalStatusIndicator"
             - "LastModified"
-            - "Note"
             - "RequestID"
             - "Timestamp"
             - "RequestMessage"
