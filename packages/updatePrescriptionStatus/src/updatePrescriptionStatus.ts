@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import {APIGatewayProxyEvent, APIGatewayProxyResult} from "aws-lambda"
-import {Logger, injectLambdaContext} from "@aws-lambda-powertools/logger"
+import {Logger} from "@aws-lambda-powertools/logger"
+import {injectLambdaContext} from "@aws-lambda-powertools/logger/middleware"
 import {DynamoDBClient, PutItemCommand} from "@aws-sdk/client-dynamodb"
 import {marshall} from "@aws-sdk/util-dynamodb"
 import middy from "@middy/core"
