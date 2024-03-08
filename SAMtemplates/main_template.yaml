@@ -269,7 +269,7 @@ Resources:
                           Fn::ImportValue: account-resources:TrustStoreBucket,
                         ],
                       ]
-                    - "truststore.pem"
+                    - "psu-truststore.pem"
               - !Ref "AWS::NoValue"
           TruststoreVersion:
             "Fn::If":
