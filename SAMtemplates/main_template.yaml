@@ -83,6 +83,9 @@ Resources:
       Location: lambda_resources.yaml
       Parameters:
         CloudWatchKMSKey: !ImportValue account-resources:CloudwatchLogsKmsKeyArn
+        SplunkSubscriptionFilterRole: !ImportValue lambda-resources:SplunkSubscriptionFilterRole
+        SplunkDeliveryStream: !ImportValue lambda-resources:SplunkDeliveryStream
+        EnableSplunk: !Ref EnableSplunk
         LambdaName: !Sub "${AWS::StackName}-UpdatePrescriptionStatus"
         LogRetentionDays: !Ref LogRetentionDays
   UpdatePrescriptionStatus:
@@ -94,7 +97,7 @@ Resources:
       Role: !GetAtt UpdatePrescriptionStatusResources.Outputs.LambdaRoleArn
       Environment:
         Variables:
-          TABLE_NAME: !Sub '${AWS::StackName}-PrescriptionStatusUpdate'
+          TABLE_NAME: !Sub '${AWS::StackName}-PrescriptionStatusUpdates'
           LOG_LEVEL: !Ref LogLevel
       Events:
         updatePrescriptionStatus:
@@ -113,11 +116,11 @@ Resources:
         EntryPoints:
           - updatePrescriptionStatus/src/updatePrescriptionStatus.ts
 
-  # Prescription Status Update table
-  PrescriptionStatusUpdate:
+  # Prescription Status Updates table
+  PrescriptionStatusUpdatesTable:
     Type: 'AWS::DynamoDB::Table'
     Properties:
-      TableName: !Sub '${AWS::StackName}-PrescriptionStatusUpdate'
+      TableName: !Sub '${AWS::StackName}-PrescriptionStatusUpdates'
       AttributeDefinitions:
         - AttributeName: "RequestID"
           AttributeType: "S"
