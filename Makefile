@@ -22,13 +22,13 @@ install-hooks: install-python
 build-specification:
 	$(MAKE) --directory=packages/specification build
 
-sam-build: sam-validate compile download-get-secrets-layer
+sam-build: sam-validate compile
 	sam build --template-file SAMtemplates/main_template.yaml --region eu-west-2
 
 sam-run-local: sam-build
 	sam local start-api
 
-sam-sync: guard-AWS_DEFAULT_PROFILE guard-stack_name compile download-get-secrets-layer
+sam-sync: guard-AWS_DEFAULT_PROFILE guard-stack_name compile
 	sam sync \
 		--stack-name $$stack_name \
 		--watch \
@@ -86,10 +86,6 @@ compile-node:
 	npx tsc --build tsconfig.build.json
 
 compile: compile-node
-
-download-get-secrets-layer:
-	mkdir -p packages/updatePrescriptionStatus/lib
-	curl -LJ https://github.com/NHSDigital/electronic-prescription-service-get-secrets/releases/download/v1.0.40-alpha/get-secrets-layer.zip -o packages/updatePrescriptionStatus/lib/get-secrets-layer.zip
 
 lint-node: compile-node
 	npm run lint --workspace packages/specification
