@@ -16,7 +16,7 @@ Globals:
         TargetServiceSearchServer: !Ref TargetServiceSearchServer
         NODE_OPTIONS: --enable-source-maps
     Layers:
-      - !Sub "arn:aws:lambda:${AWS::Region}:580247275435:layer:LambdaInsightsExtension:38"
+      - !Sub "arn:aws:lambda:${AWS::Region}:580247275435:layer:LambdaInsightsExtension:49"
 
 Parameters:
   TargetServiceSearchServer:
