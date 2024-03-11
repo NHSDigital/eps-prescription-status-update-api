@@ -128,7 +128,7 @@ jobs:
     uses: ./.github/workflows/sam_release_code.yml
     with:
       ARTIFACT_BUCKET_PREFIX: ${{needs.tag_release.outputs.spec_version}}
-      STACK_NAME: ref-ci
+      STACK_NAME: psu
       TARGET_ENVIRONMENT: ref
       ENABLE_MUTUAL_TLS: true
       DEPLOY_SANDBOX: false
@@ -146,7 +146,7 @@ jobs:
     uses: ./.github/workflows/sam_release_code.yml
     with:
       ARTIFACT_BUCKET_PREFIX: ${{needs.tag_release.outputs.spec_version}}
-      STACK_NAME: qa-ci
+      STACK_NAME: psu
       TARGET_ENVIRONMENT: qa
       ENABLE_MUTUAL_TLS: true
       DEPLOY_SANDBOX: false
@@ -164,7 +164,7 @@ jobs:
     uses: ./.github/workflows/sam_release_code.yml
     with:
       ARTIFACT_BUCKET_PREFIX: ${{needs.tag_release.outputs.spec_version}}
-      STACK_NAME: int-ci
+      STACK_NAME: psu
       TARGET_ENVIRONMENT: int
       ENABLE_MUTUAL_TLS: true
       DEPLOY_SANDBOX: false
@@ -188,7 +188,7 @@ jobs:
     uses: ./.github/workflows/sam_release_code.yml
     with:
       ARTIFACT_BUCKET_PREFIX: ${{needs.tag_release.outputs.spec_version}}
-      STACK_NAME: prod-ci
+      STACK_NAME: psu
       TARGET_ENVIRONMENT: prod
       ENABLE_MUTUAL_TLS: true
       DEPLOY_SANDBOX: false
