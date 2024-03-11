@@ -5,6 +5,7 @@ import {APIGatewayProxyEvent} from "aws-lambda"
 import {mockClient} from "aws-sdk-client-mock"
 import exampleInCollectionLocker from "../../specification/examples/request-in-collection-locker.json"
 import exampleMultipleItems from "../../specification/examples/request-multiple-items.json"
+import exampleMissingFields from "../../specification/examples/request-missing-fields.json"
 
 const generateMockEvent = (body: any): APIGatewayProxyEvent => ({
   body: JSON.stringify(body),
@@ -61,6 +62,17 @@ describe("Unit test for app handler", () => {
     expect(response.statusCode).toBe(400)
     expect(JSON.parse(response.body!)).toEqual({
       error: "Missing required fields"
+    })
+  })
+
+  it("should return a 400 status code and error message indicating missing required fields", async () => {
+    const response = await handler(
+      generateMockEvent(exampleMissingFields),
+      {} as any
+    )
+    expect(response.statusCode).toBe(400)
+    expect(JSON.parse(response.body!)).toEqual({
+      error: "Missing required fields: PrescriptionID, PatientNHSNumber"
     })
   })
 })

@@ -13,33 +13,36 @@ const logger = new Logger({serviceName: "updatePrescriptionStatus"})
 const client = new DynamoDBClient({region: "eu-west-2"})
 const tableName = process.env.TABLE_NAME
 
-const MISSING_FIELDS_RESPONSE: APIGatewayProxyResult = {
-  statusCode: 400,
-  body: JSON.stringify({error: "Missing required fields"}),
-  headers: {
-    "Content-Type": "application/fhir+json",
-    "Cache-Control": "no-cache"
-  }
+interface DynamoDBItem {
+  RequestID: string;
+  PrescriptionID: string;
+  PatientNHSNumber: string;
+  PharmacyODSCode: string;
+  TaskID: string;
+  LineItemID: string;
+  TerminalStatusIndicator: string;
+  LastModified: string;
+  Timestamp: string;
+  RequestMessage: any;
 }
 
 const lambdaHandler = async (
   event: APIGatewayProxyEvent
 ): Promise<APIGatewayProxyResult> => {
   try {
-    console.log("Received event:", event)
-
-    // Parse request body
     const requestBody = JSON.parse(event.body || "")
-    console.log("Parsed request body:", requestBody)
 
-    // Extract relevant data from request body
     const entries = requestBody.entry
-    console.log("Entries:", entries)
 
-    // Validate if the entry array exists and is not empty
     if (!entries || entries.length === 0) {
-      console.log("Missing required fields")
-      return MISSING_FIELDS_RESPONSE
+      return {
+        statusCode: 400,
+        body: JSON.stringify({error: "Missing required fields"}),
+        headers: {
+          "Content-Type": "application/fhir+json",
+          "Cache-Control": "no-cache"
+        }
+      }
     }
 
     const responseBundle: any = {
@@ -52,75 +55,65 @@ const lambdaHandler = async (
       entry: []
     }
 
-    // Process each entry
     for (const entry of entries) {
-      console.log("Processing entry:", entry)
       const entry_resource = entry.resource
-      console.log("Entry resource:", entry_resource)
 
-      // Extract data from entry resource
-      const task_id = entry_resource.id
-      const prescription_id = entry_resource.basedOn[0].identifier.value
-      const patient_nhs_number = entry_resource.for.identifier.value
-      const pharmacy_ods_code = entry_resource.owner.identifier.value
-      const line_item_id = entry_resource.focus.identifier.value
-      const terminal_status_indicator = entry_resource.status
-      const last_modified = entry_resource.lastModified
-
-      console.log("Extracted data:", {
-        task_id,
-        prescription_id,
-        patient_nhs_number,
-        pharmacy_ods_code,
-        line_item_id,
-        terminal_status_indicator,
-        last_modified
-      })
-
-      // Validate required fields
-      if (
-        !prescription_id ||
-        !patient_nhs_number ||
-        !pharmacy_ods_code ||
-        !task_id ||
-        !line_item_id ||
-        !terminal_status_indicator ||
-        !last_modified
-      ) {
-        console.log("Missing required fields in entry:", entry)
-        return MISSING_FIELDS_RESPONSE
+      const dynamoDBItem: DynamoDBItem = {
+        RequestID: "",
+        PrescriptionID: "",
+        PatientNHSNumber: "",
+        PharmacyODSCode: "",
+        TaskID: "",
+        LineItemID: "",
+        TerminalStatusIndicator: "",
+        LastModified: "",
+        Timestamp: "",
+        RequestMessage: {}
       }
 
-      // Marshall the item
-      const item = marshall({
-        RequestID: uuidv4(),
-        PrescriptionID: prescription_id,
-        PatientNHSNumber: patient_nhs_number,
-        PharmacyODSCode: pharmacy_ods_code,
-        TaskID: task_id,
-        LineItemID: line_item_id,
-        TerminalStatusIndicator: terminal_status_indicator,
-        LastModified: last_modified,
-        Timestamp: new Date().toISOString(),
-        RequestMessage: entry_resource
-      })
+      dynamoDBItem.RequestID = uuidv4()
+      dynamoDBItem.PrescriptionID =
+        entry_resource.basedOn?.[0]?.identifier?.value
+      dynamoDBItem.PatientNHSNumber = entry_resource.for?.identifier?.value
+      dynamoDBItem.PharmacyODSCode = entry_resource.owner?.identifier?.value
+      dynamoDBItem.TaskID = entry_resource.id
+      dynamoDBItem.LineItemID = entry_resource.focus?.identifier?.value
+      dynamoDBItem.TerminalStatusIndicator = entry_resource.status
+      dynamoDBItem.LastModified = entry_resource.lastModified
+      dynamoDBItem.Timestamp = new Date().toISOString()
+      dynamoDBItem.RequestMessage = entry_resource
 
-      console.log("Marshalled item:", item)
+      const invalidFields = []
+      for (const field in dynamoDBItem) {
+        if (!dynamoDBItem[field as keyof DynamoDBItem]) {
+          invalidFields.push(field)
+        }
+      }
 
-      // Put item in DynamoDB table
+      if (invalidFields.length > 0) {
+        const errorMessage = `Missing required fields: ${invalidFields.join(", ")}`
+        return {
+          statusCode: 400,
+          body: JSON.stringify({error: errorMessage}),
+          headers: {
+            "Content-Type": "application/json",
+            "Cache-Control": "no-cache"
+          }
+        }
+      }
+
+      const item = marshall(dynamoDBItem)
+
       const command = new PutItemCommand({
         TableName: tableName,
         Item: item
       })
-
-      console.log("Sending PutItemCommand:", command)
       await client.send(command)
 
-      // Construct the response for each Task resource
       const taskResponse = {
         response: {
           status: "201 Created",
-          location: `Task/${task_id}/_history/1`, // Using task_id for location
+          location: `Task/${dynamoDBItem.TaskID}/_history/1`,
           etag: "W/\"1\"",
           lastModified: new Date().toISOString(),
           outcome: {
@@ -139,30 +132,23 @@ const lambdaHandler = async (
         }
       }
 
-      console.log("Task response:", taskResponse)
       responseBundle.entry.push(taskResponse)
     }
 
-    // Log audit for request
-    console.log("Request audit log:", {requestBody})
-
-    // Return success response with the constructed response bundle
     return {
       statusCode: 201,
       body: JSON.stringify(responseBundle)
     }
   } catch (error) {
-    // Log error using powertools logger
     console.error("Error occurred:", error)
 
-    // Log audit for request error
-    console.error("Request error audit log:", {event})
-
-    // Return error response
-    if (error instanceof SyntaxError) {
-      return MISSING_FIELDS_RESPONSE
-    } else {
-      throw error
+    return {
+      statusCode: 500,
+      body: JSON.stringify({error: "Internal Server Error"}),
+      headers: {
+        "Content-Type": "application/json",
+        "Cache-Control": "no-cache"
+      }
     }
   }
 }
