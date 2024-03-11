@@ -26,14 +26,19 @@ const lambdaHandler = async (
   event: APIGatewayProxyEvent
 ): Promise<APIGatewayProxyResult> => {
   try {
+    console.log("Received event:", event)
+
     // Parse request body
     const requestBody = JSON.parse(event.body || "")
+    console.log("Parsed request body:", requestBody)
 
     // Extract relevant data from request body
     const entries = requestBody.entry
+    console.log("Entries:", entries)
 
     // Validate if the entry array exists and is not empty
     if (!entries || entries.length === 0) {
+      console.log("Missing required fields")
       return MISSING_FIELDS_RESPONSE
     }
 
@@ -49,7 +54,11 @@ const lambdaHandler = async (
 
     // Process each entry
     for (const entry of entries) {
+      console.log("Processing entry:", entry)
       const entry_resource = entry.resource
+      console.log("Entry resource:", entry_resource)
+
+      // Extract data from entry resource
       const task_id = entry_resource.id
       const prescription_id = entry_resource.basedOn[0].identifier.value
       const patient_nhs_number = entry_resource.for.identifier.value
@@ -57,6 +66,16 @@ const lambdaHandler = async (
       const line_item_id = entry_resource.focus.identifier.value
       const terminal_status_indicator = entry_resource.status
       const last_modified = entry_resource.lastModified
+
+      console.log("Extracted data:", {
+        task_id,
+        prescription_id,
+        patient_nhs_number,
+        pharmacy_ods_code,
+        line_item_id,
+        terminal_status_indicator,
+        last_modified
+      })
 
       // Validate required fields
       if (
@@ -66,9 +85,9 @@ const lambdaHandler = async (
         !task_id ||
         !line_item_id ||
         !terminal_status_indicator ||
-        !last_modified ||
-        !task_id
+        !last_modified
       ) {
+        console.log("Missing required fields in entry:", entry)
         return MISSING_FIELDS_RESPONSE
       }
 
@@ -86,12 +105,15 @@ const lambdaHandler = async (
         RequestMessage: entry_resource
       })
 
+      console.log("Marshalled item:", item)
+
       // Put item in DynamoDB table
       const command = new PutItemCommand({
         TableName: tableName,
         Item: item
       })
 
+      console.log("Sending PutItemCommand:", command)
       await client.send(command)
 
       // Construct the response for each Task resource
@@ -117,11 +139,12 @@ const lambdaHandler = async (
         }
       }
 
+      console.log("Task response:", taskResponse)
       responseBundle.entry.push(taskResponse)
     }
 
     // Log audit for request
-    logger.info("updatePrescriptionStatus request", {requestBody})
+    console.log("Request audit log:", {requestBody})
 
     // Return success response with the constructed response bundle
     return {
@@ -130,10 +153,10 @@ const lambdaHandler = async (
     }
   } catch (error) {
     // Log error using powertools logger
-    logger.error("Error occurred: ", error as Error)
+    console.error("Error occurred:", error)
 
     // Log audit for request error
-    logger.error("updatePrescriptionStatus request error", {event})
+    console.error("Request error audit log:", {event})
 
     // Return error response
     if (error instanceof SyntaxError) {
