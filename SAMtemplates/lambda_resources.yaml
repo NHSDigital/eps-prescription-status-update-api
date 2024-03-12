@@ -132,7 +132,8 @@ Resources:
               Action:
                 - dynamodb:*
               Resource:
-                - "*"
+                - !Sub "arn:${AWS::Partition}:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${TableName}"
+                - !Sub "arn:${AWS::Partition}:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${TableName}/index/*"
 
   LambdaLogGroup:
     Type: AWS::Logs::LogGroup
