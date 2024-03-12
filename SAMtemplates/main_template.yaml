@@ -115,33 +115,6 @@ Resources:
         tsconfig: updatePrescriptionStatus/tsconfig.json
         EntryPoints:
           - updatePrescriptionStatus/src/updatePrescriptionStatus.ts
-  DynamoDBReadPolicy:
-      Type: AWS::IAM::ManagedPolicy
-      Properties:
-        PolicyDocument:
-          Version: "2012-10-17"
-          Statement:
-            - Effect: Allow
-              Action:
-                - dynamodb:GetItem
-                - dynamodb:Scan
-                - dynamodb:Query
-                - dynamodb:BatchGetItem
-                - dynamodb:DescribeTable
-              Resource:
-                - !Sub "arn:${AWS::Partition}:dynamodb:${AWS::Region}:591291862413:table/${AWS::StackName}-PrescriptionStatusUpdates"
-                - !Sub "arn:${AWS::Partition}:dynamodb:${AWS::Region}:591291862413:table/${AWS::StackName}-PrescriptionStatusUpdates/index/*"
-  DynamoDBWritePolicy:
-      Type: AWS::IAM::ManagedPolicy
-      Properties:
-        PolicyDocument:
-          Version: "2012-10-17"
-          Statement:
-            - Effect: Allow
-              Action:
-                - dynamodb:*
-              Resource:
-                - "*"
   # Prescription Status Updates table
   PrescriptionStatusUpdatesTable:
     Type: 'AWS::DynamoDB::Table'
