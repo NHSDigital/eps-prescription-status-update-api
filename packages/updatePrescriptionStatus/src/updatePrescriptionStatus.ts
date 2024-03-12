@@ -30,11 +30,15 @@ const lambdaHandler = async (
   event: APIGatewayProxyEvent
 ): Promise<APIGatewayProxyResult> => {
   try {
+    console.log("Received event:", event)
     const requestBody = JSON.parse(event.body || "")
+    console.log("Parsed request body:", requestBody)
 
     const entries = requestBody.entry
+    console.log("Entries:", entries)
 
     if (!entries || entries.length === 0) {
+      console.log("Missing required fields")
       return {
         statusCode: 400,
         body: JSON.stringify({error: "Missing required fields"}),
@@ -56,7 +60,9 @@ const lambdaHandler = async (
     }
 
     for (const entry of entries) {
+      console.log("Processing entry:", entry)
       const entry_resource = entry.resource
+      console.log("Entry resource:", entry_resource)
 
       const dynamoDBItem: DynamoDBItem = {
         RequestID: "",
@@ -91,7 +97,10 @@ const lambdaHandler = async (
       }
 
       if (invalidFields.length > 0) {
-        const errorMessage = `Missing required fields: ${invalidFields.join(", ")}`
+        const errorMessage = `Missing required fields: ${invalidFields.join(
+          ", "
+        )}`
+        console.log(errorMessage)
         return {
           statusCode: 400,
           body: JSON.stringify({error: errorMessage}),
@@ -103,11 +112,13 @@ const lambdaHandler = async (
       }
 
       const item = marshall(dynamoDBItem)
+      console.log("Marshalled item:", item)
 
       const command = new PutItemCommand({
         TableName: tableName,
         Item: item
       })
+      console.log("Sending PutItemCommand:", command)
       await client.send(command)
 
       const taskResponse = {
@@ -132,16 +143,18 @@ const lambdaHandler = async (
         }
       }
 
+      console.log("Task response:", taskResponse)
       responseBundle.entry.push(taskResponse)
     }
 
+    console.log("Request audit log:", {requestBody})
     return {
       statusCode: 201,
       body: JSON.stringify(responseBundle)
     }
   } catch (error) {
     console.error("Error occurred:", error)
-
+    console.error("Request error audit log:", {event})
     return {
       statusCode: 500,
       body: JSON.stringify({error: "Internal Server Error"}),
