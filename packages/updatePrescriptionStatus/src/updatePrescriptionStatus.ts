@@ -30,12 +30,8 @@ const lambdaHandler = async (
   event: APIGatewayProxyEvent
 ): Promise<APIGatewayProxyResult> => {
   try {
-    console.log("Received event:", event)
     const requestBody = JSON.parse(event.body || "")
-    console.log("Parsed request body:", requestBody)
-
     const entries = requestBody.entry
-    console.log("Entries:", entries)
 
     if (!entries || entries.length === 0) {
       console.log("Missing required fields")
