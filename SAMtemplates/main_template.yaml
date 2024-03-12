@@ -87,17 +87,18 @@ Resources:
         SplunkDeliveryStream: !ImportValue lambda-resources:SplunkDeliveryStream
         EnableSplunk: !Ref EnableSplunk
         LambdaName: !Sub "${AWS::StackName}-UpdatePrescriptionStatus"
+        TableName: !Sub "${AWS::StackName}-PrescriptionStatusUpdates"
         LogRetentionDays: !Ref LogRetentionDays
   UpdatePrescriptionStatus:
     Type: AWS::Serverless::Function
     Properties:
       FunctionName: !Sub "${AWS::StackName}-UpdatePrescriptionStatus"
       CodeUri: ../packages
-      Handler: 'updatePrescriptionStatus.handler'
+      Handler: "updatePrescriptionStatus.handler"
       Role: !GetAtt UpdatePrescriptionStatusResources.Outputs.LambdaRoleArn
       Environment:
         Variables:
-          TABLE_NAME: !Sub '${AWS::StackName}-PrescriptionStatusUpdates'
+          TABLE_NAME: !Sub "${AWS::StackName}-PrescriptionStatusUpdates"
           LOG_LEVEL: !Ref LogLevel
       Events:
         updatePrescriptionStatus:
@@ -117,9 +118,9 @@ Resources:
           - updatePrescriptionStatus/src/updatePrescriptionStatus.ts
   # Prescription Status Updates table
   PrescriptionStatusUpdatesTable:
-    Type: 'AWS::DynamoDB::Table'
+    Type: "AWS::DynamoDB::Table"
     Properties:
-      TableName: !Sub '${AWS::StackName}-PrescriptionStatusUpdates'
+      TableName: !Sub "${AWS::StackName}-PrescriptionStatusUpdates"
       AttributeDefinitions:
         - AttributeName: "RequestID"
           AttributeType: "S"

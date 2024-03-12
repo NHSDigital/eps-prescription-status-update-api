@@ -25,6 +25,9 @@ Parameters:
   LambdaName:
     Type: String
     Description: Name of lambda we are creating for
+  TableName:
+    Type: String
+    Description: Name of the DynamoDB table
   AccessToSpine:
     Type: String
     Description: Whether to use splunk
@@ -116,8 +119,8 @@ Resources:
                 - dynamodb:BatchGetItem
                 - dynamodb:DescribeTable
               Resource:
-                - !Sub "arn:${AWS::Partition}:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${AWS::StackName}-PrescriptionStatusUpdates"
-                - !Sub "arn:${AWS::Partition}:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${AWS::StackName}-PrescriptionStatusUpdates/index/*"
+                - !Sub "arn:${AWS::Partition}:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${TableName}"
+                - !Sub "arn:${AWS::Partition}:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${TableName}/index/*"
 
   DynamoDBWritePolicy:
       Type: AWS::IAM::ManagedPolicy
