@@ -35,7 +35,7 @@ const lambdaHandler = async (
     try {
       requestBody = JSON.parse(event.body || "")
     } catch (jsonParseError) {
-      logger.error("Error parsing JSON", {jsonParseError: jsonParseError})
+      logger.error("Error parsing JSON", {error: jsonParseError})
       const errorResponseBody = {
         resourceType: "OperationOutcome",
         issue: [
