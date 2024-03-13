@@ -120,3 +120,6 @@ Outputs:
   LambdaRoleArn:
     Description: "LambdaRole ARN"
     Value: !GetAtt LambdaRole.Arn
+  LambdaRoleName:
+    Description: "LambdaRole name"
+    Value: !Ref LambdaRole
