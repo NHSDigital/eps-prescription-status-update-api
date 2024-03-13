@@ -45,9 +45,9 @@ const lambdaHandler = async (
             details: {
               coding: [
                 {
-                  system: "https://fhir.nhs.uk/CodeSystem/Spine-ErrorOrWarningCode",
-                  code: "INVALID_JSON",
-                  display: "Invalid JSON format in request body"
+                  system: "https://fhir.nhs.uk/CodeSystem/http-error-codes",
+                  code: "BAD_REQUEST",
+                  display: "400: The Server was unable to process the request."
                 }
               ]
             }
