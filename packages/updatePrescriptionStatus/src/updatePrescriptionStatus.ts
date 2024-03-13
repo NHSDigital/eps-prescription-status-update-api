@@ -29,8 +29,8 @@ interface DynamoDBItem {
 const lambdaHandler = async (
   event: APIGatewayProxyEvent
 ): Promise<APIGatewayProxyResult> => {
-  const xRequestId = event.headers["x-request-id"]
   try {
+    const xRequestId = event.headers["x-request-id"]
     let requestBody
     try {
       requestBody = JSON.parse(event.body || "")

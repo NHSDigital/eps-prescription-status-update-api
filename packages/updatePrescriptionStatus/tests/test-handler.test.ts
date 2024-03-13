@@ -91,4 +91,40 @@ describe("Unit test for app handler", () => {
       ]
     })
   })
+
+  it("should return 500 status code and internal server error message if an error occurs", async () => {
+    const event = {
+      multiValueHeaders: {},
+      httpMethod: "POST",
+      isBase64Encoded: false,
+      path: "/",
+      queryStringParameters: null,
+      multiValueQueryStringParameters: null,
+      stageVariables: null,
+      requestContext: {} as any,
+      resource: "",
+      pathParameters: null
+    }
+    const response: APIGatewayProxyResult = await handler(event, undefined)
+    expect(response.statusCode).toBe(500)
+    expect(JSON.parse(response.body!)).toEqual({
+      resourceType: "OperationOutcome",
+      issue: [
+        {
+          code: "security",
+          severity: "fatal",
+          details: {
+            coding: [
+              {
+                system: "https://fhir.nhs.uk/CodeSystem/http-error-codes",
+                code: "SERVER_ERROR",
+                display: "500: Internal Server Error."
+              }
+            ]
+          },
+          diagnostics: "Internal Server Error"
+        }
+      ]
+    })
+  })
 })
