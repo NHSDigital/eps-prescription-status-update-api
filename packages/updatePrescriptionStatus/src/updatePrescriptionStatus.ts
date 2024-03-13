@@ -36,9 +36,27 @@ const lambdaHandler = async (
 
     if (!entries || entries.length === 0) {
       logger.error("Missing required fields")
+      const errorResponseBody = {
+        resourceType: "OperationOutcome",
+        issue: [
+          {
+            code: "value",
+            severity: "error",
+            details: {
+              coding: [
+                {
+                  system: "https://fhir.nhs.uk/CodeSystem/Spine-ErrorOrWarningCode",
+                  code: "MISSING_VALUE",
+                  display: "Missing required fields"
+                }
+              ]
+            }
+          }
+        ]
+      }
       return {
         statusCode: 400,
-        body: JSON.stringify({error: "Missing required fields"}),
+        body: JSON.stringify(errorResponseBody),
         headers: {
           "Content-Type": "application/fhir+json",
           "Cache-Control": "no-cache"
@@ -86,11 +104,29 @@ const lambdaHandler = async (
       if (invalidFields.length > 0) {
         const errorMessage = `Missing required fields: ${invalidFields.join(", ")}`
         logger.error("Error message", {errorMessage: errorMessage})
+        const errorResponseBody = {
+          resourceType: "OperationOutcome",
+          issue: [
+            {
+              code: "value",
+              severity: "error",
+              details: {
+                coding: [
+                  {
+                    system: "https://fhir.nhs.uk/CodeSystem/Spine-ErrorOrWarningCode",
+                    code: "MISSING_VALUE",
+                    display: errorMessage
+                  }
+                ]
+              }
+            }
+          ]
+        }
         return {
           statusCode: 400,
-          body: JSON.stringify({error: errorMessage}),
+          body: JSON.stringify(errorResponseBody),
           headers: {
-            "Content-Type": "application/json",
+            "Content-Type": "application/fhir+json",
             "Cache-Control": "no-cache"
           }
         }
@@ -139,12 +175,30 @@ const lambdaHandler = async (
     }
   } catch (error) {
     logger.error("Error occurred", {error: error})
-
+    const errorResponseBody = {
+      resourceType: "OperationOutcome",
+      issue: [
+        {
+          code: "security",
+          severity: "fatal",
+          details: {
+            coding: [
+              {
+                system: "https://fhir.nhs.uk/CodeSystem/http-error-codes",
+                code: "SERVER_ERROR",
+                display: "500: Internal Server Error."
+              }
+            ]
+          },
+          diagnostics: "Internal Server Error"
+        }
+      ]
+    }
     return {
       statusCode: 500,
-      body: JSON.stringify({error: "Internal Server Error"}),
+      body: JSON.stringify(errorResponseBody),
       headers: {
-        "Content-Type": "application/json",
+        "Content-Type": "application/fhir+json",
         "Cache-Control": "no-cache"
       }
     }

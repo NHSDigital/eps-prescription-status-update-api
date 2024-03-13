@@ -1,15 +1,17 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import {handler} from "../src/updatePrescriptionStatus"
 import {DynamoDBClient} from "@aws-sdk/client-dynamodb"
-import {APIGatewayProxyEvent} from "aws-lambda"
 import {mockClient} from "aws-sdk-client-mock"
-// import exampleInCollectionLocker from "../../specification/examples/request-in-collection-locker.json"
-// import exampleMultipleItems from "../../specification/examples/request-multiple-items.json"
-// import exampleMissingFields from "../../specification/examples/request-missing-fields.json"
+import exampleInCollectionLocker from "../../specification/examples/request-in-collection-locker.json"
+import exampleMultipleItems from "../../specification/examples/request-multiple-items.json"
+import exampleMissingFields from "../../specification/examples/request-missing-fields.json"
+import {APIGatewayProxyEvent, APIGatewayProxyResult} from "aws-lambda"
+
+mockClient(DynamoDBClient)
 
 const generateMockEvent = (body: any): APIGatewayProxyEvent => ({
   body: JSON.stringify(body),
-  headers: {},
+  headers: {"x-request-id": "test-request-id"},
   multiValueHeaders: {},
   httpMethod: "POST",
   isBase64Encoded: false,
@@ -19,60 +21,74 @@ const generateMockEvent = (body: any): APIGatewayProxyEvent => ({
   stageVariables: null,
   requestContext: {} as any,
   resource: "",
-  pathParameters: null // Add pathParameters property
+  pathParameters: null
 })
 
 describe("Unit test for app handler", () => {
-  beforeEach(() => {
-    mockClient(DynamoDBClient)
+  it("should return 201 with response bundle for a single item", async () => {
+    const event: APIGatewayProxyEvent = generateMockEvent(exampleInCollectionLocker)
+    const response: APIGatewayProxyResult = await handler(event, {} as any)
+
+    expect(response.statusCode).toBe(201)
+    const responseBody = JSON.parse(response.body!)
+    expect(responseBody).toHaveProperty("resourceType", "Bundle")
   })
 
-  afterEach(() => {
-    mockClient(DynamoDBClient).restore()
+  it("should return 201 with response bundle for multiple items", async () => {
+    const event: APIGatewayProxyEvent = generateMockEvent(exampleMultipleItems)
+    const response: APIGatewayProxyResult = await handler(event, {} as any)
+
+    expect(response.statusCode).toBe(201)
+    const responseBody = JSON.parse(response.body!)
+    expect(responseBody).toHaveProperty("resourceType", "Bundle")
   })
-
-  // it("should update data in DynamoDB and return success response", async () => {
-  //   const response = await handler(
-  //     generateMockEvent(exampleInCollectionLocker),
-  //     {} as any
-  //   )
-  //   expect(response.statusCode).toBe(201)
-  //   expect(JSON.parse(response.body!).entry.length).toBe(
-  //     exampleInCollectionLocker.entry.length
-  //   )
-  // })
-
-  // it("should update data in DynamoDB and return success response for multiple items", async () => {
-  //   const response = await handler(
-  //     generateMockEvent(exampleMultipleItems),
-  //     {} as any
-  //   )
-  //   expect(response.statusCode).toBe(201)
-  //   expect(JSON.parse(response.body!).entry.length).toBe(
-  //     exampleMultipleItems.entry.length
-  //   )
-  // })
 
   it("should return 400 status code and error message if request body is invalid JSON", async () => {
     const requestBody = "invalid JSON"
-    const response = await handler(
-      generateMockEvent(requestBody),
-      {} as any
-    )
+    const event: APIGatewayProxyEvent = generateMockEvent(requestBody)
+    const response: APIGatewayProxyResult = await handler(event, {} as any)
     expect(response.statusCode).toBe(400)
     expect(JSON.parse(response.body!)).toEqual({
-      error: "Missing required fields"
+      resourceType: "OperationOutcome",
+      issue: [
+        {
+          code: "value",
+          severity: "error",
+          details: {
+            coding: [
+              {
+                system: "https://fhir.nhs.uk/CodeSystem/Spine-ErrorOrWarningCode",
+                code: "MISSING_VALUE",
+                display: "Missing required fields"
+              }
+            ]
+          }
+        }
+      ]
     })
   })
 
-  // it("should return a 400 status code and error message indicating missing required fields", async () => {
-  //   const response = await handler(
-  //     generateMockEvent(exampleMissingFields),
-  //     {} as any
-  //   )
-  //   expect(response.statusCode).toBe(400)
-  //   expect(JSON.parse(response.body!)).toEqual({
-  //     error: "Missing required fields: PrescriptionID, PatientNHSNumber"
-  //   })
-  // })
+  it("should return a 400 status code and error message indicating missing required fields", async () => {
+    const event: APIGatewayProxyEvent = generateMockEvent(exampleMissingFields)
+    const response: APIGatewayProxyResult = await handler(event, {} as any)
+    expect(response.statusCode).toBe(400)
+    expect(JSON.parse(response.body!)).toEqual({
+      resourceType: "OperationOutcome",
+      issue: [
+        {
+          code: "value",
+          severity: "error",
+          details: {
+            coding: [
+              {
+                system: "https://fhir.nhs.uk/CodeSystem/Spine-ErrorOrWarningCode",
+                code: "MISSING_VALUE",
+                display: "Missing required fields: PrescriptionID, PatientNHSNumber"
+              }
+            ]
+          }
+        }
+      ]
+    })
+  })
 })
