@@ -221,6 +221,8 @@ Resources:
   DynamoDBWritePolicy:
     Type: AWS::IAM::ManagedPolicy
     Properties:
+      Roles: 
+        - !Select [1, !Split ["/", !GetAtt UpdatePrescriptionStatusResources.Outputs.LambdaRoleArn]]
       PolicyDocument:
         Version: "2012-10-17"
         Statement:
