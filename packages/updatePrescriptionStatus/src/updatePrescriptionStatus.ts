@@ -14,7 +14,7 @@ const client = new DynamoDBClient({region: "eu-west-2"})
 const tableName = process.env.TABLE_NAME
 
 interface DynamoDBItem {
-  RequestID: string;
+  RequestID: string | undefined;
   PrescriptionID: string;
   PatientNHSNumber: string;
   PharmacyODSCode: string;
@@ -29,12 +29,13 @@ interface DynamoDBItem {
 const lambdaHandler = async (
   event: APIGatewayProxyEvent
 ): Promise<APIGatewayProxyResult> => {
+  const xRequestId = event.headers["x-request-id"]
   try {
     const requestBody = JSON.parse(event.body || "")
     const entries = requestBody.entry
 
     if (!entries || entries.length === 0) {
-      console.log("Missing required fields")
+      logger.error("Missing required fields")
       return {
         statusCode: 400,
         body: JSON.stringify({error: "Missing required fields"}),
@@ -43,7 +44,7 @@ const lambdaHandler = async (
           "Cache-Control": "no-cache"
         }
       }
-    }
+    } //catch
 
     const responseBundle: any = {
       resourceType: "Bundle",
@@ -56,47 +57,35 @@ const lambdaHandler = async (
     }
 
     for (const entry of entries) {
-      console.log("Processing entry:", entry)
+      logger.info("Processing entry", {entry: entry})
+
       const entry_resource = entry.resource
-      console.log("Entry resource:", entry_resource)
+      logger.info("Processed the entry resource", {processed_entry_resource: entry_resource})
 
       const dynamoDBItem: DynamoDBItem = {
-        RequestID: "",
-        PrescriptionID: "",
-        PatientNHSNumber: "",
-        PharmacyODSCode: "",
-        TaskID: "",
-        LineItemID: "",
-        TerminalStatusIndicator: "",
-        LastModified: "",
-        Timestamp: "",
-        RequestMessage: {}
+        RequestID: xRequestId,
+        PrescriptionID: entry_resource.basedOn?.[0]?.identifier?.value,
+        PatientNHSNumber: entry_resource.for?.identifier?.value,
+        PharmacyODSCode: entry_resource.owner?.identifier?.value,
+        TaskID: entry_resource.id,
+        LineItemID: entry_resource.focus?.identifier?.value,
+        TerminalStatusIndicator: entry_resource.status,
+        LastModified: entry_resource.lastModified,
+        Timestamp: new Date().toISOString(),
+        RequestMessage: entry_resource
       }
 
-      dynamoDBItem.RequestID = uuidv4()
-      dynamoDBItem.PrescriptionID =
-        entry_resource.basedOn?.[0]?.identifier?.value
-      dynamoDBItem.PatientNHSNumber = entry_resource.for?.identifier?.value
-      dynamoDBItem.PharmacyODSCode = entry_resource.owner?.identifier?.value
-      dynamoDBItem.TaskID = entry_resource.id
-      dynamoDBItem.LineItemID = entry_resource.focus?.identifier?.value
-      dynamoDBItem.TerminalStatusIndicator = entry_resource.status
-      dynamoDBItem.LastModified = entry_resource.lastModified
-      dynamoDBItem.Timestamp = new Date().toISOString()
-      dynamoDBItem.RequestMessage = entry_resource
-
       const invalidFields = []
-      for (const field in dynamoDBItem) {
-        if (!dynamoDBItem[field as keyof DynamoDBItem]) {
+      for (const [field, value] of Object.entries(dynamoDBItem)) {
+        if (!value) {
+          logger.info("Invalid value", {field: field, value: value})
           invalidFields.push(field)
         }
       }
 
       if (invalidFields.length > 0) {
-        const errorMessage = `Missing required fields: ${invalidFields.join(
-          ", "
-        )}`
-        console.log(errorMessage)
+        const errorMessage = `Missing required fields: ${invalidFields.join(", ")}`
+        logger.error("Error message", {errorMessage: errorMessage})
         return {
           statusCode: 400,
           body: JSON.stringify({error: errorMessage}),
@@ -108,13 +97,13 @@ const lambdaHandler = async (
       }
 
       const item = marshall(dynamoDBItem)
-      console.log("Marshalled item:", item)
+      logger.info("Marshalled item", {item: item})
 
       const command = new PutItemCommand({
         TableName: tableName,
         Item: item
       })
-      console.log("Sending PutItemCommand:", command)
+      logger.info("Sending PutItemCommand", {command: command})
       await client.send(command)
 
       const taskResponse = {
@@ -139,18 +128,18 @@ const lambdaHandler = async (
         }
       }
 
-      console.log("Task response:", taskResponse)
+      logger.info("Task response", {taskResponse: taskResponse})
       responseBundle.entry.push(taskResponse)
     }
 
-    console.log("Request audit log:", {requestBody})
+    logger.info("Request audit log", {requestBody: requestBody})
     return {
       statusCode: 201,
       body: JSON.stringify(responseBundle)
     }
   } catch (error) {
-    console.error("Error occurred:", error)
-    console.error("Request error audit log:", {event})
+    logger.error("Error occurred", {error: error})
+
     return {
       statusCode: 500,
       body: JSON.stringify({error: "Internal Server Error"}),
