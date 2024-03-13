@@ -236,8 +236,8 @@ Resources:
               - dynamodb:GetRecords
               - dynamodb:ListTables
             Resource:
-              - !Sub "arn:${AWS::Partition}:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${AWS::StackName}-PrescriptionStatusUpdates"
-              - !Sub "arn:${AWS::Partition}:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${AWS::StackName}-PrescriptionStatusUpdates/index/*"
+              - !GetAtt PrescriptionStatusUpdatesTable.Arn
+              - !Join ["", [!GetAtt PrescriptionStatusUpdatesTable.Arn, "/index/*"]]
   DynamoDBWritePolicy:
     Type: AWS::IAM::ManagedPolicy
     Properties:
@@ -253,8 +253,8 @@ Resources:
               - dynamodb:PutItem
               - dynamodb:UpdateItem
             Resource:
-              - !Sub "arn:${AWS::Partition}:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${AWS::StackName}-PrescriptionStatusUpdates"
-              - !Sub "arn:${AWS::Partition}:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${AWS::StackName}-PrescriptionStatusUpdates/index/*"
+              - !GetAtt PrescriptionStatusUpdatesTable.Arn
+              - !Join ["", [!GetAtt PrescriptionStatusUpdatesTable.Arn, "/index/*"]]
 
   # TLS cert for custom domain
   GenerateCertificate:
