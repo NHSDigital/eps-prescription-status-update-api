@@ -31,7 +31,39 @@ const lambdaHandler = async (
 ): Promise<APIGatewayProxyResult> => {
   const xRequestId = event.headers["x-request-id"]
   try {
-    const requestBody = JSON.parse(event.body || "")
+    let requestBody
+    try {
+      requestBody = JSON.parse(event.body || "")
+    } catch (jsonParseError) {
+      logger.error("Error parsing JSON", {jsonParseError: jsonParseError})
+      const errorResponseBody = {
+        resourceType: "OperationOutcome",
+        issue: [
+          {
+            code: "value",
+            severity: "error",
+            details: {
+              coding: [
+                {
+                  system: "https://fhir.nhs.uk/CodeSystem/Spine-ErrorOrWarningCode",
+                  code: "INVALID_JSON",
+                  display: "Invalid JSON format in request body"
+                }
+              ]
+            }
+          }
+        ]
+      }
+      return {
+        statusCode: 400,
+        body: JSON.stringify(errorResponseBody),
+        headers: {
+          "Content-Type": "application/fhir+json",
+          "Cache-Control": "no-cache"
+        }
+      }
+    }
+
     const entries = requestBody.entry
 
     if (!entries || entries.length === 0) {
@@ -62,7 +94,7 @@ const lambdaHandler = async (
           "Cache-Control": "no-cache"
         }
       }
-    } //catch
+    }
 
     const responseBundle: any = {
       resourceType: "Bundle",
@@ -78,7 +110,7 @@ const lambdaHandler = async (
       logger.info("Processing entry", {entry: entry})
 
       const entry_resource = entry.resource
-      logger.info("Processed the entry resource", {processed_entry_resource: entry_resource})
+      logger.info("Processed the entry resource", {processedEntryResource: entry_resource})
 
       const dynamoDBItem: DynamoDBItem = {
         RequestID: xRequestId,
