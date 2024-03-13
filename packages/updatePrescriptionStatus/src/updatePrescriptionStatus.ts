@@ -108,9 +108,7 @@ const lambdaHandler = async (
 
     for (const entry of entries) {
       logger.info("Processing entry", {entry: entry})
-
       const entry_resource = entry.resource
-      logger.info("Processed the entry resource", {processedEntryResource: entry_resource})
 
       const dynamoDBItem: DynamoDBItem = {
         RequestID: xRequestId,
