@@ -2,10 +2,10 @@ type: object
 properties:
   resourceType:
     type: string
-    values: Bundle
+    example: Bundle
   type:
     type: string
-    values: transaction-response
+    example: transaction-response
     description: List of responses to status updates performed in the request transaction.
   entry:
     type: array
@@ -17,13 +17,13 @@ properties:
           properties:
             status:
               type: string
-              values: 201 Created
+              example: 201 Created
             outcome:
               type: object
               properties:
                 resourceType:
                   type: string
-                  values: OperationOutcome
+                  example: OperationOutcome
                 issue:
                   type: array
                   items:
@@ -31,10 +31,10 @@ properties:
                     properties:
                       severity:
                         type: string
-                        values: information
+                        example: information
                       code:
                         type: string
-                        values: success
+                        example: success
                       diagnostics:
                         type: string
-                        values: No issues detected during validation
+                        example: No issues detected during validation
