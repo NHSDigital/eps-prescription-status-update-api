@@ -162,12 +162,42 @@ const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPro
     const item = marshall(dynamoDBItem)
     logger.info("Marshalled item", {item: item})
 
-    const command = new PutItemCommand({
-      TableName: tableName,
-      Item: item
-    })
-    logger.info("Sending PutItemCommand", {command: command})
-    await client.send(command)
+    try {
+      const command = new PutItemCommand({
+        TableName: tableName,
+        Item: item
+      })
+      logger.info("Sending PutItemCommand", {command: command})
+      await client.send(command)
+    } catch (error) {
+      logger.error("Error sending PutItemCommand", {error: error})
+      const errorResponseBody = {
+        resourceType: "OperationOutcome",
+        issue: [
+          {
+            code: "exception",
+            severity: "fatal",
+            details: {
+              coding: [
+                {
+                  system: "https://fhir.nhs.uk/CodeSystem/http-error-codes",
+                  code: "SERVER_ERROR",
+                  display: "500: The Server has encountered an error processing the request."
+                }
+              ]
+            }
+          }
+        ]
+      }
+      return {
+        statusCode: 500,
+        body: JSON.stringify(errorResponseBody),
+        headers: {
+          "Content-Type": "application/fhir+json",
+          "Cache-Control": "no-cache"
+        }
+      }
+    }
 
     const taskResponse = {
       response: {
