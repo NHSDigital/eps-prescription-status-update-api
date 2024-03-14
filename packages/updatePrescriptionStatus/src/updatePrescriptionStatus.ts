@@ -7,7 +7,6 @@ import {marshall} from "@aws-sdk/util-dynamodb"
 import middy from "@middy/core"
 import inputOutputLogger from "@middy/input-output-logger"
 import errorHandler from "@nhs/fhir-middy-error-handler"
-import {v4 as uuidv4} from "uuid"
 
 const logger = new Logger({serviceName: "updatePrescriptionStatus"})
 const client = new DynamoDBClient({region: "eu-west-2"})
@@ -65,10 +64,6 @@ const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPro
 
   const responseBundle: any = {
     resourceType: "Bundle",
-    id: uuidv4(),
-    meta: {
-      lastUpdated: new Date().toISOString()
-    },
     type: "transaction-response",
     entry: []
   }
@@ -172,18 +167,12 @@ const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPro
     const taskResponse = {
       response: {
         status: "201 Created",
-        location: `Task/${dynamoDBItem.TaskID}/_history/1`,
-        etag: "W/\"1\"",
-        lastModified: new Date().toISOString(),
         outcome: {
           resourceType: "OperationOutcome",
-          meta: {
-            lastUpdated: new Date().toISOString()
-          },
           issue: [
             {
               severity: "information",
-              code: "informational",
+              code: "success",
               diagnostics: "No issues detected during validation"
             }
           ]

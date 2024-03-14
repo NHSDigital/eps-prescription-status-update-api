@@ -48,7 +48,7 @@ describe("Unit test for app handler", () => {
     const event: APIGatewayProxyEvent = generateMockEvent(exampleNoItems)
     const response: APIGatewayProxyResult = await handler(event, {} as any)
     expect(response.statusCode).toBe(200)
-    expect(JSON.parse(response.body)).toMatchObject({
+    expect(JSON.parse(response.body)).toEqual({
       resourceType: "Bundle",
       type: "transaction-response",
       entry:[]
