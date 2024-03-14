@@ -1,9 +1,9 @@
 type: object
-required: [id, resourceType, basedOn, status, businessStatus, focus, for, lastModified, owner]
+required: [id, resourceType, basedOn, status, businessStatus, intent, focus, for, lastModified, owner]
 properties:
   resourceType:
     type: string
-    example: Task
+    enum: [Task]
   id:
     type: string
     description: The unique identifier for the Task resource.
