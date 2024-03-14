@@ -61,37 +61,7 @@ const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPro
     }
   }
 
-  const entries = requestBody.entry
-
-  if (!entries || entries.length === 0) {
-    logger.error("Missing required fields")
-    const errorResponseBody = {
-      resourceType: "OperationOutcome",
-      issue: [
-        {
-          code: "value",
-          severity: "error",
-          details: {
-            coding: [
-              {
-                system: "https://fhir.nhs.uk/CodeSystem/Spine-ErrorOrWarningCode",
-                code: "MISSING_VALUE",
-                display: "Missing required fields"
-              }
-            ]
-          }
-        }
-      ]
-    }
-    return {
-      statusCode: 400,
-      body: JSON.stringify(errorResponseBody),
-      headers: {
-        "Content-Type": "application/fhir+json",
-        "Cache-Control": "no-cache"
-      }
-    }
-  }
+  const entries = requestBody.entry || []
 
   const responseBundle: any = {
     resourceType: "Bundle",
@@ -222,6 +192,14 @@ const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPro
     }
     logger.info("Task response", {taskResponse: taskResponse})
     responseBundle.entry.push(taskResponse)
+  }
+
+  if (entries.length === 0) {
+    logger.info("No entries to process")
+    return {
+      statusCode: 200,
+      body: JSON.stringify(responseBundle)
+    }
   }
 
   logger.info("Request audit log", {requestBody: requestBody})

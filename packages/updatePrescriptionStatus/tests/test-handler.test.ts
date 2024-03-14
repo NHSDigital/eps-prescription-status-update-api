@@ -1,11 +1,12 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import {handler} from "../src/updatePrescriptionStatus"
 import {DynamoDBClient} from "@aws-sdk/client-dynamodb"
+import {APIGatewayProxyEvent, APIGatewayProxyResult} from "aws-lambda"
 import {mockClient} from "aws-sdk-client-mock"
 import exampleInCollectionLocker from "../../specification/examples/request-in-collection-locker.json"
 import exampleMultipleItems from "../../specification/examples/request-multiple-items.json"
 import exampleMissingFields from "../../specification/examples/request-missing-fields.json"
-import {APIGatewayProxyEvent, APIGatewayProxyResult} from "aws-lambda"
+import exampleNoItems from "../../specification/examples/request-no-items.json"
 
 mockClient(DynamoDBClient)
 
@@ -43,28 +44,14 @@ describe("Unit test for app handler", () => {
     expect(responseBody).toHaveProperty("resourceType", "Bundle")
   })
 
-  it("should return 400 status code and error message if request body is invalid JSON", async () => {
-    const requestBody = "invalid JSON"
-    const event: APIGatewayProxyEvent = generateMockEvent(requestBody)
+  it("should return 200 status code if there are no entries to process", async () => {
+    const event: APIGatewayProxyEvent = generateMockEvent(exampleNoItems)
     const response: APIGatewayProxyResult = await handler(event, {} as any)
-    expect(response.statusCode).toBe(400)
-    expect(JSON.parse(response.body!)).toEqual({
-      resourceType: "OperationOutcome",
-      issue: [
-        {
-          code: "value",
-          severity: "error",
-          details: {
-            coding: [
-              {
-                system: "https://fhir.nhs.uk/CodeSystem/Spine-ErrorOrWarningCode",
-                code: "MISSING_VALUE",
-                display: "Missing required fields"
-              }
-            ]
-          }
-        }
-      ]
+    expect(response.statusCode).toBe(200)
+    expect(JSON.parse(response.body)).toMatchObject({
+      resourceType: "Bundle",
+      type: "transaction-response",
+      entry:[]
     })
   })
 
