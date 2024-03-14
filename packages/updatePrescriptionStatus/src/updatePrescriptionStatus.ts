@@ -19,9 +19,7 @@ interface DynamoDBItem {
   PharmacyODSCode: string;
   TaskID: string;
   LineItemID: string;
-  TerminalStatusIndicator: string;
-  LastModified: string;
-  Timestamp: string;
+  TerminalStatus: string;
   RequestMessage: any;
 }
 
@@ -79,9 +77,7 @@ const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPro
       PharmacyODSCode: entry_resource.owner?.identifier?.value,
       TaskID: entry_resource.id,
       LineItemID: entry_resource.focus?.identifier?.value,
-      TerminalStatusIndicator: entry_resource.status,
-      LastModified: entry_resource.lastModified,
-      Timestamp: new Date().toISOString(),
+      TerminalStatus: entry_resource.status,
       RequestMessage: entry_resource
     }
 
