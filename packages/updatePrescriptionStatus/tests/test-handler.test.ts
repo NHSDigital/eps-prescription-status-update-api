@@ -80,18 +80,7 @@ describe("Unit test for app handler", () => {
   })
 
   it("should return 500 status code and internal server error message if an error occurs", async () => {
-    const event = {
-      multiValueHeaders: {},
-      httpMethod: "POST",
-      isBase64Encoded: false,
-      path: "/",
-      queryStringParameters: null,
-      multiValueQueryStringParameters: null,
-      stageVariables: null,
-      requestContext: {} as any,
-      resource: "",
-      pathParameters: null
-    }
+    const event = {}
     const response: APIGatewayProxyResult = await handler(event, undefined)
     expect(response.statusCode).toBe(500)
     expect(JSON.parse(response.body)).toEqual({
