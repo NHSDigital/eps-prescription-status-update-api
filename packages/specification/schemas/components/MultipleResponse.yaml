@@ -15,7 +15,8 @@ properties:
         example: 2024-01-30T12:01:24Z
   type:
     type: string
-    example: transaction-response
+    values: transaction-response
+    description: List of responses to status updates performed in the request transaction.
   entry:
     type: array
     items:
