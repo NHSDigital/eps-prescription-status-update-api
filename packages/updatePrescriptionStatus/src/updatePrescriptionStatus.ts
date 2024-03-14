@@ -90,7 +90,7 @@ const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPro
     }
 
     if (invalidFields.length > 0) {
-      const errorMessage = `Missing required fields: ${invalidFields.join(", ")}`
+      const errorMessage = `400: Missing required fields: ${invalidFields.join(", ")}`
       logger.error("Error message", {errorMessage: errorMessage})
       const errorResponseBody = {
         resourceType: "OperationOutcome",
@@ -101,8 +101,8 @@ const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPro
             details: {
               coding: [
                 {
-                  system: "https://fhir.nhs.uk/CodeSystem/Spine-ErrorOrWarningCode",
-                  code: "MISSING_VALUE",
+                  system: "https://fhir.nhs.uk/CodeSystem/http-error-codes",
+                  code: "BAD_REQUEST",
                   display: errorMessage
                 }
               ]

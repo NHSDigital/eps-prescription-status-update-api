@@ -68,9 +68,9 @@ describe("Unit test for app handler", () => {
           details: {
             coding: [
               {
-                system: "https://fhir.nhs.uk/CodeSystem/Spine-ErrorOrWarningCode",
-                code: "MISSING_VALUE",
-                display: "Missing required fields: PrescriptionID, PatientNHSNumber"
+                system: "https://fhir.nhs.uk/CodeSystem/http-error-codes",
+                code: "BAD_REQUEST",
+                display: "400: Missing required fields: PrescriptionID, PatientNHSNumber"
               }
             ]
           }
