@@ -94,12 +94,3 @@ properties:
           value:
             type: string
             example: C9Z1O
-  note:
-    type: array
-    description: Enables dispensing systems to provide supplementary information relating to the prescription item status update.
-    items:
-      type: object
-      properties:
-        text:
-          type: string
-          example: "Locker code: 556701"
