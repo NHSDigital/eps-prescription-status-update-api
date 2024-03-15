@@ -48,6 +48,7 @@ properties:
               example: Ready to Collect
   intent:
     type: string
+    description: Order is the allowed value to indicate the update informs an actionable task.
     example: order
   focus:
     type: object
