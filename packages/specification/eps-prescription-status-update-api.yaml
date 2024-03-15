@@ -92,7 +92,7 @@ paths:
       summary: Update prescription status
       description: |
         ## Overview
-        Use this endpoint to update a prescription status, expressed as a FHIR Bundle.
+        Status updates to be provided on prescription items to allow users of the NHS App and Third-party App consumers to track the progress of their prescriptions and when ready to collect.
       parameters:
         - $ref: "#/components/parameters/BearerAuthorisation"
         - $ref: "#/components/parameters/RequestID"
