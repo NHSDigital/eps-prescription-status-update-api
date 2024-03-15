@@ -140,7 +140,7 @@ paths:
           content:
             application/fhir+json:
               schema:
-                $ref: "#/components/schemas/bundle-response"
+                $ref: "#/components/schemas/MultipleResponse"
               examples:
                 single-item:
                   description: A successful response to a UpdatePrescriptionStatus request, contains a single item.
@@ -258,9 +258,9 @@ components:
                     default: Task
     UpdatePrescriptionStatusTask:
       $ref: schemas/resources/UpdatePrescriptionStatusTask.yaml
-    bundle-response:
+    MultipleResponse:
       $ref: "schemas/components/MultipleResponse.yaml"
-    task-response:
+    SingleResponse:
       $ref: "schemas/components/SingleResponse.yaml"
     operation-outcome:
       $ref: schemas/resources/OperationOutcome.yaml

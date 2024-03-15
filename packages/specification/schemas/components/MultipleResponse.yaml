@@ -1,4 +1,5 @@
 type: object
+required: [resourceType, type, entry]
 properties:
   resourceType:
     type: string
@@ -11,15 +12,18 @@ properties:
     type: array
     items:
       type: object
+      required: [response]
       properties:
         response:
           type: object
+          required: [status, outcome]
           properties:
             status:
               type: string
               example: 201 Created
             outcome:
               type: object
+              required: [resourceType, issue]
               properties:
                 resourceType:
                   type: string
@@ -28,6 +32,7 @@ properties:
                   type: array
                   items:
                     type: object
+                    required: [severity, code, diagnostics]
                     properties:
                       severity:
                         type: string
