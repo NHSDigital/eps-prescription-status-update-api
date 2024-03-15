@@ -78,7 +78,7 @@ properties:
             example: "9449304130"
   lastModified:
     type: string
-    description: Date and time when the prescription item status was updated.
+    description: Only the latest last modified date will be displayed to users of the NHS App. This mechanism will be implemented to resolve updates received out of sequence.
     format: date-time
     example: 2024-01-30T12:01:24Z
   owner:
