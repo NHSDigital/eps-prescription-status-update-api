@@ -5,6 +5,7 @@
 This is the AWS layer that provides an API for EPS Prescription Status Update.
 
 - `packages/specification/` This [Open API Specification](https://swagger.io/docs/specification/about/) describes the endpoints, methods and messages.
+- `packages/statusLambda/` Returns the status of the updatePrescriptionStatus endpoint
 - `scripts/` Utilities helpful to developers of this specification.
 - `.devcontainer` Contains a dockerfile and vscode devcontainer definition.
 - `.github` Contains github workflows that are used for building and deploying from pull requests and releases.

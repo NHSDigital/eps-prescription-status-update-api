@@ -7,6 +7,10 @@
 		{
 			"name": "packages/specification",
 			"path": "../packages/specification"
+		},
+		{
+			"name": "packages/statusLambda",
+			"path": "../packages/statusLambda"
 		}
 	],
 	"settings": {

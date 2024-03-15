@@ -17,10 +17,19 @@ build-specification:
 	$(MAKE) --directory=packages/specification build
 
 #Run the npm linting script (specified in package.json). Used to check the syntax and formatting of files.
-lint:
+lint: lint-node
 	npm run lint
 	find . -name '*.py' -not -path '**/.venv/*' | xargs poetry run flake8
 	shellcheck scripts/*.sh
+
+lint-node: compile-node
+	npm run lint --workspace packages/statusLambda
+
+compile-node:
+	npx tsc --build tsconfig.build.json
+
+test:
+	npm run test --workspace packages/statusLambda
 
 #Removes build/ + dist/ directories
 clean:

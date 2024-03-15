@@ -16,7 +16,8 @@
   "author": "NHS Digital",
   "license": "MIT",
   "workspaces": [
-    "packages/specification"
+    "packages/specification",
+    "packages/statusLambda"
   ],
   "devDependencies": {
     "@types/jest": "^29.5.12",
