@@ -45,7 +45,7 @@ properties:
               example: "9001"
             display:
               type: string
-              example: Ready to Collect
+              enum: [With Pharmacy, Ready to Collect, Collected, Dispatched]
   intent:
     type: string
     description: Order is the allowed value to indicate the update informs an actionable task.
