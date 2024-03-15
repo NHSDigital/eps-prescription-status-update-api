@@ -167,7 +167,7 @@ paths:
           content:
             application/fhir+json:
               schema:
-                $ref: "#/components/schemas/operation-outcome"
+                $ref: "#/components/schemas/OperationOutcome"
               examples:
                 example:
                   description: |
@@ -262,5 +262,5 @@ components:
       $ref: "schemas/components/MultipleResponse.yaml"
     SingleResponse:
       $ref: "schemas/components/SingleResponse.yaml"
-    operation-outcome:
+    OperationOutcome:
       $ref: schemas/resources/OperationOutcome.yaml

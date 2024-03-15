@@ -1,4 +1,5 @@
 type: object
+required: [resourceType, id, meta, issue]
 description: |
   Outcome of an operation that does not result in a resource or bundle being returned.
   For example - error, async/batch submission.
