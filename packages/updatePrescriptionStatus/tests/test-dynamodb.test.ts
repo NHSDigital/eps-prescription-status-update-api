@@ -103,4 +103,48 @@ describe("updatePrescriptionStatus Lambda Handler", () => {
     expect(result.statusCode).toEqual(201)
     expect(JSON.parse(result.body)).toEqual(responseMultipleItems)
   })
+
+  it("should handle errors with a 500 status code and internal server error message", async () => {
+    const event: APIGatewayProxyEvent = {
+      ...mockAPIGatewayProxyEvent,
+      body: JSON.stringify({
+        entry: [
+          {
+            resource: {
+              basedOn: [{identifier: {value: "PrescriptionID"}}],
+              for: {identifier: {value: "PatientNHSNumber"}},
+              owner: {identifier: {value: "PharmacyODSCode"}},
+              id: "TaskID",
+              focus: {identifier: {value: "LineItemID"}},
+              status: "TerminalStatus"
+            }
+          }
+        ]
+      })
+    }
+
+    jest.spyOn(DynamoDBClient.prototype, "send").mockRejectedValue(new Error("Mocked error") as never)
+
+    const result: APIGatewayProxyResult = await handler(event, {} as any)
+
+    expect(result.statusCode).toEqual(500)
+    expect(JSON.parse(result.body)).toEqual({
+      resourceType: "OperationOutcome",
+      issue: [
+        {
+          code: "exception",
+          severity: "fatal",
+          details: {
+            coding: [
+              {
+                system: "https://fhir.nhs.uk/CodeSystem/http-error-codes",
+                code: "SERVER_ERROR",
+                display: "500: The Server has encountered an error processing the request."
+              }
+            ]
+          }
+        }
+      ]
+    })
+  })
 })
