@@ -57,6 +57,32 @@ describe("Unit test for app handler", () => {
       expect(responseBody).toHaveProperty("type", "transaction-response")
     })
 
+  it("should return a 400 status code and error message when provided with invalid JSON", async () => {
+    const event: APIGatewayProxyEvent = generateMockEvent(exampleInCollectionLocker)
+    event.headers = {"x-request-id": "test-request-id"}
+    event.body = '{ "resourceType": "Bundle",  "type": "transaction", "entry":}'
+    const response: APIGatewayProxyResult = await handler(event, {} as any)
+    expect(response.statusCode).toBe(400)
+    expect(JSON.parse(response.body!)).toEqual({
+      resourceType: "OperationOutcome",
+      issue: [
+        {
+          code: "value",
+          severity: "error",
+          details: {
+            coding: [
+              {
+                system: "https://fhir.nhs.uk/CodeSystem/http-error-codes",
+                code: "BAD_REQUEST",
+                display: "400: The Server was unable to process the request."
+              }
+            ]
+          }
+        }
+      ]
+    })
+  })
+
   it("should return a 400 status code and error message indicating missing required fields", async () => {
     const event: APIGatewayProxyEvent = generateMockEvent(exampleMissingFields)
     const response: APIGatewayProxyResult = await handler(event, {} as any)
