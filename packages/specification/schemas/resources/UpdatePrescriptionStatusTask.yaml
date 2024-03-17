@@ -21,7 +21,7 @@ properties:
           properties:
             system:
               type: string
-              example: https://fhir.nhs.uk/Id/prescription-order-number
+              enum: [https://fhir.nhs.uk/Id/prescription-order-number]
             value:
               type: string
               example: 24F5DA-A83008-7EFE6Z
@@ -42,7 +42,7 @@ properties:
           properties:
             system:
               type: string
-              example: https://fhir.nhs.uk/CodeSystem/task-businessStatus-nppt
+              enum: [https://fhir.nhs.uk/CodeSystem/task-businessStatus-nppt]
             code:
               type: string
               format: date
@@ -53,7 +53,7 @@ properties:
   intent:
     type: string
     description: Order is the allowed value to indicate the update informs an actionable task.
-    example: order
+    enum: [order]
   focus:
     type: object
     description: Identifier for the prescription line item represented by the task resource.
@@ -65,7 +65,7 @@ properties:
         properties:
           system:
             type: string
-            example: https://fhir.nhs.uk/Id/prescription-order-item-number
+            enum: [https://fhir.nhs.uk/Id/prescription-order-item-number]
           value:
             type: string
             example: 6989b7bd-8db6-428c-a593-4022e3044c00
@@ -80,7 +80,7 @@ properties:
         properties:
           system:
             type: string
-            example: https://fhir.nhs.uk/Id/nhs-number
+            enum: [https://fhir.nhs.uk/Id/nhs-number]
           value:
             type: string
             example: "9449304130"
@@ -100,7 +100,7 @@ properties:
         properties:
           system:
             type: string
-            example: https://fhir.nhs.uk/Id/ods-organization-code
+            enum: [https://fhir.nhs.uk/Id/ods-organization-code]
           value:
             type: string
             example: C9Z1O
