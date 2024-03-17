@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import {DynamoDBClient} from "@aws-sdk/client-dynamodb"
 import {APIGatewayProxyEvent, APIGatewayProxyResult} from "aws-lambda"
+import {DynamoDBClient} from "@aws-sdk/client-dynamodb"
 import {
   expect,
   describe,
