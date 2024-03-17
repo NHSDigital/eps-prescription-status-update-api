@@ -58,14 +58,13 @@ const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPro
     }
   }
 
-  const entries = requestBody.entry || []
-
   const responseBundle: any = {
     resourceType: "Bundle",
     type: "transaction-response",
     entry: []
   }
 
+  const entries = requestBody.entry || []
   for (const entry of entries) {
     logger.info("Processing entry", {entry: entry})
     const entry_resource = entry.resource
