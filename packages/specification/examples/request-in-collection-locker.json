@@ -44,12 +44,7 @@
             "system": "https://fhir.nhs.uk/Id/ods-organization-code",
             "value": "C9Z1O"
           }
-        },
-        "note": [
-          {
-            "text": "Collect from Locker 6. Access code: 330984."
-          }
-        ]
+        }
       },
       "request": {
         "method": "POST",
