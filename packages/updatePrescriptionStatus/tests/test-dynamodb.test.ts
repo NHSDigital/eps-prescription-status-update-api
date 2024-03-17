@@ -9,7 +9,7 @@ import {
 } from "@jest/globals"
 import {handler} from "../src/updatePrescriptionStatus"
 import {helloworldContext} from "./helloworldContext"
-import {mockAPIGatewayProxyEvent} from "./mockAPIGatewayProxyEvent"
+import mockAPIGatewayProxyEvent from "./mockAPIGatewayProxyEvent.json"
 import responseSingleItem from "../../specification/examples/response-single-item.json"
 import responseMultipleItems from "../../specification/examples/response-multiple-items.json"
 
