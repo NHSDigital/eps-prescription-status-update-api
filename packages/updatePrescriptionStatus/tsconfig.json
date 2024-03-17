@@ -5,6 +5,6 @@
     "outDir": "lib"
   },
   "references": [],
-  "include": ["src/**/*", "tests/**/*", "tests/*.json"],
+  "include": ["src/**/*", "tests/**/*"],
   "exclude": ["node_modules"]
 }
