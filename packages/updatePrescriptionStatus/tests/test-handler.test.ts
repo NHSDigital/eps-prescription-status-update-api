@@ -9,8 +9,6 @@ import exampleMultipleItems from "../../specification/examples/request-multiple-
 import exampleMissingFields from "../../specification/examples/request-missing-fields.json"
 import exampleNoItems from "../../specification/examples/request-no-items.json"
 
-mockClient(DynamoDBClient)
-
 const generateMockEvent = (body: any): APIGatewayProxyEvent => ({
   body: JSON.stringify(body),
   headers: {"x-request-id": "test-request-id"},
@@ -24,6 +22,10 @@ const generateMockEvent = (body: any): APIGatewayProxyEvent => ({
   requestContext: {} as any,
   resource: "",
   pathParameters: null
+})
+
+beforeEach(() => {
+  mockClient(DynamoDBClient)
 })
 
 describe("Unit test for app handler", () => {
