@@ -80,4 +80,28 @@ describe("Unit test for app handler", () => {
       ]
     })
   })
+
+  it("should return 500 status code and internal server error message if an error occurs", async () => {
+    const event = {}
+    const response: APIGatewayProxyResult = await handler(event, undefined)
+    expect(response.statusCode).toBe(500)
+    expect(JSON.parse(response.body)).toEqual({
+      resourceType: "OperationOutcome",
+      issue: [
+        {
+          code: "exception",
+          severity: "fatal",
+          details: {
+            coding: [
+              {
+                system: "https://fhir.nhs.uk/CodeSystem/http-error-codes",
+                code: "SERVER_ERROR",
+                display: "500: The Server has encountered an error processing the request."
+              }
+            ]
+          }
+        }
+      ]
+    })
+  })
 })
