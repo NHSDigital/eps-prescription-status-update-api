@@ -16,6 +16,7 @@
 	"settings": {
 		"jest.disabledWorkspaceFolders": [
 			"eps-prescription-status-update-monorepo",
+			"packages/specification",
 		],
 		"files.exclude": {
 			"packages/": true,
