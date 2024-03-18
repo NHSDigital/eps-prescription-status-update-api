@@ -87,7 +87,7 @@ Stack creation succeeded. Sync infra completed.
 ```
 
 Note - the command will keep running and should not be stopped.
-You can now call this api - note getMyPrescriptions requires an nhsd-nhslogin-user header
+You can now call this api.
 
 ```
 curl -X POST https://${stack_name}.dev.eps.national.nhs.uk/
