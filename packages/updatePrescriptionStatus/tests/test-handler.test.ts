@@ -10,7 +10,7 @@ import {
 import {handler} from "../src/updatePrescriptionStatus"
 import {helloworldContext} from "./helloworldContext"
 import {mockAPIGatewayProxyEvent} from "./mockAPIGatewayProxyEvent"
-import exampleInCollectionLocker from "../../specification/examples/request-in-collection-locker.json"
+import exampleDispatched from "../../specification/examples/request-dispatched.json"
 import exampleMultipleItems from "../../specification/examples/request-multiple-items.json"
 import exampleMissingFields from "../../specification/examples/request-missing-fields.json"
 import exampleNoItems from "../../specification/examples/request-no-items.json"
@@ -125,7 +125,7 @@ describe("Unit test for app handler", () => {
 
   it.each([
     {
-      example: exampleInCollectionLocker,
+      example: exampleDispatched,
       httpResponseCode: 201,
       scenarioDescription: "201 with response bundle for a single item"
     },
@@ -152,7 +152,7 @@ describe("Unit test for app handler", () => {
     })
 
   it("should return a 400 status code and error message when provided with invalid JSON", async () => {
-    const event: APIGatewayProxyEvent = generateMockEvent(exampleInCollectionLocker)
+    const event: APIGatewayProxyEvent = generateMockEvent(exampleDispatched)
     event.headers = {"x-request-id": "test-request-id"}
     event.body = '{ "resourceType": "Bundle",  "type": "transaction", "entry":}'
     const response: APIGatewayProxyResult = await handler(event, {} as any)
