@@ -13,7 +13,6 @@ updates:
     commit-message:
       prefix: "Upgrade: [dependabot] - "
 
-
   ###################################
   # NPM workspace  ##################
   ###################################
@@ -24,7 +23,7 @@ updates:
     versioning-strategy: increase
     commit-message:
       prefix: "Upgrade: [dependabot] - "
-
+    open-pull-requests-limit: 20
 
   ###################################
   # Poetry  #########################
