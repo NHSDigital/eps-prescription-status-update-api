@@ -40,6 +40,11 @@ The description of your pull request will be used as the commit message for the 
 If you need to rename your pull request, you can restart the checks by either:
 
 - Closing and reopening the pull request
+- pushing an empty commit 
+  ```bash
+  git commit --allow-empty -m 'trigger build'
+  git push
+  ```
 - Amend your last commit and force push to the branch
   ```bash
   git commit --amend --no-edit
