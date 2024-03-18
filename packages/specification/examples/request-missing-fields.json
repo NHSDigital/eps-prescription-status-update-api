@@ -7,20 +7,13 @@
       "resource": {
         "resourceType": "Task",
         "id": "4d70678c-81e4-4ff4-8c67-17596fd0aa46",
-        "basedOn": [
-          {
-            "identifier": {
-              "system": "https://fhir.nhs.uk/Id/prescription-order-number",
-              "value": "16B2E0-A83008-81C13H"
-            }
-          }
-        ],
-        "status": "completed",
+        "status": "in-progress",
         "businessStatus": {
           "coding": [
             {
               "system": "https://fhir.nhs.uk/CodeSystem/task-businessStatus-nppt",
-              "code": "Collected"
+              "code": "3",
+              "display": "In Collection Locker"
             }
           ]
         },
@@ -29,12 +22,6 @@
           "identifier": {
             "system": "https://fhir.nhs.uk/Id/prescription-order-item-number",
             "value": "6989b7bd-8db6-428c-a593-4022e3044c00"
-          }
-        },
-        "for": {
-          "identifier": {
-            "system": "https://fhir.nhs.uk/Id/nhs-number",
-            "value": "9449304130"
           }
         },
         "lastModified": "2024-01-30T12:01:24Z",

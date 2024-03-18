@@ -11,7 +11,7 @@
           {
             "identifier": {
               "system": "https://fhir.nhs.uk/Id/prescription-order-number",
-              "value": "24F5DA-A83008-7EFE6Z"
+              "value": "3F8A06-A83008-3E85AX"
             }
           }
         ],
@@ -20,8 +20,7 @@
           "coding": [
             {
               "system": "https://fhir.nhs.uk/CodeSystem/task-businessStatus-nppt",
-              "code": "3",
-              "display": "In Collection Locker"
+              "code": "Ready to collect"
             }
           ]
         },
@@ -44,12 +43,7 @@
             "system": "https://fhir.nhs.uk/Id/ods-organization-code",
             "value": "C9Z1O"
           }
-        },
-        "note": [
-          {
-            "text": "Collect from Locker 6. Access code: 330984."
-          }
-        ]
+        }
       },
       "request": {
         "method": "POST",
@@ -65,7 +59,7 @@
           {
             "identifier": {
               "system": "https://fhir.nhs.uk/Id/prescription-order-number",
-              "value": "24F5DA-A83008-7EFE6Z"
+              "value": "480720-A83008-57FF06"
             }
           }
         ],
@@ -74,8 +68,7 @@
           "coding": [
             {
               "system": "https://fhir.nhs.uk/CodeSystem/task-businessStatus-nppt",
-              "code": "3",
-              "display": "In Collection Locker"
+              "code": "Ready to collect"
             }
           ]
         },
@@ -98,12 +91,7 @@
             "system": "https://fhir.nhs.uk/Id/ods-organization-code",
             "value": "C9Z1O"
           }
-        },
-        "note": [
-          {
-            "text": "Collect from Locker 6. Access code: 330984."
-          }
-        ]
+        }
       },
       "request": {
         "method": "POST",

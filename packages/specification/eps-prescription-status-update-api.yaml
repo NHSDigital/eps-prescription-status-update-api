@@ -92,7 +92,7 @@ paths:
       summary: Update prescription status
       description: |
         ## Overview
-        Use this endpoint to update a prescription status, expressed as a FHIR Bundle.
+        Status updates to be provided on prescription items to allow users of the NHS App and Third-party App consumers to track the progress of their prescriptions and when ready to collect.
       parameters:
         - $ref: "#/components/parameters/BearerAuthorisation"
         - $ref: "#/components/parameters/RequestID"
@@ -104,31 +104,21 @@ paths:
             schema:
               $ref: "#/components/schemas/UpdatePrescriptionStatusBundle"
             examples:
+              dispatched:
+                summary: dispatched
+                description: A request message contains tracking status `Dispatched``.
+                value:
+                  $ref: examples/request-dispatched.json
               ready-to-collect:
                 summary: ready-to-collect
                 description: A request message contains tracking status `Ready to collect`.
                 value:
                   $ref: examples/request-ready-to-collect.json
-              ready-to-deliver:
-                summary: ready-to-deliver
-                description: A request message contains tracking status `Ready to deliver`.
-                value:
-                  $ref: examples/request-ready-to-deliver.json
-              in-collection-locker:
-                summary: in-collection-locker
-                description: A request message contains tracking status `In Collection Locker` and a note that describes the collection process.
-                value:
-                  $ref: examples/request-in-collection-locker.json
               collected:
                 summary: collected
                 description: A request message contains tracking status `Collected`.
                 value:
                   $ref: examples/request-collected.json
-              dispatched:
-                summary: dispatched
-                description: A request message contains tracking status dispatched.
-                value:
-                  $ref: examples/request-dispatched.json
               multiple-items:
                 summary: multiple-items
                 description: A request message contains multiple items.
@@ -140,7 +130,7 @@ paths:
           content:
             application/fhir+json:
               schema:
-                $ref: "#/components/schemas/bundle-response"
+                $ref: "#/components/schemas/ResponseBundle"
               examples:
                 single-item:
                   description: A successful response to a UpdatePrescriptionStatus request, contains a single item.
@@ -157,9 +147,8 @@ paths:
 
             | HTTP status | Error code          | Description                                                                                                                               |
             | ----------- | ------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
-            | 400         | `exception`         | Missing or invalid NHS number in request                                                                                                  |
+            | 400         | `value`             | Missing values or invalid JSON in request                                                                                                 |
             | 401         | `processing`        | Missing or invalid OAuth 2.0 bearer token in request                                                                                      |
-            | 404         | `not-found`         | No records found for the NHS number in the request                                                                                        |
             | 408         | `timeout`           | Request timed out                                                                                                                         |
             | 429         | `throttled`         | You have exceeded your application's [rate limit](https://digital.nhs.uk/developer/guides-and-documentation/reference-guide#rate-limits). |
 
@@ -167,14 +156,9 @@ paths:
           content:
             application/fhir+json:
               schema:
-                $ref: "#/components/schemas/operation-outcome"
-              examples:
-                example:
-                  description: |
-                    An error response to a request.
-                    ODS code already in use.
-                  value:
-                    $ref: examples/error.json
+                $ref: "#/components/schemas/OperationOutcome"
+              example:
+                  $ref: examples/error-ods-code.json
 
 components:
   parameters:
@@ -213,30 +197,24 @@ components:
   schemas:
     UpdatePrescriptionStatusBundle:
       type: object
-      required:
-        - entry
-        - resourceType
-        - type
+      required: [entry, resourceType, type]
       description: A FHIR transaction Bundle.
       properties:
         resourceType:
           type: string
           description: FHIR resource type.
-          default: Bundle
+          enum: [Bundle]
         type:
           type: string
-          description: Denotes that the bundle is a list of resources returned as a result of a search.
-          default: transaction
+          description: Denotes that the bundle is a list of status updates to be performed as one transaction.
+          enum: [transaction]
         entry:
           type: array
           description: |
             A collection of resources contained within the Bundle.
           items:
             type: object
-            required:
-              - fullUrl
-              - resource
-              - request
+            required: [fullUrl, resource, request]
             description: A FHIR collection Bundle.
             properties:
               fullUrl:
@@ -246,21 +224,17 @@ components:
                 $ref: "#/components/schemas/UpdatePrescriptionStatusTask"
               request:
                 type: object
-                required:
-                - method
-                - url
+                required: [method, url]
                 properties:
                   method:
                     type: string
-                    default: POST
+                    enum: [POST]
                   url:
                     type: string
-                    default: Task
+                    enum: [Task]
     UpdatePrescriptionStatusTask:
       $ref: schemas/resources/UpdatePrescriptionStatusTask.yaml
-    bundle-response:
-      $ref: "schemas/components/MultipleResponse.yaml"
-    task-response:
-      $ref: "schemas/components/SingleResponse.yaml"
-    operation-outcome:
+    ResponseBundle:
+      $ref: "schemas/components/ResponseBundle.yaml"
+    OperationOutcome:
       $ref: schemas/resources/OperationOutcome.yaml

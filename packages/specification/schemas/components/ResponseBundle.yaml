@@ -1,0 +1,45 @@
+type: object
+required: [resourceType, type, entry]
+properties:
+  resourceType:
+    type: string
+    enum: [Bundle]
+  type:
+    type: string
+    enum: [transaction-response]
+    description: Denotes that the bundle is a list of responses to status updates performed in the request transaction.
+  entry:
+    type: array
+    items:
+      type: object
+      required: [response]
+      properties:
+        response:
+          type: object
+          required: [status, outcome]
+          properties:
+            status:
+              type: string
+              enum: [201 Created]
+            outcome:
+              type: object
+              required: [resourceType, issue]
+              properties:
+                resourceType:
+                  type: string
+                  enum: [OperationOutcome]
+                issue:
+                  type: array
+                  items:
+                    type: object
+                    required: [severity, code, diagnostics]
+                    properties:
+                      severity:
+                        type: string
+                        enum: [information]
+                      code:
+                        type: string
+                        enum: [success]
+                      diagnostics:
+                        type: string
+                        enum: [No issues detected during validation]

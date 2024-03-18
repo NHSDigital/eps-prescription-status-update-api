@@ -1,0 +1,10 @@
+{
+    "resourceType": "OperationOutcome",
+    "issue": [
+        {
+            "severity": "error",
+            "code": "value",
+            "diagnostic": "ODS code already in use"
+        }
+    ]
+}
