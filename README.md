@@ -2,6 +2,15 @@
 
 ![Build](https://github.com/NHSDigital/eps-prescription-status-update-api/workflows/release/badge.svg?branch=main)
 
+![Build](https://github.com/NHSDigital/eps-prescription-status-update-api/actions/workflows/ci.yml/badge.svg?branch=main)   
+![Release](https://github.com/NHSDigital/eps-prescription-status-update-api/actions/workflows/release.yml/badge.svg?branch=main)   
+
+## Versions and deployments
+Version release history can be found ot https://github.com/NHSDigital/eps-prescription-status-update-api/releases.   
+We use eslint convention for commit messages for commits to main branch. Descriptions for the types of changes in a release can be found in the [contributing guidelines](./CONTRIBUTING.md)   
+Deployment history can be found at https://nhsdigital.github.io/eps-prescription-status-update-api/
+
+## Introduction
 This is the AWS layer that provides an API for EPS Prescription Status Update.
 
 - `packages/updatePrescriptionStatus/` Handles updating prescription status for the root endpoint.
