@@ -3,10 +3,10 @@ required: [resourceType, type, entry]
 properties:
   resourceType:
     type: string
-    example: Bundle
+    enum: [Bundle]
   type:
     type: string
-    example: transaction-response
+    enum: [transaction-response]
     description: Denotes that the bundle is a list of responses to status updates performed in the request transaction.
   entry:
     type: array
@@ -20,14 +20,14 @@ properties:
           properties:
             status:
               type: string
-              example: 201 Created
+              enum: [201 Created]
             outcome:
               type: object
               required: [resourceType, issue]
               properties:
                 resourceType:
                   type: string
-                  example: OperationOutcome
+                  enum: [OperationOutcome]
                 issue:
                   type: array
                   items:
@@ -36,10 +36,10 @@ properties:
                     properties:
                       severity:
                         type: string
-                        example: information
+                        enum: [information]
                       code:
                         type: string
-                        example: success
+                        enum: [success]
                       diagnostics:
                         type: string
-                        example: No issues detected during validation
+                        enum: [No issues detected during validation]
