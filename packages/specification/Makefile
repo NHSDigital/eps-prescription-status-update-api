@@ -12,5 +12,6 @@ build:
 	mkdir -p dist
 	npm run lint
 	npm run resolve
-	cat dist/eps-prescription-status-update-api.resolved.json | poetry run python ../../scripts/set_version.py > dist/eps-prescription-status-update-api.json
+	# THIS NEEDS RESOLVING AS PART OF MOVE TO PROXYGEN SO CORRECT VERSION IS INSERTED
+	#cat dist/eps-prescription-status-update-api.resolved.json | poetry run python ../../scripts/set_version.py > dist/eps-prescription-status-update-api.json
 	ls -la dist

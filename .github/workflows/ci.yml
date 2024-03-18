@@ -1,7 +1,8 @@
-name: deploy to environments
+name: merge to main workflow
 
 on:
-  workflow_dispatch:
+  push:
+    branches: [main]
 
 env:
   BRANCH_NAME: ${{ github.event.ref.BRANCH_NAME }}
@@ -60,9 +61,10 @@ jobs:
         run: |
           make install-node
 
-      - name: Set VERSION_TAG to be next tag varsion
+      - name: Set VERSION_TAG env var to be short git SHA and get next tag varsion
         id: output_version_tag
         run: |
+          VERSION_TAG=$(git rev-parse --short HEAD)
           NEXT_VERSION=$(npx semantic-release --dry-run | grep -i 'The next release version is' | sed -E 's/.* ([[:digit:].]+)$/\1/')
           tagFormat=$(jq -r .tagFormat .releaserc)
           if [ "${tagFormat}" = "null" ]
@@ -71,41 +73,14 @@ jobs:
           fi
           # disabling shellcheck as replace does not work
           # shellcheck disable=SC2001
-          VERSION_TAG=$(echo "$tagFormat" | sed "s/\${version}/$NEXT_VERSION/")
+          NEW_VERSION_TAG=$(echo "$tagFormat" | sed "s/\${version}/$NEXT_VERSION/")
           echo "## VERSION TAG : ${VERSION_TAG}" >> "$GITHUB_STEP_SUMMARY"
+          echo "## NEXT TAG WILL BE : ${NEW_VERSION_TAG}" >> "$GITHUB_STEP_SUMMARY"
           echo "VERSION_TAG=${VERSION_TAG}" >> "$GITHUB_OUTPUT"
           echo "VERSION_TAG=${VERSION_TAG}" >> "$GITHUB_ENV"
         env:
           GITHUB_TOKEN: ${{ github.token }}
-  
-      - name: tag release
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          npx semantic-release
 
-      - name: Get release for editing
-        id: get_release
-        # version 1.2.4
-        uses: cardinalby/git-get-release-action@5172c3a026600b1d459b117738c605fabc9e4e44
-        env:
-          GITHUB_TOKEN: ${{ github.token }}
-        with:
-          tag: ${{ env.VERSION_TAG }}
-
-      - name: Edit Release
-        # version 1.2.0
-        uses: irongut/EditRelease@ccf529ad26dddf9996e7dd0f24ca5da4ea507cc2
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          id: ${{ steps.get_release.outputs.id }}
-          body: |
-            ## Info
-            [See code diff](${{ github.event.compare }})
-            [Release workflow run](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
-
-            It was initialized by [${{ github.event.sender.login }}](${{ github.event.sender.html_url }})
-  
   package_code:
     needs: tag_release
     uses: ./.github/workflows/sam_package_code.yml
@@ -134,24 +109,6 @@ jobs:
       PROD_CLOUD_FORMATION_CHECK_VERSION_ROLE: ${{ secrets.PROD_CLOUD_FORMATION_CHECK_VERSION_ROLE }}
       DEV_CLOUD_FORMATION_EXECUTE_LAMBDA_ROLE: ${{ secrets.DEV_CLOUD_FORMATION_EXECUTE_LAMBDA_ROLE }}
 
-  release_ref:
-    needs: [tag_release, release_dev, package_code, get_commit_id]
-    uses: ./.github/workflows/sam_release_code.yml
-    with:
-      ARTIFACT_BUCKET_PREFIX: ${{needs.tag_release.outputs.version_tag}}
-      STACK_NAME: psu
-      TARGET_ENVIRONMENT: ref
-      ENABLE_MUTUAL_TLS: true
-      DEPLOY_SANDBOX: false
-      BUILD_ARTIFACT: packaged_code
-      TRUSTSTORE_FILE: psu-truststore.pem
-      VERSION_NUMBER: ${{needs.tag_release.outputs.version_tag}}
-      COMMIT_ID: ${{needs.get_commit_id.outputs.commit_id}}
-      LOG_LEVEL: DEBUG
-      LOG_RETENTION_DAYS: 30
-    secrets:
-      CLOUD_FORMATION_DEPLOY_ROLE: ${{ secrets.REF_CLOUD_FORMATION_DEPLOY_ROLE }}
-
   release_qa:
     needs: [tag_release, release_dev, package_code, get_commit_id]
     uses: ./.github/workflows/sam_release_code.yml
@@ -169,51 +126,3 @@ jobs:
       LOG_RETENTION_DAYS: 30
     secrets:
       CLOUD_FORMATION_DEPLOY_ROLE: ${{ secrets.QA_CLOUD_FORMATION_DEPLOY_ROLE }}
-
-  release_int:
-    needs: [tag_release, release_qa, package_code, get_commit_id]
-    uses: ./.github/workflows/sam_release_code.yml
-    with:
-      ARTIFACT_BUCKET_PREFIX: ${{needs.tag_release.outputs.version_tag}}
-      STACK_NAME: psu
-      TARGET_ENVIRONMENT: int
-      ENABLE_MUTUAL_TLS: true
-      DEPLOY_SANDBOX: false
-      BUILD_ARTIFACT: packaged_code
-      TRUSTSTORE_FILE: psu-truststore.pem
-      VERSION_NUMBER: ${{needs.tag_release.outputs.version_tag}}
-      COMMIT_ID: ${{needs.get_commit_id.outputs.commit_id}}
-      LOG_LEVEL: DEBUG
-      LOG_RETENTION_DAYS: 30
-      CREATE_INT_RELEASE_NOTES: true
-      CREATE_INT_RC_RELEASE_NOTES: true
-    secrets:
-      CLOUD_FORMATION_DEPLOY_ROLE: ${{ secrets.INT_CLOUD_FORMATION_DEPLOY_ROLE }}
-      DEV_CLOUD_FORMATION_CHECK_VERSION_ROLE: ${{ secrets.DEV_CLOUD_FORMATION_CHECK_VERSION_ROLE }}
-      INT_CLOUD_FORMATION_CHECK_VERSION_ROLE: ${{ secrets.INT_CLOUD_FORMATION_CHECK_VERSION_ROLE }}
-      PROD_CLOUD_FORMATION_CHECK_VERSION_ROLE: ${{ secrets.PROD_CLOUD_FORMATION_CHECK_VERSION_ROLE }}
-      DEV_CLOUD_FORMATION_EXECUTE_LAMBDA_ROLE: ${{ secrets.DEV_CLOUD_FORMATION_EXECUTE_LAMBDA_ROLE }}
-
-  release_prod:
-    needs: [tag_release, release_int, package_code, get_commit_id]
-    uses: ./.github/workflows/sam_release_code.yml
-    with:
-      ARTIFACT_BUCKET_PREFIX: ${{needs.tag_release.outputs.version_tag}}
-      STACK_NAME: psu
-      TARGET_ENVIRONMENT: prod
-      ENABLE_MUTUAL_TLS: true
-      DEPLOY_SANDBOX: false
-      BUILD_ARTIFACT: packaged_code
-      TRUSTSTORE_FILE: psu-truststore.pem
-      VERSION_NUMBER: ${{needs.tag_release.outputs.version_tag}}
-      COMMIT_ID: ${{needs.get_commit_id.outputs.commit_id}}
-      LOG_LEVEL: INFO
-      LOG_RETENTION_DAYS: 731
-      MARK_JIRA_RELEASED: true
-      CREATE_PROD_RELEASE_NOTES: true
-    secrets:
-      CLOUD_FORMATION_DEPLOY_ROLE: ${{ secrets.PROD_CLOUD_FORMATION_DEPLOY_ROLE }}
-      DEV_CLOUD_FORMATION_CHECK_VERSION_ROLE: ${{ secrets.DEV_CLOUD_FORMATION_CHECK_VERSION_ROLE }}
-      INT_CLOUD_FORMATION_CHECK_VERSION_ROLE: ${{ secrets.INT_CLOUD_FORMATION_CHECK_VERSION_ROLE }}
-      PROD_CLOUD_FORMATION_CHECK_VERSION_ROLE: ${{ secrets.PROD_CLOUD_FORMATION_CHECK_VERSION_ROLE }}
-      DEV_CLOUD_FORMATION_EXECUTE_LAMBDA_ROLE: ${{ secrets.DEV_CLOUD_FORMATION_EXECUTE_LAMBDA_ROLE }}
