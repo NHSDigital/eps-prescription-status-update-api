@@ -118,9 +118,139 @@ describe("Unit test for app handler", () => {
 
     const result: APIGatewayProxyResult = await handler(event, dummyContext)
 
+    // Ensure that the DynamoDB send method was called twice, once for each item
     expect(DynamoDBClient.prototype.send).toHaveBeenCalledTimes(2)
+
+    // Ensure that the response status code is 201
     expect(result.statusCode).toEqual(201)
+
+    // Ensure that the response body matches the expected response for multiple items
     expect(JSON.parse(result.body)).toEqual(responseMultipleItems)
+
+    // Ensure that the DynamoDBClient was called with the correct data for both items
+    expect(DynamoDBClient.prototype.send).toHaveBeenCalledWith(
+      expect.objectContaining({
+        input: expect.objectContaining({
+          Item: expect.objectContaining({
+            LineItemID: {S: "LineItemID1"},
+            PatientNHSNumber: {S: "PatientNHSNumber1"},
+            PharmacyODSCode: {S: "PharmacyODSCode1"},
+            PrescriptionID: {S: "PrescriptionID1"},
+            RequestID: {S: "test-request-id"},
+            TaskID: {S: "TaskID1"},
+            TerminalStatus: {S: "TerminalStatus1"},
+            RequestMessage: {
+              M: {
+                basedOn: {
+                  L: [
+                    {
+                      M: {
+                        identifier: {
+                          M: {
+                            value: {S: "PrescriptionID1"}
+                          }
+                        }
+                      }
+                    }
+                  ]
+                },
+                focus: {
+                  M: {
+                    identifier: {
+                      M: {
+                        value: {S: "LineItemID1"}
+                      }
+                    }
+                  }
+                },
+                for: {
+                  M: {
+                    identifier: {
+                      M: {
+                        value: {S: "PatientNHSNumber1"}
+                      }
+                    }
+                  }
+                },
+                id: {S: "TaskID1"},
+                owner: {
+                  M: {
+                    identifier: {
+                      M: {
+                        value: {S: "PharmacyODSCode1"}
+                      }
+                    }
+                  }
+                },
+                status: {S: "TerminalStatus1"}
+              }
+            }
+          })
+        })
+      })
+    )
+
+    expect(DynamoDBClient.prototype.send).toHaveBeenCalledWith(
+      expect.objectContaining({
+        input: expect.objectContaining({
+          Item: expect.objectContaining({
+            LineItemID: {S: "LineItemID2"},
+            PatientNHSNumber: {S: "PatientNHSNumber2"},
+            PharmacyODSCode: {S: "PharmacyODSCode2"},
+            PrescriptionID: {S: "PrescriptionID2"},
+            RequestID: {S: "test-request-id"},
+            TaskID: {S: "TaskID2"},
+            TerminalStatus: {S: "TerminalStatus2"},
+            RequestMessage: {
+              M: {
+                basedOn: {
+                  L: [
+                    {
+                      M: {
+                        identifier: {
+                          M: {
+                            value: {S: "PrescriptionID2"}
+                          }
+                        }
+                      }
+                    }
+                  ]
+                },
+                focus: {
+                  M: {
+                    identifier: {
+                      M: {
+                        value: {S: "LineItemID2"}
+                      }
+                    }
+                  }
+                },
+                for: {
+                  M: {
+                    identifier: {
+                      M: {
+                        value: {S: "PatientNHSNumber2"}
+                      }
+                    }
+                  }
+                },
+                id: {S: "TaskID2"},
+                owner: {
+                  M: {
+                    identifier: {
+                      M: {
+                        value: {S: "PharmacyODSCode2"}
+                      }
+                    }
+                  }
+                },
+                status: {S: "TerminalStatus2"}
+              }
+            }
+          })
+        })
+      })
+    )
   })
 
   it.each([
