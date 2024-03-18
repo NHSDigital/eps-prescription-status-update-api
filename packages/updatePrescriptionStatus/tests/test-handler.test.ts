@@ -158,7 +158,7 @@ describe("Unit test for updatePrescriptionStatus handler", () => {
     // Ensure that the response body matches the expected response for multiple items
     expect(JSON.parse(result.body)).toEqual(responseMultipleItems)
 
-    // Ensure that the DynamoDBClient was called with the correct data for both items
+    // Ensure that the DynamoDBClient was called with the correct data
     expect(DynamoDBClient.prototype.send).toHaveBeenCalledWith(
       expect.objectContaining({
         input: expect.objectContaining({
