@@ -92,8 +92,52 @@ There are `make` commands that are run as part of the CI pipeline and help alias
 #### Publish targets
 - `publish` Outputs the specification as a **single file** into the `build/` directory. This is used when uploading to Apigee, which requires the spec as a single file.
 
+#### Compiling
+
+- `compile` Compiles all code
+- `compile-node` Runs tsc to compile typescript code
+
 #### Check licenses
 
 - `check-licenses` Checks licenses for all packages used - calls check-licenses-node, check-licenses-python
 - `check-licenses-node` Checks licenses for all node code
 - `check-licenses-python` Checks licenses for all python code
+
+#### CLI Login to AWS
+
+- `aws-configure` Configures a connection to AWS
+- `aws-login` Reconnects to AWS from a previously configured connection
+
+### Github folder
+
+This .github folder contains workflows and templates related to GitHub, along with actions and scripts pertaining to Jira.
+
+- `pull_request_template.yml` Template for pull requests.
+- `dependabot.yml` Dependabot definition file.
+
+Actions are in the `.github/actions` folder:
+
+- `mark_jira_released` Action to mark Jira issues as released.
+- `update_confluence_jira` Action to update Confluence with Jira issues.
+
+Scripts are in the `.github/scripts` folder:
+
+- `call_mark_jira_released.sh` Calls a Lambda function to mark Jira issues as released.
+- `create_env_release_notes.sh` Generates release notes for a specific environment using a Lambda function.
+- `create_int_rc_release_notes.sh` Creates release notes for integration environment using a Lambda function.
+- `delete_stacks.sh` Checks and deletes active CloudFormation stacks associated with closed pull requests.
+- `get_current_dev_tag.sh` Retrieves the current development tag and sets it as an environment variable.
+- `get_target_deployed_tag.sh` Retrieves the currently deployed tag and sets it as an environment variable.
+- `release_code.sh` Releases code by deploying it using AWS SAM after packaging it.
+
+Workflows are in the `.github/workflows` folder:
+
+- `combine-dependabot-prs.yml` Workflow for combining dependabot pull requests. Runs on demand.
+- `delete_old_cloudformation_stacks.yml` Workflow for deleting old cloud formation stacks. Runs daily.
+- `dependabot_auto_approve_and_merge.yml` Workflow to auto merge dependabot updates.
+- `pr-link.yaml` This workflow template links Pull Requests to Jira tickets and runs when a pull request is opened.
+- `pull_request.yml` Called when pull request is opened or updated. Calls sam_package_code and sam_release_code to build and deploy the code. Deploys to dev AWS account. The main stack deployed adopts the naming convention psu-pr-<PULL_REQUEST_ID>, while the sandbox stack follows the pattern psu-sandbox-pr-<PULL_REQUEST_ID>
+- `quality_checks.yml` Runs check-licenses, lint, test and SonarCloud scan against the repo. Called from pull_request.yml and release.yml
+- `release.yml` Run when code is merged to main branch or a tag starting v is pushed. Calls sam_package_code and sam_release_code to build and deploy the code.
+- `sam_package_code.yml` Packages code and uploads to a github artifact for later deployment.
+- `sam_release_code.yml` Release code built by sam_package_code.yml to an environment.
