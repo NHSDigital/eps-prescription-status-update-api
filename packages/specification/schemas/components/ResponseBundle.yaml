@@ -7,7 +7,7 @@ properties:
   type:
     type: string
     example: transaction-response
-    description: List of responses to status updates performed in the request transaction.
+    description: Denotes that the bundle is a list of responses to status updates performed in the request transaction.
   entry:
     type: array
     items:

@@ -10,7 +10,7 @@ properties:
     example: 4d70678c-81e4-4ff4-8c67-17596fd0aa46
   basedOn:
     type: array
-    description: Short-form Prescription ID for the parent prescription.
+    description: Short-form Prescription ID for the parent prescription. Should only contain one item.
     items:
       type: object
       required: [identifier]
@@ -38,15 +38,12 @@ properties:
         type: array
         items:
           type: object
-          required: [system, code, display]
+          required: [system, code]
           properties:
             system:
               type: string
               enum: [https://fhir.nhs.uk/CodeSystem/task-businessStatus-nppt]
             code:
-              type: string
-              example: "9001"
-            display:
               type: string
               enum: [With Pharmacy, Ready to Collect, Collected, Dispatched]
   intent:
