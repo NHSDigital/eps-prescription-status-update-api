@@ -32,6 +32,12 @@ const generateMockEvent = (body: any): APIGatewayProxyEvent => ({
   pathParameters: null
 })
 
+const setupTest = async (event: APIGatewayProxyEvent, context: any) => {
+  jest.spyOn(DynamoDBClient.prototype, "send").mockResolvedValue(undefined as never)
+  const result: APIGatewayProxyResult = await handler(event, context)
+  return {result}
+}
+
 describe("Unit test for app handler", () => {
   const dummyContext = helloworldContext
   const expectedItem = {
@@ -85,6 +91,37 @@ describe("Unit test for app handler", () => {
     expect(JSON.parse(result.body)).toEqual(responseSingleItem)
   })
 
+  const generateExpectedItem = (
+    LineItemID: string,
+    PatientNHSNumber: string,
+    PharmacyODSCode: string,
+    PrescriptionID: string,
+    TaskID: string,
+    TerminalStatus: string
+  ) => ({
+    LineItemID: {S: LineItemID},
+    PatientNHSNumber: {S: PatientNHSNumber},
+    PharmacyODSCode: {S: PharmacyODSCode},
+    PrescriptionID: {S: PrescriptionID},
+    RequestID: {S: "test-request-id"},
+    TaskID: {S: TaskID},
+    TerminalStatus: {S: TerminalStatus},
+    RequestMessage: {
+      M: {
+        basedOn: {
+          L: [{M: {identifier: {M: {value: {S: PrescriptionID}}}}}]
+        },
+        focus: {M: {identifier: {M: {value: {S: LineItemID}}}}},
+        for: {M: {identifier: {M: {value: {S: PatientNHSNumber}}}}},
+        id: {S: TaskID},
+        owner: {M: {identifier: {M: {value: {S: PharmacyODSCode}}}}},
+        status: {S: TerminalStatus}
+      }
+    }
+  })
+
+  // In the test case:
+
   it("should successfully update multiple items into DynamoDB", async () => {
     const event: APIGatewayProxyEvent = {
       ...mockAPIGatewayProxyEvent,
@@ -114,9 +151,7 @@ describe("Unit test for app handler", () => {
       })
     }
 
-    jest.spyOn(DynamoDBClient.prototype, "send").mockResolvedValue(undefined as never)
-
-    const result: APIGatewayProxyResult = await handler(event, dummyContext)
+    const {result} = await setupTest(event, dummyContext)
 
     // Ensure that the DynamoDB send method was called twice, once for each item
     expect(DynamoDBClient.prototype.send).toHaveBeenCalledTimes(2)
@@ -131,61 +166,16 @@ describe("Unit test for app handler", () => {
     expect(DynamoDBClient.prototype.send).toHaveBeenCalledWith(
       expect.objectContaining({
         input: expect.objectContaining({
-          Item: expect.objectContaining({
-            LineItemID: {S: "LineItemID1"},
-            PatientNHSNumber: {S: "PatientNHSNumber1"},
-            PharmacyODSCode: {S: "PharmacyODSCode1"},
-            PrescriptionID: {S: "PrescriptionID1"},
-            RequestID: {S: "test-request-id"},
-            TaskID: {S: "TaskID1"},
-            TerminalStatus: {S: "TerminalStatus1"},
-            RequestMessage: {
-              M: {
-                basedOn: {
-                  L: [
-                    {
-                      M: {
-                        identifier: {
-                          M: {
-                            value: {S: "PrescriptionID1"}
-                          }
-                        }
-                      }
-                    }
-                  ]
-                },
-                focus: {
-                  M: {
-                    identifier: {
-                      M: {
-                        value: {S: "LineItemID1"}
-                      }
-                    }
-                  }
-                },
-                for: {
-                  M: {
-                    identifier: {
-                      M: {
-                        value: {S: "PatientNHSNumber1"}
-                      }
-                    }
-                  }
-                },
-                id: {S: "TaskID1"},
-                owner: {
-                  M: {
-                    identifier: {
-                      M: {
-                        value: {S: "PharmacyODSCode1"}
-                      }
-                    }
-                  }
-                },
-                status: {S: "TerminalStatus1"}
-              }
-            }
-          })
+          Item: expect.objectContaining(
+            generateExpectedItem(
+              "LineItemID1",
+              "PatientNHSNumber1",
+              "PharmacyODSCode1",
+              "PrescriptionID1",
+              "TaskID1",
+              "TerminalStatus1"
+            )
+          )
         })
       })
     )
@@ -193,61 +183,16 @@ describe("Unit test for app handler", () => {
     expect(DynamoDBClient.prototype.send).toHaveBeenCalledWith(
       expect.objectContaining({
         input: expect.objectContaining({
-          Item: expect.objectContaining({
-            LineItemID: {S: "LineItemID2"},
-            PatientNHSNumber: {S: "PatientNHSNumber2"},
-            PharmacyODSCode: {S: "PharmacyODSCode2"},
-            PrescriptionID: {S: "PrescriptionID2"},
-            RequestID: {S: "test-request-id"},
-            TaskID: {S: "TaskID2"},
-            TerminalStatus: {S: "TerminalStatus2"},
-            RequestMessage: {
-              M: {
-                basedOn: {
-                  L: [
-                    {
-                      M: {
-                        identifier: {
-                          M: {
-                            value: {S: "PrescriptionID2"}
-                          }
-                        }
-                      }
-                    }
-                  ]
-                },
-                focus: {
-                  M: {
-                    identifier: {
-                      M: {
-                        value: {S: "LineItemID2"}
-                      }
-                    }
-                  }
-                },
-                for: {
-                  M: {
-                    identifier: {
-                      M: {
-                        value: {S: "PatientNHSNumber2"}
-                      }
-                    }
-                  }
-                },
-                id: {S: "TaskID2"},
-                owner: {
-                  M: {
-                    identifier: {
-                      M: {
-                        value: {S: "PharmacyODSCode2"}
-                      }
-                    }
-                  }
-                },
-                status: {S: "TerminalStatus2"}
-              }
-            }
-          })
+          Item: expect.objectContaining(
+            generateExpectedItem(
+              "LineItemID2",
+              "PatientNHSNumber2",
+              "PharmacyODSCode2",
+              "PrescriptionID2",
+              "TaskID2",
+              "TerminalStatus2"
+            )
+          )
         })
       })
     )
