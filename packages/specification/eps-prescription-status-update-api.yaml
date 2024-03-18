@@ -213,30 +213,24 @@ components:
   schemas:
     UpdatePrescriptionStatusBundle:
       type: object
-      required:
-        - entry
-        - resourceType
-        - type
+      required: [entry, resourceType, type]
       description: A FHIR transaction Bundle.
       properties:
         resourceType:
           type: string
           description: FHIR resource type.
-          default: Bundle
+          enum: [Bundle]
         type:
           type: string
-          example: transaction
           description: List of status updates to be performed as one transaction.
+          enum: [transaction]
         entry:
           type: array
           description: |
             A collection of resources contained within the Bundle.
           items:
             type: object
-            required:
-              - fullUrl
-              - resource
-              - request
+            required: [fullUrl, resource, request]
             description: A FHIR collection Bundle.
             properties:
               fullUrl:
@@ -246,16 +240,14 @@ components:
                 $ref: "#/components/schemas/UpdatePrescriptionStatusTask"
               request:
                 type: object
-                required:
-                - method
-                - url
+                required: [method, url]
                 properties:
                   method:
                     type: string
-                    default: POST
+                    enum: [POST]
                   url:
                     type: string
-                    default: Task
+                    enum: [Task]
     UpdatePrescriptionStatusTask:
       $ref: schemas/resources/UpdatePrescriptionStatusTask.yaml
     MultipleResponse:
