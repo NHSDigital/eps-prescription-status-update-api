@@ -120,9 +120,8 @@ deep-clean: clean
 	poetry env remove --all
 
 #Creates the fully expanded OAS spec in json
-publish: clean
-	mkdir -p build
-	npm run resolve 2> /dev/null
+publish:
+	npm run resolve --workspace packages/specification 2> /dev/null
 
 check-licenses: check-licenses-node check-licenses-python
 
