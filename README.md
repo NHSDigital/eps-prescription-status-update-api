@@ -147,7 +147,9 @@ These are used to do common commands
 
 - `lint` Runs lint for all code
 - `lint-node` Runs lint for node code
-- `lint-cloudformation` Runs lint for cloudformation templates
+- `lint-githubactions` Runs lint for github actions workflows
+- `lint-githubaction-scripts` Runs shellcheck for github actions scripts
+- `lint-python` Runs lint for python code
 - `lint-samtemplates` Runs lint for SAM templates
 - `test` Runs unit tests for all code
 
