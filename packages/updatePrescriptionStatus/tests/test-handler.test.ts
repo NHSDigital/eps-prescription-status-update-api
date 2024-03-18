@@ -38,18 +38,36 @@ const setupTest = async (event: APIGatewayProxyEvent, context: any) => {
   return {result}
 }
 
-describe("Unit test for app handler", () => {
+describe("Unit test for updatePrescriptionStatus handler", () => {
   const dummyContext = helloworldContext
-  const expectedItem = {
-    LineItemID: {"S": "LineItemID"},
-    PatientNHSNumber: {"S": "PatientNHSNumber"},
-    PharmacyODSCode: {"S": "PharmacyODSCode"},
-    PrescriptionID: {"S": "PrescriptionID"},
-    RequestID: {"S": "test-request-id"},
-    TaskID: {"S": "TaskID"},
-    TerminalStatus: {"S": "TerminalStatus"},
-    RequestMessage: expect.any(Object)
-  }
+  const generateExpectedItem = (
+    LineItemID: string,
+    PatientNHSNumber: string,
+    PharmacyODSCode: string,
+    PrescriptionID: string,
+    TaskID: string,
+    TerminalStatus: string
+  ) => ({
+    LineItemID: {S: LineItemID},
+    PatientNHSNumber: {S: PatientNHSNumber},
+    PharmacyODSCode: {S: PharmacyODSCode},
+    PrescriptionID: {S: PrescriptionID},
+    RequestID: {S: "test-request-id"},
+    TaskID: {S: TaskID},
+    TerminalStatus: {S: TerminalStatus},
+    RequestMessage: {
+      M: {
+        basedOn: {
+          L: [{M: {identifier: {M: {value: {S: PrescriptionID}}}}}]
+        },
+        focus: {M: {identifier: {M: {value: {S: LineItemID}}}}},
+        for: {M: {identifier: {M: {value: {S: PatientNHSNumber}}}}},
+        id: {S: TaskID},
+        owner: {M: {identifier: {M: {value: {S: PharmacyODSCode}}}}},
+        status: {S: TerminalStatus}
+      }
+    }
+  })
 
   beforeEach(() => {
     jest.resetModules()
@@ -82,7 +100,16 @@ describe("Unit test for app handler", () => {
     expect(DynamoDBClient.prototype.send).toHaveBeenCalledWith(
       expect.objectContaining({
         input: expect.objectContaining({
-          Item: expect.objectContaining(expectedItem)
+          Item: expect.objectContaining(
+            generateExpectedItem(
+              "LineItemID",
+              "PatientNHSNumber",
+              "PharmacyODSCode",
+              "PrescriptionID",
+              "TaskID",
+              "TerminalStatus"
+            )
+          )
         })
       })
     )
@@ -90,37 +117,6 @@ describe("Unit test for app handler", () => {
     expect(result.statusCode).toEqual(201)
     expect(JSON.parse(result.body)).toEqual(responseSingleItem)
   })
-
-  const generateExpectedItem = (
-    LineItemID: string,
-    PatientNHSNumber: string,
-    PharmacyODSCode: string,
-    PrescriptionID: string,
-    TaskID: string,
-    TerminalStatus: string
-  ) => ({
-    LineItemID: {S: LineItemID},
-    PatientNHSNumber: {S: PatientNHSNumber},
-    PharmacyODSCode: {S: PharmacyODSCode},
-    PrescriptionID: {S: PrescriptionID},
-    RequestID: {S: "test-request-id"},
-    TaskID: {S: TaskID},
-    TerminalStatus: {S: TerminalStatus},
-    RequestMessage: {
-      M: {
-        basedOn: {
-          L: [{M: {identifier: {M: {value: {S: PrescriptionID}}}}}]
-        },
-        focus: {M: {identifier: {M: {value: {S: LineItemID}}}}},
-        for: {M: {identifier: {M: {value: {S: PatientNHSNumber}}}}},
-        id: {S: TaskID},
-        owner: {M: {identifier: {M: {value: {S: PharmacyODSCode}}}}},
-        status: {S: TerminalStatus}
-      }
-    }
-  })
-
-  // In the test case:
 
   it("should successfully update multiple items into DynamoDB", async () => {
     const event: APIGatewayProxyEvent = {
