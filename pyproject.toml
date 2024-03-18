@@ -1,37 +1,42 @@
 [project]
-python = "3.8.15"
+python = "^3.12"
 
 [tool.poetry]
-name = "eps-FHIR-validator-lambda"
+name = "eps-prescription-status-update-api"
 version = "0.0.1-alpha"
-description = "lambda for Validation Service FHIR R4 API Definitions"
+description = "EPS Prescription Status Update API"
 license = "MIT"
 authors = [
-    "Anthony Brown <anthony.brown8@nhs.net>",
     "Matthew Popat <matthew.popat1@nhs.net>",
-    "Phil Gee <phil.gee@nhs.net>",
+    "Anthony Brown <anthony.brown8@nhs.net>",
     "Kris Szlapa <kris.szlapa1@nhs.net>",
+    "Phil Gee <phil.gee@nhs.net>",
+    "Adam Brown <adam.brown41@nhs.net>",
+    "Jonathan Welch <jonathan.welch1@nhs.net>",
+    "Natasa Fragkou <natasa.fragkou@nhs.net>",
     "Jack Spagnoli <jack.spagnoli1@nhs.net>",
     "Tom Smith <tom.smith24@nhs.net>",
-    "Adam Brown <adam.brown41@nhs.net>",
     "Sean Steberis <sean.steberis2@nhs.net>",
-    "Natasa Fragkou <natasa.fragkou@nhs.net>"
+    "Rizwan Mehmood <rizwan.mehmood1@nhs.net>",
+    "Thomas Merrington <thomas.merrington1@nhs.net>"
 ]
 readme = "README.md"
-repository = "https://github.com/NHSDigital/eps-FHIR-validator-lambda"
+repository = "https://github.com/NHSDigital/eps-prescription-status-update-api"
 
 [tool.poetry.dependencies]
-python = "3.8.15"
-requests = "^2.31.0"
+python = "^3.12"
 
-[tool.poetry.dev-dependencies]
-flake8 = "^7.0.0"
-pip-licenses = "^4.3.4"
-pre-commit = "^3.5.0"
-cfn-lint = "^0.86.0"
 
 [tool.poetry.scripts]
 
+[tool.poetry.group.dev.dependencies]
+pre-commit = "^3.6.2"
+cfn-lint = "^0.86.0"
+black = "^24.3.0"
+flake8 = "^7.0.0"
+jinja2 = "^3.1.3"
+pip-licenses = "^4.3.4"
+
 [build-system]
-requires = ["poetry>=1.6"]
+requires = ["poetry>=0.12"]
 build-backend = "poetry.masonry.api"

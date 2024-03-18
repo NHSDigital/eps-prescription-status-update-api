@@ -21,6 +21,42 @@ repos:
     hooks:
       - id: flake8
 
+  - repo: local
+    hooks:
+      - id: lint-updatePrescriptionStatus
+        name: Lint updatePrescriptionStatus
+        entry: npm
+        args: ["run", "--prefix=packages/updatePrescriptionStatus", "lint"]
+        language: system
+        files: ^packages\/updatePrescriptionStatus
+        types_or: [ts, tsx, javascript, jsx, json]
+        pass_filenames: false
+
+      - id: oas-build-checks
+        name: Build OAS
+        entry: make
+        args: ["build-specification"]
+        language: system
+        files: ^(examples|packages\/specification)
+        types_or: [json, yaml]
+
+      # - id: lint-githubactions
+      #   name: Lint github actions
+      #   entry: make
+      #   args: ["lint-githubactions"]
+      #   language: system
+      #   files: ^.github
+      #   types_or: [yaml]
+      #   pass_filenames: false
+
+      # - id: lint-githubaction-scripts
+      #   name: Lint github action scripts
+      #   entry: make
+      #   args: ["lint-githubaction-scripts"]
+      #   language: system
+      #   files: ^.github/scripts
+      #   types_or: [sh, shell]
+      #   pass_filenames: false
 
 fail_fast: true
 default_stages: [commit]
