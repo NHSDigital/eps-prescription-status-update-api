@@ -10,7 +10,7 @@ Globals:
     MemorySize: 256
     Architectures:
       - x86_64
-    Runtime: nodejs18.x
+    Runtime: nodejs20.x
     Environment:
       Variables:
         TargetServiceSearchServer: !Ref TargetServiceSearchServer
@@ -134,7 +134,7 @@ Resources:
           KeyType: "HASH"
         - AttributeName: "PrescriptionID"
           KeyType: "RANGE"
-      ProvisionedThroughput: 
+      ProvisionedThroughput:
         ReadCapacityUnits: "5"
         WriteCapacityUnits: "5"
       GlobalSecondaryIndexes:
@@ -146,14 +146,14 @@ Resources:
               KeyType: "RANGE"
           Projection:
             NonKeyAttributes:
-            - "PatientNHSNumber"
-            - "PharmacyODSCode"
-            - "TaskID"
-            - "LineItemID"
-            - "TerminalStatus"
-            - "RequestMessage"
+              - "PatientNHSNumber"
+              - "PharmacyODSCode"
+              - "TaskID"
+              - "LineItemID"
+              - "TerminalStatus"
+              - "RequestMessage"
             ProjectionType: "INCLUDE"
-          ProvisionedThroughput: 
+          ProvisionedThroughput:
             ReadCapacityUnits: "5"
             WriteCapacityUnits: "5"
         - IndexName: "PrescriptionIDIndex"
@@ -164,14 +164,14 @@ Resources:
               KeyType: "RANGE"
           Projection:
             NonKeyAttributes:
-            - "PharmacyODSCode"
-            - "TaskID"
-            - "LineItemID"
-            - "TerminalStatus"
-            - "RequestID"
-            - "RequestMessage"
+              - "PharmacyODSCode"
+              - "TaskID"
+              - "LineItemID"
+              - "TerminalStatus"
+              - "RequestID"
+              - "RequestMessage"
             ProjectionType: "INCLUDE"
-          ProvisionedThroughput: 
+          ProvisionedThroughput:
             ReadCapacityUnits: "5"
             WriteCapacityUnits: "5"
         - IndexName: "PatientNHSNumberIndex"
@@ -182,12 +182,12 @@ Resources:
               KeyType: "RANGE"
           Projection:
             NonKeyAttributes:
-            - "PharmacyODSCode"
-            - "TaskID"
-            - "LineItemID"
-            - "TerminalStatus"
-            - "RequestID"
-            - "RequestMessage"
+              - "PharmacyODSCode"
+              - "TaskID"
+              - "LineItemID"
+              - "TerminalStatus"
+              - "RequestID"
+              - "RequestMessage"
             ProjectionType: "INCLUDE"
           ProvisionedThroughput:
             ReadCapacityUnits: "5"
@@ -200,12 +200,12 @@ Resources:
               KeyType: "RANGE"
           Projection:
             NonKeyAttributes:
-            - "PatientNHSNumber"
-            - "TaskID"
-            - "LineItemID"
-            - "TerminalStatus"
-            - "RequestID"
-            - "RequestMessage"
+              - "PatientNHSNumber"
+              - "TaskID"
+              - "LineItemID"
+              - "TerminalStatus"
+              - "RequestID"
+              - "RequestMessage"
             ProjectionType: "INCLUDE"
           ProvisionedThroughput:
             ReadCapacityUnits: "5"
@@ -229,7 +229,10 @@ Resources:
               - dynamodb:ListTables
             Resource:
               - !GetAtt PrescriptionStatusUpdatesTable.Arn
-              - !Join ["", [!GetAtt PrescriptionStatusUpdatesTable.Arn, "/index/*"]]
+              - !Join [
+                  "",
+                  [!GetAtt PrescriptionStatusUpdatesTable.Arn, "/index/*"],
+                ]
   DynamoDBWritePolicy:
     Type: AWS::IAM::ManagedPolicy
     Properties:
@@ -246,7 +249,10 @@ Resources:
               - dynamodb:UpdateItem
             Resource:
               - !GetAtt PrescriptionStatusUpdatesTable.Arn
-              - !Join ["", [!GetAtt PrescriptionStatusUpdatesTable.Arn, "/index/*"]]
+              - !Join [
+                  "",
+                  [!GetAtt PrescriptionStatusUpdatesTable.Arn, "/index/*"],
+                ]
 
   # TLS cert for custom domain
   GenerateCertificate:

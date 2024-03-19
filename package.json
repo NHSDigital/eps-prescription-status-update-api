@@ -10,7 +10,7 @@
     "type": "git",
     "url": "https://github.com/NHSDigital/eps-prescription-status-update-api"
   },
-  "keywords": [ ],
+  "keywords": [],
   "author": "NHS Digital",
   "license": "MIT",
   "workspaces": [
@@ -18,12 +18,15 @@
     "packages/updatePrescriptionStatus"
   ],
   "devDependencies": {
+    "@semantic-release/changelog": "^6.0.3",
+    "@semantic-release/release-notes-generator": "^12.1.0",
     "@types/aws-lambda": "^8.10.134",
     "@types/jest": "^29.5.12",
     "@types/node": "^20.11.22",
     "@typescript-eslint/eslint-plugin": "^7.1.0",
     "@typescript-eslint/parser": "^7.1.0",
     "aws-lambda": "^1.0.7",
+    "conventional-changelog-eslint": "^5.0.0",
     "eslint": "^8.57.0",
     "eslint-config-prettier": "^9.1.0",
     "eslint-plugin-import-newlines": "^1.3.4",
@@ -32,6 +35,7 @@
     "jest-junit": "^16.0.0",
     "license-checker": "^25.0.1",
     "prettier": "^3.2.5",
+    "semantic-release": "^23.0.4",
     "ts-jest": "^29.1.2",
     "ts-node": "^10.9.2",
     "typescript": "^5.3.3"
