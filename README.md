@@ -219,3 +219,17 @@ Workflows are in the `.github/workflows` folder:
 - `release.yml` Runs on demand to create a release and deploy to all environments. 
 - `sam_package_code.yml` Packages code and uploads to a github artifact for later deployment.
 - `sam_release_code.yml` Release code built by sam_package_code.yml to an environment.
+
+
+### Github pages
+
+Github pages is used to display deployment information. The source for github pages is in the gh-pages branch.   
+As part of the ci and release workflows, the release tag (either the short commit SHA or release tag) is appended to _data/{environment}_deployments.csv so we have a history of releases and replaced in _data/{environment}_latest.csv so we now what the latest released version is.   
+There are different makefile targets in this branch. These are
+- `run-jekyll` - runs the site locally so changes can be previewed during development
+- `sync-main` - syncs common files from main branch to gh-pages branch. You must commit and push after running this
+- `install-python` installs python dependencies
+- `install-hooks` installs git pre commit hooks
+- `install-node` installs node dependencies
+- `install-jekyll` installs dependencies to be able to run jekyll locally
+- `install` runs all install targets
