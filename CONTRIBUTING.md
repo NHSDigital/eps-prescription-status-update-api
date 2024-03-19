@@ -29,14 +29,7 @@ Multiple branches are permitted for the same ticket.
 
 ### Commit messages
 
-Commit messages should be formatted as follows:
-
-```text
-AEA-NNN Summary of changes
-
-Longer description of changes if explaining rationale is necessary,
-limited to 80 columns and spanning as many lines as you need.
-```
+We do not enforce any conventions on commit messages to a branch, as we use squash commits when merging to main branch.   
 
 Commits from a pull request get squashed into a single commit on merge, using the pull request title as the commit message.
 Please format your pull request title using tags from [ESLint Convention](https://github.com/conventional-changelog/conventional-changelog/tree/master/packages/conventional-changelog-eslint) as follows:
