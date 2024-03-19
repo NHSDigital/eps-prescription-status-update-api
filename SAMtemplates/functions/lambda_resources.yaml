@@ -1,0 +1,107 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: |
+  Resources for a lambda
+
+Parameters:
+  LambdaName:
+    Type: String
+    Description: Name of lambda we are creating resources for.
+    Default: none
+  
+  AdditionalPolicies:
+    Type: List<String>
+    Description: A list of additional policies to attach the lambdas role.
+    Default: none
+  
+  LogRetentionInDays:
+    Type: Number
+    Description: How long to keep logs for.
+  
+  CloudWatchKMSKeyId:
+    Type: String
+    Description: The KMS Key ID used for encrypting logs.
+    Default: none
+  
+  EnableSplunk:
+    Type: String
+    Description: Whether to use splunk
+  
+  SplunkSubscriptionFilterRole:
+    Type: String
+    Description: Subscription filter role for sending logs to splunk
+    Default: none
+  
+  SplunkDeliveryStreamArn:
+    Type: String
+    Description: Splunk delivery stream
+    Default: none
+
+Conditions:
+  ShouldUseSplunk: !Equals
+    - true
+    - !Ref EnableSplunk
+
+Resources:
+  LambdaRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      ManagedPolicyArns: !Split
+        - ','
+        - !Join
+          - ','
+          - - !ImportValue lambda-resources:LambdaInsightsLogGroupPolicy
+            - !ImportValue account-resources:LambdaEncryptCloudwatchKMSPolicy
+            - !ImportValue account-resources:LambdaDecryptSecretsKMSPolicy
+            - !Join
+              - ','
+              - !Ref AdditionalPolicies
+  
+  LambdaManagedPolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      Roles:
+        - !Ref LambdaRole
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action:
+              - logs:CreateLogStream
+              - logs:PutLogEvents
+            Resource:
+              - !GetAtt LambdaLogGroup.Arn
+              - !Sub ${LambdaLogGroup.Arn}:log-stream:*
+  
+  LambdaLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub /aws/lambda/${LambdaName}
+      RetentionInDays: !Ref LogRetentionInDays
+      KmsKeyId: !Ref CloudWatchKMSKeyId
+  
+  LambdaSplunkSubscriptionFilter:
+    Condition: ShouldUseSplunk
+    Type: AWS::Logs::SubscriptionFilter
+    Properties:
+      RoleArn: !Ref SplunkSubscriptionFilterRole
+      LogGroupName: !Ref LambdaLogGroup
+      FilterPattern: ''
+      DestinationArn: !Ref SplunkDeliveryStreamArn
+
+Outputs:
+  LambdaRoleArn:
+    Description: LambdaRole ARN
+    Value: !GetAtt LambdaRole.Arn
+  
+  LambdaRoleName:
+    Description: LambdaRole name
+    Value: !Ref LambdaRole

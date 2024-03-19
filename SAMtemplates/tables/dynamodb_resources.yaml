@@ -1,0 +1,74 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: |
+  Related resources for a DynamoDB table
+
+Parameters:
+  StackName:
+    Type: String
+    Description: The name of the main stack
+    Default: none
+  TableName:
+    Type: String
+    Description: The name of the dynamodb table
+    Default: none
+  TableArn:
+    Type: String
+    Description: The arn of the dynamodb table
+    Default: none
+
+Resources:
+  TableReadPolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action:
+              - dynamodb:GetItem
+              - dynamodb:BatchGetItem
+              - dynamodb:Scan
+              - dynamodb:Query
+              - dynamodb:ConditionCheckItem
+              - dynamodb:DescribeTable
+            Resource:
+              - !Ref TableArn
+              - !Sub ${TableArn}/index/*
+  
+  TableWritePolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action:
+              - dynamodb:PutItem
+              - dynamodb:BatchWriteItem
+              - dynamodb:UpdateItem
+              - dynamodb:DeleteItem
+            Resource:
+              - !Ref TableArn
+              - !Sub ${TableArn}/index/*
+
+Outputs:
+  TableReadPolicyArn:
+    Description: Table read policy arn
+    Value: !GetAtt TableReadPolicy.PolicyArn
+    Export:
+      Name: !Join [":", [!Ref StackName, "tables", !Ref TableName, "TableReadPolicyArn"]]
+
+  TableReadPolicyId:
+    Description: Table read policy id
+    Value: !GetAtt TableReadPolicy.PolicyId
+  
+  TableWritePolicyArn:
+    Description: Table write policy arn
+    Value: !GetAtt TableWritePolicy.PolicyArn
+    Export:
+      Name: !Join [":", [!Ref StackName, "tables", !Ref TableName, "TableWritePolicyArn"]]
+  
+  TableWritePolicyId:
+    Description: Table write policy id
+    Value: !GetAtt TableWritePolicy.PolicyId

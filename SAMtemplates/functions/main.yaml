@@ -1,0 +1,83 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: |
+  PSU lambda functions and related resources
+
+# More info about Globals: https://github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
+Globals:
+  Function:
+    Timeout: 50
+    MemorySize: 256
+    Architectures:
+      - x86_64
+    Runtime: nodejs20.x
+    Environment:
+      Variables:
+        NODE_OPTIONS: --enable-source-maps
+    Layers:
+      - !Sub "arn:aws:lambda:${AWS::Region}:580247275435:layer:LambdaInsightsExtension:49"
+
+Parameters:
+  StackName:
+    Type: String
+    Description: The name of the main stack
+    Default: none
+  PrescriptionStatusUpdatesTableName:
+    Type: String
+    Description: The name of the PrescriptionStatusUpdates Table
+    Default: none
+  # ApiId:
+  #   Type: String
+  #   Description: The ID of the APIGW
+  LogLevel:
+    Type: String
+    Description: The log level to set in the lambda
+  LogRetentionInDays:
+    Type: Number
+    Description: How long to keep logs for
+  EnableSplunk:
+    Type: String
+    Description: Whether to use splunk
+
+Resources:
+  UpdatePrescriptionStatus:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub ${StackName}-UpdatePrescriptionStatus
+      CodeUri: ../../packages
+      Handler: updatePrescriptionStatus.handler
+      Role: !GetAtt UpdatePrescriptionStatusResources.Outputs.LambdaRoleArn
+      Environment:
+        Variables:
+          TABLE_NAME: !Ref PrescriptionStatusUpdatesTableName
+          LOG_LEVEL: !Ref LogLevel
+      # Events:
+      #   updatePrescriptionStatus:
+      #     Type: HttpApi
+      #     Properties:
+      #       ApiId: !Ref ApiId
+      #       Path: /
+      #       Method: post
+    Metadata:
+      BuildMethod: esbuild
+      BuildProperties:
+        Minify: true
+        Target: es2020
+        Sourcemap: true
+        tsconfig: updatePrescriptionStatus/tsconfig.json
+        EntryPoints:
+          - updatePrescriptionStatus/src/updatePrescriptionStatus.ts
+  
+  UpdatePrescriptionStatusResources:
+    Type: AWS::Serverless::Application
+    Properties:
+      Location: lambda_resources.yaml
+      Parameters:
+        LambdaName: !Sub ${StackName}-UpdatePrescriptionStatus
+        AdditionalPolicies:
+          - Fn::ImportValue: !Sub ${StackName}:tables:${PrescriptionStatusUpdatesTableName}:TableWritePolicyArn
+        LogRetentionInDays: !Ref LogRetentionInDays
+        CloudWatchKMSKeyId: !ImportValue account-resources:CloudwatchLogsKmsKeyArn
+        EnableSplunk: !Ref EnableSplunk
+        SplunkSubscriptionFilterRole: !ImportValue lambda-resources:SplunkSubscriptionFilterRole
+        SplunkDeliveryStreamArn: !ImportValue lambda-resources:SplunkDeliveryStream

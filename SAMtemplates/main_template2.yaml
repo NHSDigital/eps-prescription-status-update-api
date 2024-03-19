@@ -1,0 +1,65 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: |
+  PSU resources
+
+Parameters:
+  LogLevel:
+    Type: String
+    Description: The log level to set in the lambda
+    Default: "INFO"
+  LogRetentionInDays:
+    Type: Number
+    Description: How long to keep logs for in days.
+    Default: 30
+    AllowedValues:
+      [
+        1,
+        3,
+        5,
+        7,
+        14,
+        30,
+        60,
+        90,
+        120,
+        150,
+        180,
+        365,
+        400,
+        545,
+        731,
+        1096,
+        1827,
+        2192,
+        2557,
+        2922,
+        3288,
+        3653,
+      ]
+  EnableSplunk:
+    Type: String
+    Description: Whether to use splunk
+    Default: false
+    AllowedValues: [true, false]
+
+Resources:
+  Tables:
+    Type: AWS::Serverless::Application
+    Properties:
+      Location: tables/main.yaml
+      Parameters:
+        StackName: !Ref AWS::StackName
+  
+  Functions:
+    Type: AWS::Serverless::Application
+    Properties:
+      Location: functions/main.yaml
+      Parameters:
+        StackName: !Ref AWS::StackName
+        PrescriptionStatusUpdatesTableName: !GetAtt Tables.Outputs.PrescriptionStatusUpdatesTableName
+        ApiId: !Ref HttpApiGateway #need to create
+        LogLevel: !Ref LogLevel
+        LogRetentionInDays: !Ref LogRetentionInDays
+        EnableSplunk: !Ref EnableSplunk
+        
