@@ -67,8 +67,10 @@ Resources:
       Location: lambda_resources.yaml
       Parameters:
         LambdaName: !Sub ${StackName}-UpdatePrescriptionStatus
-        AdditionalPolicies:
-          - Fn::ImportValue: !Sub ${StackName}:tables:${PrescriptionStatusUpdatesTableName}:TableWritePolicyArn
+        AdditionalPolicies: !Join
+          - ','
+          - - Fn::ImportValue: !Sub ${StackName}:tables:${PrescriptionStatusUpdatesTableName}:TableWritePolicyArn
+            - Fn::ImportValue: !Sub ${StackName}:tables:${PrescriptionStatusUpdatesTableName}:TableReadPolicyArn
         LogRetentionInDays: !Ref LogRetentionInDays
         CloudWatchKMSKeyId: !ImportValue account-resources:CloudwatchLogsKmsKeyArn
         EnableSplunk: !Ref EnableSplunk
