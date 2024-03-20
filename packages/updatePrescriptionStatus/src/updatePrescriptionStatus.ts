@@ -99,27 +99,34 @@ const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPro
     if (invalidFields.length > 0) {
       const errorMessage = `400: Missing required fields: ${invalidFields.join(", ")}`
       logger.error("Error message", {errorMessage: errorMessage})
-      const errorResponseBody = {
-        resourceType: "OperationOutcome",
-        issue: [
-          {
-            code: "value",
-            severity: "error",
-            details: {
-              coding: [
-                {
-                  system: "https://fhir.nhs.uk/CodeSystem/http-error-codes",
-                  code: "BAD_REQUEST",
-                  display: errorMessage
+      const entry: BundleEntry = {
+        response: {
+          status: "400 Bad Request",
+          location: `Task/${task.id}/_history/1`,
+          outcome: {
+            resourceType: "OperationOutcome",
+            issue: [
+              {
+                code: "value",
+                severity: "error",
+                details: {
+                  coding: [
+                    {
+                      system: "https://fhir.nhs.uk/CodeSystem/http-error-codes",
+                      code: "BAD_REQUEST",
+                      display: errorMessage
+                    }
+                  ]
                 }
-              ]
-            }
+              }
+            ]
           }
-        ]
+        }
       }
+      responseBundle.entry!.push(entry)
       return {
         statusCode: 400,
-        body: JSON.stringify(errorResponseBody),
+        body: JSON.stringify(responseBundle),
         headers: {
           "Content-Type": "application/fhir+json",
           "Cache-Control": "no-cache"

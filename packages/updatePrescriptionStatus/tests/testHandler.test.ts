@@ -264,19 +264,31 @@ describe("Unit test for updatePrescriptionStatus handler", () => {
     const response: APIGatewayProxyResult = await handler(event, {} as any)
     expect(response.statusCode).toBe(400)
     expect(JSON.parse(response.body!)).toEqual({
-      resourceType: "OperationOutcome",
-      issue: [
+      resourceType: "Bundle",
+      type: "transaction-response",
+      entry: [
         {
-          code: "value",
-          severity: "error",
-          details: {
-            coding: [
-              {
-                system: "https://fhir.nhs.uk/CodeSystem/http-error-codes",
-                code: "BAD_REQUEST",
-                display: "400: Missing required fields: PrescriptionID, PatientNHSNumber"
-              }
-            ]
+          response: {
+            status: "400 Bad Request",
+            location: "Task/4d70678c-81e4-4ff4-8c67-17596fd0aa46/_history/1",
+            outcome: {
+              resourceType: "OperationOutcome",
+              issue: [
+                {
+                  code: "value",
+                  severity: "error",
+                  details: {
+                    coding: [
+                      {
+                        system: "https://fhir.nhs.uk/CodeSystem/http-error-codes",
+                        code: "BAD_REQUEST",
+                        display: "400: Missing required fields: PrescriptionID, PatientNHSNumber"
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
           }
         }
       ]
