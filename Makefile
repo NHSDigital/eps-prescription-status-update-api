@@ -92,7 +92,7 @@ lint-node: compile-node
 	npm run lint --workspace packages/updatePrescriptionStatus
 
 lint-samtemplates:
-	poetry run cfn-lint -t SAMtemplates/*.yaml
+	poetry run cfn-lint -t SAMtemplates/**/*.yaml
 
 lint-python:
 	poetry run flake8 scripts/*.py --config .flake8

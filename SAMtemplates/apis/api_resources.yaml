@@ -31,7 +31,7 @@ Resources:
     Type: AWS::Logs::LogGroup
     Properties:
       LogGroupName: !Sub /aws/apigateway/${StackName}/${ApiId}
-      RetentionInDays: !Ref LogRetentionDays
+      RetentionInDays: !Ref LogRetentionInDays
       KmsKeyId: !ImportValue account-resources:CloudwatchLogsKmsKeyArn
   
   ApiGwAccessLogsSplunkSubscriptionFilter:
@@ -42,3 +42,8 @@ Resources:
       LogGroupName: !Ref ApiGwAccessLogs
       FilterPattern: ''
       DestinationArn: !ImportValue lambda-resources:SplunkDeliveryStream
+
+Outputs:
+  ApiGwAccessLogsArn:
+    Description: ApiGwAccessLogs ARN
+    Value: !GetAtt ApiGwAccessLogs.Arn

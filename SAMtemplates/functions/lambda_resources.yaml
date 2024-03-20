@@ -27,7 +27,7 @@ Parameters:
     Type: String
     Description: Whether to use splunk
   
-  plunkSubscriptionFilterRole:
+  SplunkSubscriptionFilterRole:
     Type: String
     Description: Subscription filter role for sending logs to splunk
     Default: none
