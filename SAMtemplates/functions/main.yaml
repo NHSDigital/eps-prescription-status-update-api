@@ -68,7 +68,7 @@ Resources:
       Parameters:
         LambdaName: !Sub ${StackName}-UpdatePrescriptionStatus
         AdditionalPolicies: !Join
-          - ', '
+          - ','
           - - Fn::ImportValue: !Sub ${StackName}:tables:${PrescriptionStatusUpdatesTableName}:TableWritePolicyArn
             - Fn::ImportValue: !Sub ${StackName}:tables:${PrescriptionStatusUpdatesTableName}:TableReadPolicyArn
         LogRetentionInDays: !Ref LogRetentionInDays

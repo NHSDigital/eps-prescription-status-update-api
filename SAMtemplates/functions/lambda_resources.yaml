@@ -61,10 +61,10 @@ Resources:
           - - !ImportValue lambda-resources:LambdaInsightsLogGroupPolicy
             - !ImportValue account-resources:LambdaEncryptCloudwatchKMSPolicy
             - !ImportValue account-resources:LambdaDecryptSecretsKMSPolicy
-            - !Ref AdditionalPolicies
-            # - !Join
-            #   - ','
-            #   - !Ref AdditionalPolicies
+            # - !Ref AdditionalPolicies
+            - !Join
+              - ','
+              - !Ref AdditionalPolicies
   
   LambdaManagedPolicy:
     Type: AWS::IAM::ManagedPolicy
