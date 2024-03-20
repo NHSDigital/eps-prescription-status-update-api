@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import validTask from "../../specification/examples/contentValidation/validTask.json"
+import valid from "../../specification/examples/tasks/valid.json"
 import {expect, describe, it} from "@jest/globals"
 import {
   ValidationOutcome,
@@ -12,7 +12,7 @@ import {Task} from "fhir/r4"
 describe("Unit tests for overall task validation", () => {
   it.each([
     {
-      task: validTask,
+      task: valid,
       expectedOutcome: {valid: true, issues: []},
       scenarioDescription: "Valid task"
     }
@@ -28,7 +28,7 @@ describe("Unit tests for validation of lastModified", () => {
   it("over a day in the future", async () => {
     const today = new Date()
     const future = new Date(today.valueOf() + ONE_DAY_IN_MS + 1000)
-    const task = {...validTask}
+    const task = {...valid}
     task.lastModified = future.toISOString()
 
     const expected = "Date provided for lastModified is more than one day in the future."
@@ -38,7 +38,7 @@ describe("Unit tests for validation of lastModified", () => {
   })
 
   it("invalid date format", async () => {
-    const task = {...validTask}
+    const task = {...valid}
     task.lastModified = "invalid date"
 
     const expected = "Date format provided for lastModified is invalid."

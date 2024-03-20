@@ -1,21 +1,22 @@
 {
-    "resourceType": "Bundle",
-    "type": "transaction-response",
-    "entry": [
-        {
-            "response": {
-                "status": "201 Created",
-                "outcome": {
-                    "resourceType": "OperationOutcome",
-                    "issue": [
-                        {
-                            "severity": "information",
-                            "code": "success",
-                            "diagnostics": "No issues detected during validation"
-                        }
-                    ]
-                }
+  "resourceType": "Bundle",
+  "type": "transaction-response",
+  "entry": [
+    {
+      "response": {
+        "status": "201 Created",
+        "location": "Task/4d70678c-81e4-4ff4-8c67-17596fd0aa46/_history/1",
+        "outcome": {
+          "resourceType": "OperationOutcome",
+          "issue": [
+            {
+              "severity": "information",
+              "code": "success",
+              "diagnostics": "No issues detected during validation"
             }
+          ]
         }
-    ]
+      }
+    }
+  ]
 }

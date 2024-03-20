@@ -202,6 +202,7 @@ const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPro
     const taskResponse: BundleEntry = {
       response: {
         status: "201 Created",
+        location: `Task/${task.id}/_history/1`,
         outcome: {
           resourceType: "OperationOutcome",
           issue: [

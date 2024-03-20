@@ -16,6 +16,9 @@ import responseSingleItem from "../../specification/examples/response-single-ite
 import responseMultipleItems from "../../specification/examples/response-multiple-items.json"
 import {generateExpectedItem, generateMockEvent} from "./utils"
 
+const TASK_ID1 = "4d70678c-81e4-4ff4-8c67-17596fd0aa46"
+const TASK_ID2 = "0ae4daf3-f24b-479d-b8fa-b69e2d873b60"
+
 describe("Unit test for updatePrescriptionStatus handler", () => {
   beforeEach(() => {
     jest.resetModules()
@@ -30,7 +33,7 @@ describe("Unit test for updatePrescriptionStatus handler", () => {
             basedOn: [{identifier: {value: "PrescriptionID"}}],
             for: {identifier: {value: "PatientNHSNumber"}},
             owner: {identifier: {value: "PharmacyODSCode"}},
-            id: "TaskID",
+            id: TASK_ID1,
             focus: {identifier: {value: "LineItemID"}},
             status: "TerminalStatus",
             lastModified: "2023-09-11T10:11:12Z"
@@ -53,7 +56,7 @@ describe("Unit test for updatePrescriptionStatus handler", () => {
               "PatientNHSNumber",
               "PharmacyODSCode",
               "PrescriptionID",
-              "TaskID",
+              TASK_ID1,
               "TerminalStatus",
               "2023-09-11T10:11:12Z"
             )
@@ -74,7 +77,7 @@ describe("Unit test for updatePrescriptionStatus handler", () => {
             basedOn: [{identifier: {value: "PrescriptionID1"}}],
             for: {identifier: {value: "PatientNHSNumber1"}},
             owner: {identifier: {value: "PharmacyODSCode1"}},
-            id: "TaskID1",
+            id: TASK_ID1,
             focus: {identifier: {value: "LineItemID1"}},
             status: "TerminalStatus1",
             lastModified: "2023-09-11T10:11:12Z"
@@ -85,7 +88,7 @@ describe("Unit test for updatePrescriptionStatus handler", () => {
             basedOn: [{identifier: {value: "PrescriptionID2"}}],
             for: {identifier: {value: "PatientNHSNumber2"}},
             owner: {identifier: {value: "PharmacyODSCode2"}},
-            id: "TaskID2",
+            id: TASK_ID2,
             focus: {identifier: {value: "LineItemID2"}},
             status: "TerminalStatus2",
             lastModified: "2023-09-11T10:11:12Z"
@@ -111,7 +114,7 @@ describe("Unit test for updatePrescriptionStatus handler", () => {
               "PatientNHSNumber1",
               "PharmacyODSCode1",
               "PrescriptionID1",
-              "TaskID1",
+              TASK_ID1,
               "TerminalStatus1",
               "2023-09-11T10:11:12Z"
             )
@@ -129,7 +132,7 @@ describe("Unit test for updatePrescriptionStatus handler", () => {
               "PatientNHSNumber2",
               "PharmacyODSCode2",
               "PrescriptionID2",
-              "TaskID2",
+              TASK_ID2,
               "TerminalStatus2",
               "2023-09-11T10:11:12Z"
             )
@@ -214,7 +217,7 @@ describe("Unit test for updatePrescriptionStatus handler", () => {
         {
           response: {
             status: "400 Bad Request",
-            location: "Task/4d70678c-81e4-4ff4-8c67-17596fd0aa46/_history/1",
+            location: `Task/${TASK_ID1}/_history/1`,
             outcome: {
               resourceType: "OperationOutcome",
               issue: [
@@ -247,7 +250,7 @@ describe("Unit test for updatePrescriptionStatus handler", () => {
             basedOn: [{identifier: {value: "PrescriptionID"}}],
             for: {identifier: {value: "PatientNHSNumber"}},
             owner: {identifier: {value: "PharmacyODSCode"}},
-            id: "TaskID",
+            id: TASK_ID1,
             focus: {identifier: {value: "LineItemID"}},
             status: "TerminalStatus",
             lastModified: "2023-09-11T10:11:12Z"
@@ -269,7 +272,7 @@ describe("Unit test for updatePrescriptionStatus handler", () => {
         {
           response: {
             status: "500 Internal Server Error",
-            location: "Task/TaskID/_history/1",
+            location: `Task/${TASK_ID1}/_history/1`,
             outcome: {
               resourceType: "OperationOutcome",
               issue: [
@@ -301,7 +304,7 @@ describe("Unit test for updatePrescriptionStatus handler", () => {
         basedOn: [{identifier: {value: "PrescriptionID"}}],
         for: {identifier: {value: "PatientNHSNumber"}},
         owner: {identifier: {value: "PharmacyODSCode"}},
-        id: "0ae4daf3-f24b-479d-b8fa-b69e2d873b60",
+        id: TASK_ID2,
         focus: {identifier: {value: "LineItemID"}},
         status: "TerminalStatus",
         lastModified: "2023-09-11T10:11:12Z"
@@ -321,7 +324,7 @@ describe("Unit test for updatePrescriptionStatus handler", () => {
         {
           response: {
             status: "400 Bad Request",
-            location: "Task/4d70678c-81e4-4ff4-8c67-17596fd0aa46/_history/1",
+            location: `Task/${TASK_ID1}/_history/1`,
             outcome: {
               resourceType: "OperationOutcome",
               issue: [
@@ -345,7 +348,7 @@ describe("Unit test for updatePrescriptionStatus handler", () => {
         {
           response: {
             status: "500 Internal Server Error",
-            location: "Task/0ae4daf3-f24b-479d-b8fa-b69e2d873b60/_history/1",
+            location: `Task/${TASK_ID2}/_history/1`,
             outcome: {
               resourceType: "OperationOutcome",
               issue: [
