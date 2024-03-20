@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-explicit-any, max-len */
 import {APIGatewayProxyEvent, APIGatewayProxyResult} from "aws-lambda"
 import {DynamoDBClient} from "@aws-sdk/client-dynamodb"
 import {
@@ -259,10 +259,10 @@ describe("Unit test for updatePrescriptionStatus handler", () => {
     })
   })
 
-  it("should return a 400 status code and error message indicating missing required fields", async () => {
+  it("should return a 201 status code, 400 response code and error message indicating missing required fields", async () => {
     const event: APIGatewayProxyEvent = generateMockEvent(exampleMissingFields)
     const response: APIGatewayProxyResult = await handler(event, {} as any)
-    expect(response.statusCode).toBe(400)
+    expect(response.statusCode).toBe(201)
     expect(JSON.parse(response.body!)).toEqual({
       resourceType: "Bundle",
       type: "transaction-response",
@@ -295,7 +295,7 @@ describe("Unit test for updatePrescriptionStatus handler", () => {
     })
   })
 
-  it("should handle errors with a 500 status code and internal server error message", async () => {
+  it("should handle errors with a 201 status code, 500 response code and internal server error message", async () => {
     const event: APIGatewayProxyEvent = {
       ...mockAPIGatewayProxyEvent,
       body: JSON.stringify({
@@ -318,21 +318,111 @@ describe("Unit test for updatePrescriptionStatus handler", () => {
 
     const result: APIGatewayProxyResult = await handler(event, {} as any)
 
-    expect(result.statusCode).toEqual(500)
+    expect(result.statusCode).toEqual(201)
     expect(JSON.parse(result.body)).toEqual({
-      resourceType: "OperationOutcome",
-      issue: [
+      resourceType: "Bundle",
+      type: "transaction-response",
+      entry: [
         {
-          code: "exception",
-          severity: "fatal",
-          details: {
-            coding: [
-              {
-                system: "https://fhir.nhs.uk/CodeSystem/http-error-codes",
-                code: "SERVER_ERROR",
-                display: "500: The Server has encountered an error processing the request."
-              }
-            ]
+          response: {
+            status: "500 Internal Server Error",
+            location: "Task/TaskID/_history/1",
+            outcome: {
+              resourceType: "OperationOutcome",
+              issue: [
+                {
+                  code: "exception",
+                  severity: "fatal",
+                  details: {
+                    coding: [
+                      {
+                        system: "https://fhir.nhs.uk/CodeSystem/http-error-codes",
+                        code: "SERVER_ERROR",
+                        display: "500: The Server has encountered an error processing the request."
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        }
+      ]
+    })
+  })
+
+  it("should handle multiple errors with a 201 status code, appropriate response codes and error messages", async () => {
+    const body: any = {...exampleMissingFields}
+    body.entry.push({
+      resource: {
+        basedOn: [{identifier: {value: "PrescriptionID"}}],
+        for: {identifier: {value: "PatientNHSNumber"}},
+        owner: {identifier: {value: "PharmacyODSCode"}},
+        id: "0ae4daf3-f24b-479d-b8fa-b69e2d873b60",
+        focus: {identifier: {value: "LineItemID"}},
+        status: "TerminalStatus"
+      }
+    })
+    const event: APIGatewayProxyEvent = {
+      ...mockAPIGatewayProxyEvent,
+      body: JSON.stringify(body)
+    }
+
+    jest.spyOn(DynamoDBClient.prototype, "send").mockRejectedValue(new Error("Mocked error") as never)
+
+    const result: APIGatewayProxyResult = await handler(event, {} as any)
+
+    expect(result.statusCode).toEqual(201)
+    expect(JSON.parse(result.body)).toEqual({
+      resourceType: "Bundle",
+      type: "transaction-response",
+      entry: [
+        {
+          response: {
+            status: "400 Bad Request",
+            location: "Task/4d70678c-81e4-4ff4-8c67-17596fd0aa46/_history/1",
+            outcome: {
+              resourceType: "OperationOutcome",
+              issue: [
+                {
+                  code: "value",
+                  severity: "error",
+                  details: {
+                    coding: [
+                      {
+                        system: "https://fhir.nhs.uk/CodeSystem/http-error-codes",
+                        code: "BAD_REQUEST",
+                        display: "400: Missing required fields: PrescriptionID, PatientNHSNumber"
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          response: {
+            status: "500 Internal Server Error",
+            location: "Task/0ae4daf3-f24b-479d-b8fa-b69e2d873b60/_history/1",
+            outcome: {
+              resourceType: "OperationOutcome",
+              issue: [
+                {
+                  code: "exception",
+                  severity: "fatal",
+                  details: {
+                    coding: [
+                      {
+                        system: "https://fhir.nhs.uk/CodeSystem/http-error-codes",
+                        code: "SERVER_ERROR",
+                        display: "500: The Server has encountered an error processing the request."
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
           }
         }
       ]
