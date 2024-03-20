@@ -7,6 +7,7 @@ import {marshall} from "@aws-sdk/util-dynamodb"
 import middy from "@middy/core"
 import inputOutputLogger from "@middy/input-output-logger"
 import errorHandler from "@nhs/fhir-middy-error-handler"
+import {Bundle, BundleEntry, Task} from "fhir/r4"
 
 const logger = new Logger({serviceName: "updatePrescriptionStatus"})
 const client = new DynamoDBClient({region: "eu-west-2"})
@@ -14,18 +15,18 @@ const tableName = process.env.TABLE_NAME
 
 interface DynamoDBItem {
   RequestID: string | undefined;
-  PrescriptionID: string;
-  PatientNHSNumber: string;
-  PharmacyODSCode: string;
-  TaskID: string;
-  LineItemID: string;
+  PrescriptionID: string | undefined;
+  PatientNHSNumber: string | undefined;
+  PharmacyODSCode: string | undefined;
+  TaskID: string | undefined;
+  LineItemID: string | undefined;
   TerminalStatus: string;
   RequestMessage: any;
 }
 
 const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
   const xRequestId = event.headers["x-request-id"]
-  let requestBody
+  let requestBody: Bundle
   try {
     requestBody = JSON.parse(event.body || "")
   } catch (jsonParseError) {
@@ -58,26 +59,26 @@ const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPro
     }
   }
 
-  const responseBundle: any = {
+  const responseBundle: Bundle = {
     resourceType: "Bundle",
     type: "transaction-response",
     entry: []
   }
 
-  const entries = requestBody.entry || []
+  const entries: Array<BundleEntry> = requestBody.entry || []
   for (const entry of entries) {
     logger.info("Processing entry", {entry: entry})
-    const entry_resource = entry.resource
+    const task = entry.resource as Task
 
     const dynamoDBItem: DynamoDBItem = {
       RequestID: xRequestId,
-      PrescriptionID: entry_resource.basedOn?.[0]?.identifier?.value,
-      PatientNHSNumber: entry_resource.for?.identifier?.value,
-      PharmacyODSCode: entry_resource.owner?.identifier?.value,
-      TaskID: entry_resource.id,
-      LineItemID: entry_resource.focus?.identifier?.value,
-      TerminalStatus: entry_resource.status,
-      RequestMessage: entry_resource
+      PrescriptionID: task.basedOn?.[0]?.identifier?.value,
+      PatientNHSNumber: task.for?.identifier?.value,
+      PharmacyODSCode: task.owner?.identifier?.value,
+      TaskID: task.id,
+      LineItemID: task.focus?.identifier?.value,
+      TerminalStatus: task.status,
+      RequestMessage: task
     }
 
     const invalidFields = []
@@ -159,7 +160,7 @@ const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPro
       }
     }
 
-    const taskResponse = {
+    const taskResponse: BundleEntry = {
       response: {
         status: "201 Created",
         outcome: {
@@ -175,7 +176,7 @@ const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPro
       }
     }
     logger.info("Task response", {taskResponse: taskResponse})
-    responseBundle.entry.push(taskResponse)
+    responseBundle.entry!.push(taskResponse)
   }
 
   if (entries.length === 0) {
