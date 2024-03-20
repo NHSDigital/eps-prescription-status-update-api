@@ -26,43 +26,50 @@ interface DynamoDBItem {
 
 const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
   const xRequestId = event.headers["x-request-id"]
-  let requestBody: Bundle
-  try {
-    requestBody = JSON.parse(event.body || "")
-  } catch (jsonParseError) {
-    logger.error("Error parsing JSON", {error: jsonParseError})
-    const errorResponseBody = {
-      resourceType: "OperationOutcome",
-      issue: [
-        {
-          code: "value",
-          severity: "error",
-          details: {
-            coding: [
-              {
-                system: "https://fhir.nhs.uk/CodeSystem/http-error-codes",
-                code: "BAD_REQUEST",
-                display: "400: The Server was unable to process the request."
-              }
-            ]
-          }
-        }
-      ]
-    }
-    return {
-      statusCode: 400,
-      body: JSON.stringify(errorResponseBody),
-      headers: {
-        "Content-Type": "application/fhir+json",
-        "Cache-Control": "no-cache"
-      }
-    }
-  }
 
   const responseBundle: Bundle = {
     resourceType: "Bundle",
     type: "transaction-response",
     entry: []
+  }
+
+  let requestBody: Bundle
+  try {
+    requestBody = JSON.parse(event.body || "")
+  } catch (jsonParseError) {
+    logger.error("Error parsing JSON", {error: jsonParseError})
+    const entry: BundleEntry = {
+      response: {
+        status: "400 Bad Request",
+        outcome: {
+          resourceType: "OperationOutcome",
+          issue: [
+            {
+              code: "value",
+              severity: "error",
+              details: {
+                coding: [
+                  {
+                    system: "https://fhir.nhs.uk/CodeSystem/http-error-codes",
+                    code: "BAD_REQUEST",
+                    display: "400: The Server was unable to process the request."
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      }
+    }
+    responseBundle.entry!.push(entry)
+    return {
+      statusCode: 400,
+      body: JSON.stringify(responseBundle),
+      headers: {
+        "Content-Type": "application/fhir+json",
+        "Cache-Control": "no-cache"
+      }
+    }
   }
 
   const entries: Array<BundleEntry> = requestBody.entry || []

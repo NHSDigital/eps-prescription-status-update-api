@@ -229,19 +229,30 @@ describe("Unit test for updatePrescriptionStatus handler", () => {
     const response: APIGatewayProxyResult = await handler(event, {} as any)
     expect(response.statusCode).toBe(400)
     expect(JSON.parse(response.body!)).toEqual({
-      resourceType: "OperationOutcome",
-      issue: [
+      resourceType: "Bundle",
+      type: "transaction-response",
+      entry: [
         {
-          code: "value",
-          severity: "error",
-          details: {
-            coding: [
-              {
-                system: "https://fhir.nhs.uk/CodeSystem/http-error-codes",
-                code: "BAD_REQUEST",
-                display: "400: The Server was unable to process the request."
-              }
-            ]
+          response: {
+            status: "400 Bad Request",
+            outcome: {
+              resourceType: "OperationOutcome",
+              issue: [
+                {
+                  code: "value",
+                  severity: "error",
+                  details: {
+                    coding: [
+                      {
+                        system: "https://fhir.nhs.uk/CodeSystem/http-error-codes",
+                        code: "BAD_REQUEST",
+                        display: "400: The Server was unable to process the request."
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
           }
         }
       ]
