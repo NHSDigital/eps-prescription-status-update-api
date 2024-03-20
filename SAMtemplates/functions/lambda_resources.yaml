@@ -10,7 +10,7 @@ Parameters:
     Default: none
   
   AdditionalPolicies:
-    Type: String
+    Type: CommaDelimitedList
     Description: A list of additional policies to attach the lambdas role (comma deliminated).
     Default: none
   
