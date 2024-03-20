@@ -76,6 +76,7 @@ Resources:
         EnableMutualTLS: !Ref EnableMutualTLS
         TruststoreVersion: !Ref TruststoreVersion
         LogRetentionInDays: !Ref LogRetentionInDays
+        EnableSplunk: !Ref EnableSplunk
   
   Functions:
     Type: AWS::Serverless::Application
