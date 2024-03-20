@@ -8,7 +8,6 @@ import {
   jest
 } from "@jest/globals"
 import {handler} from "../src/updatePrescriptionStatus"
-import {mockAPIGatewayProxyEvent} from "./mockAPIGatewayProxyEvent"
 import exampleDispatched from "../../specification/examples/request-dispatched.json"
 import exampleMultipleItems from "../../specification/examples/request-multiple-items.json"
 import exampleMissingFields from "../../specification/examples/request-missing-fields.json"
@@ -24,24 +23,22 @@ describe("Unit test for updatePrescriptionStatus handler", () => {
   })
 
   it("should successfully update a single item into DynamoDB", async () => {
-    const event: APIGatewayProxyEvent = {
-      ...mockAPIGatewayProxyEvent,
-      body: JSON.stringify({
-        entry: [
-          {
-            resource: {
-              basedOn: [{identifier: {value: "PrescriptionID"}}],
-              for: {identifier: {value: "PatientNHSNumber"}},
-              owner: {identifier: {value: "PharmacyODSCode"}},
-              id: "TaskID",
-              focus: {identifier: {value: "LineItemID"}},
-              status: "TerminalStatus",
-              lastModified: "2023-09-11T10:11:12Z"
-            }
+    const body = {
+      entry: [
+        {
+          resource: {
+            basedOn: [{identifier: {value: "PrescriptionID"}}],
+            for: {identifier: {value: "PatientNHSNumber"}},
+            owner: {identifier: {value: "PharmacyODSCode"}},
+            id: "TaskID",
+            focus: {identifier: {value: "LineItemID"}},
+            status: "TerminalStatus",
+            lastModified: "2023-09-11T10:11:12Z"
           }
-        ]
-      })
+        }
+      ]
     }
+    const event: APIGatewayProxyEvent = generateMockEvent(body)
 
     jest.spyOn(DynamoDBClient.prototype, "send").mockResolvedValue(undefined as never)
 
@@ -70,49 +67,41 @@ describe("Unit test for updatePrescriptionStatus handler", () => {
   })
 
   it("should successfully update multiple items into DynamoDB", async () => {
-    const event: APIGatewayProxyEvent = {
-      ...mockAPIGatewayProxyEvent,
-      body: JSON.stringify({
-        entry: [
-          {
-            resource: {
-              basedOn: [{identifier: {value: "PrescriptionID1"}}],
-              for: {identifier: {value: "PatientNHSNumber1"}},
-              owner: {identifier: {value: "PharmacyODSCode1"}},
-              id: "TaskID1",
-              focus: {identifier: {value: "LineItemID1"}},
-              status: "TerminalStatus1",
-              lastModified: "2023-09-11T10:11:12Z"
-            }
-          },
-          {
-            resource: {
-              basedOn: [{identifier: {value: "PrescriptionID2"}}],
-              for: {identifier: {value: "PatientNHSNumber2"}},
-              owner: {identifier: {value: "PharmacyODSCode2"}},
-              id: "TaskID2",
-              focus: {identifier: {value: "LineItemID2"}},
-              status: "TerminalStatus2",
-              lastModified: "2023-09-11T10:11:12Z"
-            }
+    const body = {
+      entry: [
+        {
+          resource: {
+            basedOn: [{identifier: {value: "PrescriptionID1"}}],
+            for: {identifier: {value: "PatientNHSNumber1"}},
+            owner: {identifier: {value: "PharmacyODSCode1"}},
+            id: "TaskID1",
+            focus: {identifier: {value: "LineItemID1"}},
+            status: "TerminalStatus1",
+            lastModified: "2023-09-11T10:11:12Z"
           }
-        ]
-      })
+        },
+        {
+          resource: {
+            basedOn: [{identifier: {value: "PrescriptionID2"}}],
+            for: {identifier: {value: "PatientNHSNumber2"}},
+            owner: {identifier: {value: "PharmacyODSCode2"}},
+            id: "TaskID2",
+            focus: {identifier: {value: "LineItemID2"}},
+            status: "TerminalStatus2",
+            lastModified: "2023-09-11T10:11:12Z"
+          }
+        }
+      ]
     }
+    const event: APIGatewayProxyEvent = generateMockEvent(body)
 
     jest.spyOn(DynamoDBClient.prototype, "send").mockResolvedValue(undefined as never)
+
     const result: APIGatewayProxyResult = await handler(event, {})
 
-    // Ensure that the DynamoDB send method was called twice, once for each item
     expect(DynamoDBClient.prototype.send).toHaveBeenCalledTimes(2)
-
-    // Ensure that the response status code is 201
     expect(result.statusCode).toEqual(201)
-
-    // Ensure that the response body matches the expected response for multiple items
     expect(JSON.parse(result.body)).toEqual(responseMultipleItems)
-
-    // Ensure that the DynamoDBClient was called with the correct data
     expect(DynamoDBClient.prototype.send).toHaveBeenCalledWith(
       expect.objectContaining({
         input: expect.objectContaining({
@@ -180,7 +169,6 @@ describe("Unit test for updatePrescriptionStatus handler", () => {
 
   it("should return a 400 status code and error message when provided with invalid JSON", async () => {
     const event: APIGatewayProxyEvent = generateMockEvent(exampleDispatched)
-    event.headers = {"x-request-id": "test-request-id"}
     event.body = '{ "resourceType": "Bundle",  "type": "transaction", "entry":}'
     const response: APIGatewayProxyResult = await handler(event, {})
     expect(response.statusCode).toBe(400)
@@ -252,24 +240,22 @@ describe("Unit test for updatePrescriptionStatus handler", () => {
   })
 
   it("should handle errors with a 201 status code, 500 response code and internal server error message", async () => {
-    const event: APIGatewayProxyEvent = {
-      ...mockAPIGatewayProxyEvent,
-      body: JSON.stringify({
-        entry: [
-          {
-            resource: {
-              basedOn: [{identifier: {value: "PrescriptionID"}}],
-              for: {identifier: {value: "PatientNHSNumber"}},
-              owner: {identifier: {value: "PharmacyODSCode"}},
-              id: "TaskID",
-              focus: {identifier: {value: "LineItemID"}},
-              status: "TerminalStatus",
-              lastModified: "2023-09-11T10:11:12Z"
-            }
+    const body = {
+      entry: [
+        {
+          resource: {
+            basedOn: [{identifier: {value: "PrescriptionID"}}],
+            for: {identifier: {value: "PatientNHSNumber"}},
+            owner: {identifier: {value: "PharmacyODSCode"}},
+            id: "TaskID",
+            focus: {identifier: {value: "LineItemID"}},
+            status: "TerminalStatus",
+            lastModified: "2023-09-11T10:11:12Z"
           }
-        ]
-      })
+        }
+      ]
     }
+    const event: APIGatewayProxyEvent = generateMockEvent(body)
 
     jest.spyOn(DynamoDBClient.prototype, "send").mockRejectedValue(new Error("Mocked error") as never)
 
@@ -321,10 +307,7 @@ describe("Unit test for updatePrescriptionStatus handler", () => {
         lastModified: "2023-09-11T10:11:12Z"
       }
     })
-    const event: APIGatewayProxyEvent = {
-      ...mockAPIGatewayProxyEvent,
-      body: JSON.stringify(body)
-    }
+    const event: APIGatewayProxyEvent = generateMockEvent(body)
 
     jest.spyOn(DynamoDBClient.prototype, "send").mockRejectedValue(new Error("Mocked error") as never)
 
