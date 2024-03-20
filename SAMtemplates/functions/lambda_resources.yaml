@@ -10,8 +10,8 @@ Parameters:
     Default: none
   
   AdditionalPolicies:
-    Type: List<String>
-    Description: A list of additional policies to attach the lambdas role.
+    Type: String
+    Description: A list of additional policies to attach the lambdas role (comma deliminated).
     Default: none
   
   LogRetentionInDays:
@@ -61,9 +61,7 @@ Resources:
           - - !ImportValue lambda-resources:LambdaInsightsLogGroupPolicy
             - !ImportValue account-resources:LambdaEncryptCloudwatchKMSPolicy
             - !ImportValue account-resources:LambdaDecryptSecretsKMSPolicy
-            - !Join
-              - ','
-              - !Ref AdditionalPolicies
+            - !Ref AdditionalPolicies
   
   LambdaManagedPolicy:
     Type: AWS::IAM::ManagedPolicy

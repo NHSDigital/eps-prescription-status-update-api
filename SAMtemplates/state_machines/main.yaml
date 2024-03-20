@@ -3,5 +3,19 @@
 # Description: |
 #   PSU state machines and related resources
 
+# Parameters:
+#   StackName:
+#     Type: String
+#     Description: The name of the main stack
+#     Default: none
+
 # Resources:
+#   UpdatePrescriptionStatusStateMachine:
+#     Type: AWS::StepFunctions::StateMachine
+#     Properties:
+#       StateMachineName: !Sub ${StackName}-UpdatePrescriptionStatus
+#       RoleArn: todo
+#       DefinitionString: |-
+#         {
+#         }
   
