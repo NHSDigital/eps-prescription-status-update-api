@@ -3,58 +3,53 @@
 // /^[0-9a-fA-F]{6}-[0-9a-fA-F]{6}-[0-9a-fA-F]{5}[0-9a-zA-Z+]{1}
 
 import {Logger} from "@aws-lambda-powertools/logger"
-import {Bundle, Task} from "fhir/r4"
+import {Task} from "fhir/r4"
 
-type Validation = (bundle: Bundle) => Array<Issue>
+type Validation = (task: Task) => string | undefined
 
-type Issue = {
-    fhirPath: string,
-    description: string
+type ValidationOutcome = {
+    valid: boolean,
+    issues: Array<string>
 }
 
 const ONE_DAY_IN_MS = 86400000
 const logger = new Logger({serviceName: "requestContentValidation"})
 
-function lastModified(bundle: Bundle): Array<Issue> {
-  const issues: Array<Issue> = []
-
+function lastModified(task: Task): string | undefined {
   const today = new Date()
+  const lastModified = new Date(task.lastModified!)
 
-  bundle.entry?.forEach((entry, entryIndex) => {
-    const fhirPath = `entry[${entryIndex}].resource.lastModified`
-    const task: Task = entry.resource as Task
-    const lastModified = new Date(task.lastModified!)
+  if (isNaN(lastModified.getTime())) {
+    return "Date format provided for lastModified is invalid."
+  }
 
-    if (isNaN(lastModified.getTime())) {
-      issues.push({fhirPath: fhirPath, description: "Date format provided for lastModified is invalid."})
-    }
-
-    if (lastModified!.valueOf() - today.valueOf() > ONE_DAY_IN_MS) {
-      issues.push(
-        {fhirPath: fhirPath, description: "Date provided for lastModified is more than one day in the future."}
-      )
-    }
-  })
-  return issues
+  if (lastModified!.valueOf() - today.valueOf() > ONE_DAY_IN_MS) {
+    return "Date provided for lastModified is more than one day in the future."
+  }
 }
 
-function validate(bundle: Bundle): Array<Issue> {
+function validateTask(task: Task): ValidationOutcome {
   const validations: Array<Validation> = [
     lastModified
   ]
-  const issues: Array<Issue> = []
+  const validationOutcome: ValidationOutcome = {valid: true, issues: []}
 
   validations.forEach((validation: Validation) => {
     try {
-      issues.concat(validation(bundle))
+      const issue = validation(task)
+      if (issue) {
+        validationOutcome.valid = false
+        validationOutcome.issues.push(issue)
+      }
     } catch(e) {
       const message = `Unhandled error during validation of ${validation.name}.`
       logger.error(`${message}: ${e}`)
-      issues.push({fhirPath: "Unknown", description: message})
+      validationOutcome.valid = false
+      validationOutcome.issues.push(message)
     }
   })
 
-  return issues
+  return validationOutcome
 }
 
-export {Issue, ONE_DAY_IN_MS, lastModified, validate}
+export {ValidationOutcome, ONE_DAY_IN_MS, lastModified, validateTask}

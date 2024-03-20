@@ -16,21 +16,7 @@ import exampleMissingFields from "../../specification/examples/request-missing-f
 import exampleNoItems from "../../specification/examples/request-no-items.json"
 import responseSingleItem from "../../specification/examples/response-single-item.json"
 import responseMultipleItems from "../../specification/examples/response-multiple-items.json"
-
-const generateMockEvent = (body: any): APIGatewayProxyEvent => ({
-  body: JSON.stringify(body),
-  headers: {"x-request-id": "test-request-id"},
-  multiValueHeaders: {},
-  httpMethod: "POST",
-  isBase64Encoded: false,
-  path: "/",
-  queryStringParameters: null,
-  multiValueQueryStringParameters: null,
-  stageVariables: null,
-  requestContext: {} as any,
-  resource: "",
-  pathParameters: null
-})
+import {generateMockEvent} from "./utils"
 
 const setupTest = async (event: APIGatewayProxyEvent, context: any) => {
   jest.spyOn(DynamoDBClient.prototype, "send").mockResolvedValue(undefined as never)

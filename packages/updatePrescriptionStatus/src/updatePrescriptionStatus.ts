@@ -8,6 +8,7 @@ import middy from "@middy/core"
 import inputOutputLogger from "@middy/input-output-logger"
 import errorHandler from "@nhs/fhir-middy-error-handler"
 import {Bundle, BundleEntry, Task} from "fhir/r4"
+import {validateTask} from "./requestContentValidation"
 
 const logger = new Logger({serviceName: "updatePrescriptionStatus"})
 const client = new DynamoDBClient({region: "eu-west-2"})
@@ -76,6 +77,37 @@ const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPro
   for (const entry of entries) {
     const task = entry.resource as Task
     logger.info("Processing Task", {task: task, id: task.id})
+
+    const validationOutcome = validateTask(task)
+    if (!validationOutcome.valid) {
+      const display = validationOutcome.issues.join(" ")
+      const entry: BundleEntry = {
+        response: {
+          status: "400 Bad Request",
+          location: `Task/${task.id}/_history/1`,
+          outcome: {
+            resourceType: "OperationOutcome",
+            issue: [
+              {
+                code: "value",
+                severity: "error",
+                details: {
+                  coding: [
+                    {
+                      system: "https://fhir.nhs.uk/CodeSystem/http-error-codes",
+                      code: "BAD_REQUEST",
+                      display: `Validation issues: ${display}`
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      }
+      responseBundle.entry!.push(entry)
+      continue
+    }
 
     const dynamoDBItem: DynamoDBItem = {
       RequestID: xRequestId,
