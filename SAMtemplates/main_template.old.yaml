@@ -1,0 +1,374 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  prescription status update api
+
+# More info about Globals: https://github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
+Globals:
+  Function:
+    Timeout: 50
+    MemorySize: 256
+    Architectures:
+      - x86_64
+    Runtime: nodejs20.x
+    Environment:
+      Variables:
+        TargetServiceSearchServer: !Ref TargetServiceSearchServer
+        NODE_OPTIONS: --enable-source-maps
+    Layers:
+      - !Sub "arn:aws:lambda:${AWS::Region}:580247275435:layer:LambdaInsightsExtension:49"
+
+Parameters:
+  TargetServiceSearchServer:
+    Type: String
+    Description: TargetServiceSearchServer
+    Default: none
+  TruststoreVersion:
+    Type: String
+    Description: TruststoreVersion
+    Default: none
+  EnableMutualTLS:
+    Type: String
+    Description: Whether to use mutual TLS
+    Default: false
+    AllowedValues: [true, false]
+  EnableSplunk:
+    Type: String
+    Description: Whether to use splunk
+    Default: false
+    AllowedValues: [true, false]
+  LogLevel:
+    Type: String
+    Description: The log level to set in the lambda
+    Default: "INFO"
+  LogRetentionDays:
+    Type: Number
+    Description: How long to keep logs for
+    Default: 30
+    AllowedValues:
+      [
+        1,
+        3,
+        5,
+        7,
+        14,
+        30,
+        60,
+        90,
+        120,
+        150,
+        180,
+        365,
+        400,
+        545,
+        731,
+        1096,
+        1827,
+        2192,
+        2557,
+        2922,
+        3288,
+        3653,
+      ]
+
+Conditions:
+  ShouldUseMutualTLS: !Equals [true, !Ref EnableMutualTLS]
+  ShouldUseSplunk: !Equals [true, !Ref EnableSplunk]
+
+Resources:
+  # # updatePrescriptionStatus lambda
+  # UpdatePrescriptionStatusResources:
+  #   Type: AWS::Serverless::Application
+  #   Properties:
+  #     Location: lambda_resources.yaml
+  #     Parameters:
+  #       CloudWatchKMSKey: !ImportValue account-resources:CloudwatchLogsKmsKeyArn
+  #       SplunkSubscriptionFilterRole: !ImportValue lambda-resources:SplunkSubscriptionFilterRole
+  #       SplunkDeliveryStream: !ImportValue lambda-resources:SplunkDeliveryStream
+  #       EnableSplunk: !Ref EnableSplunk
+  #       LambdaName: !Sub "${AWS::StackName}-UpdatePrescriptionStatus"
+  #       LogRetentionDays: !Ref LogRetentionDays
+  # UpdatePrescriptionStatus:
+  #   Type: AWS::Serverless::Function
+  #   Properties:
+  #     FunctionName: !Sub "${AWS::StackName}-UpdatePrescriptionStatus"
+  #     CodeUri: ../packages
+  #     Handler: "updatePrescriptionStatus.handler"
+  #     Role: !GetAtt UpdatePrescriptionStatusResources.Outputs.LambdaRoleArn
+  #     Environment:
+  #       Variables:
+  #         TABLE_NAME: !Sub "${AWS::StackName}-PrescriptionStatusUpdates"
+  #         LOG_LEVEL: !Ref LogLevel
+  #     Events:
+  #       updatePrescriptionStatus:
+  #         Type: HttpApi
+  #         Properties:
+  #           ApiId: !Ref HttpApiGateway
+  #           Path: /
+  #           Method: post
+  #   Metadata: # Manage esbuild properties
+  #     BuildMethod: esbuild
+  #     BuildProperties:
+  #       Minify: true
+  #       Target: "es2020"
+  #       Sourcemap: true
+  #       tsconfig: updatePrescriptionStatus/tsconfig.json
+  #       EntryPoints:
+  #         - updatePrescriptionStatus/src/updatePrescriptionStatus.ts
+  # Prescription Status Updates table
+  # PrescriptionStatusUpdatesTable:
+  #   Type: "AWS::DynamoDB::Table"
+  #   Properties:
+  #     TableName: !Sub "${AWS::StackName}-PrescriptionStatusUpdates"
+  #     AttributeDefinitions:
+  #       - AttributeName: "RequestID"
+  #         AttributeType: "S"
+  #       - AttributeName: "PrescriptionID"
+  #         AttributeType: "S"
+  #       - AttributeName: "PatientNHSNumber"
+  #         AttributeType: "S"
+  #       - AttributeName: "PharmacyODSCode"
+  #         AttributeType: "S"
+  #     KeySchema:
+  #       - AttributeName: "RequestID"
+  #         KeyType: "HASH"
+  #       - AttributeName: "PrescriptionID"
+  #         KeyType: "RANGE"
+  #     ProvisionedThroughput:
+  #       ReadCapacityUnits: "5"
+  #       WriteCapacityUnits: "5"
+  #     GlobalSecondaryIndexes:
+  #       - IndexName: "RequestIDIndex"
+  #         KeySchema:
+  #           - AttributeName: "RequestID"
+  #             KeyType: "HASH"
+  #           - AttributeName: "PrescriptionID"
+  #             KeyType: "RANGE"
+  #         Projection:
+  #           NonKeyAttributes:
+  #             - "PatientNHSNumber"
+  #             - "PharmacyODSCode"
+  #             - "TaskID"
+  #             - "LineItemID"
+  #             - "TerminalStatus"
+  #             - "RequestMessage"
+  #           ProjectionType: "INCLUDE"
+  #         ProvisionedThroughput:
+  #           ReadCapacityUnits: "5"
+  #           WriteCapacityUnits: "5"
+  #       - IndexName: "PrescriptionIDIndex"
+  #         KeySchema:
+  #           - AttributeName: "PrescriptionID"
+  #             KeyType: "HASH"
+  #           - AttributeName: "PatientNHSNumber"
+  #             KeyType: "RANGE"
+  #         Projection:
+  #           NonKeyAttributes:
+  #             - "PharmacyODSCode"
+  #             - "TaskID"
+  #             - "LineItemID"
+  #             - "TerminalStatus"
+  #             - "RequestID"
+  #             - "RequestMessage"
+  #           ProjectionType: "INCLUDE"
+  #         ProvisionedThroughput:
+  #           ReadCapacityUnits: "5"
+  #           WriteCapacityUnits: "5"
+  #       - IndexName: "PatientNHSNumberIndex"
+  #         KeySchema:
+  #           - AttributeName: "PatientNHSNumber"
+  #             KeyType: "HASH"
+  #           - AttributeName: "PrescriptionID"
+  #             KeyType: "RANGE"
+  #         Projection:
+  #           NonKeyAttributes:
+  #             - "PharmacyODSCode"
+  #             - "TaskID"
+  #             - "LineItemID"
+  #             - "TerminalStatus"
+  #             - "RequestID"
+  #             - "RequestMessage"
+  #           ProjectionType: "INCLUDE"
+  #         ProvisionedThroughput:
+  #           ReadCapacityUnits: "5"
+  #           WriteCapacityUnits: "5"
+  #       - IndexName: "PharmacyODSCodeIndex"
+  #         KeySchema:
+  #           - AttributeName: "PharmacyODSCode"
+  #             KeyType: "HASH"
+  #           - AttributeName: "PrescriptionID"
+  #             KeyType: "RANGE"
+  #         Projection:
+  #           NonKeyAttributes:
+  #             - "PatientNHSNumber"
+  #             - "TaskID"
+  #             - "LineItemID"
+  #             - "TerminalStatus"
+  #             - "RequestID"
+  #             - "RequestMessage"
+  #           ProjectionType: "INCLUDE"
+  #         ProvisionedThroughput:
+  #           ReadCapacityUnits: "5"
+  #           WriteCapacityUnits: "5"
+  # DynamoDBReadPolicy:
+  #   Type: AWS::IAM::ManagedPolicy
+  #   Properties:
+  #     Roles:
+  #       - !GetAtt UpdatePrescriptionStatusResources.Outputs.LambdaRoleName
+  #     PolicyDocument:
+  #       Version: "2012-10-17"
+  #       Statement:
+  #         - Effect: Allow
+  #           Action:
+  #             - dynamodb:GetItem
+  #             - dynamodb:Scan
+  #             - dynamodb:Query
+  #             - dynamodb:BatchGetItem
+  #             - dynamodb:DescribeTable
+  #             - dynamodb:GetRecords
+  #             - dynamodb:ListTables
+  #           Resource:
+  #             - !GetAtt PrescriptionStatusUpdatesTable.Arn
+  #             - !Join [
+  #                 "",
+  #                 [!GetAtt PrescriptionStatusUpdatesTable.Arn, "/index/*"],
+  #               ]
+  # DynamoDBWritePolicy:
+  #   Type: AWS::IAM::ManagedPolicy
+  #   Properties:
+  #     Roles:
+  #       - !GetAtt UpdatePrescriptionStatusResources.Outputs.LambdaRoleName
+  #     PolicyDocument:
+  #       Version: "2012-10-17"
+  #       Statement:
+  #         - Effect: Allow
+  #           Action:
+  #             - dynamodb:BatchWriteItem
+  #             - dynamodb:DeleteItem
+  #             - dynamodb:PutItem
+  #             - dynamodb:UpdateItem
+  #           Resource:
+  #             - !GetAtt PrescriptionStatusUpdatesTable.Arn
+  #             - !Join [
+  #                 "",
+  #                 [!GetAtt PrescriptionStatusUpdatesTable.Arn, "/index/*"],
+  #               ]
+
+  # # TLS cert for custom domain
+  # GenerateCertificate:
+  #   Type: AWS::CertificateManager::Certificate
+  #   Properties:
+  #     ValidationMethod: DNS
+  #     DomainName:
+  #       Fn::Join:
+  #         - "."
+  #         - - !Ref "AWS::StackName"
+  #           - Fn::ImportValue: eps-route53-resources:EPS-domain
+  #     DomainValidationOptions:
+  #       - DomainName:
+  #           Fn::Join:
+  #             - "."
+  #             - - !Ref "AWS::StackName"
+  #               - Fn::ImportValue: eps-route53-resources:EPS-domain
+  #         HostedZoneId:
+  #           Fn::ImportValue: eps-route53-resources:EPS-ZoneID
+
+  # Http api
+  # HttpApiGateway:
+  #   Type: AWS::Serverless::HttpApi
+  #   Properties:
+  #     StageName: Prod
+  #     DefaultRouteSettings:
+  #       DetailedMetricsEnabled: true
+  #     Domain:
+  #       DomainName:
+  #         Fn::Join:
+  #           - "."
+  #           - - !Ref "AWS::StackName"
+  #             - Fn::ImportValue: eps-route53-resources:EPS-domain
+  #       CertificateArn: !Ref GenerateCertificate
+  #       Route53:
+  #         HostedZoneId:
+  #           Fn::ImportValue: eps-route53-resources:EPS-ZoneID
+  #       EndpointConfiguration: REGIONAL
+  #       SecurityPolicy: TLS_1_2
+  #       MutualTlsAuthentication:
+  #         TruststoreUri:
+  #           "Fn::If":
+  #             - ShouldUseMutualTLS
+  #             - Fn::Join:
+  #                 - "/"
+  #                 - - "s3:/"
+  #                   - !Select [
+  #                       5,
+  #                       !Split [
+  #                         ":",
+  #                         Fn::ImportValue: account-resources:TrustStoreBucket,
+  #                       ],
+  #                     ]
+  #                   - "psu-truststore.pem"
+  #             - !Ref "AWS::NoValue"
+  #         TruststoreVersion:
+  #           "Fn::If":
+  #             - ShouldUseMutualTLS
+  #             - !Ref TruststoreVersion
+  #             - !Ref "AWS::NoValue"
+  #     DisableExecuteApiEndpoint:
+  #       "Fn::If":
+  #         - ShouldUseMutualTLS
+  #         - true
+  #         - !Ref "AWS::NoValue"
+  #     AccessLogSettings:
+  #       DestinationArn: !GetAtt ApiGwAccessLogs.Arn
+        # Format: "{ \
+        #   \"requestTime\": \"$context.requestTime\", \
+        #   \"apiId\": \"$context.apiId\", \
+        #   \"accountId\": \"$context.accountId\", \
+        #   \"resourcePath\": \"$context.resourcePath\", \
+        #   \"stage\": \"$context.stage\", \
+        #   \"requestId\": \"$context.requestId\", \
+        #   \"extendedRequestId\": \"$context.extendedRequestId\", \
+        #   \"status\": \"$context.status\", \
+        #   \"httpMethod\": \"$context.httpMethod\", \
+        #   \"protocol\": \"$context.protocol\", \
+        #   \"path\": \"$context.path\", \
+        #   \"responseLatency\": \"$context.responseLatency\", \
+        #   \"responseLength\": \"$context.responseLength\",
+        #   \"domainName\": \"$context.domainName\", \
+        #   \"identity\": { \
+        #   \"sourceIp\": \"$context.identity.sourceIp\", \
+        #   \"userAgent\": \"$context.identity.userAgent\", \
+        #   \"clientCert\":{ \
+        #   \"subjectDN\": \"$context.identity.clientCert.subjectDN\", \
+        #   \"issuerDN\": \"$context.identity.clientCert.issuerDN\", \
+        #   \"serialNumber\": \"$context.identity.clientCert.serialNumber\", \
+        #   \"validityNotBefore\": \"$context.identity.clientCert.validity.notBefore\", \
+        #   \"validityNotAfter\": \"$context.identity.clientCert.validity.notAfter\" \
+        #   }}, \
+        #   \"integration\":{ \
+        #   \"error\": \"$context.integration.error\", \
+        #   \"integrationStatus\": \"$context.integration.integrationStatus\", \
+        #   \"latency\": \"$context.integration.latency\", \
+        #   \"requestId\": \"$context.integration.requestId\", \
+        #   \"status\": \"$context.integration.status\" \
+        #   }}"
+
+  # ApiGwAccessLogs:
+  #   Type: AWS::Logs::LogGroup
+  #   Properties:
+  #     LogGroupName:
+  #       !Join [
+  #         "/",
+  #         ["/aws/apigateway", !Ref "AWS::StackName", !Sub "${HttpApiGateway}"],
+  #       ]
+  #     RetentionInDays: !Ref LogRetentionDays
+  #     KmsKeyId: !ImportValue account-resources:CloudwatchLogsKmsKeyArn
+
+  # ApiGwAccessLogsSplunkSubscriptionFilter:
+  #   Condition: ShouldUseSplunk
+  #   Type: AWS::Logs::SubscriptionFilter
+  #   Properties:
+  #     RoleArn: !ImportValue lambda-resources:SplunkSubscriptionFilterRole
+  #     LogGroupName: !Ref ApiGwAccessLogs
+  #     FilterPattern: "" # All logs
+  #     DestinationArn: !ImportValue lambda-resources:SplunkDeliveryStream

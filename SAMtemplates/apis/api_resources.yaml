@@ -1,0 +1,44 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: |
+  Resources for an API
+
+Parameters:
+  StackName:
+    Type: String
+    Description: The name of the main stack
+  
+  ApiId:
+    Type: String
+    Description: The name of the main stack
+    Default: none
+  
+  LogRetentionInDays:
+    Type: Number
+    Description: How long to keep logs for.
+  
+  EnableSplunk:
+    Type: String
+    Description: Whether to use splunk
+
+Conditions:
+  ShouldUseSplunk: !Equals
+    - true
+    - !Ref EnableSplunk
+
+Resources:
+  ApiGwAccessLogs:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub /aws/apigateway/${StackName}/${ApiId}
+      RetentionInDays: !Ref LogRetentionDays
+      KmsKeyId: !ImportValue account-resources:CloudwatchLogsKmsKeyArn
+  
+  ApiGwAccessLogsSplunkSubscriptionFilter:
+    Condition: ShouldUseSplunk
+    Type: AWS::Logs::SubscriptionFilter
+    Properties:
+      RoleArn: !ImportValue lambda-resources:SplunkSubscriptionFilterRole
+      LogGroupName: !Ref ApiGwAccessLogs
+      FilterPattern: ''
+      DestinationArn: !ImportValue lambda-resources:SplunkDeliveryStream
