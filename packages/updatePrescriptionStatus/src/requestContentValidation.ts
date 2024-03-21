@@ -9,7 +9,7 @@ type Validation = (task: Task) => string | undefined
 
 type ValidationOutcome = {
     valid: boolean,
-    issues: Array<string>
+    issues: string | undefined
 }
 
 const ONE_DAY_IN_MS = 86400000
@@ -32,20 +32,23 @@ function validateTask(task: Task): ValidationOutcome {
   const validations: Array<Validation> = [
     lastModified
   ]
-  const validationOutcome: ValidationOutcome = {valid: true, issues: []}
+  const validationOutcome: ValidationOutcome = {valid: true, issues: undefined}
 
   validations.forEach((validation: Validation) => {
+    const issues: Array<string> = []
     try {
       const issue = validation(task)
       if (issue) {
-        validationOutcome.valid = false
-        validationOutcome.issues.push(issue)
+        issues.push(issue)
       }
     } catch(e) {
       const message = `Unhandled error during validation of ${validation.name}.`
       logger.error(`${message}: ${e}`)
+      issues.push(message)
+    }
+    if (issues.length > 0) {
       validationOutcome.valid = false
-      validationOutcome.issues.push(message)
+      validationOutcome.issues = issues.join(" ")
     }
   })
 

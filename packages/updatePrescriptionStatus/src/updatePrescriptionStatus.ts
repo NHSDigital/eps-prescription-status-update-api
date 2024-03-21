@@ -80,7 +80,6 @@ const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPro
 
     const validationOutcome = validateTask(task)
     if (!validationOutcome.valid) {
-      const display = validationOutcome.issues.join(" ")
       const entry: BundleEntry = {
         fullUrl: task.id,
         response: {
@@ -96,7 +95,7 @@ const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPro
                     {
                       system: "https://fhir.nhs.uk/CodeSystem/http-error-codes",
                       code: "BAD_REQUEST",
-                      display: `Validation issues: ${display}`
+                      display: `Validation issues: ${validationOutcome.issues}`
                     }
                   ]
                 }

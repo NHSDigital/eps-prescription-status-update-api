@@ -16,7 +16,7 @@ describe("Unit tests for overall task validation", () => {
   it.each([
     {
       task: valid,
-      expectedOutcome: {valid: true, issues: []},
+      expectedOutcome: {valid: true, issues: undefined},
       scenarioDescription: "Valid task"
     }
   ])(
