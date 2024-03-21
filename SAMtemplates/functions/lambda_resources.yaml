@@ -61,7 +61,6 @@ Resources:
           - - !ImportValue lambda-resources:LambdaInsightsLogGroupPolicy
             - !ImportValue account-resources:LambdaEncryptCloudwatchKMSPolicy
             - !ImportValue account-resources:LambdaDecryptSecretsKMSPolicy
-            # - !Ref AdditionalPolicies
             - !Join
               - ','
               - !Ref AdditionalPolicies
