@@ -3,9 +3,9 @@
   "type": "transaction-response",
   "entry": [
     {
+      "fullUrl": "4d70678c-81e4-4ff4-8c67-17596fd0aa46",
       "response": {
         "status": "201 Created",
-        "location": "Task/4d70678c-81e4-4ff4-8c67-17596fd0aa46/_history/1",
         "outcome": {
           "resourceType": "OperationOutcome",
           "issue": [
@@ -19,9 +19,9 @@
       }
     },
     {
+      "fullUrl": "0ae4daf3-f24b-479d-b8fa-b69e2d873b60",
       "response": {
         "status": "201 Created",
-        "location": "Task/0ae4daf3-f24b-479d-b8fa-b69e2d873b60/_history/1",
         "outcome": {
           "resourceType": "OperationOutcome",
           "issue": [

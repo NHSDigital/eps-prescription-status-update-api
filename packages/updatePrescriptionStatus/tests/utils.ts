@@ -2,8 +2,8 @@
 
 import {APIGatewayProxyEvent} from "aws-lambda"
 
-const TASK_ID1 = "4d70678c-81e4-4ff4-8c67-17596fd0aa46"
-const TASK_ID2 = "0ae4daf3-f24b-479d-b8fa-b69e2d873b60"
+const TASK_ID_0 = "4d70678c-81e4-4ff4-8c67-17596fd0aa46"
+const TASK_ID_1 = "0ae4daf3-f24b-479d-b8fa-b69e2d873b60"
 const X_REQUEST_ID = "43313002-debb-49e3-85fa-34812c150242"
 const DEFAULT_HEADERS = {"x-request-id": X_REQUEST_ID}
 
@@ -13,7 +13,7 @@ const TASK_VALUES = [
     nhsNumber: "9449304130",
     odsCode: "C9Z1O",
     lineItemID: "6989b7bd-8db6-428c-a593-4022e3044c00",
-    id: TASK_ID1,
+    id: TASK_ID_0,
     status: "in-progress",
     lastModified: "2023-09-11T10:11:12Z"
   },
@@ -22,7 +22,7 @@ const TASK_VALUES = [
     nhsNumber: "9449304130",
     odsCode: "C9Z1O",
     lineItemID: "e3843418-1900-44a1-8f6a-bff8601893b8",
-    id: TASK_ID2,
+    id: TASK_ID_1,
     status: "in-progress",
     lastModified: "2023-09-11T10:11:12Z"
   }
@@ -95,4 +95,4 @@ function generateExpectedItems() {
   return items
 }
 
-export {generateBody, generateExpectedItems, generateMockEvent, TASK_ID1, TASK_ID2}
+export {generateBody, generateExpectedItems, generateMockEvent, TASK_ID_0, TASK_ID_1}

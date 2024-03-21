@@ -10,8 +10,8 @@ import {
 
 import {handler} from "../src/updatePrescriptionStatus"
 import {
-  TASK_ID1,
-  TASK_ID2,
+  TASK_ID_0,
+  TASK_ID_1,
   generateBody,
   generateExpectedItems,
   generateMockEvent
@@ -166,9 +166,9 @@ describe("Unit test for updatePrescriptionStatus handler", () => {
       type: "transaction-response",
       entry: [
         {
+          fullUrl: TASK_ID_0,
           response: {
             status: "400 Bad Request",
-            location: `Task/${TASK_ID1}/_history/1`,
             outcome: {
               resourceType: "OperationOutcome",
               issue: [
@@ -206,9 +206,9 @@ describe("Unit test for updatePrescriptionStatus handler", () => {
       type: "transaction-response",
       entry: [
         {
+          fullUrl: TASK_ID_0,
           response: {
             status: "500 Internal Server Error",
-            location: `Task/${TASK_ID1}/_history/1`,
             outcome: {
               resourceType: "OperationOutcome",
               issue: [
@@ -240,7 +240,7 @@ describe("Unit test for updatePrescriptionStatus handler", () => {
         basedOn: [{identifier: {value: "PrescriptionID"}}],
         for: {identifier: {value: "PatientNHSNumber"}},
         owner: {identifier: {value: "PharmacyODSCode"}},
-        id: TASK_ID2,
+        id: TASK_ID_1,
         focus: {identifier: {value: "LineItemID"}},
         status: "TerminalStatus",
         lastModified: "2023-09-11T10:11:12Z"
@@ -258,9 +258,9 @@ describe("Unit test for updatePrescriptionStatus handler", () => {
       type: "transaction-response",
       entry: [
         {
+          fullUrl: TASK_ID_0,
           response: {
             status: "400 Bad Request",
-            location: `Task/${TASK_ID1}/_history/1`,
             outcome: {
               resourceType: "OperationOutcome",
               issue: [
@@ -282,9 +282,9 @@ describe("Unit test for updatePrescriptionStatus handler", () => {
           }
         },
         {
+          fullUrl: TASK_ID_1,
           response: {
             status: "500 Internal Server Error",
-            location: `Task/${TASK_ID2}/_history/1`,
             outcome: {
               resourceType: "OperationOutcome",
               issue: [

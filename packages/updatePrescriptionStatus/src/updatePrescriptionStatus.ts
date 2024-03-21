@@ -82,9 +82,9 @@ const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPro
     if (!validationOutcome.valid) {
       const display = validationOutcome.issues.join(" ")
       const entry: BundleEntry = {
+        fullUrl: task.id,
         response: {
           status: "400 Bad Request",
-          location: `Task/${task.id}/_history/1`,
           outcome: {
             resourceType: "OperationOutcome",
             issue: [
@@ -132,9 +132,9 @@ const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPro
       const errorMessage = `400: Missing required fields: ${invalidFields.join(", ")}`
       logger.error("Error message", {errorMessage: errorMessage})
       const entry: BundleEntry = {
+        fullUrl: task.id,
         response: {
           status: "400 Bad Request",
-          location: `Task/${task.id}/_history/1`,
           outcome: {
             resourceType: "OperationOutcome",
             issue: [
@@ -172,9 +172,9 @@ const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPro
     } catch (error) {
       logger.error("Error sending PutItemCommand", {error: error})
       const entry: BundleEntry = {
+        fullUrl: task.id,
         response: {
           status: "500 Internal Server Error",
-          location: `Task/${task.id}/_history/1`,
           outcome: {
             resourceType: "OperationOutcome",
             issue: [
@@ -200,9 +200,9 @@ const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPro
     }
 
     const taskResponse: BundleEntry = {
+      fullUrl: task.id,
       response: {
         status: "201 Created",
-        location: `Task/${task.id}/_history/1`,
         outcome: {
           resourceType: "OperationOutcome",
           issue: [
