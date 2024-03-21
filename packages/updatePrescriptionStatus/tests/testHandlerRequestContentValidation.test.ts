@@ -19,7 +19,7 @@ describe("Unit test for validation via updatePrescriptionStatus handler", () => 
     jest.resetModules()
   })
 
-  it("should return a 201 status code and 400 response codes when content validation issues are present", async () => {
+  it("when content validation issues are present, should return a 400 status code and 400 response code(s)", async () => {
     const body: any = {...exampleDispatched}
 
     const now = new Date()
@@ -59,7 +59,7 @@ describe("Unit test for validation via updatePrescriptionStatus handler", () => 
 
     const response: APIGatewayProxyResult = await handler(event, {})
 
-    expect(response.statusCode).toBe(201)
+    expect(response.statusCode).toBe(400)
     expect(JSON.parse(response.body!)).toEqual(expected)
   })
 })

@@ -15,12 +15,12 @@ const client = new DynamoDBClient({region: "eu-west-2"})
 const tableName = process.env.TABLE_NAME
 
 interface DynamoDBItem {
-  RequestID: string | undefined;
-  PrescriptionID: string | undefined;
-  PatientNHSNumber: string | undefined;
-  PharmacyODSCode: string | undefined;
-  TaskID: string | undefined;
-  LineItemID: string | undefined;
+  RequestID?: string;
+  PrescriptionID?: string;
+  PatientNHSNumber?: string;
+  PharmacyODSCode?: string;
+  TaskID?: string;
+  LineItemID?: string;
   TerminalStatus: string;
   RequestMessage: any;
 }
@@ -34,35 +34,8 @@ const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPro
     entry: []
   }
 
-  let requestBody: Bundle
-  try {
-    requestBody = JSON.parse(event.body || "")
-  } catch (jsonParseError) {
-    logger.error("Error parsing JSON", {error: jsonParseError})
-    const entry: BundleEntry = {
-      response: {
-        status: "400 Bad Request",
-        outcome: {
-          resourceType: "OperationOutcome",
-          issue: [
-            {
-              code: "value",
-              severity: "error",
-              details: {
-                coding: [
-                  {
-                    system: "https://fhir.nhs.uk/CodeSystem/http-error-codes",
-                    code: "BAD_REQUEST",
-                    display: "400: The Server was unable to process the request."
-                  }
-                ]
-              }
-            }
-          ]
-        }
-      }
-    }
-    responseBundle.entry!.push(entry)
+  const requestBody = parseEventBody(event, responseBundle)
+  if(!requestBody) {
     return {
       statusCode: 400,
       body: JSON.stringify(responseBundle),
@@ -74,39 +47,18 @@ const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPro
   }
 
   const entries: Array<BundleEntry> = requestBody.entry || []
+
+  const entriesValid = validateEntries(entries, responseBundle)
+  if (!entriesValid) {
+    return {
+      statusCode: 400,
+      body: JSON.stringify(responseBundle)
+    }
+  }
+
   for (const entry of entries) {
     const task = entry.resource as Task
     logger.info("Processing Task", {task: task, id: task.id})
-
-    const validationOutcome = validateTask(task)
-    if (!validationOutcome.valid) {
-      const entry: BundleEntry = {
-        fullUrl: task.id,
-        response: {
-          status: "400 Bad Request",
-          outcome: {
-            resourceType: "OperationOutcome",
-            issue: [
-              {
-                code: "value",
-                severity: "error",
-                details: {
-                  coding: [
-                    {
-                      system: "https://fhir.nhs.uk/CodeSystem/http-error-codes",
-                      code: "BAD_REQUEST",
-                      display: `Validation issues: ${validationOutcome.issues}`
-                    }
-                  ]
-                }
-              }
-            ]
-          }
-        }
-      }
-      responseBundle.entry!.push(entry)
-      continue
-    }
 
     const dynamoDBItem: DynamoDBItem = {
       RequestID: xRequestId,
@@ -231,6 +183,96 @@ const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPro
     statusCode: 201,
     body: JSON.stringify(responseBundle)
   }
+}
+
+function parseEventBody(event: APIGatewayProxyEvent, responseBundle: Bundle): Bundle | undefined {
+  try {
+    return JSON.parse(event.body || "") as Bundle
+  } catch (jsonParseError) {
+    logger.error("Error parsing JSON", {error: jsonParseError})
+    const entry: BundleEntry = {
+      response: {
+        status: "400 Bad Request",
+        outcome: {
+          resourceType: "OperationOutcome",
+          issue: [
+            {
+              code: "value",
+              severity: "error",
+              details: {
+                coding: [
+                  {
+                    system: "https://fhir.nhs.uk/CodeSystem/http-error-codes",
+                    code: "BAD_REQUEST",
+                    display: "400: The Server was unable to process the request."
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      }
+    }
+    responseBundle.entry!.push(entry)
+  }
+}
+
+function validateEntries(entries: Array<BundleEntry>, responseBundle: Bundle): boolean {
+  let valid = true
+  for (const requestEntry of entries) {
+    const task = requestEntry.resource as Task
+    logger.info("Processing Task", {task: task, id: task.id})
+
+    const validationOutcome = validateTask(task)
+
+    let responseEntry: BundleEntry
+    if (validationOutcome.valid) {
+      responseEntry = {
+        fullUrl: task.id,
+        response: {
+          status: "200 Accepted",
+          outcome: {
+            resourceType: "OperationOutcome",
+            issue: [
+              {
+                severity: "information",
+                code: "success",
+                diagnostics: "No issues detected during validation"
+              }
+            ]
+          }
+        }
+      }
+    } else {
+      valid = false
+      responseEntry = {
+        fullUrl: task.id,
+        response: {
+          status: "400 Bad Request",
+          outcome: {
+            resourceType: "OperationOutcome",
+            issue: [
+              {
+                code: "value",
+                severity: "error",
+                details: {
+                  coding: [
+                    {
+                      system: "https://fhir.nhs.uk/CodeSystem/http-error-codes",
+                      code: "BAD_REQUEST",
+                      display: `Validation issues: ${validationOutcome.issues}`
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      }
+      responseBundle.entry!.push(responseEntry)
+    }
+  }
+  return valid
 }
 
 export const handler = middy(lambdaHandler)
