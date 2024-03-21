@@ -1,13 +1,16 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import valid from "../../specification/examples/tasks/valid.json"
+
 import {expect, describe, it} from "@jest/globals"
+import {Task} from "fhir/r4"
+
 import {
   ValidationOutcome,
   ONE_DAY_IN_MS,
   lastModified,
   validateTask
 } from "../src/requestContentValidation"
-import {Task} from "fhir/r4"
+
+import valid from "../../specification/examples/tasks/valid.json"
 
 describe("Unit tests for overall task validation", () => {
   it.each([
@@ -34,6 +37,7 @@ describe("Unit tests for validation of lastModified", () => {
     const expected = "Date provided for lastModified is more than one day in the future."
 
     const actual = lastModified(task as Task)
+
     expect(actual).toEqual(expected)
   })
 
@@ -44,6 +48,7 @@ describe("Unit tests for validation of lastModified", () => {
     const expected = "Date format provided for lastModified is invalid."
 
     const actual = lastModified(task as Task)
+
     expect(actual).toEqual(expected)
   })
 })

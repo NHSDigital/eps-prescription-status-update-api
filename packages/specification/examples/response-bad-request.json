@@ -1,0 +1,29 @@
+{
+  "resourceType": "Bundle",
+  "type": "transaction-response",
+  "entry": [
+    {
+      "response": {
+        "status": "400 Bad Request",
+        "outcome": {
+          "resourceType": "OperationOutcome",
+          "issue": [
+            {
+              "code": "value",
+              "severity": "error",
+              "details": {
+                "coding": [
+                  {
+                    "system": "https://fhir.nhs.uk/CodeSystem/http-error-codes",
+                    "code": "BAD_REQUEST",
+                    "display": "400: The Server was unable to process the request."
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

@@ -14,15 +14,17 @@ import {
   TASK_ID_1,
   generateBody,
   generateExpectedItems,
-  generateMockEvent
+  generateMockEvent,
+  generateTask
 } from "./utils"
 
-import exampleDispatched from "../../specification/examples/request-dispatched.json"
-import exampleMultipleItems from "../../specification/examples/request-multiple-items.json"
-import exampleMissingFields from "../../specification/examples/request-missing-fields.json"
-import exampleNoItems from "../../specification/examples/request-no-items.json"
+import requestDispatched from "../../specification/examples/request-dispatched.json"
+import requestMultipleItems from "../../specification/examples/request-multiple-items.json"
+import requestMissingFields from "../../specification/examples/request-missing-fields.json"
+import requestNoItems from "../../specification/examples/request-no-items.json"
 import responseSingleItem from "../../specification/examples/response-single-item.json"
 import responseMultipleItems from "../../specification/examples/response-multiple-items.json"
+import responseBadRequest from "../../specification/examples/response-bad-request.json"
 
 describe("Unit test for updatePrescriptionStatus handler", () => {
   beforeEach(() => {
@@ -87,17 +89,17 @@ describe("Unit test for updatePrescriptionStatus handler", () => {
 
   it.each([
     {
-      example: exampleDispatched,
+      example: requestDispatched,
       httpResponseCode: 201,
       scenarioDescription: "201 with response bundle for a single item"
     },
     {
-      example: exampleMultipleItems,
+      example: requestMultipleItems,
       httpResponseCode: 201,
       scenarioDescription: "201 with response bundle for multiple items"
     },
     {
-      example: exampleNoItems,
+      example: requestNoItems,
       httpResponseCode: 200,
       scenarioDescription: "200 status code if there are no entries to process"
     }
@@ -117,46 +119,18 @@ describe("Unit test for updatePrescriptionStatus handler", () => {
     })
 
   it("should return a 400 status code and error message when provided with invalid JSON", async () => {
-    const event: APIGatewayProxyEvent = generateMockEvent(exampleDispatched)
+    const event: APIGatewayProxyEvent = generateMockEvent(requestDispatched)
     const invalidJson = '{ "resourceType": "Bundle",  "type": "transaction", "entry":}'
     event.body = invalidJson
 
     const response: APIGatewayProxyResult = await handler(event, {})
 
     expect(response.statusCode).toBe(400)
-    expect(JSON.parse(response.body)).toEqual({
-      resourceType: "Bundle",
-      type: "transaction-response",
-      entry: [
-        {
-          response: {
-            status: "400 Bad Request",
-            outcome: {
-              resourceType: "OperationOutcome",
-              issue: [
-                {
-                  code: "value",
-                  severity: "error",
-                  details: {
-                    coding: [
-                      {
-                        system: "https://fhir.nhs.uk/CodeSystem/http-error-codes",
-                        code: "BAD_REQUEST",
-                        display: "400: The Server was unable to process the request."
-                      }
-                    ]
-                  }
-                }
-              ]
-            }
-          }
-        }
-      ]
-    })
+    expect(JSON.parse(response.body)).toEqual(responseBadRequest)
   })
 
   it("should return a 201 status code, 400 response code and error message indicating missing required fields", async () => {
-    const event: APIGatewayProxyEvent = generateMockEvent(exampleMissingFields)
+    const event: APIGatewayProxyEvent = generateMockEvent(requestMissingFields)
 
     const response: APIGatewayProxyResult = await handler(event, {})
 
@@ -194,7 +168,7 @@ describe("Unit test for updatePrescriptionStatus handler", () => {
   })
 
   it("should handle errors with a 201 status code, 500 response code and internal server error message", async () => {
-    const event = generateMockEvent(exampleDispatched)
+    const event = generateMockEvent(requestDispatched)
 
     jest.spyOn(DynamoDBClient.prototype, "send").mockRejectedValue(new Error("Mocked error") as never)
 
@@ -234,18 +208,9 @@ describe("Unit test for updatePrescriptionStatus handler", () => {
   })
 
   it("should handle multiple errors with a 201 status code, appropriate response codes and error messages", async () => {
-    const body: any = {...exampleMissingFields}
-    body.entry.push({
-      resource: {
-        basedOn: [{identifier: {value: "PrescriptionID"}}],
-        for: {identifier: {value: "PatientNHSNumber"}},
-        owner: {identifier: {value: "PharmacyODSCode"}},
-        id: TASK_ID_1,
-        focus: {identifier: {value: "LineItemID"}},
-        status: "TerminalStatus",
-        lastModified: "2023-09-11T10:11:12Z"
-      }
-    })
+    const body: any = {...requestMissingFields}
+    const extraTask = generateTask(1)
+    body.entry.push(extraTask)
     const event: APIGatewayProxyEvent = generateMockEvent(body)
 
     jest.spyOn(DynamoDBClient.prototype, "send").mockRejectedValue(new Error("Mocked error") as never)

@@ -79,9 +79,7 @@ function generateExpectedItems() {
       TerminalStatus: {S: taskValues.status},
       RequestMessage: {
         M: {
-          basedOn: {
-            L: [{M: {identifier: {M: {value: {S: taskValues.prescriptionID}}}}}]
-          },
+          basedOn: {L: [{M: {identifier: {M: {value: {S: taskValues.prescriptionID}}}}}]},
           focus: {M: {identifier: {M: {value: {S: taskValues.lineItemID}}}}},
           for: {M: {identifier: {M: {value: {S: taskValues.nhsNumber}}}}},
           id: {S: taskValues.id},
@@ -95,4 +93,4 @@ function generateExpectedItems() {
   return items
 }
 
-export {generateBody, generateExpectedItems, generateMockEvent, TASK_ID_0, TASK_ID_1}
+export {generateBody, generateExpectedItems, generateMockEvent, generateTask, TASK_ID_0, TASK_ID_1}

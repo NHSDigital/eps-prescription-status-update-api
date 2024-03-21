@@ -7,10 +7,12 @@ import {
   it,
   jest
 } from "@jest/globals"
+
 import {handler} from "../src/updatePrescriptionStatus"
-import exampleDispatched from "../../specification/examples/request-dispatched.json"
-import {generateMockEvent} from "./utils"
+import {TASK_ID_0, generateMockEvent} from "./utils"
 import {ONE_DAY_IN_MS} from "../src/requestContentValidation"
+
+import exampleDispatched from "../../specification/examples/request-dispatched.json"
 
 describe("Unit test for validation via updatePrescriptionStatus handler", () => {
   beforeEach(() => {
@@ -29,9 +31,9 @@ describe("Unit test for validation via updatePrescriptionStatus handler", () => 
       type: "transaction-response",
       entry: [
         {
+          fullUrl: TASK_ID_0,
           response: {
             status: "400 Bad Request",
-            location: "Task/4d70678c-81e4-4ff4-8c67-17596fd0aa46/_history/1",
             outcome: {
               resourceType: "OperationOutcome",
               issue: [
