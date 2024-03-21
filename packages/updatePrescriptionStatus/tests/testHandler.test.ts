@@ -7,17 +7,22 @@ import {
   it,
   jest
 } from "@jest/globals"
+
 import {handler} from "../src/updatePrescriptionStatus"
+import {
+  TASK_ID1,
+  TASK_ID2,
+  generateBody,
+  generateExpectedItems,
+  generateMockEvent
+} from "./utils"
+
 import exampleDispatched from "../../specification/examples/request-dispatched.json"
 import exampleMultipleItems from "../../specification/examples/request-multiple-items.json"
 import exampleMissingFields from "../../specification/examples/request-missing-fields.json"
 import exampleNoItems from "../../specification/examples/request-no-items.json"
 import responseSingleItem from "../../specification/examples/response-single-item.json"
 import responseMultipleItems from "../../specification/examples/response-multiple-items.json"
-import {generateExpectedItem, generateMockEvent} from "./utils"
-
-const TASK_ID1 = "4d70678c-81e4-4ff4-8c67-17596fd0aa46"
-const TASK_ID2 = "0ae4daf3-f24b-479d-b8fa-b69e2d873b60"
 
 describe("Unit test for updatePrescriptionStatus handler", () => {
   beforeEach(() => {
@@ -26,98 +31,44 @@ describe("Unit test for updatePrescriptionStatus handler", () => {
   })
 
   it("should successfully update a single item into DynamoDB", async () => {
-    const body = {
-      entry: [
-        {
-          resource: {
-            basedOn: [{identifier: {value: "PrescriptionID"}}],
-            for: {identifier: {value: "PatientNHSNumber"}},
-            owner: {identifier: {value: "PharmacyODSCode"}},
-            id: TASK_ID1,
-            focus: {identifier: {value: "LineItemID"}},
-            status: "TerminalStatus",
-            lastModified: "2023-09-11T10:11:12Z"
-          }
-        }
-      ]
-    }
+    const body = generateBody()
     const event: APIGatewayProxyEvent = generateMockEvent(body)
 
     jest.spyOn(DynamoDBClient.prototype, "send").mockResolvedValue(undefined as never)
 
-    const result: APIGatewayProxyResult = await handler(event, {})
+    const response: APIGatewayProxyResult = await handler(event, {})
 
+    expect(response.statusCode).toEqual(201)
+    expect(JSON.parse(response.body)).toEqual(responseSingleItem)
+    expect(DynamoDBClient.prototype.send).toHaveBeenCalledTimes(1)
     expect(DynamoDBClient.prototype.send).toHaveBeenCalledWith(
       expect.objectContaining({
         input: expect.objectContaining({
           Item: expect.objectContaining(
-            generateExpectedItem(
-              "LineItemID",
-              "PatientNHSNumber",
-              "PharmacyODSCode",
-              "PrescriptionID",
-              TASK_ID1,
-              "TerminalStatus",
-              "2023-09-11T10:11:12Z"
-            )
+            generateExpectedItems()[0]
           )
         })
       })
     )
-    expect(DynamoDBClient.prototype.send).toHaveBeenCalledTimes(1)
-    expect(result.statusCode).toEqual(201)
-    expect(JSON.parse(result.body)).toEqual(responseSingleItem)
   })
 
   it("should successfully update multiple items into DynamoDB", async () => {
-    const body = {
-      entry: [
-        {
-          resource: {
-            basedOn: [{identifier: {value: "PrescriptionID1"}}],
-            for: {identifier: {value: "PatientNHSNumber1"}},
-            owner: {identifier: {value: "PharmacyODSCode1"}},
-            id: TASK_ID1,
-            focus: {identifier: {value: "LineItemID1"}},
-            status: "TerminalStatus1",
-            lastModified: "2023-09-11T10:11:12Z"
-          }
-        },
-        {
-          resource: {
-            basedOn: [{identifier: {value: "PrescriptionID2"}}],
-            for: {identifier: {value: "PatientNHSNumber2"}},
-            owner: {identifier: {value: "PharmacyODSCode2"}},
-            id: TASK_ID2,
-            focus: {identifier: {value: "LineItemID2"}},
-            status: "TerminalStatus2",
-            lastModified: "2023-09-11T10:11:12Z"
-          }
-        }
-      ]
-    }
+    const body = generateBody(2)
     const event: APIGatewayProxyEvent = generateMockEvent(body)
 
     jest.spyOn(DynamoDBClient.prototype, "send").mockResolvedValue(undefined as never)
 
-    const result: APIGatewayProxyResult = await handler(event, {})
+    const response: APIGatewayProxyResult = await handler(event, {})
+
+    expect(response.statusCode).toEqual(201)
+    expect(JSON.parse(response.body)).toEqual(responseMultipleItems)
 
     expect(DynamoDBClient.prototype.send).toHaveBeenCalledTimes(2)
-    expect(result.statusCode).toEqual(201)
-    expect(JSON.parse(result.body)).toEqual(responseMultipleItems)
     expect(DynamoDBClient.prototype.send).toHaveBeenCalledWith(
       expect.objectContaining({
         input: expect.objectContaining({
           Item: expect.objectContaining(
-            generateExpectedItem(
-              "LineItemID1",
-              "PatientNHSNumber1",
-              "PharmacyODSCode1",
-              "PrescriptionID1",
-              TASK_ID1,
-              "TerminalStatus1",
-              "2023-09-11T10:11:12Z"
-            )
+            generateExpectedItems()[0]
           )
         })
       })
@@ -127,15 +78,7 @@ describe("Unit test for updatePrescriptionStatus handler", () => {
       expect.objectContaining({
         input: expect.objectContaining({
           Item: expect.objectContaining(
-            generateExpectedItem(
-              "LineItemID2",
-              "PatientNHSNumber2",
-              "PharmacyODSCode2",
-              "PrescriptionID2",
-              TASK_ID2,
-              "TerminalStatus2",
-              "2023-09-11T10:11:12Z"
-            )
+            generateExpectedItems()[1]
           )
         })
       })
@@ -162,20 +105,26 @@ describe("Unit test for updatePrescriptionStatus handler", () => {
     "should return $scenarioDescription",
     async ({example, httpResponseCode}) => {
       const event: APIGatewayProxyEvent = generateMockEvent(example)
+
+      jest.spyOn(DynamoDBClient.prototype, "send").mockResolvedValue(undefined as never)
+
       const response: APIGatewayProxyResult = await handler(event, {})
 
+      const responseBody = JSON.parse(response.body)
       expect(response.statusCode).toBe(httpResponseCode)
-      const responseBody = JSON.parse(response.body!)
       expect(responseBody).toHaveProperty("resourceType", "Bundle")
       expect(responseBody).toHaveProperty("type", "transaction-response")
     })
 
   it("should return a 400 status code and error message when provided with invalid JSON", async () => {
     const event: APIGatewayProxyEvent = generateMockEvent(exampleDispatched)
-    event.body = '{ "resourceType": "Bundle",  "type": "transaction", "entry":}'
+    const invalidJson = '{ "resourceType": "Bundle",  "type": "transaction", "entry":}'
+    event.body = invalidJson
+
     const response: APIGatewayProxyResult = await handler(event, {})
+
     expect(response.statusCode).toBe(400)
-    expect(JSON.parse(response.body!)).toEqual({
+    expect(JSON.parse(response.body)).toEqual({
       resourceType: "Bundle",
       type: "transaction-response",
       entry: [
@@ -208,9 +157,11 @@ describe("Unit test for updatePrescriptionStatus handler", () => {
 
   it("should return a 201 status code, 400 response code and error message indicating missing required fields", async () => {
     const event: APIGatewayProxyEvent = generateMockEvent(exampleMissingFields)
+
     const response: APIGatewayProxyResult = await handler(event, {})
+
     expect(response.statusCode).toBe(201)
-    expect(JSON.parse(response.body!)).toEqual({
+    expect(JSON.parse(response.body)).toEqual({
       resourceType: "Bundle",
       type: "transaction-response",
       entry: [
@@ -243,29 +194,14 @@ describe("Unit test for updatePrescriptionStatus handler", () => {
   })
 
   it("should handle errors with a 201 status code, 500 response code and internal server error message", async () => {
-    const body = {
-      entry: [
-        {
-          resource: {
-            basedOn: [{identifier: {value: "PrescriptionID"}}],
-            for: {identifier: {value: "PatientNHSNumber"}},
-            owner: {identifier: {value: "PharmacyODSCode"}},
-            id: TASK_ID1,
-            focus: {identifier: {value: "LineItemID"}},
-            status: "TerminalStatus",
-            lastModified: "2023-09-11T10:11:12Z"
-          }
-        }
-      ]
-    }
-    const event: APIGatewayProxyEvent = generateMockEvent(body)
+    const event = generateMockEvent(exampleDispatched)
 
     jest.spyOn(DynamoDBClient.prototype, "send").mockRejectedValue(new Error("Mocked error") as never)
 
-    const result: APIGatewayProxyResult = await handler(event, {})
+    const response: APIGatewayProxyResult = await handler(event, {})
 
-    expect(result.statusCode).toEqual(201)
-    expect(JSON.parse(result.body)).toEqual({
+    expect(response.statusCode).toEqual(201)
+    expect(JSON.parse(response.body)).toEqual({
       resourceType: "Bundle",
       type: "transaction-response",
       entry: [
@@ -314,10 +250,10 @@ describe("Unit test for updatePrescriptionStatus handler", () => {
 
     jest.spyOn(DynamoDBClient.prototype, "send").mockRejectedValue(new Error("Mocked error") as never)
 
-    const result: APIGatewayProxyResult = await handler(event, {})
+    const response: APIGatewayProxyResult = await handler(event, {})
 
-    expect(result.statusCode).toEqual(201)
-    expect(JSON.parse(result.body)).toEqual({
+    expect(response.statusCode).toEqual(201)
+    expect(JSON.parse(response.body)).toEqual({
       resourceType: "Bundle",
       type: "transaction-response",
       entry: [
@@ -374,8 +310,8 @@ describe("Unit test for updatePrescriptionStatus handler", () => {
   })
 
   it("should return 500 status code and internal server error message if an error occurs", async () => {
-    const event = {}
-    const response: APIGatewayProxyResult = await handler(event, undefined)
+    const response: APIGatewayProxyResult = await handler({}, undefined)
+
     expect(response.statusCode).toBe(500)
     expect(JSON.parse(response.body)).toEqual({
       resourceType: "OperationOutcome",
