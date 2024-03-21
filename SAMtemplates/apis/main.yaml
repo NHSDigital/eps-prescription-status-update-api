@@ -17,6 +17,11 @@ Parameters:
     Type: String
     Description: TruststoreVersion
   
+  UpdatePrescriptionStatusStateMachineName:
+    Type: String
+    Description: Name of the UpdatePrescriptionStatus state machine
+    Default: none
+
   LogRetentionInDays:
     Type: Number
     Description: How long to keep logs for.
@@ -93,6 +98,9 @@ Resources:
       Location: api_resources.yaml
       Parameters:
         StackName: !Ref StackName
+        AdditionalPolicies: !Join
+          - ','
+          - - Fn::ImportValue: !Sub ${StackName}:state-machines:${UpdatePrescriptionStatusStateMachineName}:ExecuteStateMachinePolicy
         ApiId: !Ref HttpApiGateway
         LogRetentionInDays: !Ref LogRetentionInDays
         EnableSplunk: !Ref EnableSplunk

@@ -1,21 +1,24 @@
-# AWSTemplateFormatVersion: '2010-09-09'
-# Transform: AWS::Serverless-2016-10-31
-# Description: |
-#   PSU state machines and related resources
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: |
+  PSU state machines and related resources
 
-# Parameters:
-#   StackName:
-#     Type: String
-#     Description: The name of the main stack
-#     Default: none
+Parameters:
+  StackName:
+    Type: String
+    Description: The name of the main stack
+    Default: none
 
-# Resources:
-#   UpdatePrescriptionStatusStateMachine:
-#     Type: AWS::StepFunctions::StateMachine
-#     Properties:
-#       StateMachineName: !Sub ${StackName}-UpdatePrescriptionStatus
-#       RoleArn: todo
-#       DefinitionString: |-
-#         {
-#         }
+Resources:
+  UpdatePrescriptionStatusStateMachine:
+    Type: AWS::Serverless::StateMachine
+    Properties:
+      Name: !Sub ${StackName}-UpdatePrescriptionStatus
+      Type: EXPRESS
+      Role: todo
+      DefinitionUri: UpdatePrescriptionStatusStateMachine.asl.json
   
+Outputs:
+  UpdatePrescriptionStatusStateMachineArn:
+    Description: UpdatePrescriptionStatus state machine arn
+    Value: !Ref UpdatePrescriptionStatusStateMachine

@@ -11,7 +11,7 @@ Parameters:
   
   AdditionalPolicies:
     Type: CommaDelimitedList
-    Description: A list of additional policies to attach the lambdas role (comma deliminated).
+    Description: A list of additional policies to attach the lambdas role (comma delimited).
     Default: none
   
   LogRetentionInDays:

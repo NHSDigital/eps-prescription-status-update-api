@@ -8,6 +8,11 @@ Parameters:
     Type: String
     Description: The name of the main stack
   
+  AdditionalPolicies:
+    Type: CommaDelimitedList
+    Description: A list of additional policies to attach to the API gateway role (comma delimited).
+    Default: none
+  
   ApiId:
     Type: String
     Description: The name of the main stack
@@ -27,6 +32,27 @@ Conditions:
     - !Ref EnableSplunk
 
 Resources:
+  ApiGwRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - apigateway.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      ManagedPolicyArns: !Split
+        - ','
+        - !Join
+          - ','
+          - - !Join
+              - ','
+              - !Ref AdditionalPolicies
+
+
   ApiGwAccessLogs:
     Type: AWS::Logs::LogGroup
     Properties:
@@ -44,6 +70,10 @@ Resources:
       DestinationArn: !ImportValue lambda-resources:SplunkDeliveryStream
 
 Outputs:
+  ApiGwRoleArn:
+    Description: The API GW role ARN
+    Value: !GetAtt ApiGwRole.Arn
+  
   ApiGwAccessLogsArn:
     Description: ApiGwAccessLogs ARN
     Value: !GetAtt ApiGwAccessLogs.Arn

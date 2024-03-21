@@ -1,0 +1,16 @@
+openapi: 3.0.1
+info:
+  title: "API"
+  version: "1.0.0"
+
+paths:
+  /:
+    post:
+    responses:
+      x-amazon-apigateway-integration:
+        integrationSubtype: "StepFunctions-StartSyncExecution"
+        credentials:
+          Fn::GetAtt: [HttpApiGatewayResources, Outputs.ApiGwRoleArn]
+        requestParameters:
+          Input: "$request"
+          StateMachineArn:

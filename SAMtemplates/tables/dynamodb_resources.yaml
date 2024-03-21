@@ -20,7 +20,7 @@ Parameters:
     Default: none
 
 Resources:
-  TableReadPolicy:
+  TableReadManagedPolicy:
     Type: AWS::IAM::ManagedPolicy
     Properties:
       PolicyDocument:
@@ -38,7 +38,7 @@ Resources:
               - !Ref TableArn
               - !Sub ${TableArn}/index/*
   
-  TableWritePolicy:
+  TableWriteManagedPolicy:
     Type: AWS::IAM::ManagedPolicy
     Properties:
       PolicyDocument:
@@ -57,20 +57,20 @@ Resources:
 Outputs:
   TableReadPolicyArn:
     Description: Table read policy arn
-    Value: !GetAtt TableReadPolicy.PolicyArn
+    Value: !GetAtt TableReadManagedPolicy.PolicyArn
     Export:
       Name: !Sub ${StackName}:tables:${TableName}:TableReadPolicyArn
   
   TableReadPolicyId:
     Description: Table read policy id
-    Value: !GetAtt TableReadPolicy.PolicyId
+    Value: !GetAtt TableReadManagedPolicy.PolicyId
   
   TableWritePolicyArn:
     Description: Table write policy arn
-    Value: !GetAtt TableWritePolicy.PolicyArn
+    Value: !GetAtt TableWriteManagedPolicy.PolicyArn
     Export:
       Name: !Sub ${StackName}:tables:${TableName}:TableWritePolicyArn
   
   TableWritePolicyId:
     Description: Table write policy id
-    Value: !GetAtt TableWritePolicy.PolicyId
+    Value: !GetAtt TableWriteManagedPolicy.PolicyId

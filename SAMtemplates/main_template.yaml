@@ -75,6 +75,7 @@ Resources:
         StackName: !Ref AWS::StackName
         EnableMutualTLS: !Ref EnableMutualTLS
         TruststoreVersion: !Ref TruststoreVersion
+        UpdatePrescriptionStatusStateMachineName: !GetAtt StateMachines.Outputs.
         LogRetentionInDays: !Ref LogRetentionInDays
         EnableSplunk: !Ref EnableSplunk
   
@@ -88,3 +89,10 @@ Resources:
         LogLevel: !Ref LogLevel
         LogRetentionInDays: !Ref LogRetentionInDays
         EnableSplunk: !Ref EnableSplunk
+  
+  StateMachines:
+    Type: AWS::Serverless::Application
+    Properties:
+      Location: state_machines/main.yaml
+      Parameters:
+        todo

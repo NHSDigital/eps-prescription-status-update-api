@@ -1,0 +1,40 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: |
+  Resources for a state machine
+
+Parameters:
+  StackName:
+    Type: String
+    Description: The name of the main stack
+    Default: none
+  
+  StateMachineName:
+    Type: String
+    Description: The name of the state machine
+    Default: none
+  
+  StateMachineArn:
+    Type: String
+    Description: The Arn of the state machine
+    Default: none
+
+Resources:
+  ExecuteStateMachineManagedPolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action:
+              - states:StartSyncExecution
+            Resource:
+              - !Ref StateMachineArn
+
+Outputs:
+  ExecuteStateMachinePolicyArn:
+    Description: State machine execution policy arn
+    Value: !GetAtt ExecuteStateMachineManagedPolicy.PolicyArn
+    Export:
+      Name: !Sub ${StackName}:state-machines:${StateMachineName}:ExecuteStateMachinePolicy
