@@ -93,4 +93,4 @@ function generateExpectedItems() {
   return items
 }
 
-export {generateBody, generateExpectedItems, generateMockEvent, generateTask, TASK_ID_0, TASK_ID_1}
+export {generateBody, generateExpectedItems, generateMockEvent, TASK_ID_0, TASK_ID_1}

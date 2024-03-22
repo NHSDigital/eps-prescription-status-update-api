@@ -1,0 +1,81 @@
+{
+  "resourceType": "Bundle",
+  "type": "transaction",
+  "entry": [
+    {
+      "fullUrl": "http://example.org/fhir/Task/4d70678c-81e4-4ff4-8c67-17596fd0aa46",
+      "resource": {
+        "resourceType": "Task",
+        "id": "4d70678c-81e4-4ff4-8c67-17596fd0aa46",
+        "status": "in-progress",
+        "businessStatus": {
+          "coding": [
+            {
+              "system": "https://fhir.nhs.uk/CodeSystem/task-businessStatus-nppt",
+              "code": "3",
+              "display": "In Collection Locker"
+            }
+          ]
+        },
+        "intent": "order",
+        "focus": {
+          "identifier": {
+            "system": "https://fhir.nhs.uk/Id/prescription-order-item-number",
+            "value": "6989b7bd-8db6-428c-a593-4022e3044c00"
+          }
+        },
+        "lastModified": "2024-01-30T12:01:24Z",
+        "owner": {
+          "identifier": {
+            "system": "https://fhir.nhs.uk/Id/ods-organization-code",
+            "value": "C9Z1O"
+          }
+        }
+      },
+      "request": {
+        "method": "POST",
+        "url": "Task"
+      }
+    },
+    {
+      "fullUrl": "http://example.org/fhir/Task/0ae4daf3-f24b-479d-b8fa-b69e2d873b60",
+      "resource": {
+        "resourceType": "Task",
+        "id": "0ae4daf3-f24b-479d-b8fa-b69e2d873b60",
+        "status": "in-progress",
+        "businessStatus": {
+          "coding": [
+            {
+              "system": "https://fhir.nhs.uk/CodeSystem/task-businessStatus-nppt",
+              "code": "Ready to collect"
+            }
+          ]
+        },
+        "intent": "order",
+        "focus": {
+          "identifier": {
+            "system": "https://fhir.nhs.uk/Id/prescription-order-item-number",
+            "value": "e3843418-1900-44a1-8f6a-bff8601893b8"
+          }
+        },
+        "for": {
+          "identifier": {
+            "system": "https://fhir.nhs.uk/Id/nhs-number",
+            "value": "9449304130"
+          }
+        },
+        "lastModified": "2024-01-30T12:01:24Z",
+        "owner": {
+          "identifier": {
+            "system": "https://fhir.nhs.uk/Id/ods-organization-code",
+            "value": "C9Z1O"
+          }
+        }
+      },
+      "request": {
+        "method": "POST",
+        "url": "Task"
+      }
+    }
+  ]
+}

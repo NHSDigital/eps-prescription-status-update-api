@@ -14,7 +14,7 @@ const logger = new Logger({serviceName: "updatePrescriptionStatus"})
 const client = new DynamoDBClient({region: "eu-west-2"})
 const tableName = process.env.TABLE_NAME
 
-interface DynamoDBItem {
+interface DataItem {
   RequestID?: string;
   PrescriptionID?: string;
   PatientNHSNumber?: string;
@@ -36,6 +36,7 @@ const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPro
 
   const requestBody = parseEventBody(event, responseBundle)
   if(!requestBody) {
+    logger.error("Unable to parse event body as json.")
     return {
       statusCode: 400,
       body: JSON.stringify(responseBundle),
@@ -50,67 +51,24 @@ const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPro
 
   const entriesValid = validateEntries(entries, responseBundle)
   if (!entriesValid) {
+    logger.error("Content validation issues present in request.")
     return {
       statusCode: 400,
       body: JSON.stringify(responseBundle)
     }
   }
 
-  for (const entry of entries) {
-    const task = entry.resource as Task
-    logger.info("Processing Task", {task: task, id: task.id})
-
-    const dynamoDBItem: DynamoDBItem = {
-      RequestID: xRequestId,
-      PrescriptionID: task.basedOn?.[0]?.identifier?.value,
-      PatientNHSNumber: task.for?.identifier?.value,
-      PharmacyODSCode: task.owner?.identifier?.value,
-      TaskID: task.id,
-      LineItemID: task.focus?.identifier?.value,
-      TerminalStatus: task.status,
-      RequestMessage: task
+  const {dataItemsValid, dataItems} = buildDataItems(entries, responseBundle, xRequestId)
+  if (!dataItemsValid) {
+    logger.error("Unable to create valid data items from request.")
+    return {
+      statusCode: 400,
+      body: JSON.stringify(responseBundle)
     }
+  }
 
-    const invalidFields = []
-    for (const [field, value] of Object.entries(dynamoDBItem)) {
-      if (!value) {
-        logger.info("Invalid value", {field: field, value: value})
-        invalidFields.push(field)
-      }
-    }
-
-    if (invalidFields.length > 0) {
-      const errorMessage = `400: Missing required fields: ${invalidFields.join(", ")}`
-      logger.error("Error message", {errorMessage: errorMessage})
-      const entry: BundleEntry = {
-        fullUrl: task.id,
-        response: {
-          status: "400 Bad Request",
-          outcome: {
-            resourceType: "OperationOutcome",
-            issue: [
-              {
-                code: "value",
-                severity: "error",
-                details: {
-                  coding: [
-                    {
-                      system: "https://fhir.nhs.uk/CodeSystem/http-error-codes",
-                      code: "BAD_REQUEST",
-                      display: errorMessage
-                    }
-                  ]
-                }
-              }
-            ]
-          }
-        }
-      }
-      responseBundle.entry!.push(entry)
-      continue
-    }
-
-    const item = marshall(dynamoDBItem)
+  for (const dataItem of dataItems) {
+    const item = marshall(dataItem)
     logger.info("Marshalled item", {item: item})
 
     try {
@@ -123,7 +81,7 @@ const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPro
     } catch (error) {
       logger.error("Error sending PutItemCommand", {error: error})
       const entry: BundleEntry = {
-        fullUrl: task.id,
+        fullUrl: dataItem.TaskID,
         response: {
           status: "500 Internal Server Error",
           outcome: {
@@ -146,12 +104,12 @@ const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPro
           }
         }
       }
-      responseBundle.entry!.push(entry)
+      replaceResponseBundleEntry(responseBundle, entry)
       continue
     }
 
-    const taskResponse: BundleEntry = {
-      fullUrl: task.id,
+    const entry: BundleEntry = {
+      fullUrl: dataItem.TaskID,
       response: {
         status: "201 Created",
         outcome: {
@@ -166,8 +124,8 @@ const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPro
         }
       }
     }
-    logger.info("Task response", {taskResponse: taskResponse})
-    responseBundle.entry!.push(taskResponse)
+    logger.info("Task response", {taskResponse: entry})
+    replaceResponseBundleEntry(responseBundle, entry)
   }
 
   if (entries.length === 0) {
@@ -189,7 +147,7 @@ function parseEventBody(event: APIGatewayProxyEvent, responseBundle: Bundle): Bu
   try {
     return JSON.parse(event.body || "") as Bundle
   } catch (jsonParseError) {
-    logger.error("Error parsing JSON", {error: jsonParseError})
+    logger.error("Error parsing request body as json.", {error: jsonParseError})
     const entry: BundleEntry = {
       response: {
         status: "400 Bad Request",
@@ -221,12 +179,13 @@ function validateEntries(entries: Array<BundleEntry>, responseBundle: Bundle): b
   let valid = true
   for (const requestEntry of entries) {
     const task = requestEntry.resource as Task
-    logger.info("Processing Task", {task: task, id: task.id})
+    logger.info("Validating task.", {task: task, id: task.id})
 
     const validationOutcome = validateTask(task)
 
     let responseEntry: BundleEntry
     if (validationOutcome.valid) {
+      logger.info("Task validated successfully.", {task: task, id: task.id})
       responseEntry = {
         fullUrl: task.id,
         response: {
@@ -244,6 +203,7 @@ function validateEntries(entries: Array<BundleEntry>, responseBundle: Bundle): b
         }
       }
     } else {
+      logger.info("Task failed validation.", {task: task, id: task.id})
       valid = false
       responseEntry = {
         fullUrl: task.id,
@@ -269,10 +229,83 @@ function validateEntries(entries: Array<BundleEntry>, responseBundle: Bundle): b
           }
         }
       }
-      responseBundle.entry!.push(responseEntry)
     }
+    responseBundle.entry!.push(responseEntry)
   }
   return valid
+}
+
+function buildDataItems(
+  entries: Array<BundleEntry>, responseBundle: Bundle, xRequestId: string | undefined
+): {dataItemsValid: boolean, dataItems: Array<DataItem>} {
+  let valid = true
+  const dataItems: Array<DataItem> = []
+
+  for (const entry of entries) {
+    const task = entry.resource as Task
+    logger.info("Processing Task", {task: task, id: task.id})
+
+    const dataItem: DataItem = {
+      RequestID: xRequestId,
+      PrescriptionID: task.basedOn?.[0]?.identifier?.value,
+      PatientNHSNumber: task.for?.identifier?.value,
+      PharmacyODSCode: task.owner?.identifier?.value,
+      TaskID: task.id,
+      LineItemID: task.focus?.identifier?.value,
+      TerminalStatus: task.status,
+      RequestMessage: task
+    }
+
+    const invalidFields = []
+    for (const [field, value] of Object.entries(dataItem)) {
+      if (!value) {
+        logger.info("Invalid value", {field: field, value: value})
+        invalidFields.push(field)
+      }
+    }
+
+    if (invalidFields.length > 0) {
+      const errorMessage = `400: Missing required fields: ${invalidFields.join(", ")}`
+      logger.error("Error message", {errorMessage: errorMessage})
+
+      const entry: BundleEntry = {
+        fullUrl: task.id,
+        response: {
+          status: "400 Bad Request",
+          outcome: {
+            resourceType: "OperationOutcome",
+            issue: [
+              {
+                code: "value",
+                severity: "error",
+                details: {
+                  coding: [
+                    {
+                      system: "https://fhir.nhs.uk/CodeSystem/http-error-codes",
+                      code: "BAD_REQUEST",
+                      display: errorMessage
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      }
+      valid = false
+      replaceResponseBundleEntry(responseBundle, entry)
+    }
+    dataItems.push(dataItem)
+  }
+  return {dataItemsValid: valid, dataItems: dataItems}
+}
+
+function replaceResponseBundleEntry(responseBundle: Bundle, entry: BundleEntry) {
+  responseBundle.entry!.forEach((e, i) => {
+    if (e.fullUrl === entry.fullUrl) {
+      responseBundle.entry![i] = entry
+    }
+  })
 }
 
 export const handler = middy(lambdaHandler)

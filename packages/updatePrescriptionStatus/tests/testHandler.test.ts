@@ -14,13 +14,13 @@ import {
   TASK_ID_1,
   generateBody,
   generateExpectedItems,
-  generateMockEvent,
-  generateTask
+  generateMockEvent
 } from "./utils"
 
 import requestDispatched from "../../specification/examples/request-dispatched.json"
 import requestMultipleItems from "../../specification/examples/request-multiple-items.json"
 import requestMissingFields from "../../specification/examples/request-missing-fields.json"
+import requestMultipleMissingFields from "../../specification/examples/request-multiple-missing-fields.json"
 import requestNoItems from "../../specification/examples/request-no-items.json"
 import responseSingleItem from "../../specification/examples/response-single-item.json"
 import responseMultipleItems from "../../specification/examples/response-multiple-items.json"
@@ -129,12 +129,12 @@ describe("Unit test for updatePrescriptionStatus handler", () => {
     expect(JSON.parse(response.body)).toEqual(responseBadRequest)
   })
 
-  it("should return a 201 status code, 400 response code and error message indicating missing required fields", async () => {
+  it("should return a 400 status code, 400 response code and error message indicating missing required fields", async () => {
     const event: APIGatewayProxyEvent = generateMockEvent(requestMissingFields)
 
     const response: APIGatewayProxyResult = await handler(event, {})
 
-    expect(response.statusCode).toBe(201)
+    expect(response.statusCode).toBe(400)
     expect(JSON.parse(response.body)).toEqual({
       resourceType: "Bundle",
       type: "transaction-response",
@@ -207,17 +207,13 @@ describe("Unit test for updatePrescriptionStatus handler", () => {
     })
   })
 
-  it("should handle multiple errors with a 201 status code, appropriate response codes and error messages", async () => {
-    const body: any = {...requestMissingFields}
-    const extraTask = generateTask(1)
-    body.entry.push(extraTask)
+  it("should handle multiple errors with a 400 status code, appropriate response codes and error messages", async () => {
+    const body: any = {...requestMultipleMissingFields}
     const event: APIGatewayProxyEvent = generateMockEvent(body)
-
-    jest.spyOn(DynamoDBClient.prototype, "send").mockRejectedValue(new Error("Mocked error") as never)
 
     const response: APIGatewayProxyResult = await handler(event, {})
 
-    expect(response.statusCode).toEqual(201)
+    expect(response.statusCode).toEqual(400)
     expect(JSON.parse(response.body)).toEqual({
       resourceType: "Bundle",
       type: "transaction-response",
@@ -249,19 +245,19 @@ describe("Unit test for updatePrescriptionStatus handler", () => {
         {
           fullUrl: TASK_ID_1,
           response: {
-            status: "500 Internal Server Error",
+            status: "400 Bad Request",
             outcome: {
               resourceType: "OperationOutcome",
               issue: [
                 {
-                  code: "exception",
-                  severity: "fatal",
+                  code: "value",
+                  severity: "error",
                   details: {
                     coding: [
                       {
                         system: "https://fhir.nhs.uk/CodeSystem/http-error-codes",
-                        code: "SERVER_ERROR",
-                        display: "500: The Server has encountered an error processing the request."
+                        code: "BAD_REQUEST",
+                        display: "400: Missing required fields: PrescriptionID"
                       }
                     ]
                   }
