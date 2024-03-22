@@ -54,7 +54,7 @@ describe("Unit test for updatePrescriptionStatus handler", () => {
     )
   })
 
-  it("when multiple items in request, expect multiple items sent to DynamoDB", async () => {
+  it("when multiple items in request, expect multiple items sent to DynamoDB in a single call", async () => {
     const body = generateBody(2)
     const event: APIGatewayProxyEvent = generateMockEvent(body)
 
@@ -65,7 +65,7 @@ describe("Unit test for updatePrescriptionStatus handler", () => {
     expect(response.statusCode).toEqual(201)
     expect(JSON.parse(response.body)).toEqual(responseMultipleItems)
 
-    expect(DynamoDBClient.prototype.send).toHaveBeenCalledTimes(2)
+    expect(DynamoDBClient.prototype.send).toHaveBeenCalledTimes(1)
     expect(DynamoDBClient.prototype.send).toHaveBeenCalledWith(
       expect.objectContaining({
         input: expect.objectContaining({
@@ -174,14 +174,12 @@ describe("Unit test for updatePrescriptionStatus handler", () => {
 
     const response: APIGatewayProxyResult = await handler(event, {})
 
-    // 500
-    expect(response.statusCode).toEqual(201)
+    expect(response.statusCode).toEqual(500)
     expect(JSON.parse(response.body)).toEqual({
       resourceType: "Bundle",
       type: "transaction-response",
       entry: [
         {
-          fullUrl: TASK_ID_0,
           response: {
             status: "500 Internal Server Error",
             outcome: {

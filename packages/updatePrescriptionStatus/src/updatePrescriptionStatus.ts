@@ -2,7 +2,7 @@
 import {APIGatewayProxyEvent, APIGatewayProxyResult} from "aws-lambda"
 import {Logger} from "@aws-lambda-powertools/logger"
 import {injectLambdaContext} from "@aws-lambda-powertools/logger/middleware"
-import {DynamoDBClient, PutItemCommand} from "@aws-sdk/client-dynamodb"
+import {BatchWriteItemCommand, DynamoDBClient} from "@aws-sdk/client-dynamodb"
 import {marshall} from "@aws-sdk/util-dynamodb"
 import middy from "@middy/core"
 import inputOutputLogger from "@middy/input-output-logger"
@@ -12,7 +12,7 @@ import {validateTask} from "./requestContentValidation"
 
 const logger = new Logger({serviceName: "updatePrescriptionStatus"})
 const client = new DynamoDBClient({region: "eu-west-2"})
-const tableName = process.env.TABLE_NAME
+const tableName = process.env.TABLE_NAME || ""
 
 interface DataItem {
   RequestID?: string;
@@ -49,6 +49,14 @@ const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPro
 
   const entries: Array<BundleEntry> = requestBody.entry || []
 
+  if (entries.length === 0) {
+    logger.info("No entries to process")
+    return {
+      statusCode: 200,
+      body: JSON.stringify(responseBundle)
+    }
+  }
+
   const entriesValid = validateEntries(entries, responseBundle)
   if (!entriesValid) {
     logger.error("Content validation issues present in request.")
@@ -67,49 +75,43 @@ const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPro
     }
   }
 
-  for (const dataItem of dataItems) {
-    const item = marshall(dataItem)
-    logger.info("Marshalled item", {item: item})
+  const batchCommand = createBatchCommand(dataItems)
+  const persistSuccess = await persistDataItems(batchCommand)
 
-    try {
-      const command = new PutItemCommand({
-        TableName: tableName,
-        Item: item
-      })
-      logger.info("Sending PutItemCommand", {command: command})
-      await client.send(command)
-    } catch (error) {
-      logger.error("Error sending PutItemCommand", {error: error})
-      const entry: BundleEntry = {
-        fullUrl: dataItem.TaskID,
-        response: {
-          status: "500 Internal Server Error",
-          outcome: {
-            resourceType: "OperationOutcome",
-            issue: [
-              {
-                code: "exception",
-                severity: "fatal",
-                details: {
-                  coding: [
-                    {
-                      system: "https://fhir.nhs.uk/CodeSystem/http-error-codes",
-                      code: "SERVER_ERROR",
-                      display: "500: The Server has encountered an error processing the request."
-                    }
-                  ]
-                }
+  if (!persistSuccess) {
+    const entry: BundleEntry = {
+      response: {
+        status: "500 Internal Server Error",
+        outcome: {
+          resourceType: "OperationOutcome",
+          issue: [
+            {
+              code: "exception",
+              severity: "fatal",
+              details: {
+                coding: [
+                  {
+                    system: "https://fhir.nhs.uk/CodeSystem/http-error-codes",
+                    code: "SERVER_ERROR",
+                    display: "500: The Server has encountered an error processing the request."
+                  }
+                ]
               }
-            ]
-          }
+            }
+          ]
         }
       }
-      replaceResponseBundleEntry(responseBundle, entry)
-      continue
     }
+    responseBundle.entry = [entry]
+    return {
+      statusCode: 500,
+      body: JSON.stringify(responseBundle)
+    }
+  }
 
-    const entry: BundleEntry = {
-      fullUrl: dataItem.TaskID,
+  for (const entry of entries) {
+    const responseBundleEntry: BundleEntry = {
+      fullUrl: entry.resource?.id,
       response: {
         status: "201 Created",
         outcome: {
@@ -124,16 +126,7 @@ const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPro
         }
       }
     }
-    logger.info("Task response", {taskResponse: entry})
-    replaceResponseBundleEntry(responseBundle, entry)
-  }
-
-  if (entries.length === 0) {
-    logger.info("No entries to process")
-    return {
-      statusCode: 200,
-      body: JSON.stringify(responseBundle)
-    }
+    replaceResponseBundleEntry(responseBundle, responseBundleEntry)
   }
 
   logger.info("Request audit log", {requestBody: requestBody})
@@ -298,6 +291,32 @@ function buildDataItems(
     dataItems.push(dataItem)
   }
   return {dataItemsValid: valid, dataItems: dataItems}
+}
+
+function createBatchCommand(dataItems: Array<DataItem>): BatchWriteItemCommand {
+  const putRequests = dataItems.map(d => {
+    return {
+      PutRequest: {
+        Item: marshall(d)
+      }
+    }
+  })
+  return new BatchWriteItemCommand({
+    RequestItems: {
+      [tableName]: putRequests
+    }
+  })
+}
+
+async function persistDataItems(batchCommand: BatchWriteItemCommand): Promise<boolean> {
+  try {
+    logger.info("Sending BatchWriteItemCommand to DynamoDB", {command: batchCommand})
+    await client.send(batchCommand)
+    return true
+  } catch(e) {
+    logger.error("Error sending BatchWriteItemCommand", {error: e})
+    return false
+  }
 }
 
 function replaceResponseBundleEntry(responseBundle: Bundle, entry: BundleEntry) {
