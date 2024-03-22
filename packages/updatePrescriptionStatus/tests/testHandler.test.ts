@@ -10,11 +10,11 @@ import {
 
 import {handler} from "../src/updatePrescriptionStatus"
 import {
-  TASK_ID_0,
-  TASK_ID_1,
   generateBody,
   generateExpectedItems,
-  generateMockEvent
+  generateMockEvent,
+  TASK_ID_0,
+  TASK_ID_1
 } from "./utils"
 
 import requestDispatched from "../../specification/examples/request-dispatched.json"
@@ -46,8 +46,8 @@ describe("Unit test for updatePrescriptionStatus handler", () => {
     expect(DynamoDBClient.prototype.send).toHaveBeenCalledWith(
       expect.objectContaining({
         input: expect.objectContaining({
-          Item: expect.objectContaining(
-            generateExpectedItems()[0]
+          RequestItems: expect.objectContaining(
+            generateExpectedItems()
           )
         })
       })
@@ -69,18 +69,8 @@ describe("Unit test for updatePrescriptionStatus handler", () => {
     expect(DynamoDBClient.prototype.send).toHaveBeenCalledWith(
       expect.objectContaining({
         input: expect.objectContaining({
-          Item: expect.objectContaining(
-            generateExpectedItems()[0]
-          )
-        })
-      })
-    )
-
-    expect(DynamoDBClient.prototype.send).toHaveBeenCalledWith(
-      expect.objectContaining({
-        input: expect.objectContaining({
-          Item: expect.objectContaining(
-            generateExpectedItems()[1]
+          RequestItems: expect.objectContaining(
+            generateExpectedItems(2)
           )
         })
       })

@@ -6,6 +6,7 @@ const TASK_ID_0 = "4d70678c-81e4-4ff4-8c67-17596fd0aa46"
 const TASK_ID_1 = "0ae4daf3-f24b-479d-b8fa-b69e2d873b60"
 const X_REQUEST_ID = "43313002-debb-49e3-85fa-34812c150242"
 const DEFAULT_HEADERS = {"x-request-id": X_REQUEST_ID}
+const TABLE_NAME = "PrescriptionStatusUpdates"
 
 const TASK_VALUES = [
   {
@@ -66,31 +67,36 @@ function generateBody(taskCount: number = 1) {
   return {entry: tasks}
 }
 
-function generateExpectedItems() {
+function generateExpectedItems(itemCount: number = 1) {
   const items = []
-  for (const taskValues of TASK_VALUES) {
+  for (let i = 0; i < itemCount; i++) {
+    const values = TASK_VALUES[i]
     items.push({
-      LineItemID: {S: taskValues.lineItemID},
-      PatientNHSNumber: {S: taskValues.nhsNumber},
-      PharmacyODSCode: {S: taskValues.odsCode},
-      PrescriptionID: {S: taskValues.prescriptionID},
-      RequestID: {S: X_REQUEST_ID},
-      TaskID: {S: taskValues.id},
-      TerminalStatus: {S: taskValues.status},
-      RequestMessage: {
-        M: {
-          basedOn: {L: [{M: {identifier: {M: {value: {S: taskValues.prescriptionID}}}}}]},
-          focus: {M: {identifier: {M: {value: {S: taskValues.lineItemID}}}}},
-          for: {M: {identifier: {M: {value: {S: taskValues.nhsNumber}}}}},
-          id: {S: taskValues.id},
-          owner: {M: {identifier: {M: {value: {S: taskValues.odsCode}}}}},
-          status: {S: taskValues.status},
-          lastModified: {S: taskValues.lastModified}
+      PutRequest: {
+        Item: {
+          LineItemID: {S: values.lineItemID},
+          PatientNHSNumber: {S: values.nhsNumber},
+          PharmacyODSCode: {S: values.odsCode},
+          PrescriptionID: {S: values.prescriptionID},
+          RequestID: {S: X_REQUEST_ID},
+          TaskID: {S: values.id},
+          TerminalStatus: {S: values.status},
+          RequestMessage: {
+            M: {
+              basedOn: {L: [{M: {identifier: {M: {value: {S: values.prescriptionID}}}}}]},
+              focus: {M: {identifier: {M: {value: {S: values.lineItemID}}}}},
+              for: {M: {identifier: {M: {value: {S: values.nhsNumber}}}}},
+              id: {S: values.id},
+              owner: {M: {identifier: {M: {value: {S: values.odsCode}}}}},
+              status: {S: values.status},
+              lastModified: {S: values.lastModified}
+            }
+          }
         }
       }
     })
   }
-  return items
+  return {[TABLE_NAME]: items}
 }
 
 export {generateBody, generateExpectedItems, generateMockEvent, TASK_ID_0, TASK_ID_1}

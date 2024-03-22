@@ -12,7 +12,7 @@ import {validateTask} from "./requestContentValidation"
 
 const logger = new Logger({serviceName: "updatePrescriptionStatus"})
 const client = new DynamoDBClient({region: "eu-west-2"})
-const tableName = process.env.TABLE_NAME || ""
+const tableName = process.env.TABLE_NAME || "PrescriptionStatusUpdates"
 
 interface DataItem {
   RequestID?: string;
