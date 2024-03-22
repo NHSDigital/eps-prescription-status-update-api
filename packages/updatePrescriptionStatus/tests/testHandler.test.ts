@@ -32,7 +32,7 @@ describe("Unit test for updatePrescriptionStatus handler", () => {
     jest.clearAllMocks()
   })
 
-  it("should successfully update a single item into DynamoDB", async () => {
+  it("when single item in request, expect a single item sent to DynamoDB", async () => {
     const body = generateBody()
     const event: APIGatewayProxyEvent = generateMockEvent(body)
 
@@ -54,7 +54,7 @@ describe("Unit test for updatePrescriptionStatus handler", () => {
     )
   })
 
-  it("should successfully update multiple items into DynamoDB", async () => {
+  it("when multiple items in request, expect multiple items sent to DynamoDB", async () => {
     const body = generateBody(2)
     const event: APIGatewayProxyEvent = generateMockEvent(body)
 
@@ -118,7 +118,7 @@ describe("Unit test for updatePrescriptionStatus handler", () => {
       expect(responseBody).toHaveProperty("type", "transaction-response")
     })
 
-  it("should return a 400 status code and error message when provided with invalid JSON", async () => {
+  it("when invalid json, expect 400 status code and error message", async () => {
     const event: APIGatewayProxyEvent = generateMockEvent(requestDispatched)
     const invalidJson = '{ "resourceType": "Bundle",  "type": "transaction", "entry":}'
     event.body = invalidJson
@@ -129,7 +129,7 @@ describe("Unit test for updatePrescriptionStatus handler", () => {
     expect(JSON.parse(response.body)).toEqual(responseBadRequest)
   })
 
-  it("should return a 400 status code, 400 response code and error message indicating missing required fields", async () => {
+  it("when missing fields, expect 400 status code and message indicating missing fields", async () => {
     const event: APIGatewayProxyEvent = generateMockEvent(requestMissingFields)
 
     const response: APIGatewayProxyResult = await handler(event, {})
@@ -167,13 +167,14 @@ describe("Unit test for updatePrescriptionStatus handler", () => {
     })
   })
 
-  it("should handle errors with a 201 status code, 500 response code and internal server error message", async () => {
+  it("when dynamo call fails, expect 500 status code and internal server error message", async () => {
     const event = generateMockEvent(requestDispatched)
 
     jest.spyOn(DynamoDBClient.prototype, "send").mockRejectedValue(new Error("Mocked error") as never)
 
     const response: APIGatewayProxyResult = await handler(event, {})
 
+    // 500
     expect(response.statusCode).toEqual(201)
     expect(JSON.parse(response.body)).toEqual({
       resourceType: "Bundle",
@@ -207,7 +208,7 @@ describe("Unit test for updatePrescriptionStatus handler", () => {
     })
   })
 
-  it("should handle multiple errors with a 400 status code, appropriate response codes and error messages", async () => {
+  it("when multiple tasks have missing fields, expect 400 status code and messages indicating missing fields", async () => {
     const body: any = {...requestMultipleMissingFields}
     const event: APIGatewayProxyEvent = generateMockEvent(body)
 
@@ -270,7 +271,7 @@ describe("Unit test for updatePrescriptionStatus handler", () => {
     })
   })
 
-  it("should return 500 status code and internal server error message if an error occurs", async () => {
+  it("when general error occurs, expect 500 status code and internal server error message", async () => {
     const response: APIGatewayProxyResult = await handler({}, undefined)
 
     expect(response.statusCode).toBe(500)

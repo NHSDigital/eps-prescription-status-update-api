@@ -19,7 +19,7 @@ describe("Unit test for validation via updatePrescriptionStatus handler", () => 
     jest.resetModules()
   })
 
-  it("when content validation issues are present, should return a 400 status code and 400 response code(s)", async () => {
+  it("when content validation issues are present, expect a 400 status code and 400 response code(s)", async () => {
     const body: any = {...exampleDispatched}
 
     const now = new Date()
