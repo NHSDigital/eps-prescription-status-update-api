@@ -46,11 +46,12 @@ const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPro
       }
     }
   }
+  logger.info("Request audit log", {requestBody: requestBody})
 
   const entries: Array<BundleEntry> = requestBody.entry || []
 
   if (entries.length === 0) {
-    logger.info("No entries to process")
+    logger.info("No entries to process.")
     return {
       statusCode: 200,
       body: JSON.stringify(responseBundle)
@@ -76,60 +77,16 @@ const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPro
   }
 
   const batchCommand = createBatchCommand(dataItems)
-  const persistSuccess = await persistDataItems(batchCommand)
-
+  const persistSuccess = await persistDataItems(batchCommand, responseBundle)
   if (!persistSuccess) {
-    const entry: BundleEntry = {
-      response: {
-        status: "500 Internal Server Error",
-        outcome: {
-          resourceType: "OperationOutcome",
-          issue: [
-            {
-              code: "exception",
-              severity: "fatal",
-              details: {
-                coding: [
-                  {
-                    system: "https://fhir.nhs.uk/CodeSystem/http-error-codes",
-                    code: "SERVER_ERROR",
-                    display: "500: The Server has encountered an error processing the request."
-                  }
-                ]
-              }
-            }
-          ]
-        }
-      }
-    }
-    responseBundle.entry = [entry]
     return {
       statusCode: 500,
       body: JSON.stringify(responseBundle)
     }
   }
 
-  for (const entry of entries) {
-    const responseBundleEntry: BundleEntry = {
-      fullUrl: entry.resource?.id,
-      response: {
-        status: "201 Created",
-        outcome: {
-          resourceType: "OperationOutcome",
-          issue: [
-            {
-              severity: "information",
-              code: "success",
-              diagnostics: "No issues detected during validation"
-            }
-          ]
-        }
-      }
-    }
-    replaceResponseBundleEntry(responseBundle, responseBundleEntry)
-  }
-
-  logger.info("Request audit log", {requestBody: requestBody})
+  createSuccessResponseBundle(responseBundle, entries)
+  logger.info("Event processed successfully.")
   return {
     statusCode: 201,
     body: JSON.stringify(responseBundle)
@@ -308,14 +265,60 @@ function createBatchCommand(dataItems: Array<DataItem>): BatchWriteItemCommand {
   })
 }
 
-async function persistDataItems(batchCommand: BatchWriteItemCommand): Promise<boolean> {
+async function persistDataItems(batchCommand: BatchWriteItemCommand, responseBundle: Bundle): Promise<boolean> {
   try {
     logger.info("Sending BatchWriteItemCommand to DynamoDB", {command: batchCommand})
     await client.send(batchCommand)
+    logger.info("BatchWriteItemCommand sent to DynamoDB successfully.", {command: batchCommand})
     return true
   } catch(e) {
-    logger.error("Error sending BatchWriteItemCommand", {error: e})
+    logger.error("Error sending BatchWriteItemCommand to DynamoDB.", {error: e})
+    responseBundle.entry = [{
+      response: {
+        status: "500 Internal Server Error",
+        outcome: {
+          resourceType: "OperationOutcome",
+          issue: [
+            {
+              code: "exception",
+              severity: "fatal",
+              details: {
+                coding: [
+                  {
+                    system: "https://fhir.nhs.uk/CodeSystem/http-error-codes",
+                    code: "SERVER_ERROR",
+                    display: "500: The Server has encountered an error processing the request."
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      }
+    }]
     return false
+  }
+}
+
+function createSuccessResponseBundle(responseBundle: Bundle, entries: Array<BundleEntry>) {
+  responseBundle.entry = []
+  for (const entry of entries) {
+    responseBundle.entry.push({
+      fullUrl: entry.resource?.id,
+      response: {
+        status: "201 Created",
+        outcome: {
+          resourceType: "OperationOutcome",
+          issue: [
+            {
+              severity: "information",
+              code: "success",
+              diagnostics: "No issues detected during validation"
+            }
+          ]
+        }
+      }
+    })
   }
 }
 
