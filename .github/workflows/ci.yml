@@ -92,7 +92,7 @@ jobs:
       ARTIFACT_BUCKET_PREFIX: ${{needs.tag_release.outputs.version_tag}}
       STACK_NAME: psu
       TARGET_ENVIRONMENT: dev
-      ENABLE_MUTUAL_TLS: true
+      ENABLE_MUTUAL_TLS: false
       DEPLOY_SANDBOX: false
       BUILD_ARTIFACT: packaged_code
       TRUSTSTORE_FILE: psu-truststore.pem
@@ -116,7 +116,7 @@ jobs:
       ARTIFACT_BUCKET_PREFIX: ${{needs.tag_release.outputs.version_tag}}
       STACK_NAME: psu
       TARGET_ENVIRONMENT: qa
-      ENABLE_MUTUAL_TLS: true
+      ENABLE_MUTUAL_TLS: false
       DEPLOY_SANDBOX: false
       BUILD_ARTIFACT: packaged_code
       TRUSTSTORE_FILE: psu-truststore.pem
