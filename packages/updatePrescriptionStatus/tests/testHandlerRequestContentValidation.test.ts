@@ -9,7 +9,7 @@ import {
 } from "@jest/globals"
 
 import {handler} from "../src/updatePrescriptionStatus"
-import {TASK_ID_0, generateMockEvent} from "./utils"
+import {TASK_ID_0, generateMockEvent} from "./utils/testUtils"
 import {ONE_DAY_IN_MS} from "../src/requestContentValidation"
 
 import exampleDispatched from "../../specification/examples/request-dispatched.json"

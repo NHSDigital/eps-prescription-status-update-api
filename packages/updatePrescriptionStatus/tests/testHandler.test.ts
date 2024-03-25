@@ -14,7 +14,7 @@ import {
   generateExpectedItems,
   generateMockEvent,
   TASK_ID_1
-} from "./utils"
+} from "./utils/testUtils"
 
 import requestDispatched from "../../specification/examples/request-dispatched.json"
 import requestMultipleItems from "../../specification/examples/request-multiple-items.json"

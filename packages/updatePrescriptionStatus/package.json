@@ -24,6 +24,7 @@
     "@types/fhir": "^0.0.41"
   },
   "devDependencies": {
+    "@faker-js/faker": "^8.4.1",
     "@types/uuid": "^9.0.8",
     "aws-sdk-client-mock": "^3.0.1"
   }
