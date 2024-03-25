@@ -19,7 +19,7 @@
   ],
   "devDependencies": {
     "@semantic-release/changelog": "^6.0.3",
-    "@semantic-release/release-notes-generator": "^12.1.0",
+    "@semantic-release/release-notes-generator": "^13.0.0",
     "@types/aws-lambda": "^8.10.134",
     "@types/jest": "^29.5.12",
     "@types/node": "^20.11.30",
