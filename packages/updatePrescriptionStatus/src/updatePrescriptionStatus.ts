@@ -8,7 +8,15 @@ import middy from "@middy/core"
 import inputOutputLogger from "@middy/input-output-logger"
 import errorHandler from "@nhs/fhir-middy-error-handler"
 import {Bundle, BundleEntry, Task} from "fhir/r4"
+
 import {validateTask} from "./requestContentValidation"
+import {
+  accepted,
+  badRequest,
+  createSuccessResponseBundle,
+  replaceResponseBundleEntry,
+  serverError
+} from "./utils/responses"
 
 const logger = new Logger({serviceName: "updatePrescriptionStatus"})
 const client = new DynamoDBClient({region: "eu-west-2"})
@@ -97,28 +105,12 @@ function parseEventBody(event: APIGatewayProxyEvent, responseBundle: Bundle): Bu
   try {
     return JSON.parse(event.body || "") as Bundle
   } catch (jsonParseError) {
-    logger.error("Error parsing request body as json.", {error: jsonParseError})
+    const errorMessage = "Error parsing request body as json."
+    logger.error(errorMessage, {error: jsonParseError})
     const entry: BundleEntry = {
       response: {
         status: "400 Bad Request",
-        outcome: {
-          resourceType: "OperationOutcome",
-          issue: [
-            {
-              code: "value",
-              severity: "error",
-              details: {
-                coding: [
-                  {
-                    system: "https://fhir.nhs.uk/CodeSystem/http-error-codes",
-                    code: "BAD_REQUEST",
-                    display: "400: The Server was unable to process the request."
-                  }
-                ]
-              }
-            }
-          ]
-        }
+        outcome: badRequest(errorMessage)
       }
     }
     responseBundle.entry!.push(entry)
@@ -140,43 +132,18 @@ function validateEntries(entries: Array<BundleEntry>, responseBundle: Bundle): b
         fullUrl: task.id,
         response: {
           status: "200 Accepted",
-          outcome: {
-            resourceType: "OperationOutcome",
-            issue: [
-              {
-                severity: "information",
-                code: "success",
-                diagnostics: "No issues detected during validation"
-              }
-            ]
-          }
+          outcome: accepted()
         }
       }
     } else {
-      logger.info("Task failed validation.", {task: task, id: task.id})
+      const errorMessage = `Validation issues: ${validationOutcome.issues}`
+      logger.info(`Task failed validation. ${errorMessage}`, {task: task, id: task.id})
       valid = false
       responseEntry = {
         fullUrl: task.id,
         response: {
           status: "400 Bad Request",
-          outcome: {
-            resourceType: "OperationOutcome",
-            issue: [
-              {
-                code: "value",
-                severity: "error",
-                details: {
-                  coding: [
-                    {
-                      system: "https://fhir.nhs.uk/CodeSystem/http-error-codes",
-                      code: "BAD_REQUEST",
-                      display: `Validation issues: ${validationOutcome.issues}`
-                    }
-                  ]
-                }
-              }
-            ]
-          }
+          outcome: badRequest(errorMessage)
         }
       }
     }
@@ -215,31 +182,14 @@ function buildDataItems(
     }
 
     if (invalidFields.length > 0) {
-      const errorMessage = `400: Missing required fields: ${invalidFields.join(", ")}`
+      const errorMessage = `Missing required fields: ${invalidFields.join(", ")}`
       logger.error("Error message", {errorMessage: errorMessage})
 
       const entry: BundleEntry = {
         fullUrl: task.id,
         response: {
           status: "400 Bad Request",
-          outcome: {
-            resourceType: "OperationOutcome",
-            issue: [
-              {
-                code: "value",
-                severity: "error",
-                details: {
-                  coding: [
-                    {
-                      system: "https://fhir.nhs.uk/CodeSystem/http-error-codes",
-                      code: "BAD_REQUEST",
-                      display: errorMessage
-                    }
-                  ]
-                }
-              }
-            ]
-          }
+          outcome: badRequest(errorMessage)
         }
       }
       valid = false
@@ -276,58 +226,11 @@ async function persistDataItems(batchCommand: BatchWriteItemCommand, responseBun
     responseBundle.entry = [{
       response: {
         status: "500 Internal Server Error",
-        outcome: {
-          resourceType: "OperationOutcome",
-          issue: [
-            {
-              code: "exception",
-              severity: "fatal",
-              details: {
-                coding: [
-                  {
-                    system: "https://fhir.nhs.uk/CodeSystem/http-error-codes",
-                    code: "SERVER_ERROR",
-                    display: "500: The Server has encountered an error processing the request."
-                  }
-                ]
-              }
-            }
-          ]
-        }
+        outcome: serverError()
       }
     }]
     return false
   }
-}
-
-function createSuccessResponseBundle(responseBundle: Bundle, entries: Array<BundleEntry>) {
-  responseBundle.entry = []
-  for (const entry of entries) {
-    responseBundle.entry.push({
-      fullUrl: entry.resource?.id,
-      response: {
-        status: "201 Created",
-        outcome: {
-          resourceType: "OperationOutcome",
-          issue: [
-            {
-              severity: "information",
-              code: "success",
-              diagnostics: "No issues detected during validation"
-            }
-          ]
-        }
-      }
-    })
-  }
-}
-
-function replaceResponseBundleEntry(responseBundle: Bundle, entry: BundleEntry) {
-  responseBundle.entry!.forEach((e, i) => {
-    if (e.fullUrl === entry.fullUrl) {
-      responseBundle.entry![i] = entry
-    }
-  })
 }
 
 export const handler = middy(lambdaHandler)

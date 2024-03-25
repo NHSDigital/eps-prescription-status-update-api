@@ -9,14 +9,15 @@
           "resourceType": "OperationOutcome",
           "issue": [
             {
-              "code": "value",
+              "code": "processing",
               "severity": "error",
+              "diagnostics": "Error parsing request body as json.",
               "details": {
                 "coding": [
                   {
                     "system": "https://fhir.nhs.uk/CodeSystem/http-error-codes",
                     "code": "BAD_REQUEST",
-                    "display": "400: The Server was unable to process the request."
+                    "display": "Bad request"
                   }
                 ]
               }

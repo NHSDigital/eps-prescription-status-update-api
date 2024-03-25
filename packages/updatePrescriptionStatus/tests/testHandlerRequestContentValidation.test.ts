@@ -23,14 +23,15 @@ function expectedEntry(taskID: string, issues: string) {
         resourceType: "OperationOutcome",
         issue: [
           {
-            code: "value",
+            code: "processing",
             severity: "error",
+            diagnostics: `Validation issues: ${issues}`,
             details: {
               coding: [
                 {
                   system: "https://fhir.nhs.uk/CodeSystem/http-error-codes",
                   code: "BAD_REQUEST",
-                  display: `Validation issues: ${issues}`
+                  display: "Bad request"
                 }
               ]
             }

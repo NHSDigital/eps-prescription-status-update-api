@@ -135,14 +135,15 @@ describe("Unit test for updatePrescriptionStatus handler", () => {
               resourceType: "OperationOutcome",
               issue: [
                 {
-                  code: "value",
+                  code: "processing",
                   severity: "error",
+                  diagnostics: "Missing required fields: PharmacyODSCode, TaskID",
                   details: {
                     coding: [
                       {
                         system: "https://fhir.nhs.uk/CodeSystem/http-error-codes",
                         code: "BAD_REQUEST",
-                        display: "400: Missing required fields: PharmacyODSCode, TaskID"
+                        display: "Bad request"
                       }
                     ]
                   }
@@ -176,12 +177,13 @@ describe("Unit test for updatePrescriptionStatus handler", () => {
                 {
                   code: "exception",
                   severity: "fatal",
+                  diagnostics: "The Server has encountered an error processing the request.",
                   details: {
                     coding: [
                       {
                         system: "https://fhir.nhs.uk/CodeSystem/http-error-codes",
                         code: "SERVER_ERROR",
-                        display: "500: The Server has encountered an error processing the request."
+                        display: "Server error"
                       }
                     ]
                   }
@@ -212,14 +214,15 @@ describe("Unit test for updatePrescriptionStatus handler", () => {
               resourceType: "OperationOutcome",
               issue: [
                 {
-                  code: "value",
+                  code: "processing",
                   severity: "error",
+                  diagnostics: "Missing required fields: PharmacyODSCode, TaskID",
                   details: {
                     coding: [
                       {
                         system: "https://fhir.nhs.uk/CodeSystem/http-error-codes",
                         code: "BAD_REQUEST",
-                        display: "400: Missing required fields: PharmacyODSCode, TaskID"
+                        display: "Bad request"
                       }
                     ]
                   }
@@ -236,14 +239,15 @@ describe("Unit test for updatePrescriptionStatus handler", () => {
               resourceType: "OperationOutcome",
               issue: [
                 {
-                  code: "value",
+                  code: "processing",
                   severity: "error",
+                  diagnostics: "Missing required fields: PharmacyODSCode",
                   details: {
                     coding: [
                       {
                         system: "https://fhir.nhs.uk/CodeSystem/http-error-codes",
                         code: "BAD_REQUEST",
-                        display: "400: Missing required fields: PharmacyODSCode"
+                        display: "Bad request"
                       }
                     ]
                   }
