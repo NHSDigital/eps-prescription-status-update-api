@@ -13,7 +13,6 @@ import {
   generateBody,
   generateExpectedItems,
   generateMockEvent,
-  TASK_ID_0,
   TASK_ID_1
 } from "./utils"
 
@@ -130,7 +129,6 @@ describe("Unit test for updatePrescriptionStatus handler", () => {
       type: "transaction-response",
       entry: [
         {
-          fullUrl: TASK_ID_0,
           response: {
             status: "400 Bad Request",
             outcome: {
@@ -144,7 +142,7 @@ describe("Unit test for updatePrescriptionStatus handler", () => {
                       {
                         system: "https://fhir.nhs.uk/CodeSystem/http-error-codes",
                         code: "BAD_REQUEST",
-                        display: "400: Missing required fields: PrescriptionID, PatientNHSNumber"
+                        display: "400: Missing required fields: PharmacyODSCode, TaskID"
                       }
                     ]
                   }
@@ -208,7 +206,6 @@ describe("Unit test for updatePrescriptionStatus handler", () => {
       type: "transaction-response",
       entry: [
         {
-          fullUrl: TASK_ID_0,
           response: {
             status: "400 Bad Request",
             outcome: {
@@ -222,7 +219,7 @@ describe("Unit test for updatePrescriptionStatus handler", () => {
                       {
                         system: "https://fhir.nhs.uk/CodeSystem/http-error-codes",
                         code: "BAD_REQUEST",
-                        display: "400: Missing required fields: PrescriptionID, PatientNHSNumber"
+                        display: "400: Missing required fields: PharmacyODSCode, TaskID"
                       }
                     ]
                   }
@@ -246,7 +243,7 @@ describe("Unit test for updatePrescriptionStatus handler", () => {
                       {
                         system: "https://fhir.nhs.uk/CodeSystem/http-error-codes",
                         code: "BAD_REQUEST",
-                        display: "400: Missing required fields: PrescriptionID"
+                        display: "400: Missing required fields: PharmacyODSCode"
                       }
                     ]
                   }

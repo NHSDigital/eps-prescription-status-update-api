@@ -6,7 +6,14 @@
       "fullUrl": "http://example.org/fhir/Task/4d70678c-81e4-4ff4-8c67-17596fd0aa46",
       "resource": {
         "resourceType": "Task",
-        "id": "4d70678c-81e4-4ff4-8c67-17596fd0aa46",
+        "basedOn": [
+          {
+            "identifier": {
+              "system": "https://fhir.nhs.uk/Id/prescription-order-number",
+              "value": "07A66F-A83008-1EEEA0"
+            }
+          }
+        ],
         "status": "in-progress",
         "businessStatus": {
           "coding": [
@@ -24,13 +31,13 @@
             "value": "6989b7bd-8db6-428c-a593-4022e3044c00"
           }
         },
-        "lastModified": "2024-01-30T12:01:24Z",
-        "owner": {
+        "for": {
           "identifier": {
-            "system": "https://fhir.nhs.uk/Id/ods-organization-code",
-            "value": "C9Z1O"
+            "system": "https://fhir.nhs.uk/Id/nhs-number",
+            "value": "9449304130"
           }
-        }
+        },
+        "lastModified": "2024-01-30T12:01:24Z"
       },
       "request": {
         "method": "POST",
@@ -42,6 +49,14 @@
       "resource": {
         "resourceType": "Task",
         "id": "0ae4daf3-f24b-479d-b8fa-b69e2d873b60",
+        "basedOn": [
+          {
+            "identifier": {
+              "system": "https://fhir.nhs.uk/Id/prescription-order-number",
+              "value": "480720-A83008-57FF06"
+            }
+          }
+        ],
         "status": "in-progress",
         "businessStatus": {
           "coding": [
@@ -64,13 +79,7 @@
             "value": "9449304130"
           }
         },
-        "lastModified": "2024-01-30T12:01:24Z",
-        "owner": {
-          "identifier": {
-            "system": "https://fhir.nhs.uk/Id/ods-organization-code",
-            "value": "C9Z1O"
-          }
-        }
+        "lastModified": "2024-01-30T12:01:24Z"
       },
       "request": {
         "method": "POST",
