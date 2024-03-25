@@ -14,6 +14,28 @@ const ONE_DAY_IN_MS = 86400000
 
 const logger = new Logger({serviceName: "requestContentValidation"})
 
+function fields(task: Task): string | undefined {
+  const requiredFields: Array<Validation> = [
+    (t: Task) => t.basedOn?.[0]?.identifier?.value ? undefined : "PrescriptionID",
+    (t: Task) => t.for?.identifier?.value ? undefined: "PatientNHSNumber",
+    (t: Task) => t.owner?.identifier?.value ? undefined: "PharmacyODSCode",
+    (t: Task) => t.id ? undefined: "TaskID",
+    (t: Task) => t.focus?.identifier?.value ? undefined: "LineItemID",
+    (t: Task) => t.status ? undefined: "TerminalStatus",
+    (t: Task) => t ? undefined: "RequestMessage"
+  ]
+  const missingFields: Array<string> = []
+  for (const field of requiredFields) {
+    const missingField = field(task)
+    if (missingField) {
+      missingFields.push(missingField)
+    }
+  }
+  if (missingFields.length > 0) {
+    return `Missing required fields - ${missingFields.join(", ")}`
+  }
+}
+
 function lastModified(task: Task): string | undefined {
   const today = new Date()
   const lastModified = new Date(task.lastModified!)
@@ -61,6 +83,7 @@ function status(task: Task): string | undefined {
 
 function validateTask(task: Task): ValidationOutcome {
   const validations: Array<Validation> = [
+    fields,
     lastModified,
     prescriptionID,
     nhsNumber,

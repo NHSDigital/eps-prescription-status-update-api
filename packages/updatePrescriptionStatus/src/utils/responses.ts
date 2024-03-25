@@ -83,12 +83,4 @@ function createSuccessResponseBundle(responseBundle: Bundle, entries: Array<Bund
   }
 }
 
-function replaceResponseBundleEntry(responseBundle: Bundle, entry: BundleEntry) {
-  responseBundle.entry!.forEach((e, i) => {
-    if (e.fullUrl === entry.fullUrl) {
-      responseBundle.entry![i] = entry
-    }
-  })
-}
-
-export {accepted, badRequest, createSuccessResponseBundle, replaceResponseBundleEntry, serverError}
+export {accepted, badRequest, createSuccessResponseBundle, serverError}

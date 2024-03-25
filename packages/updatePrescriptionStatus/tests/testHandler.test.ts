@@ -137,7 +137,7 @@ describe("Unit test for updatePrescriptionStatus handler", () => {
                 {
                   code: "processing",
                   severity: "error",
-                  diagnostics: "Missing required fields: PharmacyODSCode, TaskID",
+                  diagnostics: "Validation issues: Missing required fields - PharmacyODSCode, TaskID",
                   details: {
                     coding: [
                       {
@@ -216,7 +216,7 @@ describe("Unit test for updatePrescriptionStatus handler", () => {
                 {
                   code: "processing",
                   severity: "error",
-                  diagnostics: "Missing required fields: PharmacyODSCode, TaskID",
+                  diagnostics: "Validation issues: Missing required fields - PharmacyODSCode, TaskID",
                   details: {
                     coding: [
                       {
@@ -241,7 +241,7 @@ describe("Unit test for updatePrescriptionStatus handler", () => {
                 {
                   code: "processing",
                   severity: "error",
-                  diagnostics: "Missing required fields: PharmacyODSCode",
+                  diagnostics: "Validation issues: Missing required fields - PharmacyODSCode",
                   details: {
                     coding: [
                       {

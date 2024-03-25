@@ -14,7 +14,6 @@ import {
   accepted,
   badRequest,
   createSuccessResponseBundle,
-  replaceResponseBundleEntry,
   serverError
 } from "./utils/responses"
 
@@ -34,25 +33,30 @@ interface DataItem {
 }
 
 const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
-  const xRequestID = event.headers["x-request-id"]
-
   const responseBundle: Bundle = {
     resourceType: "Bundle",
     type: "transaction-response",
     entry: []
   }
 
+  const xRequestID = event.headers["x-request-id"] || undefined
+  if (!xRequestID) {
+    const errorMessage = "Missing x-request-id header."
+    logger.error(errorMessage)
+    const entry: BundleEntry = {
+      response: {
+        status: "400 Bad Request",
+        outcome: badRequest(errorMessage)
+      }
+    }
+    responseBundle.entry!.push(entry)
+    return response(400, JSON.stringify(responseBundle))
+  }
+
   const requestBody = parseEventBody(event, responseBundle)
   if(!requestBody) {
     logger.error("Unable to parse event body as json.")
-    return {
-      statusCode: 400,
-      body: JSON.stringify(responseBundle),
-      headers: {
-        "Content-Type": "application/fhir+json",
-        "Cache-Control": "no-cache"
-      }
-    }
+    return response(400, JSON.stringify(responseBundle))
   }
   logger.info("Request audit log", {requestBody: requestBody})
 
@@ -60,45 +64,26 @@ const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPro
 
   if (entries.length === 0) {
     logger.info("No entries to process.")
-    return {
-      statusCode: 200,
-      body: JSON.stringify(responseBundle)
-    }
+    return response(200, JSON.stringify(responseBundle))
   }
 
   const entriesValid = validateEntries(entries, responseBundle)
   if (!entriesValid) {
     logger.error("Content validation issues present in request.")
-    return {
-      statusCode: 400,
-      body: JSON.stringify(responseBundle)
-    }
+    return response(400, JSON.stringify(responseBundle))
   }
 
-  const {dataItemsValid, dataItems} = buildDataItems(entries, responseBundle, xRequestID)
-  if (!dataItemsValid) {
-    logger.error("Unable to create valid data items from request.")
-    return {
-      statusCode: 400,
-      body: JSON.stringify(responseBundle)
-    }
-  }
-
+  const dataItems = buildDataItems(entries, responseBundle, xRequestID)
   const batchCommand = createBatchCommand(dataItems)
+
   const persistSuccess = await persistDataItems(batchCommand, responseBundle)
   if (!persistSuccess) {
-    return {
-      statusCode: 500,
-      body: JSON.stringify(responseBundle)
-    }
+    return response(500, JSON.stringify(responseBundle))
   }
 
   createSuccessResponseBundle(responseBundle, entries)
   logger.info("Event processed successfully.")
-  return {
-    statusCode: 201,
-    body: JSON.stringify(responseBundle)
-  }
+  return response(201, JSON.stringify(responseBundle))
 }
 
 function parseEventBody(event: APIGatewayProxyEvent, responseBundle: Bundle): Bundle | undefined {
@@ -154,8 +139,7 @@ function validateEntries(entries: Array<BundleEntry>, responseBundle: Bundle): b
 
 function buildDataItems(
   entries: Array<BundleEntry>, responseBundle: Bundle, xRequestID: string | undefined
-): {dataItemsValid: boolean, dataItems: Array<DataItem>} {
-  let valid = true
+): Array<DataItem> {
   const dataItems: Array<DataItem> = []
 
   for (const entry of entries) {
@@ -173,31 +157,9 @@ function buildDataItems(
       RequestMessage: task
     }
 
-    const invalidFields = []
-    for (const [field, value] of Object.entries(dataItem)) {
-      if (!value) {
-        logger.info("Invalid value", {field: field, value: value})
-        invalidFields.push(field)
-      }
-    }
-
-    if (invalidFields.length > 0) {
-      const errorMessage = `Missing required fields: ${invalidFields.join(", ")}`
-      logger.error("Error message", {errorMessage: errorMessage})
-
-      const entry: BundleEntry = {
-        fullUrl: task.id,
-        response: {
-          status: "400 Bad Request",
-          outcome: badRequest(errorMessage)
-        }
-      }
-      valid = false
-      replaceResponseBundleEntry(responseBundle, entry)
-    }
     dataItems.push(dataItem)
   }
-  return {dataItemsValid: valid, dataItems: dataItems}
+  return dataItems
 }
 
 function createBatchCommand(dataItems: Array<DataItem>): BatchWriteItemCommand {
@@ -230,6 +192,17 @@ async function persistDataItems(batchCommand: BatchWriteItemCommand, responseBun
       }
     }]
     return false
+  }
+}
+
+function response(statusCode: number, body: string) {
+  return {
+    statusCode: statusCode,
+    body: body,
+    headers: {
+      "Content-Type": "application/fhir+json",
+      "Cache-Control": "no-cache"
+    }
   }
 }
 
