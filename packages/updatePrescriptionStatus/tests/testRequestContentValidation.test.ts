@@ -7,10 +7,11 @@ import {
   ValidationOutcome,
   ONE_DAY_IN_MS,
   lastModified,
-  validateTask
+  validateTask,
+  prescriptionID
 } from "../src/requestContentValidation"
 
-import valid from "../../specification/examples/tasks/valid.json"
+import valid from "./tasks/valid.json"
 
 describe("Unit tests for overall task validation", () => {
   it.each([
@@ -48,6 +49,19 @@ describe("Unit tests for validation of lastModified", () => {
     const expected = "Date format provided for lastModified is invalid."
 
     const actual = lastModified(task as Task)
+
+    expect(actual).toEqual(expected)
+  })
+})
+
+describe("Unit tests for validation of prescription ID", () => {
+  it("ID is invalid", async () => {
+    const task = {...valid}
+    task.basedOn[0].identifier.value = "invalid"
+
+    const expected = "Prescription ID is invalid."
+
+    const actual = prescriptionID(task as Task)
 
     expect(actual).toEqual(expected)
   })

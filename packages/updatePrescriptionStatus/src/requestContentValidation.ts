@@ -1,9 +1,6 @@
-// https://digital.nhs.uk/developer/api-catalogue/
-// electronic-prescription-service-fhir#post-/FHIR/R4/$process-message-prescription-order
-// /^[0-9a-fA-F]{6}-[0-9a-fA-F]{6}-[0-9a-fA-F]{5}[0-9a-zA-Z+]{1}
-
 import {Logger} from "@aws-lambda-powertools/logger"
 import {Task} from "fhir/r4"
+import {validatePrescriptionID} from "./utils"
 
 type Validation = (task: Task) => string | undefined
 
@@ -13,6 +10,7 @@ type ValidationOutcome = {
 }
 
 const ONE_DAY_IN_MS = 86400000
+
 const logger = new Logger({serviceName: "requestContentValidation"})
 
 function lastModified(task: Task): string | undefined {
@@ -28,9 +26,18 @@ function lastModified(task: Task): string | undefined {
   }
 }
 
+function prescriptionID(task: Task): string | undefined {
+  const prescriptionID = task.basedOn?.[0].identifier?.value
+  if (!prescriptionID) {
+    return "Prescription ID is invalid."
+  }
+  return validatePrescriptionID(prescriptionID) ? undefined : "Prescription ID is invalid."
+}
+
 function validateTask(task: Task): ValidationOutcome {
   const validations: Array<Validation> = [
-    lastModified
+    lastModified,
+    prescriptionID
   ]
   const validationOutcome: ValidationOutcome = {valid: true, issues: undefined}
 
@@ -55,4 +62,4 @@ function validateTask(task: Task): ValidationOutcome {
   return validationOutcome
 }
 
-export {ValidationOutcome, ONE_DAY_IN_MS, lastModified, validateTask}
+export {ValidationOutcome, ONE_DAY_IN_MS, lastModified, prescriptionID, validateTask}
