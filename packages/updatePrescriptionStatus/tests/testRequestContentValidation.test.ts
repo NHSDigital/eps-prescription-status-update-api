@@ -8,17 +8,19 @@ import {
   ONE_DAY_IN_MS,
   lastModified,
   validateTask,
-  prescriptionID
+  prescriptionID,
+  nhsNumber
 } from "../src/requestContentValidation"
 
 import valid from "./tasks/valid.json"
+import {generateInvalidNhsNumbers} from "./utils/nhsNumber"
 
 describe("Unit tests for overall task validation", () => {
   it.each([
     {
       task: valid,
       expectedOutcome: {valid: true, issues: undefined},
-      scenarioDescription: "Valid task"
+      scenarioDescription: "When task is valid, should return true with no issues."
     }
   ])(
     "should return $scenarioDescription",
@@ -29,7 +31,7 @@ describe("Unit tests for overall task validation", () => {
 })
 
 describe("Unit tests for validation of lastModified", () => {
-  it("over a day in the future", async () => {
+  it("When lastModified is over a day in the future, should return expected issue.", async () => {
     const today = new Date()
     const future = new Date(today.valueOf() + ONE_DAY_IN_MS + 1000)
     const task = {...valid}
@@ -42,7 +44,7 @@ describe("Unit tests for validation of lastModified", () => {
     expect(actual).toEqual(expected)
   })
 
-  it("invalid date format", async () => {
+  it("When last modified date format is invalid, should return expected issue.", async () => {
     const task = {...valid}
     task.lastModified = "invalid date"
 
@@ -55,13 +57,26 @@ describe("Unit tests for validation of lastModified", () => {
 })
 
 describe("Unit tests for validation of prescription ID", () => {
-  it("ID is invalid", async () => {
+  it("When prescription ID is invalid, should return expected issue.", async () => {
     const task = {...valid}
     task.basedOn[0].identifier.value = "invalid"
 
     const expected = "Prescription ID is invalid."
 
     const actual = prescriptionID(task as Task)
+
+    expect(actual).toEqual(expected)
+  })
+})
+
+describe("Unit tests for validation of NHS number", () => {
+  it("When NHS number is invalid, should return expected issue.", async () => {
+    const task = {...valid}
+    task.for.identifier.value = generateInvalidNhsNumbers(1)[0]
+
+    const expected = "NHS number is invalid."
+
+    const actual = nhsNumber(task as Task)
 
     expect(actual).toEqual(expected)
   })

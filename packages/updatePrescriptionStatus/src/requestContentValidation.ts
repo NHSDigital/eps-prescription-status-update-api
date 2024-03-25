@@ -1,6 +1,7 @@
 import {Logger} from "@aws-lambda-powertools/logger"
 import {Task} from "fhir/r4"
-import {validatePrescriptionID} from "./utils"
+import {validatePrescriptionID} from "./utils/prescriptionID"
+import {validateNhsNumber} from "./utils/nhsNumber"
 
 type Validation = (task: Task) => string | undefined
 
@@ -27,17 +28,28 @@ function lastModified(task: Task): string | undefined {
 }
 
 function prescriptionID(task: Task): string | undefined {
+  const message = "Prescription ID is invalid."
   const prescriptionID = task.basedOn?.[0].identifier?.value
   if (!prescriptionID) {
-    return "Prescription ID is invalid."
+    return message
   }
-  return validatePrescriptionID(prescriptionID) ? undefined : "Prescription ID is invalid."
+  return validatePrescriptionID(prescriptionID) ? undefined : message
+}
+
+function nhsNumber(task: Task): string | undefined {
+  const message = "NHS number is invalid."
+  const nhsNumber = task.for?.identifier?.value
+  if (!nhsNumber) {
+    return message
+  }
+  return validateNhsNumber(nhsNumber) ? undefined : message
 }
 
 function validateTask(task: Task): ValidationOutcome {
   const validations: Array<Validation> = [
     lastModified,
-    prescriptionID
+    prescriptionID,
+    nhsNumber
   ]
   const validationOutcome: ValidationOutcome = {valid: true, issues: undefined}
 
@@ -62,4 +74,4 @@ function validateTask(task: Task): ValidationOutcome {
   return validationOutcome
 }
 
-export {ValidationOutcome, ONE_DAY_IN_MS, lastModified, prescriptionID, validateTask}
+export {ValidationOutcome, ONE_DAY_IN_MS, lastModified, nhsNumber, prescriptionID, validateTask}
