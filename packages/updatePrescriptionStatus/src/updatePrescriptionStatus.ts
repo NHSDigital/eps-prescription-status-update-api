@@ -26,7 +26,7 @@ interface DataItem {
 }
 
 const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
-  const xRequestId = event.headers["x-request-id"]
+  const xRequestID = event.headers["x-request-id"]
 
   const responseBundle: Bundle = {
     resourceType: "Bundle",
@@ -67,7 +67,7 @@ const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPro
     }
   }
 
-  const {dataItemsValid, dataItems} = buildDataItems(entries, responseBundle, xRequestId)
+  const {dataItemsValid, dataItems} = buildDataItems(entries, responseBundle, xRequestID)
   if (!dataItemsValid) {
     logger.error("Unable to create valid data items from request.")
     return {
@@ -186,7 +186,7 @@ function validateEntries(entries: Array<BundleEntry>, responseBundle: Bundle): b
 }
 
 function buildDataItems(
-  entries: Array<BundleEntry>, responseBundle: Bundle, xRequestId: string | undefined
+  entries: Array<BundleEntry>, responseBundle: Bundle, xRequestID: string | undefined
 ): {dataItemsValid: boolean, dataItems: Array<DataItem>} {
   let valid = true
   const dataItems: Array<DataItem> = []
@@ -196,7 +196,7 @@ function buildDataItems(
     logger.info("Processing Task", {task: task, id: task.id})
 
     const dataItem: DataItem = {
-      RequestID: xRequestId,
+      RequestID: xRequestID,
       PrescriptionID: task.basedOn?.[0]?.identifier?.value,
       PatientNHSNumber: task.for?.identifier?.value,
       PharmacyODSCode: task.owner?.identifier?.value,

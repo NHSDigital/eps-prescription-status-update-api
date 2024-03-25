@@ -14,6 +14,33 @@ import {ONE_DAY_IN_MS} from "../src/requestContentValidation"
 
 import exampleDispatched from "../../specification/examples/request-dispatched.json"
 
+function expectedEntry(taskID: string, issues: string) {
+  return {
+    fullUrl: taskID,
+    response: {
+      status: "400 Bad Request",
+      outcome: {
+        resourceType: "OperationOutcome",
+        issue: [
+          {
+            code: "value",
+            severity: "error",
+            details: {
+              coding: [
+                {
+                  system: "https://fhir.nhs.uk/CodeSystem/http-error-codes",
+                  code: "BAD_REQUEST",
+                  display: `Validation issues: ${issues}`
+                }
+              ]
+            }
+          }
+        ]
+      }
+    }
+  }
+}
+
 describe("Unit test for validation via updatePrescriptionStatus handler", () => {
   beforeEach(() => {
     jest.resetModules()
@@ -29,32 +56,7 @@ describe("Unit test for validation via updatePrescriptionStatus handler", () => 
     const expected = {
       resourceType: "Bundle",
       type: "transaction-response",
-      entry: [
-        {
-          fullUrl: TASK_ID_0,
-          response: {
-            status: "400 Bad Request",
-            outcome: {
-              resourceType: "OperationOutcome",
-              issue: [
-                {
-                  code: "value",
-                  severity: "error",
-                  details: {
-                    coding: [
-                      {
-                        system: "https://fhir.nhs.uk/CodeSystem/http-error-codes",
-                        code: "BAD_REQUEST",
-                        display: "Validation issues: Date provided for lastModified is more than one day in the future."
-                      }
-                    ]
-                  }
-                }
-              ]
-            }
-          }
-        }
-      ]
+      entry: [expectedEntry(TASK_ID_0, "Date provided for lastModified is more than one day in the future.")]
     }
 
     const response: APIGatewayProxyResult = await handler(event, {})
