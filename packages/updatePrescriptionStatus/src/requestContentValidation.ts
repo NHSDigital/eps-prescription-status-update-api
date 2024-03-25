@@ -45,7 +45,7 @@ function lastModified(task: Task): string | undefined {
   }
 
   if (lastModified!.valueOf() - today.valueOf() > ONE_DAY_IN_MS) {
-    return "Date provided for lastModified is more than one day in the future."
+    return "Invalid last modified value provided."
   }
 }
 
@@ -75,7 +75,7 @@ function status(task: Task): string | undefined {
       const coding: Coding = businessStatus.coding![0]
       const code = coding.code
       if (code && ["with pharmacy", "ready to collect"].includes(code.toLowerCase())) {
-        return `Status cannot be 'completed' when business status is '${code}'.`
+        return "Completed state indicated for a prescription status requiring patient action."
       }
     }
   }

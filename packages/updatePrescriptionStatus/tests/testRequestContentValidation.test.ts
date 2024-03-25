@@ -38,7 +38,7 @@ describe("Unit tests for validation of lastModified", () => {
     const task = {...valid}
     task.lastModified = future.toISOString()
 
-    const expected = "Date provided for lastModified is more than one day in the future."
+    const expected = "Invalid last modified value provided."
 
     const actual = lastModified(task as Task)
 
@@ -88,17 +88,17 @@ describe("Unit tests for validation of status against business status", () => {
     {
       taskStatus: "completed",
       businessStatus: "With Pharmacy",
-      expected: "Status cannot be 'completed' when business status is 'With Pharmacy'."
+      expected: "Completed state indicated for a prescription status requiring patient action."
     },
     {
       taskStatus: "completed",
       businessStatus: "Ready to collect",
-      expected: "Status cannot be 'completed' when business status is 'Ready to collect'."
+      expected: "Completed state indicated for a prescription status requiring patient action."
     },
     {
       taskStatus: "completed",
       businessStatus: "ReAdY tO cOlLeCt",
-      expected: "Status cannot be 'completed' when business status is 'ReAdY tO cOlLeCt'."
+      expected: "Completed state indicated for a prescription status requiring patient action."
     },
     {
       taskStatus: "in-progress",

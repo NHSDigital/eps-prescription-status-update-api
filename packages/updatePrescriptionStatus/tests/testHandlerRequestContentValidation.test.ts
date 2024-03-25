@@ -57,7 +57,7 @@ describe("Unit test for validation via updatePrescriptionStatus handler", () => 
     const expected = {
       resourceType: "Bundle",
       type: "transaction-response",
-      entry: [expectedEntry(TASK_ID_0, "Date provided for lastModified is more than one day in the future.")]
+      entry: [expectedEntry(TASK_ID_0, "Invalid last modified value provided.")]
     }
 
     const response: APIGatewayProxyResult = await handler(event, {})
