@@ -1,5 +1,5 @@
 import {Logger} from "@aws-lambda-powertools/logger"
-import {Task} from "fhir/r4"
+import {CodeableConcept, Coding, Task} from "fhir/r4"
 import {validatePrescriptionID} from "./utils/prescriptionID"
 import {validateNhsNumber} from "./utils/nhsNumber"
 
@@ -45,11 +45,26 @@ function nhsNumber(task: Task): string | undefined {
   return validateNhsNumber(nhsNumber) ? undefined : message
 }
 
+function status(task: Task): string | undefined {
+  const status = task.status
+  if (status === "completed") {
+    const businessStatus: CodeableConcept | undefined = task.businessStatus
+    if (businessStatus) {
+      const coding: Coding = businessStatus.coding![0]
+      const code = coding.code
+      if (code && ["with pharmacy", "ready to collect"].includes(code.toLowerCase())) {
+        return `Status cannot be 'completed' when business status is '${code}'.`
+      }
+    }
+  }
+}
+
 function validateTask(task: Task): ValidationOutcome {
   const validations: Array<Validation> = [
     lastModified,
     prescriptionID,
-    nhsNumber
+    nhsNumber,
+    status
   ]
   const validationOutcome: ValidationOutcome = {valid: true, issues: undefined}
 
@@ -74,4 +89,4 @@ function validateTask(task: Task): ValidationOutcome {
   return validationOutcome
 }
 
-export {ValidationOutcome, ONE_DAY_IN_MS, lastModified, nhsNumber, prescriptionID, validateTask}
+export {ValidationOutcome, ONE_DAY_IN_MS, lastModified, nhsNumber, prescriptionID, status, validateTask}

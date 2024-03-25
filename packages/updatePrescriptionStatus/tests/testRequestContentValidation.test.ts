@@ -4,12 +4,13 @@ import {expect, describe, it} from "@jest/globals"
 import {Task} from "fhir/r4"
 
 import {
-  ValidationOutcome,
-  ONE_DAY_IN_MS,
   lastModified,
-  validateTask,
+  nhsNumber,
+  ONE_DAY_IN_MS,
   prescriptionID,
-  nhsNumber
+  status,
+  validateTask,
+  ValidationOutcome
 } from "../src/requestContentValidation"
 
 import valid from "./tasks/valid.json"
@@ -80,4 +81,45 @@ describe("Unit tests for validation of NHS number", () => {
 
     expect(actual).toEqual(expected)
   })
+})
+
+describe("Unit tests for validation of status against business status", () => {
+  it.each([
+    {
+      taskStatus: "completed",
+      businessStatus: "With Pharmacy",
+      expected: "Status cannot be 'completed' when business status is 'With Pharmacy'."
+    },
+    {
+      taskStatus: "completed",
+      businessStatus: "Ready to collect",
+      expected: "Status cannot be 'completed' when business status is 'Ready to collect'."
+    },
+    {
+      taskStatus: "completed",
+      businessStatus: "ReAdY tO cOlLeCt",
+      expected: "Status cannot be 'completed' when business status is 'ReAdY tO cOlLeCt'."
+    },
+    {
+      taskStatus: "in-progress",
+      businessStatus: "With Pharmacy",
+      expected: undefined
+    },
+    {
+      taskStatus: "in-progress",
+      businessStatus: "Ready to collect",
+      expected: undefined
+    }
+  ])(
+    "When status is '$status' and business status is '$businessStatus', should return expected issue.",
+    async ({taskStatus, businessStatus, expected}) => {
+      const task = {...valid}
+      task.status = taskStatus
+      task.businessStatus.coding[0].code = businessStatus
+
+      const actual = status(task as Task)
+
+      expect(actual).toEqual(expected)
+    }
+  )
 })
