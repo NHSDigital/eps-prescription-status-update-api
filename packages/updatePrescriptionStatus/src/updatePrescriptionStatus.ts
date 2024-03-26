@@ -43,7 +43,6 @@ const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPro
 
   const requestBody = parseEventBody(event, responseEntries)
   if(!requestBody) {
-    logger.error("Unable to parse event body as json.")
     return response(400, responseEntries)
   }
   logger.info("Request audit log", {requestBody: requestBody})
@@ -57,7 +56,6 @@ const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPro
 
   const entriesValid = validateEntries(requestEntries, responseEntries)
   if (!entriesValid) {
-    logger.error("Content validation issues present in request.")
     return response(400, responseEntries)
   }
 
@@ -98,6 +96,7 @@ function parseEventBody(event: APIGatewayProxyEvent, responseEntries: Array<Bund
 }
 
 function validateEntries(requestEntries: Array<BundleEntry>, responseEntries: Array<BundleEntry>): boolean {
+  logger.info("Validating entries.")
   let valid = true
   for (const requestEntry of requestEntries) {
     const task = requestEntry.resource as Task
@@ -117,6 +116,7 @@ function validateEntries(requestEntries: Array<BundleEntry>, responseEntries: Ar
     }
     responseEntries.push(responseEntry)
   }
+  logger.info("Entries validated.")
   return valid
 }
 
@@ -125,7 +125,7 @@ function buildDataItems(requestEntries: Array<BundleEntry>, xRequestID: string |
 
   for (const requestEntry of requestEntries) {
     const task = requestEntry.resource as Task
-    logger.info("Processing Task", {task: task, id: task.id})
+    logger.info("Building data item for task.", {task: task, id: task.id})
 
     const dataItem: DataItem = {
       RequestID: xRequestID,
@@ -144,6 +144,7 @@ function buildDataItems(requestEntries: Array<BundleEntry>, xRequestID: string |
 }
 
 function createBatchCommand(dataItems: Array<DataItem>): BatchWriteItemCommand {
+  logger.info("Creating batch command to write data items.")
   const putRequests = dataItems.map(d => {
     return {
       PutRequest: {
@@ -160,7 +161,7 @@ function createBatchCommand(dataItems: Array<DataItem>): BatchWriteItemCommand {
 
 async function persistDataItems(batchCommand: BatchWriteItemCommand): Promise<boolean> {
   try {
-    logger.info("Sending BatchWriteItemCommand to DynamoDB", {command: batchCommand})
+    logger.info("Sending BatchWriteItemCommand to DynamoDB.", {command: batchCommand})
     await client.send(batchCommand)
     logger.info("BatchWriteItemCommand sent to DynamoDB successfully.", {command: batchCommand})
     return true
