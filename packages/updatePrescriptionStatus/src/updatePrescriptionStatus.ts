@@ -121,7 +121,7 @@ function validateEntries(entries: Array<BundleEntry>, responseBundle: Bundle): b
         }
       }
     } else {
-      const errorMessage = `Validation issues: ${validationOutcome.issues}`
+      const errorMessage = validationOutcome.issues!
       logger.info(`Task failed validation. ${errorMessage}`, {task: task, id: task.id})
       valid = false
       responseEntry = {

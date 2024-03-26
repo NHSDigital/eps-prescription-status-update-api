@@ -12,7 +12,7 @@
             {
               "severity": "information",
               "code": "success",
-              "diagnostics": "No issues detected during validation"
+              "diagnostics": "No issues detected during validation."
             }
           ]
         }
@@ -28,7 +28,7 @@
             {
               "severity": "information",
               "code": "success",
-              "diagnostics": "No issues detected during validation"
+              "diagnostics": "No issues detected during validation."
             }
           ]
         }

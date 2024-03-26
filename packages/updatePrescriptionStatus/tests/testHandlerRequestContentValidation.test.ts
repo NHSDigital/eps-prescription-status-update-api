@@ -25,7 +25,7 @@ function expectedEntry(taskID: string, issues: string) {
           {
             code: "processing",
             severity: "error",
-            diagnostics: `Validation issues: ${issues}`,
+            diagnostics: issues,
             details: {
               coding: [
                 {

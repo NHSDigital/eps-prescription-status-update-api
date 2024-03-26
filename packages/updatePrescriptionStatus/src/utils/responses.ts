@@ -29,7 +29,7 @@ function accepted(): OperationOutcome {
       {
         code: "informational",
         severity: "information",
-        diagnostics: "No issues detected during validation"
+        diagnostics: "No issues detected during validation."
       }
     ]
   }
@@ -42,7 +42,7 @@ function created(): OperationOutcome {
       {
         code: "success",
         severity: "information",
-        diagnostics: "No issues detected during validation"
+        diagnostics: "No issues detected during validation."
       }
     ]
   }
