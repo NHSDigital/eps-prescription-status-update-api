@@ -22,14 +22,14 @@ const client = new DynamoDBClient({region: "eu-west-2"})
 const tableName = process.env.TABLE_NAME || "PrescriptionStatusUpdates"
 
 interface DataItem {
-  RequestID?: string;
-  PrescriptionID?: string;
-  PatientNHSNumber?: string;
-  PharmacyODSCode?: string;
-  TaskID?: string;
-  LineItemID?: string;
-  TerminalStatus: string;
-  RequestMessage: any;
+  RequestID?: string
+  PrescriptionID?: string
+  PatientNHSNumber?: string
+  PharmacyODSCode?: string
+  TaskID?: string
+  LineItemID?: string
+  TerminalStatus: string
+  RequestMessage: any
 }
 
 const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
@@ -46,40 +46,40 @@ const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPro
     logger.error(errorMessage)
     const entry: BundleEntry = badRequest(errorMessage)
     responseBundle.entry!.push(entry)
-    return response(400, JSON.stringify(responseBundle))
+    return response(400, responseBundle)
   }
 
   const requestBody = parseEventBody(event, responseBundle)
   if(!requestBody) {
     logger.error("Unable to parse event body as json.")
-    return response(400, JSON.stringify(responseBundle))
+    return response(400, responseBundle)
   }
   logger.info("Request audit log", {requestBody: requestBody})
 
-  const entries: Array<BundleEntry> = requestBody.entry || []
+  const requestEntries: Array<BundleEntry> = requestBody.entry || []
 
-  if (entries.length === 0) {
+  if (requestEntries.length === 0) {
     logger.info("No entries to process.")
-    return response(200, JSON.stringify(responseBundle))
+    return response(200, responseBundle)
   }
 
-  const entriesValid = validateEntries(entries, responseBundle)
+  const entriesValid = validateEntries(requestEntries, responseBundle)
   if (!entriesValid) {
     logger.error("Content validation issues present in request.")
-    return response(400, JSON.stringify(responseBundle))
+    return response(400, responseBundle)
   }
 
-  const dataItems = buildDataItems(entries, responseBundle, xRequestID)
+  const dataItems = buildDataItems(requestEntries, xRequestID)
   const batchCommand = createBatchCommand(dataItems)
 
   const persistSuccess = await persistDataItems(batchCommand, responseBundle)
   if (!persistSuccess) {
-    return response(500, JSON.stringify(responseBundle))
+    return response(500, responseBundle)
   }
 
-  createSuccessResponseBundle(responseBundle, entries)
+  createSuccessResponseBundle(responseBundle, requestEntries)
   logger.info("Event processed successfully.")
-  return response(201, JSON.stringify(responseBundle))
+  return response(201, responseBundle)
 }
 
 function parseEventBody(event: APIGatewayProxyEvent, responseBundle: Bundle): Bundle | undefined {
@@ -93,9 +93,9 @@ function parseEventBody(event: APIGatewayProxyEvent, responseBundle: Bundle): Bu
   }
 }
 
-function validateEntries(entries: Array<BundleEntry>, responseBundle: Bundle): boolean {
+function validateEntries(requestEntries: Array<BundleEntry>, responseBundle: Bundle): boolean {
   let valid = true
-  for (const requestEntry of entries) {
+  for (const requestEntry of requestEntries) {
     const task = requestEntry.resource as Task
     logger.info("Validating task.", {task: task, id: task.id})
 
@@ -116,13 +116,11 @@ function validateEntries(entries: Array<BundleEntry>, responseBundle: Bundle): b
   return valid
 }
 
-function buildDataItems(
-  entries: Array<BundleEntry>, responseBundle: Bundle, xRequestID: string | undefined
-): Array<DataItem> {
+function buildDataItems(requestEntries: Array<BundleEntry>, xRequestID: string | undefined): Array<DataItem> {
   const dataItems: Array<DataItem> = []
 
-  for (const entry of entries) {
-    const task = entry.resource as Task
+  for (const requestEntry of requestEntries) {
+    const task = requestEntry.resource as Task
     logger.info("Processing Task", {task: task, id: task.id})
 
     const dataItem: DataItem = {
@@ -169,10 +167,10 @@ async function persistDataItems(batchCommand: BatchWriteItemCommand, responseBun
   }
 }
 
-function response(statusCode: number, body: string) {
+function response(statusCode: number, responseBundle: Bundle) {
   return {
     statusCode: statusCode,
-    body: body,
+    body: JSON.stringify(responseBundle),
     headers: {
       "Content-Type": "application/fhir+json",
       "Cache-Control": "no-cache"
