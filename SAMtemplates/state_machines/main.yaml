@@ -8,6 +8,22 @@ Parameters:
     Type: String
     Description: The name of the main stack
     Default: none
+  
+  UpdatePrescriptionStatusFunctionName:
+    Description: The function name of UpdatePrescriptionStatus lambda
+    Default: none
+  
+  UpdatePrescriptionStatusFunctionArn:
+    Description: The function ARN of UpdatePrescriptionStatus lambda
+    Default: none
+  
+  LogRetentionInDays:
+    Type: Number
+    Description: How long to keep logs for
+  
+  EnableSplunk:
+    Type: String
+    Description: Whether to use splunk
 
 Resources:
   UpdatePrescriptionStatusStateMachine:
@@ -15,10 +31,43 @@ Resources:
     Properties:
       Name: !Sub ${StackName}-UpdatePrescriptionStatus
       Type: EXPRESS
-      Role: todo
+      Role: UpdatePrescriptionStatusStateMachineResources.Outputs.StateMachineRoleArn
       DefinitionUri: UpdatePrescriptionStatusStateMachine.asl.json
+      DefinitionSubstitutions:
+        FhirValidationFunctionArn: !Join
+          - ":" 
+          - - !ImportValue fhir-validator:FHIRValidatorLambdaArn
+            - snap
+        UpdatePrescriptionStatusFunctionArn: !Sub ${UpdatePrescriptionStatusFunctionArn}:$LATEST
+    Logging:
+      Destinations:
+        - CloudWatchLogsLogGroup:
+          LogGroupArn: UpdatePrescriptionStatusStateMachineResources.Outputs.StateMachineLogGroupArn
+      IncludeExecutionData: true
+      Level: ALL
+  
+  UpdatePrescriptionStatusStateMachineResources:
+    Type: AWS::Serverless::Application
+    Properties:
+      Location: state_machine_resources.yaml
+      Parameters:
+        StackName: !Ref StackName
+        StateMachineName: !GetAtt UpdatePrescriptionStatusStateMachine.Name
+        StateMachineArn: !Ref UpdatePrescriptionStatusStateMachine
+        AdditionalPolicies: !Join
+          - ','
+          - - Fn::ImportValue: !Sub ${StackName}:functions:${UpdatePrescriptionStatusFunctionName}:ExecuteLambdaPolicyArn
+        LogRetentionInDays: !Ref LogRetentionInDays
+        CloudWatchKMSKeyId: !ImportValue account-resources:CloudwatchLogsKmsKeyArn
+        EnableSplunk: !Ref EnableSplunk
+        SplunkSubscriptionFilterRole: !ImportValue lambda-resources:SplunkSubscriptionFilterRole
+        SplunkDeliveryStreamArn: !ImportValue lambda-resources:SplunkDeliveryStream
   
 Outputs:
   UpdatePrescriptionStatusStateMachineArn:
     Description: UpdatePrescriptionStatus state machine arn
     Value: !Ref UpdatePrescriptionStatusStateMachine
+  
+  UpdatePrescriptionStatusStateMachineName:
+    Description: UpdatePrescriptionStatus state machine name
+    Value: !GetAtt  UpdatePrescriptionStatusStateMachine.Name

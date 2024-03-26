@@ -21,6 +21,11 @@ Parameters:
     Type: String
     Description: Name of the UpdatePrescriptionStatus state machine
     Default: none
+  
+  UpdatePrescriptionStatusStateMachineArn:
+    Type: String
+    Description: Arn of the UpdatePrescriptionStatus state machine
+    Default: none
 
   LogRetentionInDays:
     Type: Number
@@ -54,6 +59,11 @@ Resources:
   HttpApiGateway:
     Type: AWS::Serverless::HttpApi
     Properties:
+      DefinitionBody: 
+      'Fn::Transform':
+        Name: AWS::Include
+        Parameters:
+          Location: spec.yaml
       StageName: Prod
       DefaultRouteSettings:
         DetailedMetricsEnabled: true

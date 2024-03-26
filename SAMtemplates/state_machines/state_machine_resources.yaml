@@ -19,6 +19,39 @@ Parameters:
     Description: The Arn of the state machine
     Default: none
 
+  AdditionalPolicies:
+    Type: CommaDelimitedList
+    Description: A list of additional policies to attach the state machines role (comma delimited).
+    Default: none
+  
+  LogRetentionInDays:
+    Type: Number
+    Description: How long to keep logs for.
+  
+  CloudWatchKMSKeyId:
+    Type: String
+    Description: The KMS Key ID used for encrypting logs.
+    Default: none
+  
+  EnableSplunk:
+    Type: String
+    Description: Whether to use splunk
+  
+  SplunkSubscriptionFilterRole:
+    Type: String
+    Description: Subscription filter role for sending logs to splunk
+    Default: none
+  
+  SplunkDeliveryStreamArn:
+    Type: String
+    Description: Splunk delivery stream
+    Default: none
+
+Conditions:
+  ShouldUseSplunk: !Equals
+    - true
+    - !Ref EnableSplunk
+
 Resources:
   ExecuteStateMachineManagedPolicy:
     Type: AWS::IAM::ManagedPolicy
@@ -31,10 +64,81 @@ Resources:
               - states:StartSyncExecution
             Resource:
               - !Ref StateMachineArn
+  
+  StateMachineRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: states.amazonaws.com
+            Action:
+              - sts:AssumeRole
+            Condition:
+              ArnLike:
+                aws:SourceArn: !Ref StateMachineArn
+              StringEquals:
+                aws:SourceAccount: !Ref AWS::AccountId
+      ManagedPolicyArns: !Split
+        - ','
+        - !Join
+          - ','
+          - - !Ref StateMachineManagedPolicy
+            - !ImportValue account-resources:(todo)EncryptCloudwatchKMSPolicy
+            - !Join
+              - ','
+              - !Ref AdditionalPolicies
+  
+  StateMachineManagedPolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action:
+              - logs:CreateLogStream
+              - logs:PutLogEvents
+            Resource:
+              - !GetAtt StateMachineLogGroup.Arn
+              - !Sub ${StateMachineLogGroup.Arn}:log-stream:*
+          - Effect: Allow
+            Action:
+              - logs:CreateLogDelivery
+              - logs:GetLogDelivery
+              - logs:UpdateLogDelivery
+              - logs:DeleteLogDelivery
+              - logs:ListLogDeliveries
+              - logs:PutResourcePolicy
+              - logs:DescribeResourcePolicies
+              - logs:DescribeLogGroups
+            Resource: "*"
+
+  StateMachineLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub /aws/stepfunctions/${StateMachineName}
+      RetentionInDays: !Ref LogRetentionInDays
+      KmsKeyId: !Ref CloudWatchKMSKeyId
+  
+  StateMachineSplunkSubscriptionFilter:
+    Condition: ShouldUseSplunk
+    Type: AWS::Logs::SubscriptionFilter
+    Properties:
+      RoleArn: !Ref SplunkSubscriptionFilterRole
+      LogGroupName: !Ref StateMachineLogGroup
+      FilterPattern: ''
+      DestinationArn: !Ref SplunkDeliveryStreamArn
 
 Outputs:
   ExecuteStateMachinePolicyArn:
     Description: State machine execution policy arn
-    Value: !GetAtt ExecuteStateMachineManagedPolicy.PolicyArn
+    Value: !Ref ExecuteStateMachineManagedPolicy
     Export:
       Name: !Sub ${StackName}:state-machines:${StateMachineName}:ExecuteStateMachinePolicy
+
+  StateMachineLogGroupArn:
+    Description: State machine log group arn
+    Value: !GetAtt StateMachineLogGroup.Arn

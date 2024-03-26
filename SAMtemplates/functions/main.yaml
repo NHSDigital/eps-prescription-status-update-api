@@ -66,7 +66,8 @@ Resources:
     Properties:
       Location: lambda_resources.yaml
       Parameters:
-        LambdaName: !Sub ${StackName}-UpdatePrescriptionStatus
+        LambdaName: !Ref UpdatePrescriptionStatus
+        LambdaArn: !GetAtt UpdatePrescriptionStatus.Arn
         AdditionalPolicies: !Join
           - ','
           - - Fn::ImportValue: !Sub ${StackName}:tables:${PrescriptionStatusUpdatesTableName}:TableWritePolicyArn
@@ -75,3 +76,8 @@ Resources:
         EnableSplunk: !Ref EnableSplunk
         SplunkSubscriptionFilterRole: !ImportValue lambda-resources:SplunkSubscriptionFilterRole
         SplunkDeliveryStreamArn: !ImportValue lambda-resources:SplunkDeliveryStream
+
+Outputs:
+  UpdatePrescriptionStatusFunctionName:
+    Description: The function name of the UpdatePrescriptionStatus lambda
+    Value: !Ref UpdatePrescriptionStatus

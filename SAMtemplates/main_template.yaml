@@ -75,7 +75,8 @@ Resources:
         StackName: !Ref AWS::StackName
         EnableMutualTLS: !Ref EnableMutualTLS
         TruststoreVersion: !Ref TruststoreVersion
-        UpdatePrescriptionStatusStateMachineName: !GetAtt StateMachines.Outputs.
+        UpdatePrescriptionStatusStateMachineName: !GetAtt StateMachines.Outputs.UpdatePrescriptionStatusStateMachineName
+        UpdatePrescriptionStatusStateMachineArn: !GetAtt StateMachines.Outputs.UpdatePrescriptionStatusStateMachineArn
         LogRetentionInDays: !Ref LogRetentionInDays
         EnableSplunk: !Ref EnableSplunk
   
@@ -95,4 +96,8 @@ Resources:
     Properties:
       Location: state_machines/main.yaml
       Parameters:
-        todo
+        StackName: !Ref AWS::StackName
+        UpdatePrescriptionStatusFunctionName: !GetAtt Functions.Outputs.UpdatePrescriptionStatusFunctionName
+        UpdatePrescriptionStatusStateMachineArn: !GetAtt StateMachines.Outputs.UpdatePrescriptionStatusStateMachineArn
+        LogRetentionInDays: !Ref LogRetentionInDays
+        EnableSplunk: !Ref EnableSplunk
