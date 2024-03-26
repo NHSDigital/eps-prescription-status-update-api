@@ -1,6 +1,11 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import {expect, describe, it} from "@jest/globals"
+import {
+  expect,
+  describe,
+  it,
+  jest
+} from "@jest/globals"
 import {Task} from "fhir/r4"
 
 import {
@@ -15,6 +20,7 @@ import {
 
 import valid from "./tasks/valid.json"
 import {generateInvalidNhsNumbers} from "./utils/nhsNumber"
+import {DEFAULT_DATE} from "./utils/testUtils"
 
 describe("Unit tests for overall task validation", () => {
   it.each([
@@ -33,10 +39,8 @@ describe("Unit tests for overall task validation", () => {
 
 describe("Unit tests for validation of lastModified", () => {
   it("When lastModified is over a day in the future, should return expected issue.", async () => {
-    const today = new Date()
-    const future = new Date(today.valueOf() + ONE_DAY_IN_MS + 1000)
+    jest.useFakeTimers().setSystemTime(DEFAULT_DATE.valueOf() - (ONE_DAY_IN_MS + 1000))
     const task = {...valid}
-    task.lastModified = future.toISOString()
 
     const expected = "Invalid last modified value provided."
 

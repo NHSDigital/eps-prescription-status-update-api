@@ -7,6 +7,7 @@ const TASK_ID_1 = "0ae4daf3-f24b-479d-b8fa-b69e2d873b60"
 const X_REQUEST_ID = "43313002-debb-49e3-85fa-34812c150242"
 const DEFAULT_HEADERS = {"x-request-id": X_REQUEST_ID}
 const TABLE_NAME = "PrescriptionStatusUpdates"
+const DEFAULT_DATE = new Date("2023-09-11T10:11:12Z")
 
 const TASK_VALUES = [
   {
@@ -99,4 +100,4 @@ function generateExpectedItems(itemCount: number = 1) {
   return {[TABLE_NAME]: items}
 }
 
-export {generateBody, generateExpectedItems, generateMockEvent, TASK_ID_0, TASK_ID_1}
+export {DEFAULT_DATE, generateBody, generateExpectedItems, generateMockEvent, TASK_ID_0, TASK_ID_1}

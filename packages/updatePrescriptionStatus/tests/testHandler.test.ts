@@ -10,6 +10,7 @@ import {
 
 import {handler} from "../src/updatePrescriptionStatus"
 import {
+  DEFAULT_DATE,
   generateBody,
   generateExpectedItems,
   generateMockEvent,
@@ -29,6 +30,7 @@ describe("Unit test for updatePrescriptionStatus handler", () => {
   beforeEach(() => {
     jest.resetModules()
     jest.clearAllMocks()
+    jest.useFakeTimers().setSystemTime(new Date(DEFAULT_DATE))
   })
 
   it("when single item in request, expect a single item sent to DynamoDB", async () => {
