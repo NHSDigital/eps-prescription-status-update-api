@@ -36,6 +36,7 @@ const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPro
   const responseBundle: Bundle = {
     resourceType: "Bundle",
     type: "transaction-response",
+    meta: {lastUpdated: new Date().toISOString()},
     entry: []
   }
 

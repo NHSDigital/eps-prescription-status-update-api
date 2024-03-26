@@ -9,7 +9,7 @@ import {
 } from "@jest/globals"
 
 import {handler} from "../src/updatePrescriptionStatus"
-import {TASK_ID_0, generateMockEvent} from "./utils/testUtils"
+import {DEFAULT_DATE, TASK_ID_0, generateMockEvent} from "./utils/testUtils"
 import {ONE_DAY_IN_MS} from "../src/requestContentValidation"
 
 import exampleDispatched from "../../specification/examples/request-dispatched.json"
@@ -45,6 +45,7 @@ function expectedEntry(taskID: string, issues: string) {
 describe("Unit test for validation via updatePrescriptionStatus handler", () => {
   beforeEach(() => {
     jest.resetModules()
+    jest.useFakeTimers().setSystemTime(DEFAULT_DATE)
   })
 
   it("when content validation issues are present, expect a 400 status code and 400 response code(s)", async () => {
@@ -57,6 +58,9 @@ describe("Unit test for validation via updatePrescriptionStatus handler", () => 
     const expected = {
       resourceType: "Bundle",
       type: "transaction-response",
+      meta: {
+        lastUpdated: DEFAULT_DATE.toISOString()
+      },
       entry: [expectedEntry(TASK_ID_0, "Invalid last modified value provided.")]
     }
 

@@ -25,12 +25,13 @@ import requestNoItems from "../../specification/examples/request-no-items.json"
 import responseSingleItem from "../../specification/examples/response-single-item.json"
 import responseMultipleItems from "../../specification/examples/response-multiple-items.json"
 import responseBadRequest from "../../specification/examples/response-bad-request.json"
+import {badRequest, serverError} from "../src/utils/responses"
 
 describe("Unit test for updatePrescriptionStatus handler", () => {
   beforeEach(() => {
     jest.resetModules()
     jest.clearAllMocks()
-    jest.useFakeTimers().setSystemTime(new Date(DEFAULT_DATE))
+    jest.useFakeTimers().setSystemTime(DEFAULT_DATE)
   })
 
   it("when single item in request, expect a single item sent to DynamoDB", async () => {
@@ -129,29 +130,14 @@ describe("Unit test for updatePrescriptionStatus handler", () => {
     expect(JSON.parse(response.body)).toEqual({
       resourceType: "Bundle",
       type: "transaction-response",
+      meta: {
+        lastUpdated: DEFAULT_DATE.toISOString()
+      },
       entry: [
         {
           response: {
             status: "400 Bad Request",
-            outcome: {
-              resourceType: "OperationOutcome",
-              issue: [
-                {
-                  code: "processing",
-                  severity: "error",
-                  diagnostics: "Missing required fields - PharmacyODSCode, TaskID",
-                  details: {
-                    coding: [
-                      {
-                        system: "https://fhir.nhs.uk/CodeSystem/http-error-codes",
-                        code: "BAD_REQUEST",
-                        display: "Bad request"
-                      }
-                    ]
-                  }
-                }
-              ]
-            }
+            outcome: badRequest("Missing required fields - PharmacyODSCode, TaskID")
           }
         }
       ]
@@ -169,29 +155,14 @@ describe("Unit test for updatePrescriptionStatus handler", () => {
     expect(JSON.parse(response.body)).toEqual({
       resourceType: "Bundle",
       type: "transaction-response",
+      meta: {
+        lastUpdated: DEFAULT_DATE.toISOString()
+      },
       entry: [
         {
           response: {
             status: "500 Internal Server Error",
-            outcome: {
-              resourceType: "OperationOutcome",
-              issue: [
-                {
-                  code: "exception",
-                  severity: "fatal",
-                  diagnostics: "The Server has encountered an error processing the request.",
-                  details: {
-                    coding: [
-                      {
-                        system: "https://fhir.nhs.uk/CodeSystem/http-error-codes",
-                        code: "SERVER_ERROR",
-                        display: "Server error"
-                      }
-                    ]
-                  }
-                }
-              ]
-            }
+            outcome: serverError()
           }
         }
       ]
@@ -208,54 +179,21 @@ describe("Unit test for updatePrescriptionStatus handler", () => {
     expect(JSON.parse(response.body)).toEqual({
       resourceType: "Bundle",
       type: "transaction-response",
+      meta: {
+        lastUpdated: DEFAULT_DATE.toISOString()
+      },
       entry: [
         {
           response: {
             status: "400 Bad Request",
-            outcome: {
-              resourceType: "OperationOutcome",
-              issue: [
-                {
-                  code: "processing",
-                  severity: "error",
-                  diagnostics: "Missing required fields - PharmacyODSCode, TaskID",
-                  details: {
-                    coding: [
-                      {
-                        system: "https://fhir.nhs.uk/CodeSystem/http-error-codes",
-                        code: "BAD_REQUEST",
-                        display: "Bad request"
-                      }
-                    ]
-                  }
-                }
-              ]
-            }
+            outcome: badRequest("Missing required fields - PharmacyODSCode, TaskID")
           }
         },
         {
           fullUrl: TASK_ID_1,
           response: {
             status: "400 Bad Request",
-            outcome: {
-              resourceType: "OperationOutcome",
-              issue: [
-                {
-                  code: "processing",
-                  severity: "error",
-                  diagnostics: "Missing required fields - PharmacyODSCode",
-                  details: {
-                    coding: [
-                      {
-                        system: "https://fhir.nhs.uk/CodeSystem/http-error-codes",
-                        code: "BAD_REQUEST",
-                        display: "Bad request"
-                      }
-                    ]
-                  }
-                }
-              ]
-            }
+            outcome: badRequest("Missing required fields - PharmacyODSCode")
           }
         }
       ]
