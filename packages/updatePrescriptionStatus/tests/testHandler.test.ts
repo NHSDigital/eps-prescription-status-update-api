@@ -11,10 +11,10 @@ import {
 import {handler} from "../src/updatePrescriptionStatus"
 import {
   DEFAULT_DATE,
+  TASK_ID_1,
   generateBody,
   generateExpectedItems,
-  generateMockEvent,
-  TASK_ID_1
+  generateMockEvent
 } from "./utils/testUtils"
 
 import requestDispatched from "../../specification/examples/request-dispatched.json"
@@ -133,14 +133,7 @@ describe("Unit test for updatePrescriptionStatus handler", () => {
       meta: {
         lastUpdated: DEFAULT_DATE.toISOString()
       },
-      entry: [
-        {
-          response: {
-            status: "400 Bad Request",
-            outcome: badRequest("Missing required fields - PharmacyODSCode, TaskID")
-          }
-        }
-      ]
+      entry: [badRequest("Missing required fields - PharmacyODSCode, TaskID")]
     })
   })
 
@@ -158,14 +151,7 @@ describe("Unit test for updatePrescriptionStatus handler", () => {
       meta: {
         lastUpdated: DEFAULT_DATE.toISOString()
       },
-      entry: [
-        {
-          response: {
-            status: "500 Internal Server Error",
-            outcome: serverError()
-          }
-        }
-      ]
+      entry: [serverError()]
     })
   })
 
@@ -183,19 +169,8 @@ describe("Unit test for updatePrescriptionStatus handler", () => {
         lastUpdated: DEFAULT_DATE.toISOString()
       },
       entry: [
-        {
-          response: {
-            status: "400 Bad Request",
-            outcome: badRequest("Missing required fields - PharmacyODSCode, TaskID")
-          }
-        },
-        {
-          fullUrl: TASK_ID_1,
-          response: {
-            status: "400 Bad Request",
-            outcome: badRequest("Missing required fields - PharmacyODSCode")
-          }
-        }
+        badRequest("Missing required fields - PharmacyODSCode, TaskID"),
+        badRequest("Missing required fields - PharmacyODSCode", TASK_ID_1)
       ]
     })
   })

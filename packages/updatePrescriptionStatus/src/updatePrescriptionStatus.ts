@@ -44,12 +44,7 @@ const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPro
   if (!xRequestID) {
     const errorMessage = "Missing x-request-id header."
     logger.error(errorMessage)
-    const entry: BundleEntry = {
-      response: {
-        status: "400 Bad Request",
-        outcome: badRequest(errorMessage)
-      }
-    }
+    const entry: BundleEntry = badRequest(errorMessage)
     responseBundle.entry!.push(entry)
     return response(400, JSON.stringify(responseBundle))
   }
@@ -93,12 +88,7 @@ function parseEventBody(event: APIGatewayProxyEvent, responseBundle: Bundle): Bu
   } catch (jsonParseError) {
     const errorMessage = "Error parsing request body as json."
     logger.error(errorMessage, {error: jsonParseError})
-    const entry: BundleEntry = {
-      response: {
-        status: "400 Bad Request",
-        outcome: badRequest(errorMessage)
-      }
-    }
+    const entry: BundleEntry = badRequest(errorMessage)
     responseBundle.entry!.push(entry)
   }
 }
@@ -114,24 +104,12 @@ function validateEntries(entries: Array<BundleEntry>, responseBundle: Bundle): b
     let responseEntry: BundleEntry
     if (validationOutcome.valid) {
       logger.info("Task validated successfully.", {task: task, id: task.id})
-      responseEntry = {
-        fullUrl: task.id,
-        response: {
-          status: "200 Accepted",
-          outcome: accepted()
-        }
-      }
+      responseEntry = accepted(task.id!)
     } else {
       const errorMessage = validationOutcome.issues!
       logger.info(`Task failed validation. ${errorMessage}`, {task: task, id: task.id})
       valid = false
-      responseEntry = {
-        fullUrl: task.id,
-        response: {
-          status: "400 Bad Request",
-          outcome: badRequest(errorMessage)
-        }
-      }
+      responseEntry = badRequest(errorMessage, task.id)
     }
     responseBundle.entry!.push(responseEntry)
   }
@@ -186,12 +164,7 @@ async function persistDataItems(batchCommand: BatchWriteItemCommand, responseBun
     return true
   } catch(e) {
     logger.error("Error sending BatchWriteItemCommand to DynamoDB.", {error: e})
-    responseBundle.entry = [{
-      response: {
-        status: "500 Internal Server Error",
-        outcome: serverError()
-      }
-    }]
+    responseBundle.entry = [serverError()]
     return false
   }
 }
