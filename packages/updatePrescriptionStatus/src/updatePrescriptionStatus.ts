@@ -13,7 +13,8 @@ import {validateTask} from "./requestContentValidation"
 import {
   accepted,
   badRequest,
-  createSuccessResponseBundle,
+  bundleWrap,
+  createSuccessResponseEntries,
   serverError
 } from "./utils/responses"
 
@@ -33,22 +34,17 @@ interface DataItem {
 }
 
 const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
-  const responseBundle: Bundle = {
-    resourceType: "Bundle",
-    type: "transaction-response",
-    meta: {lastUpdated: new Date().toISOString()},
-    entry: []
-  }
+  let responseEntries: Array<BundleEntry> = []
 
-  const xRequestID = getXRequestID(event, responseBundle)
+  const xRequestID = getXRequestID(event, responseEntries)
   if (!xRequestID) {
-    return response(400, responseBundle)
+    return response(400, responseEntries)
   }
 
-  const requestBody = parseEventBody(event, responseBundle)
+  const requestBody = parseEventBody(event, responseEntries)
   if(!requestBody) {
     logger.error("Unable to parse event body as json.")
-    return response(400, responseBundle)
+    return response(400, responseEntries)
   }
   logger.info("Request audit log", {requestBody: requestBody})
 
@@ -56,51 +52,52 @@ const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPro
 
   if (requestEntries.length === 0) {
     logger.info("No entries to process.")
-    return response(200, responseBundle)
+    return response(200, responseEntries)
   }
 
-  const entriesValid = validateEntries(requestEntries, responseBundle)
+  const entriesValid = validateEntries(requestEntries, responseEntries)
   if (!entriesValid) {
     logger.error("Content validation issues present in request.")
-    return response(400, responseBundle)
+    return response(400, responseEntries)
   }
 
   const dataItems = buildDataItems(requestEntries, xRequestID)
   const batchCommand = createBatchCommand(dataItems)
 
-  const persistSuccess = await persistDataItems(batchCommand, responseBundle)
+  const persistSuccess = await persistDataItems(batchCommand)
   if (!persistSuccess) {
-    return response(500, responseBundle)
+    responseEntries = [serverError()]
+    return response(500, responseEntries)
   }
 
-  createSuccessResponseBundle(responseBundle, requestEntries)
+  responseEntries = createSuccessResponseEntries(requestEntries)
   logger.info("Event processed successfully.")
-  return response(201, responseBundle)
+  return response(201, responseEntries)
 }
 
-function getXRequestID(event: APIGatewayProxyEvent, responseBundle: Bundle): string | undefined {
+function getXRequestID(event: APIGatewayProxyEvent, responseEntries: Array<BundleEntry>): string | undefined {
   const xRequestID = event.headers["x-request-id"]
   if (!xRequestID) {
     const errorMessage = "Missing or empty x-request-id header."
     logger.error(errorMessage)
     const entry: BundleEntry = badRequest(errorMessage)
-    responseBundle.entry!.push(entry)
+    responseEntries.push(entry)
   }
   return xRequestID
 }
 
-function parseEventBody(event: APIGatewayProxyEvent, responseBundle: Bundle): Bundle | undefined {
+function parseEventBody(event: APIGatewayProxyEvent, responseEntries: Array<BundleEntry>): Bundle | undefined {
   try {
     return JSON.parse(event.body || "") as Bundle
   } catch (jsonParseError) {
     const errorMessage = "Error parsing request body as json."
     logger.error(errorMessage, {error: jsonParseError})
     const entry: BundleEntry = badRequest(errorMessage)
-    responseBundle.entry!.push(entry)
+    responseEntries.push(entry)
   }
 }
 
-function validateEntries(requestEntries: Array<BundleEntry>, responseBundle: Bundle): boolean {
+function validateEntries(requestEntries: Array<BundleEntry>, responseEntries: Array<BundleEntry>): boolean {
   let valid = true
   for (const requestEntry of requestEntries) {
     const task = requestEntry.resource as Task
@@ -118,7 +115,7 @@ function validateEntries(requestEntries: Array<BundleEntry>, responseBundle: Bun
       valid = false
       responseEntry = badRequest(errorMessage, task.id)
     }
-    responseBundle.entry!.push(responseEntry)
+    responseEntries.push(responseEntry)
   }
   return valid
 }
@@ -161,7 +158,7 @@ function createBatchCommand(dataItems: Array<DataItem>): BatchWriteItemCommand {
   })
 }
 
-async function persistDataItems(batchCommand: BatchWriteItemCommand, responseBundle: Bundle): Promise<boolean> {
+async function persistDataItems(batchCommand: BatchWriteItemCommand): Promise<boolean> {
   try {
     logger.info("Sending BatchWriteItemCommand to DynamoDB", {command: batchCommand})
     await client.send(batchCommand)
@@ -169,15 +166,14 @@ async function persistDataItems(batchCommand: BatchWriteItemCommand, responseBun
     return true
   } catch(e) {
     logger.error("Error sending BatchWriteItemCommand to DynamoDB.", {error: e})
-    responseBundle.entry = [serverError()]
     return false
   }
 }
 
-function response(statusCode: number, responseBundle: Bundle) {
+function response(statusCode: number, responseEntries: Array<BundleEntry>) {
   return {
     statusCode: statusCode,
-    body: JSON.stringify(responseBundle),
+    body: JSON.stringify(bundleWrap(responseEntries)),
     headers: {
       "Content-Type": "application/fhir+json",
       "Cache-Control": "no-cache"

@@ -23,9 +23,9 @@ function badRequest(diagnostics: string, taskID: string | undefined = undefined)
             details: {
               coding: [
                 {
-                  system: "https://fhir.nhs.uk/CodeSystem/http-error-codes",
-                  code: "BAD_REQUEST",
-                  display: "Bad request"
+                  system: "https://fhir.nhs.uk/CodeSystem/Spine-ErrorOrWarningCode",
+                  code: "INVALID_VALUE",
+                  display: "Invalid value"
                 }
               ]
             }
@@ -105,11 +105,8 @@ function serverError(): BundleEntry {
   }
 }
 
-function createSuccessResponseBundle(responseBundle: Bundle, entries: Array<BundleEntry>) {
-  responseBundle.entry = []
-  for (const entry of entries) {
-    responseBundle.entry.push(created(entry.resource!.id!))
-  }
+function createSuccessResponseEntries(entries: Array<BundleEntry>) {
+  return entries.map(e => created(e.resource!.id!))
 }
 
-export {accepted, badRequest, bundleWrap, createSuccessResponseBundle, serverError}
+export {accepted, badRequest, bundleWrap, createSuccessResponseEntries, serverError}
