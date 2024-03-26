@@ -1,9 +1,6 @@
 {
   "resourceType": "Bundle",
   "type": "transaction-response",
-  "meta": {
-    "lastUpdated": "2023-09-11T10:11:12.000Z"
-  },
   "entry": [
     {
       "fullUrl": "4d70678c-81e4-4ff4-8c67-17596fd0aa46",
@@ -11,6 +8,9 @@
         "status": "201 Created",
         "outcome": {
           "resourceType": "OperationOutcome",
+          "meta": {
+            "lastUpdated": "2023-09-11T10:11:12.000Z"
+          },
           "issue": [
             {
               "severity": "information",
@@ -27,6 +27,9 @@
         "status": "201 Created",
         "outcome": {
           "resourceType": "OperationOutcome",
+          "meta": {
+            "lastUpdated": "2023-09-11T10:11:12.000Z"
+          },
           "issue": [
             {
               "severity": "information",

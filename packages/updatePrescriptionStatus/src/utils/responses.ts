@@ -4,7 +4,6 @@ function bundleWrap(entries: Array<BundleEntry>): Bundle {
   return {
     resourceType: "Bundle",
     type: "transaction-response",
-    meta: {lastUpdated: new Date().toISOString()},
     entry: entries
   }
 }
@@ -15,6 +14,9 @@ function badRequest(diagnostics: string, taskID: string | undefined = undefined)
       status: "400 Bad Request",
       outcome: {
         resourceType: "OperationOutcome",
+        meta: {
+          lastUpdated: new Date().toISOString()
+        },
         issue: [
           {
             code: "processing",
@@ -47,6 +49,9 @@ function accepted(taskID: string): BundleEntry {
       status: "200 Accepted",
       outcome: {
         resourceType: "OperationOutcome",
+        meta: {
+          lastUpdated: new Date().toISOString()
+        },
         issue: [
           {
             code: "informational",
@@ -66,6 +71,9 @@ function created(taskID: string): BundleEntry {
       status: "201 Created",
       outcome: {
         resourceType: "OperationOutcome",
+        meta: {
+          lastUpdated: new Date().toISOString()
+        },
         issue: [
           {
             code: "success",
@@ -84,6 +92,9 @@ function serverError(): BundleEntry {
       status: "500 Internal Server Error",
       outcome: {
         resourceType: "OperationOutcome",
+        meta: {
+          lastUpdated: new Date().toISOString()
+        },
         issue: [
           {
             code: "exception",
