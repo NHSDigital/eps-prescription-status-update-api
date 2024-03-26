@@ -86,7 +86,7 @@ Resources:
         - !Join
           - ','
           - - !Ref StateMachineManagedPolicy
-            - !ImportValue account-resources:(todo)EncryptCloudwatchKMSPolicy
+            - !ImportValue account-resources:CloudwatchEncryptionKMSPolicyArn
             - !Join
               - ','
               - !Ref AdditionalPolicies
