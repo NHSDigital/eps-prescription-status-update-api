@@ -40,12 +40,8 @@ const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPro
     entry: []
   }
 
-  const xRequestID = event.headers["x-request-id"] || undefined
+  const xRequestID = getXRequestID(event, responseBundle)
   if (!xRequestID) {
-    const errorMessage = "Missing x-request-id header."
-    logger.error(errorMessage)
-    const entry: BundleEntry = badRequest(errorMessage)
-    responseBundle.entry!.push(entry)
     return response(400, responseBundle)
   }
 
@@ -80,6 +76,17 @@ const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPro
   createSuccessResponseBundle(responseBundle, requestEntries)
   logger.info("Event processed successfully.")
   return response(201, responseBundle)
+}
+
+function getXRequestID(event: APIGatewayProxyEvent, responseBundle: Bundle): string | undefined {
+  const xRequestID = event.headers["x-request-id"]
+  if (!xRequestID) {
+    const errorMessage = "Missing or empty x-request-id header."
+    logger.error(errorMessage)
+    const entry: BundleEntry = badRequest(errorMessage)
+    responseBundle.entry!.push(entry)
+  }
+  return xRequestID
 }
 
 function parseEventBody(event: APIGatewayProxyEvent, responseBundle: Bundle): Bundle | undefined {

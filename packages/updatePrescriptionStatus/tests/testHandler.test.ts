@@ -25,7 +25,7 @@ import requestNoItems from "../../specification/examples/request-no-items.json"
 import responseSingleItem from "../../specification/examples/response-single-item.json"
 import responseMultipleItems from "../../specification/examples/response-multiple-items.json"
 import responseBadRequest from "../../specification/examples/response-bad-request.json"
-import {badRequest, serverError} from "../src/utils/responses"
+import {badRequest, bundleWrap, serverError} from "../src/utils/responses"
 
 describe("Unit test for updatePrescriptionStatus handler", () => {
   beforeEach(() => {
@@ -127,14 +127,9 @@ describe("Unit test for updatePrescriptionStatus handler", () => {
     const response: APIGatewayProxyResult = await handler(event, {})
 
     expect(response.statusCode).toBe(400)
-    expect(JSON.parse(response.body)).toEqual({
-      resourceType: "Bundle",
-      type: "transaction-response",
-      meta: {
-        lastUpdated: DEFAULT_DATE.toISOString()
-      },
-      entry: [badRequest("Missing required fields - PharmacyODSCode, TaskID")]
-    })
+    expect(JSON.parse(response.body)).toEqual(bundleWrap(
+      [badRequest("Missing required fields - PharmacyODSCode, TaskID")]
+    ))
   })
 
   it("when dynamo call fails, expect 500 status code and internal server error message", async () => {
@@ -145,14 +140,7 @@ describe("Unit test for updatePrescriptionStatus handler", () => {
     const response: APIGatewayProxyResult = await handler(event, {})
 
     expect(response.statusCode).toEqual(500)
-    expect(JSON.parse(response.body)).toEqual({
-      resourceType: "Bundle",
-      type: "transaction-response",
-      meta: {
-        lastUpdated: DEFAULT_DATE.toISOString()
-      },
-      entry: [serverError()]
-    })
+    expect(JSON.parse(response.body)).toEqual(bundleWrap([serverError()]))
   })
 
   it("when multiple tasks have missing fields, expect 400 status code and messages indicating missing fields", async () => {
@@ -162,40 +150,31 @@ describe("Unit test for updatePrescriptionStatus handler", () => {
     const response: APIGatewayProxyResult = await handler(event, {})
 
     expect(response.statusCode).toEqual(400)
-    expect(JSON.parse(response.body)).toEqual({
-      resourceType: "Bundle",
-      type: "transaction-response",
-      meta: {
-        lastUpdated: DEFAULT_DATE.toISOString()
-      },
-      entry: [
-        badRequest("Missing required fields - PharmacyODSCode, TaskID"),
-        badRequest("Missing required fields - PharmacyODSCode", TASK_ID_1)
-      ]
-    })
+    expect(JSON.parse(response.body)).toEqual(bundleWrap([
+      badRequest("Missing required fields - PharmacyODSCode, TaskID"),
+      badRequest("Missing required fields - PharmacyODSCode", TASK_ID_1)
+    ]))
   })
 
-  it("when general error occurs, expect 500 status code and internal server error message", async () => {
-    const response: APIGatewayProxyResult = await handler({}, undefined)
+  it("when x-request-id header is present but empty, expect 400 status code and relevant error message", async () => {
+    const body = generateBody()
+    const event: APIGatewayProxyEvent = generateMockEvent(body)
+    event.headers["x-request-id"] = undefined
 
-    expect(response.statusCode).toBe(500)
-    expect(JSON.parse(response.body)).toEqual({
-      resourceType: "OperationOutcome",
-      issue: [
-        {
-          code: "exception",
-          severity: "fatal",
-          details: {
-            coding: [
-              {
-                system: "https://fhir.nhs.uk/CodeSystem/http-error-codes",
-                code: "SERVER_ERROR",
-                display: "500: The Server has encountered an error processing the request."
-              }
-            ]
-          }
-        }
-      ]
-    })
+    const response: APIGatewayProxyResult = await handler(event, {})
+
+    expect(response.statusCode).toEqual(400)
+    expect(JSON.parse(response.body)).toEqual(bundleWrap([badRequest("Missing or empty x-request-id header.")]))
+  })
+
+  it("when x-request-id header is missing, expect 400 status code and relevant error message", async () => {
+    const body = generateBody()
+    const event: APIGatewayProxyEvent = generateMockEvent(body)
+    delete event.headers["x-request-id"]
+
+    const response: APIGatewayProxyResult = await handler(event, {})
+
+    expect(response.statusCode).toEqual(400)
+    expect(JSON.parse(response.body)).toEqual(bundleWrap([badRequest("Missing or empty x-request-id header.")]))
   })
 })

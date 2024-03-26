@@ -1,5 +1,14 @@
 import {Bundle, BundleEntry} from "fhir/r4"
 
+function bundleWrap(entries: Array<BundleEntry>): Bundle {
+  return {
+    resourceType: "Bundle",
+    type: "transaction-response",
+    meta: {lastUpdated: new Date().toISOString()},
+    entry: entries
+  }
+}
+
 function badRequest(diagnostics: string, taskID: string | undefined = undefined): BundleEntry {
   const bundleEntry: BundleEntry = {
     response: {
@@ -103,4 +112,4 @@ function createSuccessResponseBundle(responseBundle: Bundle, entries: Array<Bund
   }
 }
 
-export {accepted, badRequest, createSuccessResponseBundle, serverError}
+export {accepted, badRequest, bundleWrap, createSuccessResponseBundle, serverError}
