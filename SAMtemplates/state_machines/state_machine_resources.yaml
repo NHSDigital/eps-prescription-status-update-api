@@ -78,7 +78,7 @@ Resources:
               - sts:AssumeRole
             Condition:
               ArnLike:
-                aws:SourceArn: !Ref StateMachineArn
+                aws:SourceArn: !Sub arn:aws:states:${AWS::Region}:${AWS::AccountId}:stateMachine:*
               StringEquals:
                 aws:SourceAccount: !Ref AWS::AccountId
       ManagedPolicyArns: !Split

@@ -11,8 +11,8 @@
       },
       "ResultPath": "$.FhirValidationResult",
       "ResultSelector": {
-        "Response": "$",
-        "NoFailed": "States.ArrayLength($.Payload.issue[?(@.severity ==error)])"
+        "Response.$": "$.Payload",
+        "NoFailed.$": "States.ArrayLength($.Payload.issue[?(@.severity ==error)])"
       },
       "Next": "FHIR Validation Result"
     },
@@ -30,7 +30,7 @@
     "Failed FHIR Validation": {
       "Type": "Pass",
       "End": true,
-      "InputPath": "$.FhirValidationResult.Response.Payload"
+      "InputPath": "$.FhirValidationResult.Response"
     },
     "Update Prescription Status": {
       "Type": "Task",

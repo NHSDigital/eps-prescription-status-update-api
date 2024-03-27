@@ -100,21 +100,22 @@ Resources:
       DefinitionBody:
         openapi: 3.0.1
         info:
-          title: psu-apigw
           version: 1.0.0
         paths:
           /:
             post:
               responses:
-                x-amazon-apigateway-integration:
-                  integrationSubtype: StepFunctions-StartSyncExecution
-                  credentials: !GetAtt HttpApiGatewayResources.Outputs.ApiGwRoleArn
-                  requestParameters:
-                    Input: $request
-                    StateMachineArn: !Ref UpdatePrescriptionStatusStateMachineArn
-                  payloadFormatVersion: 1.0
-                  type: aws_proxy
-                  connectionType: INTERNET
+                default:
+                  description: "Default response for POST /"
+              x-amazon-apigateway-integration:
+                integrationSubtype: StepFunctions-StartSyncExecution
+                credentials: !GetAtt HttpApiGatewayResources.Outputs.ApiGwRoleArn
+                requestParameters:
+                  Input: $request
+                  StateMachineArn: !Ref UpdatePrescriptionStatusStateMachineArn
+                payloadFormatVersion: 1.0
+                type: aws_proxy
+                connectionType: INTERNET
         x-amazon-apigateway-importexport-version: 1.0
   
   HttpApiGatewayResources:
