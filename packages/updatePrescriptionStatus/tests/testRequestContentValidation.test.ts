@@ -14,6 +14,7 @@ import {
   ONE_DAY_IN_MS,
   prescriptionID,
   status,
+  transactionBundle,
   validateTask,
   ValidationOutcome
 } from "../src/validation/content"
@@ -23,19 +24,30 @@ import {generateInvalidNhsNumbers} from "./utils/nhsNumber"
 import {DEFAULT_DATE} from "./utils/testUtils"
 import {fields} from "../src/validation/fields"
 
-describe("Unit tests for overall task validation", () => {
-  it.each([
-    {
-      task: valid,
-      expectedOutcome: {valid: true, issues: undefined},
-      scenarioDescription: "When task is valid, should return true with no issues."
-    }
-  ])(
-    "should return $scenarioDescription",
-    async ({task, expectedOutcome}) => {
-      const actual: ValidationOutcome = validateTask(task as Task)
-      expect(actual).toEqual(expectedOutcome)
-    })
+describe("Unit test for overall task validation", () => {
+  it("When task is valid, should return true with no issues.", async () => {
+    const expectedOutcome = {valid: true, issues: undefined}
+    const actual: ValidationOutcome = validateTask(valid as Task)
+    expect(actual).toEqual(expectedOutcome)
+  })
+})
+
+describe("Unit tests for pre-cast validation of bundle", () => {
+  it("When resourceType is not Bundle, should return expected issue.", async () => {
+    const body = {resourceType: "NotBundle"}
+
+    const actual = transactionBundle(body)
+
+    expect(actual).toEqual(false)
+  })
+
+  it("When type is not transaction, should return expected issue.", async () => {
+    const body = {type: "not_transaction"}
+
+    const actual = transactionBundle(body)
+
+    expect(actual).toEqual(false)
+  })
 })
 
 describe("Unit tests for validation of lastModified", () => {

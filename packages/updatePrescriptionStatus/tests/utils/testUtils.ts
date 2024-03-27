@@ -65,7 +65,11 @@ function generateBody(taskCount: number = 1) {
   for (let i = 0; i < taskCount; i++) {
     tasks.push(generateTask(i))
   }
-  return {entry: tasks}
+  return {
+    resourceType: "Bundle",
+    type: "transaction",
+    entry: tasks
+  }
 }
 
 function generateExpectedItems(itemCount: number = 1) {

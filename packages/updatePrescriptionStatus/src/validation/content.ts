@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 import {Logger} from "@aws-lambda-powertools/logger"
 import {CodeableConcept, Coding, Task} from "fhir/r4"
 import {validatePrescriptionID} from "../utils/prescriptionID"
@@ -14,6 +16,10 @@ type ValidationOutcome = {
 const ONE_DAY_IN_MS = 86400000
 
 const logger = new Logger({serviceName: "requestContentValidation"})
+
+function transactionBundle(body: any): boolean {
+  return body.resourceType === "Bundle" && body.type === "transaction"
+}
 
 function lastModified(task: Task): string | undefined {
   const today = new Date()
@@ -108,4 +114,14 @@ function validateTask(task: Task): ValidationOutcome {
   return validateContent(task)
 }
 
-export {Validation, ValidationOutcome, ONE_DAY_IN_MS, lastModified, nhsNumber, prescriptionID, status, validateTask}
+export {
+  Validation,
+  ValidationOutcome,
+  ONE_DAY_IN_MS,
+  lastModified,
+  nhsNumber,
+  prescriptionID,
+  status,
+  transactionBundle,
+  validateTask
+}

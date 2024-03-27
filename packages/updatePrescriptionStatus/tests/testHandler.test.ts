@@ -24,7 +24,6 @@ import requestMultipleMissingFields from "../../specification/examples/request-m
 import requestNoItems from "../../specification/examples/request-no-items.json"
 import responseSingleItem from "../../specification/examples/response-single-item.json"
 import responseMultipleItems from "../../specification/examples/response-multiple-items.json"
-import responseBadRequest from "../../specification/examples/response-bad-request.json"
 import {badRequest, bundleWrap, serverError} from "../src/utils/responses"
 
 describe("Unit test for updatePrescriptionStatus handler", () => {
@@ -32,6 +31,18 @@ describe("Unit test for updatePrescriptionStatus handler", () => {
     jest.resetModules()
     jest.clearAllMocks()
     jest.useFakeTimers().setSystemTime(DEFAULT_DATE)
+  })
+
+  it("when request doesn't have correct resourceType and type, expect 400 status code and appropriate message", async () => {
+    const body = {resourceType: "NotBundle", type: "not_transaction"}
+    const event: APIGatewayProxyEvent = generateMockEvent(body)
+
+    const response: APIGatewayProxyResult = await handler(event, {})
+
+    expect(response.statusCode).toEqual(400)
+    expect(JSON.parse(response.body)).toEqual(
+      bundleWrap([badRequest("Request body does not have resourceType of 'Bundle' and type of 'transaction'.")])
+    )
   })
 
   it("when single item in request, expect a single item sent to DynamoDB", async () => {
@@ -94,17 +105,6 @@ describe("Unit test for updatePrescriptionStatus handler", () => {
       expect(responseBody).toHaveProperty("resourceType", "Bundle")
       expect(responseBody).toHaveProperty("type", "transaction-response")
     })
-
-  it("when invalid json, expect 400 status code and error message", async () => {
-    const event: APIGatewayProxyEvent = generateMockEvent(requestDispatched)
-    const invalidJson = '{ "resourceType": "Bundle",  "type": "transaction", "entry":}'
-    event.body = invalidJson
-
-    const response: APIGatewayProxyResult = await handler(event, {})
-
-    expect(response.statusCode).toBe(400)
-    expect(JSON.parse(response.body)).toEqual(responseBadRequest)
-  })
 
   it("when missing fields, expect 400 status code and message indicating missing fields", async () => {
     const event: APIGatewayProxyEvent = generateMockEvent(requestMissingFields)

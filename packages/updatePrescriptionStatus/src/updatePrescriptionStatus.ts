@@ -7,7 +7,7 @@ import inputOutputLogger from "@middy/input-output-logger"
 import errorHandler from "@nhs/fhir-middy-error-handler"
 import {Bundle, BundleEntry, Task} from "fhir/r4"
 
-import {validateTask} from "./validation/content"
+import {transactionBundle, validateTask} from "./validation/content"
 import {
   accepted,
   badRequest,
@@ -39,13 +39,14 @@ const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPro
     return response(400, responseEntries)
   }
 
-  const requestBody = parseEventBody(event, responseEntries)
-  if(!requestBody) {
+  const requestBody = JSON.parse(event.body!)
+  const requestBundle = castEventBody(requestBody, responseEntries)
+  if(!requestBundle) {
     return response(400, responseEntries)
   }
-  logger.info("Request audit log", {requestBody: requestBody})
+  logger.info("Request audit log", {requestBody: requestBundle})
 
-  const requestEntries: Array<BundleEntry> = requestBody.entry || []
+  const requestEntries: Array<BundleEntry> = requestBundle.entry || []
 
   if (requestEntries.length === 0) {
     logger.info("No entries to process.")
@@ -81,14 +82,12 @@ function getXRequestID(event: APIGatewayProxyEvent, responseEntries: Array<Bundl
   return xRequestID
 }
 
-// put json parse in top level handler as it will work
-function parseEventBody(event: APIGatewayProxyEvent, responseEntries: Array<BundleEntry>): Bundle | undefined {
-  try {
-    // check for bundle of type transaction before casting
-    return JSON.parse(event.body || "") as Bundle
-  } catch (jsonParseError) {
-    const errorMessage = "Error parsing request body as json."
-    logger.error(errorMessage, {error: jsonParseError})
+function castEventBody(body: any, responseEntries: Array<BundleEntry>): Bundle | undefined {
+  if (transactionBundle(body)) {
+    return body as Bundle
+  } else {
+    const errorMessage = "Request body does not have resourceType of 'Bundle' and type of 'transaction'."
+    logger.error(errorMessage)
     const entry: BundleEntry = badRequest(errorMessage)
     responseEntries.push(entry)
   }
