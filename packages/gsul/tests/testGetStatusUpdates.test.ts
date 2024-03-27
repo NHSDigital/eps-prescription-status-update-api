@@ -1,39 +1,137 @@
-import {assert} from "console"
 import {buildResults} from "../src/getStatusUpdates"
 import {inputPrescriptionType} from "../src/schema/request"
 import {DynamoDBResult} from "../src/schema/result"
 import {outputPrescriptionType} from "../src/schema/response"
 
-describe("Unit tests for build results", () => {
-  it("should return correct data when a matched prescription found", () => {
-    const inputPrescriptions: Array<inputPrescriptionType> = [{
+type scenariosType = {
+  scenarioDescription: string;
+  inputPrescriptions: Array<inputPrescriptionType>;
+  queryResults: Array<DynamoDBResult>,
+  expectedResult: Array<outputPrescriptionType>;
+}
+const scenarios: Array<scenariosType> = [
+  {
+    scenarioDescription: "should return correct data when a matched prescription found",
+    inputPrescriptions: [{
       prescriptionID: "abc",
       odsCode: "123"
-    }]
-
-    const queryResults: Array<DynamoDBResult> = [{
+    }],
+    queryResults: [{
       prescriptionID: "abc",
       itemId: "item_1",
       latestStatus: "latest_status",
       isTerminalState: "is_terminal_status",
       lastUpdateDateTime: "1970-01-01T00:00:00Z"
+    }],
+    expectedResult: [{
+      prescriptionID: "abc",
+      onboarded: true,
+      items: [{
+        itemId: "item_1",
+        latestStatus: "latest_status",
+        isTerminalState: "is_terminal_status",
+        lastUpdateDateTime: "1970-01-01T00:00:00Z"
+      }]
     }]
-
+  }, {
+    scenarioDescription: "should return no items when empty item status are found",
+    inputPrescriptions: [{
+      prescriptionID: "abc",
+      odsCode: "123"
+    }],
+    queryResults: [],
+    expectedResult: [{
+      prescriptionID: "abc",
+      onboarded: true,
+      items: []
+    }]
+  }, {
+    scenarioDescription: "should return no items when item status are found for different prescription",
+    inputPrescriptions: [{
+      prescriptionID: "abc",
+      odsCode: "123"
+    }],
+    queryResults: [{
+      prescriptionID: "def",
+      itemId: "item_1",
+      latestStatus: "latest_status",
+      isTerminalState: "is_terminal_status",
+      lastUpdateDateTime: "1970-01-01T00:00:00Z"
+    }],
+    expectedResult: [{
+      prescriptionID: "abc",
+      onboarded: true,
+      items: []
+    }]
+  }, {
+    scenarioDescription: "should return latest data when a multiple updates found",
+    inputPrescriptions: [{
+      prescriptionID: "abc",
+      odsCode: "123"
+    }],
+    queryResults: [{
+      prescriptionID: "abc",
+      itemId: "item_1",
+      latestStatus: "early_status",
+      isTerminalState: "is_terminal_status",
+      lastUpdateDateTime: "1970-01-01T00:00:00Z"
+    }, {
+      prescriptionID: "abc",
+      itemId: "item_1",
+      latestStatus: "latest_status",
+      isTerminalState: "is_terminal_status",
+      lastUpdateDateTime: "1971-01-01T00:00:00Z"
+    }],
+    expectedResult: [{
+      prescriptionID: "abc",
+      onboarded: true,
+      items: [{
+        itemId: "item_1",
+        latestStatus: "latest_status",
+        isTerminalState: "is_terminal_status",
+        lastUpdateDateTime: "1971-01-01T00:00:00Z"
+      }]
+    }]
+  }, {
+    scenarioDescription: "should return correct data for multiple items",
+    inputPrescriptions: [{
+      prescriptionID: "abc",
+      odsCode: "123"
+    }],
+    queryResults: [{
+      prescriptionID: "abc",
+      itemId: "item_1",
+      latestStatus: "item_1_status",
+      isTerminalState: "is_terminal_status",
+      lastUpdateDateTime: "1970-01-01T00:00:00Z"
+    }, {
+      prescriptionID: "abc",
+      itemId: "item_2",
+      latestStatus: "item_2_status",
+      isTerminalState: "is_terminal_status",
+      lastUpdateDateTime: "1971-01-01T00:00:00Z"
+    }],
+    expectedResult:  [{
+      prescriptionID: "abc",
+      onboarded: true,
+      items: [{
+        itemId: "item_1",
+        latestStatus: "item_1_status",
+        isTerminalState: "is_terminal_status",
+        lastUpdateDateTime: "1970-01-01T00:00:00Z"
+      }, {
+        itemId: "item_2",
+        latestStatus: "item_2_status",
+        isTerminalState: "is_terminal_status",
+        lastUpdateDateTime: "1971-01-01T00:00:00Z"
+      }]
+    }]
+  }
+]
+describe("Unit tests for buildResults", () => {
+  it.each<scenariosType>(scenarios)("$scenarioDescription", ({inputPrescriptions, queryResults, expectedResult}) => {
     const result = buildResults(inputPrescriptions, queryResults)
-
-    const expectedResult: Array<outputPrescriptionType> = [
-      {
-        prescriptionID: "abc",
-        onboarded: true,
-        items: [{
-          itemId: "item_1",
-          latestStatus: "latest_status",
-          isTerminalState: "is_terminal_status",
-          lastUpdateDateTime: "1970-01-01T00:00:00Z"
-        }]
-      }
-    ]
-
-    assert(result === expectedResult)
+    expect(result).toMatchObject(expectedResult)
   })
+
 })

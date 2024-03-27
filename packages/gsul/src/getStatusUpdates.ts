@@ -9,13 +9,13 @@ import validator from "@middy/validator"
 import {transpileSchema} from "@middy/validator/transpile"
 import {errorHandler} from "./errorHandler.ts"
 import{requestSchema, requestType, inputPrescriptionType} from "./schema/request.ts"
-import{responseType, outputPrescriptionType, itemType} from "./schema/response.ts"
+import {responseType, outputPrescriptionType, itemType} from "./schema/response.ts"
 import{DynamoDBResult} from "./schema/result.ts"
+
 const logger = new Logger({serviceName: "updatePrescriptionStatus"})
 const client = new DynamoDBClient({region: "eu-west-2"})
 const docClient = DynamoDBDocumentClient.from(client)
 const tableName = process.env.TABLE_NAME
-
 
 const lambdaHandler = async (event: requestType): Promise<responseType> => {
 
@@ -39,7 +39,7 @@ const lambdaHandler = async (event: requestType): Promise<responseType> => {
   // get all the query results
   const queryResults = await Promise.all(queryResultsTasks)
 
-  const itemResults = buildResults(event.prescriptions, queryResults)
+  const itemResults = buildResults(event.prescriptions, queryResults.flat())
 
   const response = {
     "schemaVersion": 1,
@@ -49,35 +49,35 @@ const lambdaHandler = async (event: requestType): Promise<responseType> => {
   return response
 }
 
-const runDynamoDBQueries = (queryParams: Array<QueryCommandInput>): Array<Promise<DynamoDBResult>> => {
-  const queryResultsTasks: Array<Promise<DynamoDBResult>> = queryParams.map(async (query) => {
+const runDynamoDBQueries = (queryParams: Array<QueryCommandInput>): Array<Promise<Array<DynamoDBResult>>> => {
+  const queryResultsTasks: Array<Promise<Array<DynamoDBResult>>> = queryParams.map(async (query) => {
     // run each query
     const command = new QueryCommand(query)
     logger.info("running query", {query})
     const dynamoDBresponse = await docClient.send(command)
     if (dynamoDBresponse?.Count !== 0) {
-      // if we have a response get the latest update
-      const latestUpdate = dynamoDBresponse.Items?.reduce((prev, current) => {
-        return (prev && Date.parse(prev.LastModified) > Date.parse(current.LastModified)) ? prev : current
+
+      const response: Array<DynamoDBResult> = dynamoDBresponse.Items?.map((singleUpdate) => {
+        const result: DynamoDBResult = {
+          prescriptionID: String(singleUpdate.PrescriptionID),
+          itemId: String(singleUpdate.LineItemID),
+          latestStatus: String(singleUpdate.Status),
+          isTerminalState: String(singleUpdate.TerminalStatus),
+          lastUpdateDateTime: String(singleUpdate.LastModified)
+        }
+        return result
       })
 
-      const result: DynamoDBResult = {
-        prescriptionID: String(latestUpdate?.PrescriptionID),
-        itemId: String(latestUpdate?.LineItemID),
-        latestStatus: String(latestUpdate?.Status),
-        isTerminalState: String(latestUpdate?.TerminalStatus),
-        lastUpdateDateTime: String(latestUpdate?.LastModified)
-      }
-      return Promise.resolve(result)
+      return response
     }
-    const result: DynamoDBResult = {
+    const result: Array<DynamoDBResult> = [{
       prescriptionID: undefined,
       itemId: undefined,
       latestStatus: undefined,
       isTerminalState: undefined,
       lastUpdateDateTime: undefined
-    }
-    return Promise.resolve(result)
+    }]
+    return result
   })
 
   return queryResultsTasks
@@ -93,7 +93,30 @@ export const buildResults = (inputPrescriptions: Array<inputPrescriptionType>,
     })
     // if we have results then populate the response
     if (items.length > 0) {
-      const responseItems = items.map((item) => {
+      // get the latest update per item id
+
+      // first get the unique item ids
+      const uniqueItemIds = [...new Set(items.map((item) => {
+        return item.itemId
+      }))]
+
+      // now get an array of the latest updates for each unique item id
+      const latestUpdates = uniqueItemIds.map((itemId)=> {
+
+        // get all the updates for this prescription id and item id
+        const matchedItems = items.filter((item) => {
+          return item.prescriptionID === prescription.prescriptionID && item.itemId === itemId
+        })
+
+        // now just get the latest update
+        const latestUpdate = matchedItems.reduce((prev, current) => {
+          return (prev && Date.parse(prev.lastUpdateDateTime) > Date.parse(current.lastUpdateDateTime)) ? prev : current
+        })
+
+        return latestUpdate
+      })
+
+      const responseItems = latestUpdates.map((item) => {
         const returnItem: itemType = {
           "itemId": String(item.itemId),
           "latestStatus": String(item.latestStatus),
