@@ -44,16 +44,9 @@ describe("Unit test for updatePrescriptionStatus handler", () => {
 
     expect(response.statusCode).toEqual(201)
     expect(JSON.parse(response.body)).toEqual(responseSingleItem)
+
     expect(DynamoDBClient.prototype.send).toHaveBeenCalledTimes(1)
-    expect(DynamoDBClient.prototype.send).toHaveBeenCalledWith(
-      expect.objectContaining({
-        input: expect.objectContaining({
-          RequestItems: expect.objectContaining(
-            generateExpectedItems()
-          )
-        })
-      })
-    )
+    expect(DynamoDBClient.prototype.send).toHaveBeenCalledWith(expect.objectContaining(generateExpectedItems()))
   })
 
   it("when multiple items in request, expect multiple items sent to DynamoDB in a single call", async () => {
@@ -68,15 +61,7 @@ describe("Unit test for updatePrescriptionStatus handler", () => {
     expect(JSON.parse(response.body)).toEqual(responseMultipleItems)
 
     expect(DynamoDBClient.prototype.send).toHaveBeenCalledTimes(1)
-    expect(DynamoDBClient.prototype.send).toHaveBeenCalledWith(
-      expect.objectContaining({
-        input: expect.objectContaining({
-          RequestItems: expect.objectContaining(
-            generateExpectedItems(2)
-          )
-        })
-      })
-    )
+    expect(DynamoDBClient.prototype.send).toHaveBeenCalledWith(expect.objectContaining(generateExpectedItems(2)))
   })
 
   it.each([

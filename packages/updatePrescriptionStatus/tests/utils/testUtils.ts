@@ -73,7 +73,8 @@ function generateExpectedItems(itemCount: number = 1) {
   for (let i = 0; i < itemCount; i++) {
     const values = TASK_VALUES[i]
     items.push({
-      PutRequest: {
+      Put: {
+        TableName: TABLE_NAME,
         Item: {
           LineItemID: {S: values.lineItemID},
           PatientNHSNumber: {S: values.nhsNumber},
@@ -97,7 +98,7 @@ function generateExpectedItems(itemCount: number = 1) {
       }
     })
   }
-  return {[TABLE_NAME]: items}
+  return {input: {TransactItems: items}}
 }
 
 export {DEFAULT_DATE, generateBody, generateExpectedItems, generateMockEvent, TASK_ID_0, TASK_ID_1}

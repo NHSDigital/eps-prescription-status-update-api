@@ -2,8 +2,6 @@
 import {APIGatewayProxyEvent, APIGatewayProxyResult} from "aws-lambda"
 import {Logger} from "@aws-lambda-powertools/logger"
 import {injectLambdaContext} from "@aws-lambda-powertools/logger/middleware"
-import {BatchWriteItemCommand, DynamoDBClient} from "@aws-sdk/client-dynamodb"
-import {marshall} from "@aws-sdk/util-dynamodb"
 import middy from "@middy/core"
 import inputOutputLogger from "@middy/input-output-logger"
 import errorHandler from "@nhs/fhir-middy-error-handler"
@@ -17,10 +15,9 @@ import {
   createSuccessResponseEntries,
   serverError
 } from "./utils/responses"
+import {persistDataItems} from "./utils/databaseClient"
 
 const logger = new Logger({serviceName: "updatePrescriptionStatus"})
-const client = new DynamoDBClient({region: "eu-west-2"})
-const tableName = process.env.TABLE_NAME || "PrescriptionStatusUpdates"
 
 // chop this down
 interface DataItem {
@@ -61,9 +58,8 @@ const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPro
   }
 
   const dataItems = buildDataItems(requestEntries, xRequestID)
-  const batchCommand = createBatchCommand(dataItems)
 
-  const persistSuccess = await persistDataItems(batchCommand)
+  const persistSuccess = await persistDataItems(dataItems)
   if (!persistSuccess) {
     responseEntries = [serverError()]
     return response(500, responseEntries)
@@ -146,35 +142,6 @@ function buildDataItems(requestEntries: Array<BundleEntry>, xRequestID: string |
   return dataItems
 }
 
-// transaction for atomicity
-function createBatchCommand(dataItems: Array<DataItem>): BatchWriteItemCommand {
-  logger.info("Creating batch command to write data items.")
-  const putRequests = dataItems.map(d => {
-    return {
-      PutRequest: {
-        Item: marshall(d)
-      }
-    }
-  })
-  return new BatchWriteItemCommand({
-    RequestItems: {
-      [tableName]: putRequests
-    }
-  })
-}
-
-async function persistDataItems(batchCommand: BatchWriteItemCommand): Promise<boolean> {
-  try {
-    logger.info("Sending BatchWriteItemCommand to DynamoDB.", {command: batchCommand})
-    await client.send(batchCommand)
-    logger.info("BatchWriteItemCommand sent to DynamoDB successfully.", {command: batchCommand})
-    return true
-  } catch(e) {
-    logger.error("Error sending BatchWriteItemCommand to DynamoDB.", {error: e})
-    return false
-  }
-}
-
 function response(statusCode: number, responseEntries: Array<BundleEntry>) {
   return {
     statusCode: statusCode,
@@ -186,7 +153,7 @@ function response(statusCode: number, responseEntries: Array<BundleEntry>) {
   }
 }
 
-export const handler = middy(lambdaHandler)
+const handler = middy(lambdaHandler)
   .use(injectLambdaContext(logger, {clearState: true}))
   .use(
     inputOutputLogger({
@@ -200,3 +167,5 @@ export const handler = middy(lambdaHandler)
     })
   )
   .use(errorHandler({logger: logger}))
+
+export {DataItem, handler}
