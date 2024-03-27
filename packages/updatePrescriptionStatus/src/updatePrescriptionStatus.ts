@@ -31,6 +31,38 @@ interface DataItem {
   RequestMessage: any
 }
 
+interface Matt {
+  PrescriptionID?: string
+  LineItemID?: string
+  TaskID?: string
+  RequestMessage: any
+}
+
+interface Ant {
+  RequestID: string | undefined
+  PrescriptionID: string
+  PatientNHSNumber: string
+  PharmacyODSCode: string
+  TaskID: string
+  LineItemID: string
+  TerminalStatus: string
+  RequestMessage: any
+  LastModified: string
+  Status: string
+}
+
+interface Phil {
+  PrescriptionID: string // Both
+  PatientNHSNumber: string // Ant
+  PharmacyODSCode: string // Ant
+  TaskID: string // Matt
+  LineItemID: string // Both
+  TerminalStatus: string // Ant
+  LastModified: string // Ant
+  Status: string // Ant
+  RequestMessage: any
+}
+
 const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
   let responseEntries: Array<BundleEntry> = []
 

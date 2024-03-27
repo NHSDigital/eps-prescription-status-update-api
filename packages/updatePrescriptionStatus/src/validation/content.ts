@@ -64,10 +64,6 @@ function resourceType(task: Task): string | undefined {
 
 // validate all codesystems in the request example
 
-// validate all resources are of type Task
-
-// validate top level is Bundle of type transaction
-
 function status(task: Task): string | undefined {
   const status = task.status
   if (status === "completed") {
