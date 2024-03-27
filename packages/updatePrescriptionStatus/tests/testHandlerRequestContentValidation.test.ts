@@ -15,7 +15,7 @@ import {
   TASK_ID_1,
   generateMockEvent
 } from "./utils/testUtils"
-import {ONE_DAY_IN_MS} from "../src/requestContentValidation"
+import {ONE_DAY_IN_MS} from "../src/validation/content"
 
 import requestMultipleItems from "../../specification/examples/request-multiple-items.json"
 import {accepted, badRequest, bundleWrap} from "../src/utils/responses"

@@ -1,7 +1,8 @@
 import {Logger} from "@aws-lambda-powertools/logger"
 import {CodeableConcept, Coding, Task} from "fhir/r4"
-import {validatePrescriptionID} from "./utils/prescriptionID"
-import {validateNhsNumber} from "./utils/nhsNumber"
+import {validatePrescriptionID} from "../utils/prescriptionID"
+import {validateNhsNumber} from "../utils/nhsNumber"
+import {validateFields} from "./fields"
 
 type Validation = (task: Task) => string | undefined
 
@@ -13,28 +14,6 @@ type ValidationOutcome = {
 const ONE_DAY_IN_MS = 86400000
 
 const logger = new Logger({serviceName: "requestContentValidation"})
-
-function fields(task: Task): string | undefined {
-  const requiredFields: Array<Validation> = [
-    (t: Task) => t.basedOn?.[0]?.identifier?.value ? undefined : "PrescriptionID",
-    (t: Task) => t.for?.identifier?.value ? undefined: "PatientNHSNumber",
-    (t: Task) => t.owner?.identifier?.value ? undefined: "PharmacyODSCode",
-    (t: Task) => t.id ? undefined: "TaskID",
-    (t: Task) => t.focus?.identifier?.value ? undefined: "LineItemID",
-    (t: Task) => t.status ? undefined: "TerminalStatus",
-    (t: Task) => t ? undefined: "RequestMessage"
-  ]
-  const missingFields: Array<string> = []
-  for (const field of requiredFields) {
-    const missingField = field(task)
-    if (missingField) {
-      missingFields.push(missingField)
-    }
-  }
-  if (missingFields.length > 0) {
-    return `Missing required fields - ${missingFields.join(", ")}.`
-  }
-}
 
 function lastModified(task: Task): string | undefined {
   const today = new Date()
@@ -81,23 +60,6 @@ function status(task: Task): string | undefined {
   }
 }
 
-function validateFields(task: Task): ValidationOutcome {
-  const validationOutcome: ValidationOutcome = {valid: true, issues: undefined}
-  try {
-    const issue = fields(task)
-    if (issue) {
-      validationOutcome.valid = false
-      validationOutcome.issues = issue
-    }
-  } catch(e) {
-    const message = `Unhandled error during validation of fields.`
-    logger.error(`${message}: ${e}`)
-    validationOutcome.valid = false
-    validationOutcome.issues = message
-  }
-  return validationOutcome
-}
-
 function validateTask(task: Task): ValidationOutcome {
   const fieldsOutcome = validateFields(task)
   if (!fieldsOutcome.valid) {
@@ -134,4 +96,4 @@ function validateTask(task: Task): ValidationOutcome {
   return validationOutcome
 }
 
-export {ValidationOutcome, ONE_DAY_IN_MS, fields, lastModified, nhsNumber, prescriptionID, status, validateTask}
+export {Validation, ValidationOutcome, ONE_DAY_IN_MS, lastModified, nhsNumber, prescriptionID, status, validateTask}

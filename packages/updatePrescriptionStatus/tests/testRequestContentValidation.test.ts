@@ -9,7 +9,6 @@ import {
 import {Task} from "fhir/r4"
 
 import {
-  fields,
   lastModified,
   nhsNumber,
   ONE_DAY_IN_MS,
@@ -17,11 +16,12 @@ import {
   status,
   validateTask,
   ValidationOutcome
-} from "../src/requestContentValidation"
+} from "../src/validation/content"
 
 import valid from "./tasks/valid.json"
 import {generateInvalidNhsNumbers} from "./utils/nhsNumber"
 import {DEFAULT_DATE} from "./utils/testUtils"
+import {fields} from "../src/validation/fields"
 
 describe("Unit tests for overall task validation", () => {
   it.each([

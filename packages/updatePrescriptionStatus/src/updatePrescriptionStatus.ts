@@ -9,7 +9,7 @@ import inputOutputLogger from "@middy/input-output-logger"
 import errorHandler from "@nhs/fhir-middy-error-handler"
 import {Bundle, BundleEntry, Task} from "fhir/r4"
 
-import {validateTask} from "./requestContentValidation"
+import {validateTask} from "./validation/content"
 import {
   accepted,
   badRequest,
