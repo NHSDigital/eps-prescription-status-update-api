@@ -52,6 +52,14 @@ function nhsNumber(task: Task): string | undefined {
   return validateNhsNumber(nhsNumber) ? undefined : message
 }
 
+function resourceType(task: Task): string | undefined {
+  const message = "Resource's resourceType is not 'Task'."
+  const isTask = task.resourceType === "Task"
+  if (!isTask) {
+    return message
+  }
+}
+
 // validate status as in schemas/resources/UpdatePrescriptionStatusTask.yaml
 
 // validate all codesystems in the request example
@@ -79,7 +87,8 @@ function validateContent(task: Task): ValidationOutcome {
     lastModified,
     prescriptionID,
     nhsNumber,
-    status
+    status,
+    resourceType
   ]
 
   const validationOutcome: ValidationOutcome = {valid: true, issues: undefined}
@@ -121,6 +130,7 @@ export {
   lastModified,
   nhsNumber,
   prescriptionID,
+  resourceType,
   status,
   transactionBundle,
   validateTask

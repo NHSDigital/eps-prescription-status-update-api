@@ -49,6 +49,7 @@ function generateTask(index: number) {
   const values = TASK_VALUES[index]
   return {
     resource: {
+      resourceType: "Task",
       basedOn: [{identifier: {value: values.prescriptionID}}],
       for: {identifier: {value: values.nhsNumber}},
       owner: {identifier: {value: values.odsCode}},
@@ -89,6 +90,7 @@ function generateExpectedItems(itemCount: number = 1) {
           TerminalStatus: {S: values.status},
           RequestMessage: {
             M: {
+              resourceType: {S: "Task"},
               basedOn: {L: [{M: {identifier: {M: {value: {S: values.prescriptionID}}}}}]},
               focus: {M: {identifier: {M: {value: {S: values.lineItemID}}}}},
               for: {M: {identifier: {M: {value: {S: values.nhsNumber}}}}},

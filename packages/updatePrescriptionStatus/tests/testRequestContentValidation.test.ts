@@ -13,6 +13,7 @@ import {
   nhsNumber,
   ONE_DAY_IN_MS,
   prescriptionID,
+  resourceType,
   status,
   transactionBundle,
   validateTask,
@@ -22,7 +23,6 @@ import {
 import valid from "./tasks/valid.json"
 import {generateInvalidNhsNumbers} from "./utils/nhsNumber"
 import {DEFAULT_DATE} from "./utils/testUtils"
-import {fields} from "../src/validation/fields"
 
 describe("Unit test for overall task validation", () => {
   it("When task is valid, should return true with no issues.", async () => {
@@ -141,27 +141,13 @@ describe("Unit tests for validation of status against business status", () => {
   )
 })
 
-describe("Unit tests for validation of fields", () => {
-  it.each([
-    {
-      missingField: "PatientNHSNumber",
-      operation: ((t: Task) => delete t.for)
-    },
-    {
-      missingField: "TaskID",
-      operation: ((t: Task) => delete t.id)
-    },
-    {
-      missingField: "PrescriptionID",
-      operation: ((t: Task) => delete t.basedOn)
-    }
-  ])("When $missingField is missing, should return expected issue.", async ({operation, missingField}) => {
-    const task = {...valid} as any
-    operation(task)
+describe("Unit tests for validation of resourceType", () => {
+  it("When resourceType is not Task, should return expected issue.", async () => {
+    const task = {resourceType: "NotTask"}
 
-    const expected = `Missing required fields - ${missingField}.`
+    const expected = "Resource's resourceType is not 'Task'."
 
-    const actual = fields(task as Task)
+    const actual = resourceType(task as Task)
 
     expect(actual).toEqual(expected)
   })
