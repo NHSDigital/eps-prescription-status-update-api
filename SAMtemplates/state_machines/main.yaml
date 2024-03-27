@@ -41,12 +41,12 @@ Resources:
           - - !ImportValue fhir-validator:FHIRValidatorUKCoreLambdaArn
             - snap
         UpdatePrescriptionStatusFunctionArn: !Sub ${UpdatePrescriptionStatusFunctionArn}:$LATEST
-    Logging:
-      Destinations:
-        - CloudWatchLogsLogGroup:
-          LogGroupArn: !GetAtt UpdatePrescriptionStatusStateMachineResources.Outputs.StateMachineLogGroupArn
-      IncludeExecutionData: true
-      Level: ALL
+      Logging:
+        Destinations:
+          - CloudWatchLogsLogGroup:
+            LogGroupArn: !GetAtt UpdatePrescriptionStatusStateMachineResources.Outputs.StateMachineLogGroupArn
+        IncludeExecutionData: true
+        Level: ALL
   
   UpdatePrescriptionStatusStateMachineResources:
     Type: AWS::Serverless::Application
