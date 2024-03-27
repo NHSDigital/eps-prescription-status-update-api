@@ -119,6 +119,11 @@ jobs:
           VERSION_NUMBER: ${{ inputs.VERSION_NUMBER }}
         run: ./release_code.sh
 
+      - name: Deploy API
+        shell: bash
+        working-directory: .github/scripts
+        run: ./deploy_api.sh
+
       - name: create_int_release_notes
         uses: ./.github/actions/update_confluence_jira
         if: ${{ inputs.CREATE_INT_RELEASE_NOTES == true && always() && !failure() && !cancelled() }}
