@@ -44,7 +44,7 @@ Resources:
       Logging:
         Destinations:
           - CloudWatchLogsLogGroup:
-            LogGroupArn: !GetAtt UpdatePrescriptionStatusStateMachineResources.Outputs.StateMachineLogGroupArn
+              LogGroupArn: !GetAtt UpdatePrescriptionStatusStateMachineResources.Outputs.StateMachineLogGroupArn
         IncludeExecutionData: true
         Level: ALL
   
@@ -59,7 +59,7 @@ Resources:
         AdditionalPolicies: !Join
           - ','
           - - Fn::ImportValue: !Sub ${StackName}:functions:${UpdatePrescriptionStatusFunctionName}:ExecuteLambdaPolicyArn
-          - - !ImportValue fhir-validator:FHIRValidatorUKCoreExecuteLambdaPolicyArn
+            - !ImportValue fhir-validator:FHIRValidatorUKCoreExecuteLambdaPolicyArn
         LogRetentionInDays: !Ref LogRetentionInDays
         CloudWatchKMSKeyId: !ImportValue account-resources:CloudwatchLogsKmsKeyArn
         EnableSplunk: !Ref EnableSplunk
