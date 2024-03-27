@@ -17,6 +17,7 @@ const TASK_VALUES = [
     lineItemID: "6989b7bd-8db6-428c-a593-4022e3044c00",
     id: TASK_ID_0,
     status: "in-progress",
+    businessStatus: "Dispatched",
     lastModified: "2023-09-11T10:11:12Z"
   },
   {
@@ -26,6 +27,7 @@ const TASK_VALUES = [
     lineItemID: "e3843418-1900-44a1-8f6a-bff8601893b8",
     id: TASK_ID_1,
     status: "in-progress",
+    businessStatus: "Ready to collect",
     lastModified: "2023-09-11T10:11:12Z"
   }
 ]
@@ -50,13 +52,14 @@ function generateTask(index: number) {
   return {
     resource: {
       resourceType: "Task",
-      basedOn: [{identifier: {value: values.prescriptionID}}],
+      lastModified: values.lastModified,
+      focus: {identifier: {value: values.lineItemID}},
       for: {identifier: {value: values.nhsNumber}},
       owner: {identifier: {value: values.odsCode}},
+      basedOn: [{identifier: {value: values.prescriptionID}}],
+      businessStatus: {coding: [{code: values.businessStatus}]},
       id: values.id,
-      focus: {identifier: {value: values.lineItemID}},
-      status: values.status,
-      lastModified: values.lastModified
+      status: values.status
     }
   }
 }
@@ -81,23 +84,25 @@ function generateExpectedItems(itemCount: number = 1) {
       Put: {
         TableName: TABLE_NAME,
         Item: {
+          LastModified: {S: values.lastModified},
           LineItemID: {S: values.lineItemID},
           PatientNHSNumber: {S: values.nhsNumber},
           PharmacyODSCode: {S: values.odsCode},
           PrescriptionID: {S: values.prescriptionID},
-          RequestID: {S: X_REQUEST_ID},
+          Status: {S: values.businessStatus},
           TaskID: {S: values.id},
           TerminalStatus: {S: values.status},
           RequestMessage: {
             M: {
               resourceType: {S: "Task"},
-              basedOn: {L: [{M: {identifier: {M: {value: {S: values.prescriptionID}}}}}]},
+              lastModified: {S: values.lastModified},
               focus: {M: {identifier: {M: {value: {S: values.lineItemID}}}}},
               for: {M: {identifier: {M: {value: {S: values.nhsNumber}}}}},
-              id: {S: values.id},
               owner: {M: {identifier: {M: {value: {S: values.odsCode}}}}},
-              status: {S: values.status},
-              lastModified: {S: values.lastModified}
+              basedOn: {L: [{M: {identifier: {M: {value: {S: values.prescriptionID}}}}}]},
+              businessStatus: {M: {coding: {L: [{M: {code: {S: values.businessStatus}}}]}}},
+              id: {S: values.id},
+              status: {S: values.status}
             }
           }
         }

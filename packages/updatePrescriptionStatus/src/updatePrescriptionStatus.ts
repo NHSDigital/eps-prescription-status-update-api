@@ -19,57 +19,20 @@ import {persistDataItems} from "./utils/databaseClient"
 
 const logger = new Logger({serviceName: "updatePrescriptionStatus"})
 
-// chop this down
 interface DataItem {
-  RequestID?: string
-  PrescriptionID?: string
-  PatientNHSNumber?: string
-  PharmacyODSCode?: string
-  TaskID?: string
-  LineItemID?: string
-  TerminalStatus: string
-  RequestMessage: any
-}
-
-interface Matt {
-  PrescriptionID?: string
-  LineItemID?: string
-  TaskID?: string
-  RequestMessage: any
-}
-
-interface Ant {
-  RequestID: string | undefined
-  PrescriptionID: string
+  LastModified: string
+  LineItemID: string
   PatientNHSNumber: string
   PharmacyODSCode: string
-  TaskID: string
-  LineItemID: string
-  TerminalStatus: string
-  RequestMessage: any
-  LastModified: string
+  PrescriptionID: string
+  RequestMessage: Task
   Status: string
-}
-
-interface Phil {
-  PrescriptionID: string // Both
-  PatientNHSNumber: string // Ant
-  PharmacyODSCode: string // Ant
-  TaskID: string // Matt
-  LineItemID: string // Both
-  TerminalStatus: string // Ant
-  LastModified: string // Ant
-  Status: string // Ant
-  RequestMessage: any
+  TaskID: string
+  TerminalStatus: string
 }
 
 const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
   let responseEntries: Array<BundleEntry> = []
-
-  const xRequestID = getXRequestID(event, responseEntries)
-  if (!xRequestID) {
-    return response(400, responseEntries)
-  }
 
   const requestBody = JSON.parse(event.body!)
   const requestBundle = castEventBody(requestBody, responseEntries)
@@ -90,7 +53,7 @@ const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPro
     return response(400, responseEntries)
   }
 
-  const dataItems = buildDataItems(requestEntries, xRequestID)
+  const dataItems = buildDataItems(requestEntries)
 
   const persistSuccess = await persistDataItems(dataItems)
   if (!persistSuccess) {
@@ -101,17 +64,6 @@ const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPro
   responseEntries = createSuccessResponseEntries(requestEntries)
   logger.info("Event processed successfully.")
   return response(201, responseEntries)
-}
-
-function getXRequestID(event: APIGatewayProxyEvent, responseEntries: Array<BundleEntry>): string | undefined {
-  const xRequestID = event.headers["x-request-id"]
-  if (!xRequestID) {
-    const errorMessage = "Missing or empty x-request-id header."
-    logger.error(errorMessage)
-    const entry: BundleEntry = badRequest(errorMessage)
-    responseEntries.push(entry)
-  }
-  return xRequestID
 }
 
 function castEventBody(body: any, responseEntries: Array<BundleEntry>): Bundle | undefined {
@@ -150,7 +102,7 @@ function validateEntries(requestEntries: Array<BundleEntry>, responseEntries: Ar
   return valid
 }
 
-function buildDataItems(requestEntries: Array<BundleEntry>, xRequestID: string | undefined): Array<DataItem> {
+function buildDataItems(requestEntries: Array<BundleEntry>): Array<DataItem> {
   const dataItems: Array<DataItem> = []
 
   for (const requestEntry of requestEntries) {
@@ -158,14 +110,15 @@ function buildDataItems(requestEntries: Array<BundleEntry>, xRequestID: string |
     logger.info("Building data item for task.", {task: task, id: task.id})
 
     const dataItem: DataItem = {
-      RequestID: xRequestID,
-      PrescriptionID: task.basedOn?.[0]?.identifier?.value,
-      PatientNHSNumber: task.for?.identifier?.value,
-      PharmacyODSCode: task.owner?.identifier?.value,
-      TaskID: task.id,
-      LineItemID: task.focus?.identifier?.value,
-      TerminalStatus: task.status,
-      RequestMessage: task
+      LastModified: task.lastModified!,
+      LineItemID: task.focus!.identifier!.value!,
+      PatientNHSNumber: task.for!.identifier!.value!,
+      PharmacyODSCode: task.owner!.identifier!.value!,
+      PrescriptionID: task.basedOn![0]!.identifier!.value!,
+      RequestMessage: task,
+      Status: task.businessStatus!.coding![0].code!,
+      TaskID: task.id!,
+      TerminalStatus: task.status
     }
 
     dataItems.push(dataItem)
