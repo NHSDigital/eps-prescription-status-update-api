@@ -65,4 +65,4 @@ jobs:
           name: packaged_code
           path: |
             .aws-sam/build
-            packages/updatePrescriptionStatus/lib/get-secrets-layer.zip 
+            SAMtemplates/state_machines/UpdatePrescriptionStatusStateMachine.asl.json
