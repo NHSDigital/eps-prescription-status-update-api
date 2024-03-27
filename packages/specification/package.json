@@ -5,7 +5,8 @@
   "scripts": {
     "lint": "swagger-cli validate eps-prescription-status-update-api.yaml",
     "resolve": "swagger-cli bundle eps-prescription-status-update-api.yaml -r -o dist/eps-prescription-status-update-api.resolved.json",
-    "check-licenses": "license-checker --failOn GPL --failOn LGPL --start ../.."
+    "check-licenses": "license-checker --failOn GPL --failOn LGPL --start ../..",
+    "replace-components": "node scripts/replace-components.js"
   },
   "author": "NHS Digital",
   "license": "MIT",
