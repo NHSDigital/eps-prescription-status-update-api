@@ -38,7 +38,7 @@ Resources:
       DefinitionSubstitutions:
         FhirValidationFunctionArn: !Join
           - ":" 
-          - - !ImportValue fhir-validator:FHIRValidatorLambdaArn
+          - - !ImportValue fhir-validator:FHIRValidatorUKCoreLambdaArn
             - snap
         UpdatePrescriptionStatusFunctionArn: !Sub ${UpdatePrescriptionStatusFunctionArn}:$LATEST
     Logging:
