@@ -33,7 +33,7 @@ Resources:
     Properties:
       Name: !Sub ${StackName}-UpdatePrescriptionStatus
       Type: EXPRESS
-      Role: UpdatePrescriptionStatusStateMachineResources.Outputs.StateMachineRoleArn
+      Role: !GetAtt UpdatePrescriptionStatusStateMachineResources.Outputs.StateMachineRoleArn
       DefinitionUri: UpdatePrescriptionStatusStateMachine.asl.json
       DefinitionSubstitutions:
         FhirValidationFunctionArn: !Join
@@ -44,7 +44,7 @@ Resources:
     Logging:
       Destinations:
         - CloudWatchLogsLogGroup:
-          LogGroupArn: UpdatePrescriptionStatusStateMachineResources.Outputs.StateMachineLogGroupArn
+          LogGroupArn: !GetAtt UpdatePrescriptionStatusStateMachineResources.Outputs.StateMachineLogGroupArn
       IncludeExecutionData: true
       Level: ALL
   
