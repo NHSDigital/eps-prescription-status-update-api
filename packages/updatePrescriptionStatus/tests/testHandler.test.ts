@@ -128,7 +128,7 @@ describe("Unit test for updatePrescriptionStatus handler", () => {
 
     expect(response.statusCode).toBe(400)
     expect(JSON.parse(response.body)).toEqual(bundleWrap(
-      [badRequest("Missing required fields - PharmacyODSCode, TaskID")]
+      [badRequest("Missing required fields - PharmacyODSCode, TaskID.")]
     ))
   })
 
@@ -151,8 +151,8 @@ describe("Unit test for updatePrescriptionStatus handler", () => {
 
     expect(response.statusCode).toEqual(400)
     expect(JSON.parse(response.body)).toEqual(bundleWrap([
-      badRequest("Missing required fields - PharmacyODSCode, TaskID"),
-      badRequest("Missing required fields - PharmacyODSCode", TASK_ID_1)
+      badRequest("Missing required fields - PharmacyODSCode, TaskID."),
+      badRequest("Missing required fields - PharmacyODSCode.", TASK_ID_1)
     ]))
   })
 

@@ -32,7 +32,7 @@ function fields(task: Task): string | undefined {
     }
   }
   if (missingFields.length > 0) {
-    return `Missing required fields - ${missingFields.join(", ")}`
+    return `Missing required fields - ${missingFields.join(", ")}.`
   }
 }
 
@@ -81,17 +81,39 @@ function status(task: Task): string | undefined {
   }
 }
 
+function validateFields(task: Task): ValidationOutcome {
+  const validationOutcome: ValidationOutcome = {valid: true, issues: undefined}
+  try {
+    const issue = fields(task)
+    if (issue) {
+      validationOutcome.valid = false
+      validationOutcome.issues = issue
+    }
+  } catch(e) {
+    const message = `Unhandled error during validation of fields.`
+    logger.error(`${message}: ${e}`)
+    validationOutcome.valid = false
+    validationOutcome.issues = message
+  }
+  return validationOutcome
+}
+
 function validateTask(task: Task): ValidationOutcome {
-  const validations: Array<Validation> = [
-    fields,
+  const fieldsOutcome = validateFields(task)
+  if (!fieldsOutcome.valid) {
+    return fieldsOutcome
+  }
+
+  const contentValidations: Array<Validation> = [
     lastModified,
     prescriptionID,
     nhsNumber,
     status
   ]
+
   const validationOutcome: ValidationOutcome = {valid: true, issues: undefined}
 
-  validations.forEach((validation: Validation) => {
+  contentValidations.forEach((validation: Validation) => {
     const issues: Array<string> = []
     try {
       const issue = validation(task)
@@ -112,4 +134,4 @@ function validateTask(task: Task): ValidationOutcome {
   return validationOutcome
 }
 
-export {ValidationOutcome, ONE_DAY_IN_MS, lastModified, nhsNumber, prescriptionID, status, validateTask}
+export {ValidationOutcome, ONE_DAY_IN_MS, fields, lastModified, nhsNumber, prescriptionID, status, validateTask}

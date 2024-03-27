@@ -57,7 +57,7 @@ describe("Unit test for validation via updatePrescriptionStatus handler", () => 
 
     const expected = bundleWrap([
       badRequest("Invalid last modified value provided.", TASK_ID_0),
-      badRequest("Prescription ID is invalid.", TASK_ID_1)
+      badRequest("Missing required fields - PrescriptionID.", TASK_ID_1)
     ])
 
     const response: APIGatewayProxyResult = await handler(event, {})
