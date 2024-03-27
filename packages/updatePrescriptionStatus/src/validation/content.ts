@@ -46,6 +46,14 @@ function nhsNumber(task: Task): string | undefined {
   return validateNhsNumber(nhsNumber) ? undefined : message
 }
 
+// validate status as in schemas/resources/UpdatePrescriptionStatusTask.yaml
+
+// validate all codesystems in the request example
+
+// validate all resources are of type Task
+
+// validate top level is Bundle of type transaction
+
 function status(task: Task): string | undefined {
   const status = task.status
   if (status === "completed") {
@@ -60,12 +68,7 @@ function status(task: Task): string | undefined {
   }
 }
 
-function validateTask(task: Task): ValidationOutcome {
-  const fieldsOutcome = validateFields(task)
-  if (!fieldsOutcome.valid) {
-    return fieldsOutcome
-  }
-
+function validateContent(task: Task): ValidationOutcome {
   const contentValidations: Array<Validation> = [
     lastModified,
     prescriptionID,
@@ -94,6 +97,15 @@ function validateTask(task: Task): ValidationOutcome {
   })
 
   return validationOutcome
+}
+
+function validateTask(task: Task): ValidationOutcome {
+  const fieldsOutcome = validateFields(task)
+  if (!fieldsOutcome.valid) {
+    return fieldsOutcome
+  }
+
+  return validateContent(task)
 }
 
 export {Validation, ValidationOutcome, ONE_DAY_IN_MS, lastModified, nhsNumber, prescriptionID, status, validateTask}

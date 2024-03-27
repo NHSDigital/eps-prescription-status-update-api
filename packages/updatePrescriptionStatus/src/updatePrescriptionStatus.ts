@@ -22,6 +22,7 @@ const logger = new Logger({serviceName: "updatePrescriptionStatus"})
 const client = new DynamoDBClient({region: "eu-west-2"})
 const tableName = process.env.TABLE_NAME || "PrescriptionStatusUpdates"
 
+// chop this down
 interface DataItem {
   RequestID?: string
   PrescriptionID?: string
@@ -84,8 +85,10 @@ function getXRequestID(event: APIGatewayProxyEvent, responseEntries: Array<Bundl
   return xRequestID
 }
 
+// put json parse in top level handler as it will work
 function parseEventBody(event: APIGatewayProxyEvent, responseEntries: Array<BundleEntry>): Bundle | undefined {
   try {
+    // check for bundle of type transaction before casting
     return JSON.parse(event.body || "") as Bundle
   } catch (jsonParseError) {
     const errorMessage = "Error parsing request body as json."
@@ -143,6 +146,7 @@ function buildDataItems(requestEntries: Array<BundleEntry>, xRequestID: string |
   return dataItems
 }
 
+// transaction for atomicity
 function createBatchCommand(dataItems: Array<DataItem>): BatchWriteItemCommand {
   logger.info("Creating batch command to write data items.")
   const putRequests = dataItems.map(d => {
