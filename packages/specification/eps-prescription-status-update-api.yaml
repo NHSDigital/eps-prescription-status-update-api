@@ -22,23 +22,23 @@ info:
         
     ## Related APIs
     * [Electronic Prescriptions Service](https://digital.nhs.uk/developer/api-catalogue/electronic-prescription-service-fhir): The national service for creating and dispensing prescriptions across health and social care.
-    * [Personal Demographics Service](https://digital.nhs.uk/developer/api-catalogue/personal-demographics-service-fhir): the national service for storing and retrieving NHS patient details such as name, address, date of birth, related people, registered GP and NHS number.
+    * [Prescriptions for Patients](https://digital.nhs.uk/developer/api-catalogue/prescriptions-for-patients): the national service to retrieve prescriptions data for individual patients from the Electronic Prescription Service (EPS), for use in patient-facing applications.
 
     ## API Status and Roadmap
-    This API is in an [internal private beta](https://digital.nhs.uk/developer/guides-and-documentation/reference-guide#statuses), meaning the API is not currently available for integration by external third parties.
+    This API is [in development](https://digital.nhs.uk/developer/guides-and-documentation/reference-guide#statuses), meaning the API will soon be available for testing via a sandbox service or an integration environment - but we expect to make breaking changes based on developer feedback.
 
     ## Service Level
-    This API is a platinum service, meaning it is operational and supported 24 hours a day, 365 days a year.
+    This API will be a platinum service, meaning it is operational and supported 24 hours a day, 365 days a year.
     See [service levels](https://digital.nhs.uk/developer/guides-and-documentation/reference-guide#service-levels) for more details.
 
     ## Technology
     This API is [RESTful](https://digital.nhs.uk/developer/guides-and-documentation/our-api-technologies#basic-rest).
 
-    It conforms to the [FHIR](https://digital.nhs.uk/developer/guides-and-documentation/our-api-technologies#fhir) global standard for health care data exchange, specifically to [FHIR UK Core](https://digital.nhs.uk/services/fhir-uk-core).
+    It conforms to the [FHIR](https://digital.nhs.uk/developer/guides-and-documentation/our-api-technologies#fhir) global standard for health care data exchange, specifically to [FHIR R4 (v4.0.1)](https://hl7.org/fhir/r4/).
 
-    It includes some country-specific FHIR extensions, which are built against [FHIR UK Core, specifically [UKcore.stu1 0.5.1](https://simplifier.net/packages/fhir.r4.ukcore.stu1/0.5.1).
+    It includes some country-specific FHIR extensions, which are built against FHIR UK Core, specifically [UK Core R4 (v4.0.1)](https://simplifier.net/HL7FHIRUKCoreR4/).
 
-    You do not need to know much about FHIR to use this API. The API only supports GET requests and the responses will be FHIR.
+    You do not need to know much about FHIR to use this API. The API only supports POST requests containing FHIR messages.
 
     FHIR APIs are just RESTful APIs that follow specific rules.
     These rules mean:
@@ -54,10 +54,40 @@ info:
     For more details see [Network access for APIs](https://digital.nhs.uk/developer/guides-and-documentation/network-access-for-apis).
 
     ## Security and Authorisation
-    TBC
+    This API only supports application-restricted access, meaning we authenticate the calling application but not the end user.
+
+    The end user could be:
+    a healthcare worker - in which case you must ensure they are authenticated and suitably authorised locally
+    not present at all - for example as part of a back end process integrated with a shipping system
+
+    To use this access mode, use the following security pattern:
+    * [Application-restricted RESTful API - signed JWT authentication](https://digital.nhs.uk/developer/guides-and-documentation/security-and-authorisation/application-restricted-restful-apis-signed-jwt-authentication)
 
     ## Environment and testing
-    TBC
+    | Environment      | Base URL                                                            |
+    |------------------|---------------------------------------------------------------------|
+    | Sandbox          | `https://sandbox.api.service.nhs.uk/prescription-status-update`     |
+    | Integration test | `https://int.api.service.nhs.uk/prescription-status-update`         |
+    | Production       | `https://api.service.nhs.uk/prescription-status-update`             |
+
+    ### Sandbox testing
+    Our [sandbox environment](https://digital.nhs.uk/developer/guides-and-documentation/testing#sandbox-testing):
+
+    * is for early developer testing
+    * only covers a limited set of scenarios
+    * is stateless, so it does not actually persist any updates
+    * is open access, so does not allow you to test authorisation
+
+    For details of sandbox testing, or to try out the sandbox using our "Try this API" feature, see the documentation for each endpoint.
+
+    ### Integration testing
+    Our [integration test environment](https://digital.nhs.uk/developer/guides-and-documentation/testing#integration-testing):
+
+    * is for formal integration testing
+    * is stateful, so persists updates
+    * includes authorisation, with [smartcard](https://digital.nhs.uk/developer/guides-and-documentation/security-and-authorisation/nhs-smartcards-for-developers) and non-smartcard options
+
+    For more details see [integration testing with our RESTful APIs](https://digital.nhs.uk/developer/guides-and-documentation/testing#integration-testing-with-our-restful-apis).
 
     ## Onboarding
     All dispenser suppliers are being asked to integrate with this new service.
@@ -166,7 +196,7 @@ components:
       in: header
       name: Authorization
       description: |
-        An [OAuth 2.0 bearer token](https://digital.nhs.uk/developer/guides-and-documentation/security-and-authorisation#user-restricted-apis).
+        An [OAuth 2.0 bearer token](https://digital.nhs.uk/developer/guides-and-documentation/security-and-authorisation#application-restricted-apis).
       required: true
       schema:
         type: string
