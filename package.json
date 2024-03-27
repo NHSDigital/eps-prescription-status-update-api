@@ -15,7 +15,8 @@
   "license": "MIT",
   "workspaces": [
     "packages/specification",
-    "packages/updatePrescriptionStatus"
+    "packages/updatePrescriptionStatus",
+    "packages/gsul"
   ],
   "devDependencies": {
     "@semantic-release/changelog": "^6.0.3",

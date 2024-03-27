@@ -90,6 +90,7 @@ compile: compile-node
 lint-node: compile-node
 	npm run lint --workspace packages/specification
 	npm run lint --workspace packages/updatePrescriptionStatus
+	npm run lint --workspace packages/gsul
 
 lint-samtemplates:
 	poetry run cfn-lint -t SAMtemplates/*.yaml
