@@ -82,3 +82,7 @@ Outputs:
   UpdatePrescriptionStatusFunctionName:
     Description: The function name of the UpdatePrescriptionStatus lambda
     Value: !Ref UpdatePrescriptionStatus
+
+  UpdatePrescriptionStatusFunctionArn:
+    Description: The function ARN of the UpdatePrescriptionStatus lambda
+    Value: !GetAtt  UpdatePrescriptionStatus.Arn
