@@ -4,6 +4,7 @@
   "files": [],
   // Building this project will build all of the following:
   "references": [
-    { "path": "packages/updatePrescriptionStatus" }
+    { "path": "packages/updatePrescriptionStatus" },
+    { "path": "packages/gsul" }
   ]
 }

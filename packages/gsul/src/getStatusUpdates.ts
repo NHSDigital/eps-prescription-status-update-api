@@ -10,18 +10,12 @@ import {transpileSchema} from "@middy/validator/transpile"
 import {errorHandler} from "./errorHandler.ts"
 import{requestSchema, requestType, inputPrescriptionType} from "./schema/request.ts"
 import{responseType, outputPrescriptionType, itemType} from "./schema/response.ts"
+import{DynamoDBResult} from "./schema/result.ts"
 const logger = new Logger({serviceName: "updatePrescriptionStatus"})
 const client = new DynamoDBClient({region: "eu-west-2"})
 const docClient = DynamoDBDocumentClient.from(client)
 const tableName = process.env.TABLE_NAME
 
-interface DynamoDBResult {
-  prescriptionID: string | undefined;
-  itemId: string | undefined;
-  latestStatus: string | undefined;
-  isTerminalState: string | undefined;
-  lastUpdateDateTime: string | undefined
-}
 
 const lambdaHandler = async (event: requestType): Promise<responseType> => {
 
@@ -89,7 +83,7 @@ const runDynamoDBQueries = (queryParams: Array<QueryCommandInput>): Array<Promis
   return queryResultsTasks
 }
 
-const buildResults = (inputPrescriptions: Array<inputPrescriptionType>,
+export const buildResults = (inputPrescriptions: Array<inputPrescriptionType>,
   queryResults: Array<DynamoDBResult>): Array<outputPrescriptionType> => {
   // for each prescription id passed in build up a response
   const itemResults = inputPrescriptions.map((prescription) => {
