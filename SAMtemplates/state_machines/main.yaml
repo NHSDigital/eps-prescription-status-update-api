@@ -54,8 +54,8 @@ Resources:
       Location: state_machine_resources.yaml
       Parameters:
         StackName: !Ref StackName
-        StateMachineName: !GetAtt UpdatePrescriptionStatusStateMachine.Name
-        StateMachineArn: !Ref UpdatePrescriptionStatusStateMachine
+        StateMachineName: !Sub ${StackName}-UpdatePrescriptionStatus
+        StateMachineArn: !Sub arn:aws:states:${AWS::Region}:${AWS::AccountId}:stateMachine:${StackName}-UpdatePrescriptionStatus
         AdditionalPolicies: !Join
           - ','
           - - Fn::ImportValue: !Sub ${StackName}:functions:${UpdatePrescriptionStatusFunctionName}:ExecuteLambdaPolicyArn
