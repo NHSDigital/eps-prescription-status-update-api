@@ -139,6 +139,10 @@ Outputs:
     Export:
       Name: !Sub ${StackName}:state-machines:${StateMachineName}:ExecuteStateMachinePolicy
 
+  StateMachineRoleArn:
+    Description: State machine role arn
+    Value: !GetAtt StateMachineRole.Arn
+
   StateMachineLogGroupArn:
     Description: State machine log group arn
     Value: !GetAtt StateMachineLogGroup.Arn
