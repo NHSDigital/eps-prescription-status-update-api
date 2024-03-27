@@ -4,18 +4,14 @@ Description: |
   Resources for an API
 
 Parameters:
-  StackName:
-    Type: String
-    Description: The name of the main stack
-  
   AdditionalPolicies:
     Type: CommaDelimitedList
     Description: A list of additional policies to attach to the API gateway role (comma delimited).
     Default: none
   
-  ApiId:
+  ApiName:
     Type: String
-    Description: The name of the main stack
+    Description: The name of the API Gateway
     Default: none
   
   LogRetentionInDays:
@@ -56,7 +52,7 @@ Resources:
   ApiGwAccessLogs:
     Type: AWS::Logs::LogGroup
     Properties:
-      LogGroupName: !Sub /aws/apigateway/${StackName}/${ApiId}
+      LogGroupName: !Sub /aws/apigateway/${ApiName}
       RetentionInDays: !Ref LogRetentionInDays
       KmsKeyId: !ImportValue account-resources:CloudwatchLogsKmsKeyArn
   

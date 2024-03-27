@@ -66,8 +66,9 @@ Resources:
     Properties:
       Location: lambda_resources.yaml
       Parameters:
-        LambdaName: !Ref UpdatePrescriptionStatus
-        LambdaArn: !GetAtt UpdatePrescriptionStatus.Arn
+        StackName: !Ref StackName
+        LambdaName: !Sub ${StackName}-UpdatePrescriptionStatus
+        LambdaArn: !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:${StackName}-UpdatePrescriptionStatus
         AdditionalPolicies: !Join
           - ','
           - - Fn::ImportValue: !Sub ${StackName}:tables:${PrescriptionStatusUpdatesTableName}:TableWritePolicyArn

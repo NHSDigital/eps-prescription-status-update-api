@@ -10,10 +10,12 @@ Parameters:
     Default: none
   
   UpdatePrescriptionStatusFunctionName:
+    Type: String
     Description: The function name of UpdatePrescriptionStatus lambda
     Default: none
   
   UpdatePrescriptionStatusFunctionArn:
+    Type: String
     Description: The function ARN of UpdatePrescriptionStatus lambda
     Default: none
   

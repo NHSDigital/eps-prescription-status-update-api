@@ -4,6 +4,10 @@ Description: |
   Resources for a lambda
 
 Parameters:
+  StackName:
+    Type: String
+    Description: The name of the main stack
+
   LambdaName:
     Type: String
     Description: Name of lambda we are creating resources for.
