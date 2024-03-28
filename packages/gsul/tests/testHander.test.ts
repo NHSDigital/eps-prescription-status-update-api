@@ -28,8 +28,15 @@ describe("test handler", () => {
     jest.resetModules()
     jest.clearAllMocks()
   })
+
   it("respond with error when schema version is 2", async () => {
-    const response = await handler({schemaVersion: 2}, dummyContext)
+    const response = await handler({
+      "schemaVersion": 2,
+      "prescriptions": [{
+        prescriptionID: "abc",
+        odsCode: "123"
+      }]
+    }, dummyContext)
     expect(response).toMatchObject({
       schemaVersion: 1,
       isSuccess: false,
