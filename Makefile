@@ -108,6 +108,7 @@ lint: lint-node lint-samtemplates lint-python lint-githubactions lint-githubacti
 
 test: compile
 	npm run test --workspace packages/updatePrescriptionStatus
+	npm run test --workspace packages/gsul
 
 #Removes build/ + dist/ directories
 clean:
