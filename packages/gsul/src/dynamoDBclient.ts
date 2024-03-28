@@ -16,7 +16,7 @@ export function runDynamoDBQueries (queryParams: Array<QueryCommandInput>,
       }
       const command = new QueryCommand(query)
       logger.info("running query", {query})
-      return docClient.send(new QueryCommand(query))
+      return docClient.send(command)
     }
     let lastEvaluatedKey = null
     let rows = []

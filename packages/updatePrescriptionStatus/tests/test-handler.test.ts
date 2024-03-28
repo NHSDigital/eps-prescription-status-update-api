@@ -46,9 +46,7 @@ describe("Unit test for updatePrescriptionStatus handler", () => {
     PharmacyODSCode: string,
     PrescriptionID: string,
     TaskID: string,
-    TerminalStatus: string,
-    LastModified: string,
-    Status: string
+    TerminalStatus: string
   ) => ({
     LineItemID: {S: LineItemID},
     PatientNHSNumber: {S: PatientNHSNumber},
@@ -66,13 +64,9 @@ describe("Unit test for updatePrescriptionStatus handler", () => {
         for: {M: {identifier: {M: {value: {S: PatientNHSNumber}}}}},
         id: {S: TaskID},
         owner: {M: {identifier: {M: {value: {S: PharmacyODSCode}}}}},
-        status: {S: TerminalStatus},
-        lastModified: {S: LastModified},
-        businessStatus: {M: {coding: {L: [{M: {display: Status}}]}}}
+        status: {S: TerminalStatus}
       }
-    },
-    LastModified: {S: LastModified},
-    Status: {S: Status}
+    }
   })
 
   beforeEach(() => {
@@ -92,20 +86,18 @@ describe("Unit test for updatePrescriptionStatus handler", () => {
               owner: {identifier: {value: "PharmacyODSCode"}},
               id: "TaskID",
               focus: {identifier: {value: "LineItemID"}},
-              status: "TerminalStatus",
-              lastModified: "1970-01-01T00:00:00Z",
-              businessStatus: {coding: [{display: "dispatched"}]}
+              status: "TerminalStatus"
             }
           }
         ]
       })
     }
 
-    const spy = jest.spyOn(DynamoDBClient.prototype, "send").mockResolvedValue(undefined as never)
+    jest.spyOn(DynamoDBClient.prototype, "send").mockResolvedValue(undefined as never)
 
     const result: APIGatewayProxyResult = await handler(event, dummyContext)
 
-    expect(spy).toHaveBeenCalledWith(
+    expect(DynamoDBClient.prototype.send).toHaveBeenCalledWith(
       expect.objectContaining({
         input: expect.objectContaining({
           Item: expect.objectContaining(
@@ -115,9 +107,7 @@ describe("Unit test for updatePrescriptionStatus handler", () => {
               "PharmacyODSCode",
               "PrescriptionID",
               "TaskID",
-              "TerminalStatus",
-              "1970-01-01T00:00:00Z",
-              "dispatched"
+              "TerminalStatus"
             )
           )
         })
@@ -140,10 +130,7 @@ describe("Unit test for updatePrescriptionStatus handler", () => {
               owner: {identifier: {value: "PharmacyODSCode1"}},
               id: "TaskID1",
               focus: {identifier: {value: "LineItemID1"}},
-              status: "TerminalStatus1",
-              lastModified: "1970-01-01T00:00:00Z",
-              businessStatus: {coding: [{display: "dispatched"}]}
-
+              status: "TerminalStatus1"
             }
           },
           {
@@ -153,10 +140,7 @@ describe("Unit test for updatePrescriptionStatus handler", () => {
               owner: {identifier: {value: "PharmacyODSCode2"}},
               id: "TaskID2",
               focus: {identifier: {value: "LineItemID2"}},
-              status: "TerminalStatus2",
-              lastModified: "1970-01-01T00:00:00Z",
-              businessStatus: {coding: [{display: "dispatched"}]}
-
+              status: "TerminalStatus2"
             }
           }
         ]
@@ -185,9 +169,7 @@ describe("Unit test for updatePrescriptionStatus handler", () => {
               "PharmacyODSCode1",
               "PrescriptionID1",
               "TaskID1",
-              "TerminalStatus1",
-              "1970-01-01T00:00:00Z",
-              "dispatched"
+              "TerminalStatus1"
             )
           )
         })
@@ -204,9 +186,7 @@ describe("Unit test for updatePrescriptionStatus handler", () => {
               "PharmacyODSCode2",
               "PrescriptionID2",
               "TaskID2",
-              "TerminalStatus2",
-              "1970-01-01T00:00:00Z",
-              "dispatched"
+              "TerminalStatus2"
             )
           )
         })
@@ -304,9 +284,7 @@ describe("Unit test for updatePrescriptionStatus handler", () => {
               owner: {identifier: {value: "PharmacyODSCode"}},
               id: "TaskID",
               focus: {identifier: {value: "LineItemID"}},
-              status: "TerminalStatus",
-              lastModified: "1970-01-01T00:00:00Z",
-              businessStatus: {coding: [{display: "dispatched"}]}
+              status: "TerminalStatus"
             }
           }
         ]

@@ -21,8 +21,6 @@ interface DynamoDBItem {
   LineItemID: string;
   TerminalStatus: string;
   RequestMessage: any;
-  LastModified: string;
-  Status: string
 }
 
 const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
@@ -79,9 +77,7 @@ const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPro
       TaskID: entry_resource.id,
       LineItemID: entry_resource.focus?.identifier?.value,
       TerminalStatus: entry_resource.status,
-      RequestMessage: entry_resource,
-      LastModified: entry_resource.lastModified,
-      Status: entry_resource.businessStatus.coding[0].display
+      RequestMessage: entry_resource
     }
 
     const invalidFields = []

@@ -5,7 +5,6 @@ import {
   jest
 } from "@jest/globals"
 import {handler} from "../src/getStatusUpdates"
-import {runDynamoDBQueries} from "../src/dynamoDBclient.ts"
 import {DynamoDBResult} from "../src/schema/result"
 
 const dummyContext = {
@@ -41,7 +40,7 @@ describe("test handler", () => {
     jest.resetModules()
     jest.clearAllMocks()
     jest.mock("../src/dynamoDBclient.ts", () => ({
-      runDynamoDBQueries: jest.fn().mockImplementation(mockRunDynamoDBQueries),
+      runDynamoDBQueries: jest.fn().mockImplementation(mockRunDynamoDBQueries)
     }))
   })
 
