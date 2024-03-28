@@ -140,4 +140,26 @@ describe("Unit test for updatePrescriptionStatus handler", () => {
       badRequest("Missing required fields - PharmacyODSCode.", TASK_ID_1)
     ]))
   })
+
+  it("when x-request-id header is present but empty, expect 400 status code and relevant error message", async () => {
+    const body = generateBody()
+    const event: APIGatewayProxyEvent = generateMockEvent(body)
+    event.headers["x-request-id"] = undefined
+
+    const response: APIGatewayProxyResult = await handler(event, {})
+
+    expect(response.statusCode).toEqual(400)
+    expect(JSON.parse(response.body)).toEqual(bundleWrap([badRequest("Missing or empty x-request-id header.")]))
+  })
+
+  it("when x-request-id header is missing, expect 400 status code and relevant error message", async () => {
+    const body = generateBody()
+    const event: APIGatewayProxyEvent = generateMockEvent(body)
+    delete event.headers["x-request-id"]
+
+    const response: APIGatewayProxyResult = await handler(event, {})
+
+    expect(response.statusCode).toEqual(400)
+    expect(JSON.parse(response.body)).toEqual(bundleWrap([badRequest("Missing or empty x-request-id header.")]))
+  })
 })

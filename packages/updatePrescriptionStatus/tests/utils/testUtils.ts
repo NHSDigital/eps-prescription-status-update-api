@@ -92,6 +92,7 @@ function generateExpectedItems(itemCount: number = 1) {
           Status: {S: values.businessStatus},
           TaskID: {S: values.id},
           TerminalStatus: {S: values.status},
+          RequestID: {S: X_REQUEST_ID},
           RequestMessage: {
             M: {
               resourceType: {S: "Task"},

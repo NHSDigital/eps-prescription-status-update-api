@@ -25,6 +25,7 @@ interface DataItem {
   PatientNHSNumber: string
   PharmacyODSCode: string
   PrescriptionID: string
+  RequestID: string
   RequestMessage: Task
   Status: string
   TaskID: string
@@ -33,6 +34,11 @@ interface DataItem {
 
 const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
   let responseEntries: Array<BundleEntry> = []
+
+  const xRequestID = getXRequestID(event, responseEntries)
+  if (!xRequestID) {
+    return response(400, responseEntries)
+  }
 
   const requestBody = JSON.parse(event.body!)
   const requestBundle = castEventBody(requestBody, responseEntries)
@@ -53,7 +59,7 @@ const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPro
     return response(400, responseEntries)
   }
 
-  const dataItems = buildDataItems(requestEntries)
+  const dataItems = buildDataItems(requestEntries, xRequestID)
 
   const persistSuccess = await persistDataItems(dataItems)
   if (!persistSuccess) {
@@ -64,6 +70,17 @@ const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPro
   responseEntries = createSuccessResponseEntries(requestEntries)
   logger.info("Event processed successfully.")
   return response(201, responseEntries)
+}
+
+function getXRequestID(event: APIGatewayProxyEvent, responseEntries: Array<BundleEntry>): string | undefined {
+  const xRequestID = event.headers["x-request-id"]
+  if (!xRequestID) {
+    const errorMessage = "Missing or empty x-request-id header."
+    logger.error(errorMessage)
+    const entry: BundleEntry = badRequest(errorMessage)
+    responseEntries.push(entry)
+  }
+  return xRequestID
 }
 
 function castEventBody(body: any, responseEntries: Array<BundleEntry>): Bundle | undefined {
@@ -102,7 +119,7 @@ function validateEntries(requestEntries: Array<BundleEntry>, responseEntries: Ar
   return valid
 }
 
-function buildDataItems(requestEntries: Array<BundleEntry>): Array<DataItem> {
+function buildDataItems(requestEntries: Array<BundleEntry>, xRequestID: string): Array<DataItem> {
   const dataItems: Array<DataItem> = []
 
   for (const requestEntry of requestEntries) {
@@ -115,6 +132,7 @@ function buildDataItems(requestEntries: Array<BundleEntry>): Array<DataItem> {
       PatientNHSNumber: task.for!.identifier!.value!,
       PharmacyODSCode: task.owner!.identifier!.value!,
       PrescriptionID: task.basedOn![0]!.identifier!.value!,
+      RequestID: xRequestID,
       RequestMessage: task,
       Status: task.businessStatus!.coding![0].code!,
       TaskID: task.id!,
