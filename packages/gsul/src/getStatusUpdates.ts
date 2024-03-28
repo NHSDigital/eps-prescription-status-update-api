@@ -44,7 +44,7 @@ const lambdaHandler = async (event: requestType): Promise<responseType> => {
 
   // queryResults is an array of arrays
   // the first array is for each prescription id passed in as we have created a query for each prescription
-  // and the second array is the items for each prescription id
+  // and the second array is the items for that prescription id
   // we use flat() to just get an array of items which we can pass to buildResults
   const itemResults = buildResults(event.prescriptions, queryResults.flat())
 
