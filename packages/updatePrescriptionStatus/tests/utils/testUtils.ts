@@ -33,7 +33,7 @@ const TASK_VALUES = [
 ]
 
 const generateMockEvent = (body: any): APIGatewayProxyEvent => ({
-  body: JSON.stringify(body),
+  body: body,
   headers: DEFAULT_HEADERS,
   multiValueHeaders: {},
   httpMethod: "POST",

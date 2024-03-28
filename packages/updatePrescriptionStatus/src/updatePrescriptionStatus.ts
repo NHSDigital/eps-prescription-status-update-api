@@ -40,7 +40,7 @@ const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPro
     return response(400, responseEntries)
   }
 
-  const requestBody = JSON.parse(event.body!)
+  const requestBody = event.body
   const requestBundle = castEventBody(requestBody, responseEntries)
   if(!requestBundle) {
     return response(400, responseEntries)
