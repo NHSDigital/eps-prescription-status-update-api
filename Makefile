@@ -90,6 +90,7 @@ compile: compile-node
 lint-node: compile-node
 	npm run lint --workspace packages/specification
 	npm run lint --workspace packages/updatePrescriptionStatus
+	npm run lint --workspace packages/gsul
 
 lint-samtemplates:
 	poetry run cfn-lint -t SAMtemplates/*.yaml
@@ -107,6 +108,7 @@ lint: lint-node lint-samtemplates lint-python lint-githubactions lint-githubacti
 
 test: compile
 	npm run test --workspace packages/updatePrescriptionStatus
+	npm run test --workspace packages/gsul
 
 #Removes build/ + dist/ directories
 clean:
