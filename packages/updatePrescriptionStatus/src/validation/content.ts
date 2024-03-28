@@ -15,6 +15,16 @@ type ValidationOutcome = {
 
 const ONE_DAY_IN_MS = 86400000
 
+const BUSINESS_STATUSES = [
+  "with pharmacy",
+  "with pharmacy - preparing remainder",
+  "ready to collect",
+  "ready to collect - partial",
+  "collected",
+  "dispatched",
+  "not dispensed"
+]
+
 const logger = new Logger({serviceName: "requestContentValidation"})
 
 function transactionBundle(body: any): boolean {
@@ -60,11 +70,16 @@ function resourceType(task: Task): string | undefined {
   }
 }
 
-// validate status as in schemas/resources/UpdatePrescriptionStatusTask.yaml
-
 // validate all codesystems in the request example
 
-function status(task: Task): string | undefined {
+function businessStatus(task: Task): string | undefined {
+  const code: string = task.businessStatus!.coding![0].code!
+  if (!BUSINESS_STATUSES.includes(code.toLowerCase())) {
+    return "Invalid business status."
+  }
+}
+
+function statuses(task: Task): string | undefined {
   const status = task.status
   if (status === "completed") {
     const businessStatus: CodeableConcept | undefined = task.businessStatus
@@ -80,11 +95,12 @@ function status(task: Task): string | undefined {
 
 function validateContent(task: Task): ValidationOutcome {
   const contentValidations: Array<Validation> = [
+    businessStatus,
     lastModified,
-    prescriptionID,
     nhsNumber,
-    status,
-    resourceType
+    prescriptionID,
+    resourceType,
+    statuses
   ]
 
   const validationOutcome: ValidationOutcome = {valid: true, issues: undefined}
@@ -122,12 +138,14 @@ function validateTask(task: Task): ValidationOutcome {
 export {
   Validation,
   ValidationOutcome,
+  BUSINESS_STATUSES,
   ONE_DAY_IN_MS,
+  businessStatus,
   lastModified,
   nhsNumber,
   prescriptionID,
   resourceType,
-  status,
+  statuses,
   transactionBundle,
   validateTask
 }

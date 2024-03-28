@@ -9,19 +9,21 @@ import {
 import {Task} from "fhir/r4"
 
 import {
+  BUSINESS_STATUSES,
+  businessStatus,
   lastModified,
   nhsNumber,
   ONE_DAY_IN_MS,
   prescriptionID,
   resourceType,
-  status,
+  statuses,
   transactionBundle,
   validateTask,
   ValidationOutcome
 } from "../src/validation/content"
 
 import valid from "./tasks/valid.json"
-import {generateInvalidNhsNumbers} from "./utils/nhsNumber"
+import {generateInvalidNhsNumbers, generateValidNhsNumbers} from "./utils/nhsNumber"
 import {DEFAULT_DATE} from "./utils/testUtils"
 
 describe("Unit test for overall task validation", () => {
@@ -33,7 +35,7 @@ describe("Unit test for overall task validation", () => {
 })
 
 describe("Unit tests for pre-cast validation of bundle", () => {
-  it("When resourceType is not Bundle, should return expected issue.", async () => {
+  it("When resourceType is not Bundle, should return false.", async () => {
     const body = {resourceType: "NotBundle"}
 
     const actual = transactionBundle(body)
@@ -41,19 +43,31 @@ describe("Unit tests for pre-cast validation of bundle", () => {
     expect(actual).toEqual(false)
   })
 
-  it("When type is not transaction, should return expected issue.", async () => {
+  it("When type is not transaction, should return false.", async () => {
     const body = {type: "not_transaction"}
 
     const actual = transactionBundle(body)
 
     expect(actual).toEqual(false)
   })
+
+  it("When both correct, should return true.", async () => {
+    const body = {resourceType: "Bundle", type: "transaction"}
+
+    const actual = transactionBundle(body)
+
+    expect(actual).toEqual(true)
+  })
 })
 
 describe("Unit tests for validation of lastModified", () => {
+  beforeEach(() => {
+    jest.useFakeTimers().setSystemTime(DEFAULT_DATE)
+  })
+
   it("When lastModified is over a day in the future, should return expected issue.", async () => {
-    jest.useFakeTimers().setSystemTime(DEFAULT_DATE.valueOf() - (ONE_DAY_IN_MS + 1000))
-    const task = {...valid}
+    const futureDate = new Date(DEFAULT_DATE.valueOf() + (ONE_DAY_IN_MS + 1000))
+    const task = {lastModified: futureDate.toISOString()}
 
     const expected = "Invalid last modified value provided."
 
@@ -63,8 +77,7 @@ describe("Unit tests for validation of lastModified", () => {
   })
 
   it("When last modified date format is invalid, should return expected issue.", async () => {
-    const task = {...valid}
-    task.lastModified = "invalid date"
+    const task = {lastModified: "invalid date"}
 
     const expected = "Date format provided for lastModified is invalid."
 
@@ -72,14 +85,30 @@ describe("Unit tests for validation of lastModified", () => {
 
     expect(actual).toEqual(expected)
   })
+
+  it("When lastModified is valid and not in the future, should return undefined.", async () => {
+    const task = {lastModified: DEFAULT_DATE.toISOString()}
+
+    const actual = lastModified(task as Task)
+
+    expect(actual).toEqual(undefined)
+  })
 })
 
 describe("Unit tests for validation of prescription ID", () => {
-  it("When prescription ID is invalid, should return expected issue.", async () => {
-    const task = {...valid}
-    task.basedOn[0].identifier.value = "invalid"
-
-    const expected = "Prescription ID is invalid."
+  it.each([
+    {
+      testPrescriptionID: "invalid",
+      expected: "Prescription ID is invalid.",
+      scenarioDescription: "When prescription ID is invalid, should return expected issue."
+    },
+    {
+      testPrescriptionID: "07A66F-A83008-1EEEA0",
+      expected: undefined,
+      scenarioDescription: "When prescription ID is valid, should return undefined."
+    }
+  ])("$scenarioDescription", async ({testPrescriptionID, expected}) => {
+    const task = {basedOn: [{identifier: {value: testPrescriptionID}}]}
 
     const actual = prescriptionID(task as Task)
 
@@ -88,11 +117,19 @@ describe("Unit tests for validation of prescription ID", () => {
 })
 
 describe("Unit tests for validation of NHS number", () => {
-  it("When NHS number is invalid, should return expected issue.", async () => {
-    const task = {...valid}
-    task.for.identifier.value = generateInvalidNhsNumbers(1)[0]
-
-    const expected = "NHS number is invalid."
+  it.each([
+    {
+      generatedNhsNumber: generateInvalidNhsNumbers(1)[0],
+      expected: "NHS number is invalid.",
+      scenarioDescription: "When NHS number is invalid, should return expected issue."
+    },
+    {
+      generatedNhsNumber: generateValidNhsNumbers(1)[0],
+      expected: undefined,
+      scenarioDescription: "When NHS number is valid, should return undefined."
+    }
+  ])("$scenarioDescription", async ({generatedNhsNumber, expected}) => {
+    const task = {for: {identifier: {value: generatedNhsNumber}}}
 
     const actual = nhsNumber(task as Task)
 
@@ -130,11 +167,9 @@ describe("Unit tests for validation of status against business status", () => {
   ])(
     "When status is '$status' and business status is '$businessStatus', should return expected issue.",
     async ({taskStatus, businessStatus, expected}) => {
-      const task = {...valid}
-      task.status = taskStatus
-      task.businessStatus.coding[0].code = businessStatus
+      const task = {status: taskStatus, businessStatus: {coding: [{code: businessStatus}]}}
 
-      const actual = status(task as Task)
+      const actual = statuses(task as Task)
 
       expect(actual).toEqual(expected)
     }
@@ -142,13 +177,70 @@ describe("Unit tests for validation of status against business status", () => {
 })
 
 describe("Unit tests for validation of resourceType", () => {
-  it("When resourceType is not Task, should return expected issue.", async () => {
-    const task = {resourceType: "NotTask"}
-
-    const expected = "Resource's resourceType is not 'Task'."
+  it.each([
+    {
+      type: "NotTask",
+      expected: "Resource's resourceType is not 'Task'.",
+      scenarioDescription: "When resourceType is not Task, should return expected issue."
+    },
+    {
+      type: "Task",
+      expected: undefined,
+      scenarioDescription: "When resourceType is Task, should return undefined."
+    }
+  ])("$scenarioDescription", async ({type, expected}) => {
+    const task = {resourceType: type}
 
     const actual = resourceType(task as Task)
 
     expect(actual).toEqual(expected)
+  })
+})
+
+describe("Unit tests for validation of transaction bundle", () => {
+  it.each([
+    {
+      resourceType: "NotBundle",
+      type: "transaction",
+      expected: false
+    },
+    {
+      resourceType: "Bundle",
+      type: "not_transaction",
+      expected: false
+    },
+    {
+      resourceType: "Bundle",
+      type: "transaction",
+      expected: true
+    }
+  ])("When resourceType is $resourceType and type is $type, should return $expected.",
+    async ({resourceType, type, expected}) => {
+      const body = {resourceType: resourceType, type: type}
+
+      const actual = transactionBundle(body)
+
+      expect(actual).toEqual(expected)
+    }
+  )
+})
+
+describe("Unit tests for validation of businessStatus", () => {
+  it.each(BUSINESS_STATUSES)("When businessStatus is valid, should return undefined.",
+    async (status) => {
+      const task = {businessStatus: {coding: [{code: status}]}}
+
+      const actual = businessStatus(task as Task)
+
+      expect(actual).toEqual(undefined)
+    }
+  )
+
+  it("When businessStatus is invalid, should return expected message.", async () => {
+    const task = {businessStatus: {coding: [{code: "Invalid"}]}}
+
+    const actual = businessStatus(task as Task)
+
+    expect(actual).toEqual("Invalid business status.")
   })
 })
