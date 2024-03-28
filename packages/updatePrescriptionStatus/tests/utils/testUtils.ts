@@ -113,4 +113,4 @@ function generateExpectedItems(itemCount: number = 1) {
   return {input: {TransactItems: items}}
 }
 
-export {DEFAULT_DATE, generateBody, generateExpectedItems, generateMockEvent, TASK_ID_0, TASK_ID_1}
+export {DEFAULT_DATE, generateBody, generateExpectedItems, generateMockEvent, TASK_ID_0, TASK_ID_1, X_REQUEST_ID}

@@ -79,6 +79,7 @@ function getXRequestID(event: APIGatewayProxyEvent, responseEntries: Array<Bundl
     logger.error(errorMessage)
     const entry: BundleEntry = badRequest(errorMessage)
     responseEntries.push(entry)
+    return undefined
   }
   return xRequestID
 }
@@ -170,4 +171,4 @@ const handler = middy(lambdaHandler)
   )
   .use(errorHandler({logger: logger}))
 
-export {DataItem, handler}
+export {DataItem, handler, castEventBody, buildDataItems, getXRequestID, persistDataItems, validateEntries}
