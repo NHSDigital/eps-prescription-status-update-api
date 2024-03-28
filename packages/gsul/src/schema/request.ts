@@ -18,7 +18,9 @@ const requestSchema = {
   required: ["schemaVersion", "prescriptions"],
   properties: {
     schemaVersion: {
-      type: "number"
+      type: "number",
+      minimum: 1,
+      maximum: 1
     },
     prescriptions: {
       type: "array",

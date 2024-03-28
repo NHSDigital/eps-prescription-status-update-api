@@ -2,22 +2,25 @@
 import {Logger} from "@aws-lambda-powertools/logger"
 import {injectLambdaContext} from "@aws-lambda-powertools/logger/middleware"
 import {DynamoDBClient} from "@aws-sdk/client-dynamodb"
-import {DynamoDBDocumentClient, QueryCommand, QueryCommandInput} from "@aws-sdk/lib-dynamodb"
+import {DynamoDBDocumentClient, QueryCommandInput} from "@aws-sdk/lib-dynamodb"
 import middy from "@middy/core"
 import inputOutputLogger from "@middy/input-output-logger"
 import validator from "@middy/validator"
 import {transpileSchema} from "@middy/validator/transpile"
 import {errorHandler} from "./errorHandler.ts"
-import{requestSchema, requestType, inputPrescriptionType} from "./schema/request.ts"
+import {runDynamoDBQueries} from "./dynamoDBclient.ts"
+import {requestSchema, requestType, inputPrescriptionType} from "./schema/request.ts"
 import {responseType, outputPrescriptionType, itemType} from "./schema/response.ts"
-import{DynamoDBResult} from "./schema/result.ts"
+import {DynamoDBResult} from "./schema/result.ts"
 
-const logger = new Logger({serviceName: "updatePrescriptionStatus"})
+const logger = new Logger({serviceName: "GSUL"})
 const client = new DynamoDBClient({region: "eu-west-2"})
 const docClient = DynamoDBDocumentClient.from(client)
 const tableName = process.env.TABLE_NAME
 
 const lambdaHandler = async (event: requestType): Promise<responseType> => {
+  // there are deliberately no try..catch blocks in this as any errors are caught by custom middy error handler
+  // and an error response is sent
 
   const queryParams = event.prescriptions.map((prescription) => {
     // create query for each prescription and ods code passed in
@@ -34,7 +37,7 @@ const lambdaHandler = async (event: requestType): Promise<responseType> => {
   })
 
   // run the dynamodb queries
-  const queryResultsTasks = await runDynamoDBQueries(queryParams)
+  const queryResultsTasks = runDynamoDBQueries(queryParams, docClient, logger)
 
   // get all the query results
   const queryResults = await Promise.all(queryResultsTasks)
@@ -47,40 +50,6 @@ const lambdaHandler = async (event: requestType): Promise<responseType> => {
     "prescriptions": itemResults
   }
   return response
-}
-
-const runDynamoDBQueries = (queryParams: Array<QueryCommandInput>): Array<Promise<Array<DynamoDBResult>>> => {
-  const queryResultsTasks: Array<Promise<Array<DynamoDBResult>>> = queryParams.map(async (query) => {
-    // run each query
-    const command = new QueryCommand(query)
-    logger.info("running query", {query})
-    const dynamoDBresponse = await docClient.send(command)
-    if (dynamoDBresponse?.Count !== 0) {
-
-      const response: Array<DynamoDBResult> = dynamoDBresponse.Items?.map((singleUpdate) => {
-        const result: DynamoDBResult = {
-          prescriptionID: String(singleUpdate.PrescriptionID),
-          itemId: String(singleUpdate.LineItemID),
-          latestStatus: String(singleUpdate.Status),
-          isTerminalState: String(singleUpdate.TerminalStatus),
-          lastUpdateDateTime: String(singleUpdate.LastModified)
-        }
-        return result
-      })
-
-      return response
-    }
-    const result: Array<DynamoDBResult> = [{
-      prescriptionID: undefined,
-      itemId: undefined,
-      latestStatus: undefined,
-      isTerminalState: undefined,
-      lastUpdateDateTime: undefined
-    }]
-    return result
-  })
-
-  return queryResultsTasks
 }
 
 export const buildResults = (inputPrescriptions: Array<inputPrescriptionType>,

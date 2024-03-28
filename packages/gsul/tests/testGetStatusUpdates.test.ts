@@ -106,19 +106,31 @@ const scenarios: Array<scenariosType> = [
       lastUpdateDateTime: "1970-01-01T00:00:00Z"
     }, {
       prescriptionID: "abc",
+      itemId: "item_1",
+      latestStatus: "latest_item_1_status",
+      isTerminalState: "is_terminal_status",
+      lastUpdateDateTime: "1972-01-01T00:00:00Z"
+    }, {
+      prescriptionID: "abc",
       itemId: "item_2",
       latestStatus: "item_2_status",
       isTerminalState: "is_terminal_status",
       lastUpdateDateTime: "1971-01-01T00:00:00Z"
+    }, {
+      prescriptionID: "abc",
+      itemId: "item_2",
+      latestStatus: "early_item_2_status",
+      isTerminalState: "is_terminal_status",
+      lastUpdateDateTime: "1970-01-01T00:00:00Z"
     }],
     expectedResult:  [{
       prescriptionID: "abc",
       onboarded: true,
       items: [{
         itemId: "item_1",
-        latestStatus: "item_1_status",
+        latestStatus: "latest_item_1_status",
         isTerminalState: "is_terminal_status",
-        lastUpdateDateTime: "1970-01-01T00:00:00Z"
+        lastUpdateDateTime: "1972-01-01T00:00:00Z"
       }, {
         itemId: "item_2",
         latestStatus: "item_2_status",
