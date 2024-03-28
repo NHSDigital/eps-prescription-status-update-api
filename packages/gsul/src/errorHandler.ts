@@ -17,7 +17,7 @@ type LoggerAndLevel = {
 function errorHandler({logger = console, level = "error"}: LoggerAndLevel) {
   return {
     onError: async (handler) => {
-      const error: Error | any = handler.error
+      const error: any = handler.error
 
       // if there are a `statusCode` and an `error` field
       // this is a valid http error object

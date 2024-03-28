@@ -118,7 +118,7 @@ export const handler = middy(lambdaHandler)
     inputOutputLogger({
       logger: (request) => {
         if (request.response) {
-          logger.info(request)
+          logger.info(request.response)
         } else {
           logger.info(request)
         }
