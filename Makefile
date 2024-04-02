@@ -121,6 +121,7 @@ deep-clean: clean
 
 #Creates the fully expanded OAS spec in json
 publish:
+	npm install
 	npm run resolve --workspace packages/specification 2> /dev/null
 	npm run replace-components --workspace packages/specification 2> /dev/null
 
