@@ -25,6 +25,9 @@ build-specification:
 sam-build: sam-validate compile
 	sam build --template-file SAMtemplates/main_template.yaml --region eu-west-2
 
+sam-build-sandbox: sam-validate-sandbox compile
+	sam build --template-file SAMtemplates/sandbox_template.yaml --region eu-west-2
+
 sam-run-local: sam-build
 	sam local start-api
 
@@ -57,6 +60,8 @@ sam-list-outputs: guard-AWS_DEFAULT_PROFILE guard-stack_name
 sam-validate: 
 	sam validate --template-file SAMtemplates/main_template.yaml --region eu-west-2
 	sam validate --template-file SAMtemplates/lambda_resources.yaml --region eu-west-2
+
+sam-validate-sandbox:
 	sam validate --template-file SAMtemplates/sandbox_template.yaml --region eu-west-2
 
 sam-deploy-package: guard-artifact_bucket guard-artifact_bucket_prefix guard-stack_name guard-template_file guard-cloud_formation_execution_role guard-LATEST_TRUSTSTORE_VERSION guard-enable_mutual_tls guard-VERSION_NUMBER guard-LOG_RETENTION_DAYS guard-TARGET_ENVIRONMENT
