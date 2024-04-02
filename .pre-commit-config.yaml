@@ -32,6 +32,15 @@ repos:
         types_or: [ts, tsx, javascript, jsx, json]
         pass_filenames: false
 
+      - id: lint-sandbox
+        name: Lint sandbox
+        entry: npm
+        args: ["run", "--prefix=packages/sandbox", "lint"]
+        language: system
+        files: ^packages\/sandbox
+        types_or: [ts, tsx, javascript, jsx, json]
+        pass_filenames: false
+
       - id: oas-build-checks
         name: Build OAS
         entry: make

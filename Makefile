@@ -57,8 +57,9 @@ sam-list-outputs: guard-AWS_DEFAULT_PROFILE guard-stack_name
 sam-validate: 
 	sam validate --template-file SAMtemplates/main_template.yaml --region eu-west-2
 	sam validate --template-file SAMtemplates/lambda_resources.yaml --region eu-west-2
+	sam validate --template-file SAMtemplates/sandbox_resources.yaml --region eu-west-2
 
-sam-deploy-package: guard-artifact_bucket guard-artifact_bucket_prefix guard-stack_name guard-template_file guard-cloud_formation_execution_role guard-LATEST_TRUSTSTORE_VERSION guard-enable_mutual_tls guard-VERSION_NUMBER guard-COMMIT_ID guard-LOG_LEVEL guard-LOG_RETENTION_DAYS guard-TARGET_ENVIRONMENT
+sam-deploy-package: guard-artifact_bucket guard-artifact_bucket_prefix guard-stack_name guard-template_file guard-cloud_formation_execution_role guard-LATEST_TRUSTSTORE_VERSION guard-enable_mutual_tls guard-VERSION_NUMBER guard-LOG_RETENTION_DAYS guard-TARGET_ENVIRONMENT
 	sam deploy \
 		--template-file $$template_file \
 		--stack-name $$stack_name \
@@ -76,9 +77,6 @@ sam-deploy-package: guard-artifact_bucket guard-artifact_bucket_prefix guard-sta
 			  TruststoreVersion=$$LATEST_TRUSTSTORE_VERSION \
 			  EnableMutualTLS=$$enable_mutual_tls \
 			  EnableSplunk=true \
-			  VersionNumber=$$VERSION_NUMBER \
-			  CommitId=$$COMMIT_ID \
-			  LogLevel=$$LOG_LEVEL \
 			  LogRetentionDays=$$LOG_RETENTION_DAYS \
 			  Env=$$TARGET_ENVIRONMENT
 
@@ -90,6 +88,7 @@ compile: compile-node
 lint-node: compile-node
 	npm run lint --workspace packages/specification
 	npm run lint --workspace packages/updatePrescriptionStatus
+	npm run lint --workspace packages/sandbox
 
 lint-samtemplates:
 	poetry run cfn-lint -t SAMtemplates/*.yaml
@@ -107,11 +106,14 @@ lint: lint-node lint-samtemplates lint-python lint-githubactions lint-githubacti
 
 test: compile
 	npm run test --workspace packages/updatePrescriptionStatus
+	npm run test --workspace packages/sandbox
 
 #Removes build/ + dist/ directories
 clean:
 	rm -rf packages/updatePrescriptionStatus/coverage
 	rm -rf packages/updatePrescriptionStatus/lib
+	rm -rf packages/sandbox/coverage
+	rm -rf packages/sandbox/lib
 	rm -rf .aws-sam
 
 deep-clean: clean

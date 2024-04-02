@@ -11,6 +11,10 @@
 		{
 			"name": "packages/updatePrescriptionStatus",
 			"path": "../packages/updatePrescriptionStatus"
+		},
+		{
+			"name": "packages/sandbox",
+			"path": "../packages/sandbox"
 		}
 	],
 	"settings": {
