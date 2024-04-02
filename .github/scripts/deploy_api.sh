@@ -21,6 +21,9 @@ environment=internal-dev
 instance=prescription-status-update
 path_to_spec=packages/specification/dist/eps-prescription-status-update-api.resolved.json
 
+# Create ~/.proxygen directory if it doesn't exist
+mkdir -p ~/.proxygen
+
 # Create credentials.yaml file
 cat <<EOF > ~/.proxygen/credentials.yaml
 client_id: prescription-status-update-api-client
@@ -37,6 +40,7 @@ endpoint_url: https://proxygen.prod.api.platform.nhs.uk
 spec_output_format: json
 EOF
 
+cd ../../.aws-sam/build || exit
 make publish
 
 proxygen instance deploy --no-confirm "$environment" "$instance" "$path_to_spec"
