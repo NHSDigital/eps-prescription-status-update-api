@@ -23,7 +23,7 @@ function fields(task: Task): string | undefined {
     }
   }
   if (missingFields.length > 0) {
-    return `Missing required fields - ${missingFields.join(", ")}.`
+    return `Missing required field(s) - ${missingFields.join(", ")}.`
   }
 }
 

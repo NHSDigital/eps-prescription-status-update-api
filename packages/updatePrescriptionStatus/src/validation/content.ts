@@ -14,6 +14,11 @@ type ValidationOutcome = {
 }
 
 const ONE_DAY_IN_MS = 86400000
+const LINE_ITEM_ID_CODESYSTEM = "https://fhir.nhs.uk/Id/prescription-order-item-number"
+const NHS_NUMBER_CODESYSTEM = "https://fhir.nhs.uk/Id/nhs-number"
+const ODS_CODE_CODESYSTEM = "https://fhir.nhs.uk/Id/ods-organization-code"
+const PRESCRIPTION_ID_CODESYSTEM = "https://fhir.nhs.uk/Id/prescription-order-number"
+const STATUS_CODESYSTEM = "https://fhir.nhs.uk/CodeSystem/task-businessStatus-nppt"
 
 const BUSINESS_STATUSES = [
   "with pharmacy",
@@ -70,7 +75,25 @@ function resourceType(task: Task): string | undefined {
   }
 }
 
-// validate all codesystems in the request example
+function codeSystems(task: Task): string | undefined {
+  const systems: Array<Validation> = [
+    (t: Task) => t.focus!.identifier!.system === LINE_ITEM_ID_CODESYSTEM ? undefined : "LineItemID",
+    (t: Task) => t.for!.identifier!.system === NHS_NUMBER_CODESYSTEM ? undefined : "PatientNHSNumber",
+    (t: Task) => t.owner!.identifier!.system === ODS_CODE_CODESYSTEM ? undefined : "PharmacyODSCode",
+    (t: Task) => t.basedOn![0].identifier!.system === PRESCRIPTION_ID_CODESYSTEM ? undefined : "PrescriptionID",
+    (t: Task) => t.businessStatus!.coding![0].system === STATUS_CODESYSTEM ? undefined : "Status"
+  ]
+  const incorrectCodeSystems: Array<string> = []
+  for (const system of systems) {
+    const incorrect = system(task)
+    if (incorrect) {
+      incorrectCodeSystems.push(incorrect)
+    }
+  }
+  if (incorrectCodeSystems.length > 0) {
+    return `Invalid CodeSystem(s) - ${incorrectCodeSystems.join(", ")}.`
+  }
+}
 
 function businessStatus(task: Task): string | undefined {
   const code: string = task.businessStatus!.coding![0].code!
@@ -100,7 +123,8 @@ function validateContent(task: Task): ValidationOutcome {
     nhsNumber,
     prescriptionID,
     resourceType,
-    statuses
+    statuses,
+    codeSystems
   ]
 
   const validationOutcome: ValidationOutcome = {valid: true, issues: undefined}
@@ -140,7 +164,13 @@ export {
   ValidationOutcome,
   BUSINESS_STATUSES,
   ONE_DAY_IN_MS,
+  LINE_ITEM_ID_CODESYSTEM,
+  NHS_NUMBER_CODESYSTEM,
+  ODS_CODE_CODESYSTEM,
+  PRESCRIPTION_ID_CODESYSTEM,
+  STATUS_CODESYSTEM,
   businessStatus,
+  codeSystems,
   lastModified,
   nhsNumber,
   prescriptionID,

@@ -1,6 +1,13 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import {APIGatewayProxyEvent} from "aws-lambda"
+import {
+  LINE_ITEM_ID_CODESYSTEM,
+  NHS_NUMBER_CODESYSTEM,
+  ODS_CODE_CODESYSTEM,
+  PRESCRIPTION_ID_CODESYSTEM,
+  STATUS_CODESYSTEM
+} from "../../src/validation/content"
 
 const TASK_ID_0 = "4d70678c-81e4-4ff4-8c67-17596fd0aa46"
 const TASK_ID_1 = "0ae4daf3-f24b-479d-b8fa-b69e2d873b60"
@@ -47,17 +54,17 @@ const generateMockEvent = (body: any): APIGatewayProxyEvent => ({
   pathParameters: null
 })
 
-function generateTask(index: number) {
+function generateEntry(index: number) {
   const values = TASK_VALUES[index]
   return {
     resource: {
       resourceType: "Task",
       lastModified: values.lastModified,
-      focus: {identifier: {value: values.lineItemID}},
-      for: {identifier: {value: values.nhsNumber}},
-      owner: {identifier: {value: values.odsCode}},
-      basedOn: [{identifier: {value: values.prescriptionID}}],
-      businessStatus: {coding: [{code: values.businessStatus}]},
+      focus: {identifier: {value: values.lineItemID, system: LINE_ITEM_ID_CODESYSTEM}},
+      for: {identifier: {value: values.nhsNumber, system: NHS_NUMBER_CODESYSTEM}},
+      owner: {identifier: {value: values.odsCode, system: ODS_CODE_CODESYSTEM}},
+      basedOn: [{identifier: {value: values.prescriptionID, system: PRESCRIPTION_ID_CODESYSTEM}}],
+      businessStatus: {coding: [{code: values.businessStatus, system: STATUS_CODESYSTEM}]},
       id: values.id,
       status: values.status
     }
@@ -65,14 +72,14 @@ function generateTask(index: number) {
 }
 
 function generateBody(taskCount: number = 1) {
-  const tasks = []
+  const entries = []
   for (let i = 0; i < taskCount; i++) {
-    tasks.push(generateTask(i))
+    entries.push(generateEntry(i))
   }
   return {
     resourceType: "Bundle",
     type: "transaction",
-    entry: tasks
+    entry: entries
   }
 }
 
@@ -97,11 +104,13 @@ function generateExpectedItems(itemCount: number = 1) {
             M: {
               resourceType: {S: "Task"},
               lastModified: {S: values.lastModified},
-              focus: {M: {identifier: {M: {value: {S: values.lineItemID}}}}},
-              for: {M: {identifier: {M: {value: {S: values.nhsNumber}}}}},
-              owner: {M: {identifier: {M: {value: {S: values.odsCode}}}}},
-              basedOn: {L: [{M: {identifier: {M: {value: {S: values.prescriptionID}}}}}]},
-              businessStatus: {M: {coding: {L: [{M: {code: {S: values.businessStatus}}}]}}},
+              focus: {M: {identifier: {M: {value: {S: values.lineItemID}, system: {S: LINE_ITEM_ID_CODESYSTEM}}}}},
+              for: {M: {identifier: {M: {value: {S: values.nhsNumber}, system: {S: NHS_NUMBER_CODESYSTEM}}}}},
+              owner: {M: {identifier: {M: {value: {S: values.odsCode}, system: {S: ODS_CODE_CODESYSTEM}}}}},
+              basedOn: {L:
+                [{M: {identifier: {M: {value: {S: values.prescriptionID}, system: {S: PRESCRIPTION_ID_CODESYSTEM}}}}}]},
+              businessStatus: {M: {
+                coding: {L: [{M: {code: {S: values.businessStatus}, system: {S: STATUS_CODESYSTEM}}}]}}},
               id: {S: values.id},
               status: {S: values.status}
             }
@@ -113,4 +122,13 @@ function generateExpectedItems(itemCount: number = 1) {
   return {input: {TransactItems: items}}
 }
 
-export {DEFAULT_DATE, generateBody, generateExpectedItems, generateMockEvent, TASK_ID_0, TASK_ID_1, X_REQUEST_ID}
+export {
+  DEFAULT_DATE,
+  generateBody,
+  generateExpectedItems,
+  generateMockEvent,
+  generateEntry,
+  TASK_ID_0,
+  TASK_ID_1,
+  X_REQUEST_ID
+}

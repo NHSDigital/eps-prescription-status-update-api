@@ -40,7 +40,7 @@ describe("Unit tests for validation of fields", () => {
     const task = {...valid} as any
     operation(task)
 
-    const expected = `Missing required fields - ${missingField}.`
+    const expected = `Missing required field(s) - ${missingField}.`
 
     const actual = fields(task as Task)
 

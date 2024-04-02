@@ -6,11 +6,12 @@ import {
   it,
   jest
 } from "@jest/globals"
-import {Task} from "fhir/r4"
+import {BundleEntry, Task} from "fhir/r4"
 
 import {
   BUSINESS_STATUSES,
   businessStatus,
+  codeSystems,
   lastModified,
   nhsNumber,
   ONE_DAY_IN_MS,
@@ -24,7 +25,7 @@ import {
 
 import valid from "./tasks/valid.json"
 import {generateInvalidNhsNumbers, generateValidNhsNumbers} from "./utils/nhsNumber"
-import {DEFAULT_DATE} from "./utils/testUtils"
+import {DEFAULT_DATE, generateEntry} from "./utils/testUtils"
 
 describe("Unit test for overall task validation", () => {
   it("When task is valid, should return true with no issues.", async () => {
@@ -242,5 +243,26 @@ describe("Unit tests for validation of businessStatus", () => {
     const actual = businessStatus(task as Task)
 
     expect(actual).toEqual("Invalid business status.")
+  })
+})
+
+describe("Unit tests for validation of codeSystems", () => {
+  it("When code systems are all valid, should return undefined.", async () => {
+    const entry = generateEntry(0) as BundleEntry
+
+    const actual = codeSystems(entry.resource as Task)
+
+    expect(actual).toEqual(undefined)
+  })
+
+  it("When code systems are invalid, should return expected message.", async () => {
+    const entry = generateEntry(0) as BundleEntry
+    const task = entry.resource as Task
+    task.focus!.identifier!.system = "invalidLineItemIdCodeSystem"
+    task.for!.identifier!.system = "invalidNhsNumberCodeSystem"
+
+    const actual = codeSystems(entry.resource as Task)
+
+    expect(actual).toEqual("Invalid CodeSystem(s) - LineItemID, PatientNHSNumber.")
   })
 })

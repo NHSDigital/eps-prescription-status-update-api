@@ -1,4 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any, max-len */
+import {APIGatewayProxyEvent, APIGatewayProxyResult} from "aws-lambda"
+import {DynamoDBClient} from "@aws-sdk/client-dynamodb"
 import {
   expect,
   describe,
@@ -6,71 +8,158 @@ import {
   jest
 } from "@jest/globals"
 
-import {BundleEntry} from "fhir/r4"
+import {handler} from "../src/updatePrescriptionStatus"
+import {
+  DEFAULT_DATE,
+  TASK_ID_1,
+  generateBody,
+  generateExpectedItems,
+  generateMockEvent
+} from "./utils/testUtils"
 
-import {castEventBody, getXRequestID} from "../src/updatePrescriptionStatus"
-import {badRequest} from "../src/utils/responses"
-import {DEFAULT_DATE, X_REQUEST_ID} from "./utils/testUtils"
-import {APIGatewayProxyEvent} from "aws-lambda"
+import requestDispatched from "../../specification/examples/request-dispatched.json"
+import requestMultipleItems from "../../specification/examples/request-multiple-items.json"
+import requestMissingFields from "../../specification/examples/request-missing-fields.json"
+import requestMultipleMissingFields from "../../specification/examples/request-multiple-missing-fields.json"
+import requestNoItems from "../../specification/examples/request-no-items.json"
+import responseSingleItem from "../../specification/examples/response-single-item.json"
+import responseMultipleItems from "../../specification/examples/response-multiple-items.json"
+import {badRequest, bundleWrap, serverError} from "../src/utils/responses"
 
-describe("Unit test getXRequestID", () => {
-  beforeAll(() => {
+describe("Integration tests for updatePrescriptionStatus handler", () => {
+  beforeEach(() => {
+    jest.resetModules()
+    jest.clearAllMocks()
     jest.useFakeTimers().setSystemTime(DEFAULT_DATE)
   })
 
-  it("when event has x-request-id, return it and no response in the response bundle", async () => {
-    const event: unknown = {headers: {"x-request-id": X_REQUEST_ID}}
-    const responseEntries: Array<BundleEntry> = []
+  it("when request doesn't have correct resourceType and type, expect 400 status code and appropriate message", async () => {
+    const body = {resourceType: "NotBundle", type: "not_transaction"}
+    const event: APIGatewayProxyEvent = generateMockEvent(body)
 
-    const result = getXRequestID(event as APIGatewayProxyEvent, responseEntries)
+    const response: APIGatewayProxyResult = await handler(event, {})
 
-    expect(result).toEqual(X_REQUEST_ID)
-    expect(responseEntries.length).toEqual(0)
+    expect(response.statusCode).toEqual(400)
+    expect(JSON.parse(response.body)).toEqual(
+      bundleWrap([badRequest("Request body does not have resourceType of 'Bundle' and type of 'transaction'.")])
+    )
+  })
+
+  it("when single item in request, expect a single item sent to DynamoDB", async () => {
+    const body = generateBody()
+    const event: APIGatewayProxyEvent = generateMockEvent(body)
+
+    jest.spyOn(DynamoDBClient.prototype, "send").mockResolvedValue(undefined as never)
+
+    const response: APIGatewayProxyResult = await handler(event, {})
+
+    expect(response.statusCode).toEqual(201)
+    expect(JSON.parse(response.body)).toEqual(responseSingleItem)
+
+    expect(DynamoDBClient.prototype.send).toHaveBeenCalledTimes(1)
+    expect(DynamoDBClient.prototype.send).toHaveBeenCalledWith(expect.objectContaining(generateExpectedItems()))
+  })
+
+  it("when multiple items in request, expect multiple items sent to DynamoDB in a single call", async () => {
+    const body = generateBody(2)
+    const event: APIGatewayProxyEvent = generateMockEvent(body)
+
+    jest.spyOn(DynamoDBClient.prototype, "send").mockResolvedValue(undefined as never)
+
+    const response: APIGatewayProxyResult = await handler(event, {})
+
+    expect(response.statusCode).toEqual(201)
+    expect(JSON.parse(response.body)).toEqual(responseMultipleItems)
+
+    expect(DynamoDBClient.prototype.send).toHaveBeenCalledTimes(1)
+    expect(DynamoDBClient.prototype.send).toHaveBeenCalledWith(expect.objectContaining(generateExpectedItems(2)))
   })
 
   it.each([
     {
-      event: {headers: {"x-request-id": ""}} as unknown,
-      scenarioDescription: "when event has empty x-request-id, return undefined and a response in the response bundle"
+      example: requestDispatched,
+      httpResponseCode: 201,
+      scenarioDescription: "201 with response bundle for a single item"
     },
     {
-      event: {headers: {}} as unknown,
-      scenarioDescription: "when event has a missing x-request-id, return undefined and a response in the response bundle"
+      example: requestMultipleItems,
+      httpResponseCode: 201,
+      scenarioDescription: "201 with response bundle for multiple items"
+    },
+    {
+      example: requestNoItems,
+      httpResponseCode: 200,
+      scenarioDescription: "200 status code if there are no entries to process"
     }
-  ])("$scenarioDescription", async ({event}) => {
-    const responseEntries: Array<BundleEntry> = []
+  ])(
+    "should return $scenarioDescription",
+    async ({example, httpResponseCode}) => {
+      const event: APIGatewayProxyEvent = generateMockEvent(example)
 
-    const result = getXRequestID(event as APIGatewayProxyEvent, responseEntries)
+      jest.spyOn(DynamoDBClient.prototype, "send").mockResolvedValue(undefined as never)
 
-    expect(result).toEqual(undefined)
-    expect(responseEntries.length).toEqual(1)
-    expect(responseEntries[0]).toEqual(badRequest("Missing or empty x-request-id header."))
+      const response: APIGatewayProxyResult = await handler(event, {})
+
+      const responseBody = JSON.parse(response.body)
+      expect(response.statusCode).toBe(httpResponseCode)
+      expect(responseBody).toHaveProperty("resourceType", "Bundle")
+      expect(responseBody).toHaveProperty("type", "transaction-response")
+    })
+
+  it("when missing fields, expect 400 status code and message indicating missing fields", async () => {
+    const event: APIGatewayProxyEvent = generateMockEvent(requestMissingFields)
+
+    const response: APIGatewayProxyResult = await handler(event, {})
+
+    expect(response.statusCode).toBe(400)
+    expect(JSON.parse(response.body)).toEqual(bundleWrap(
+      [badRequest("Missing required field(s) - PharmacyODSCode, TaskID.")]
+    ))
   })
-})
 
-describe("Unit test castEventBody", () => {
-  beforeAll(() => {
-    jest.useFakeTimers().setSystemTime(DEFAULT_DATE)
+  it("when dynamo call fails, expect 500 status code and internal server error message", async () => {
+    const event = generateMockEvent(requestDispatched)
+
+    jest.spyOn(DynamoDBClient.prototype, "send").mockRejectedValue(new Error("Mocked error") as never)
+
+    const response: APIGatewayProxyResult = await handler(event, {})
+
+    expect(response.statusCode).toEqual(500)
+    expect(JSON.parse(response.body)).toEqual(bundleWrap([serverError()]))
   })
 
-  it("when body doesn't have correct resourceType and type, return undefined and a response in the response bundle", async () => {
-    const body = {resourceType: "NotBundle", type: "not_transaction"}
-    const responseEntries: Array<BundleEntry> = []
+  it("when multiple tasks have missing fields, expect 400 status code and messages indicating missing fields", async () => {
+    const body: any = {...requestMultipleMissingFields}
+    const event: APIGatewayProxyEvent = generateMockEvent(body)
 
-    const result = castEventBody(body, responseEntries)
+    const response: APIGatewayProxyResult = await handler(event, {})
 
-    expect(result).toEqual(undefined)
-    expect(responseEntries.length).toEqual(1)
-    expect(responseEntries[0]).toEqual(badRequest("Request body does not have resourceType of 'Bundle' and type of 'transaction'."))
+    expect(response.statusCode).toEqual(400)
+    expect(JSON.parse(response.body)).toEqual(bundleWrap([
+      badRequest("Missing required field(s) - PharmacyODSCode, TaskID."),
+      badRequest("Missing required field(s) - PharmacyODSCode.", TASK_ID_1)
+    ]))
   })
 
-  it("when body has correct resourceType and type, return bundle and no response in the response bundle", async () => {
-    const body = {resourceType: "Bundle", type: "transaction"}
-    const responseEntries: Array<BundleEntry> = []
+  it("when x-request-id header is present but empty, expect 400 status code and relevant error message", async () => {
+    const body = generateBody()
+    const event: APIGatewayProxyEvent = generateMockEvent(body)
+    event.headers["x-request-id"] = undefined
 
-    const result = castEventBody(body, responseEntries)
+    const response: APIGatewayProxyResult = await handler(event, {})
 
-    expect(result).toBeDefined()
-    expect(responseEntries.length).toEqual(0)
+    expect(response.statusCode).toEqual(400)
+    expect(JSON.parse(response.body)).toEqual(bundleWrap([badRequest("Missing or empty x-request-id header.")]))
+  })
+
+  it("when x-request-id header is missing, expect 400 status code and relevant error message", async () => {
+    const body = generateBody()
+    const event: APIGatewayProxyEvent = generateMockEvent(body)
+    delete event.headers["x-request-id"]
+
+    const response: APIGatewayProxyResult = await handler(event, {})
+
+    expect(response.statusCode).toEqual(400)
+    expect(JSON.parse(response.body)).toEqual(bundleWrap([badRequest("Missing or empty x-request-id header.")]))
   })
 })
