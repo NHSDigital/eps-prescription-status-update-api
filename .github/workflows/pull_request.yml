@@ -78,14 +78,14 @@ jobs:
     needs: [get_issue_number, package_code, get_commit_id]
     uses: ./.github/workflows/sam_release_code.yml
     with:
-      STACK_NAME: psu-pr-${{needs.get_issue_number.outputs.issue_number}}
-      ARTIFACT_BUCKET_PREFIX: PR-${{needs.get_issue_number.outputs.issue_number}}
+      STACK_NAME: psu-pr-${{needs.get_issue_number.outputs.issue_number}}-sandbox
+      ARTIFACT_BUCKET_PREFIX: PR-${{needs.get_issue_number.outputs.issue_number}}-sandbox
       TARGET_ENVIRONMENT: dev-pr
       ENABLE_MUTUAL_TLS: false
       BUILD_ARTIFACT: packaged_sandbox_code
-      TRUSTSTORE_FILE: psu-truststore.pem
+      TRUSTSTORE_FILE: psu-sandbox-truststore.pem
       VERSION_NUMBER: PR-${{ needs.get_issue_number.outputs.issue_number }}
       COMMIT_ID: ${{ needs.get_commit_id.outputs.commit_id }}
       LOG_RETENTION_DAYS: 30
     secrets:
-      CLOUD_FORMATION_DEPLOY_ROLE: ${{ secrets.SANDBOX_CLOUD_FORMATION_DEPLOY_ROLE }}
+      CLOUD_FORMATION_DEPLOY_ROLE: ${{ secrets.DEV_CLOUD_FORMATION_DEPLOY_ROLE }}
