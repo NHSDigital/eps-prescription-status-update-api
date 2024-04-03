@@ -140,4 +140,4 @@ aws-login:
 
 debug-proxygen-cli:
 	echo "Location of proxygen-cli binary:"
-	which proxygen
+	which proxygen-cli
