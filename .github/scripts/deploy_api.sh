@@ -19,6 +19,7 @@ echo "$client_private_key" > /tmp/client_private_key.pem
 
 environment=internal-dev
 instance=prescription-status-update
+path_to_proxygen=.venv/bin/proxygen
 path_to_spec=packages/specification/dist/eps-prescription-status-update-api.resolved.json
 
 # Create ~/.proxygen directory if it doesn't exist
@@ -40,6 +41,4 @@ endpoint_url: https://proxygen.prod.api.platform.nhs.uk
 spec_output_format: json
 EOF
 
-# Run proxygen using the binary from the virtual environment
-~/.poetry/bin/proxygen instance deploy --no-confirm "$environment" "$instance" "$path_to_spec"
-# home/runner/work/eps-prescription-status-update-api/eps-prescription-status-update-api/.venv/bin/proxygen instance deploy --no-confirm "$environment" "$instance" "$path_to_spec"
+"$path_to_proxygen" instance deploy --no-confirm "$environment" "$instance" "$path_to_spec"
