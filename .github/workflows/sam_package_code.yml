@@ -55,6 +55,10 @@ jobs:
         run: |
           echo "Installed packages:"
           poetry show --tree
+          echo "Location of Poetry virtual environment:"
+          poetry env info --path
+          echo "Location of proxygen-cli binary:"
+          ls -la $(poetry run which proxygen-cli)
 
       - shell: bash
         name: package code
