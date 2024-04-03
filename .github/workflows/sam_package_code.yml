@@ -50,6 +50,16 @@ jobs:
           make install
           echo "Installed packages:"
           asdf current
+      
+      - name: Check python package
+        run: |
+          asdf list python
+          asdf where python
+      
+      - name: Check poetry package
+        run: |
+          asdf list poetry
+          asdf where poetry
 
       - shell: bash
         name: package code
