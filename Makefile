@@ -6,7 +6,7 @@ guard-%:
 
 .PHONY: install build test publish release clean
 
-install: install-node install-python install-hooks
+install: install-node install-python install-hooks publish
 
 #Installs dependencies using poetry.
 install-python:
@@ -121,7 +121,6 @@ deep-clean: clean
 
 #Creates the fully expanded OAS spec in json
 publish:
-	npm install
 	npm run resolve --workspace packages/specification 2> /dev/null
 	npm run replace-components --workspace packages/specification 2> /dev/null
 
