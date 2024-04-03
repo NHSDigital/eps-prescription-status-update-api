@@ -102,11 +102,6 @@ jobs:
           name: ${{ inputs.BUILD_ARTIFACT }}
           path: .
 
-      - name: Print proxygen location in artifact
-        run: |
-          echo "Location of proxygen binary in artifact:"
-          find . -name "proxygen"
-
       - name: release code
         shell: bash
         working-directory: .github/scripts
@@ -124,17 +119,10 @@ jobs:
           VERSION_NUMBER: ${{ inputs.VERSION_NUMBER }}
         run: ./release_code.sh
 
-      - name: Debug installed packages
+      - name: Print proxygen location in artifact
         run: |
-          echo "Installed packages:"
-          poetry show --tree
-          echo "Location of Poetry virtual environment:"
-          poetry env info --path
-          echo "Location of proxygen binary:"
-          ls -la "$(poetry run which proxygen)"
-          echo "Setting PROXYGEN_PATH variable"
-          PROXYGEN_PATH="$(poetry run which proxygen)"
-          echo "PROXYGEN_PATH=${PROXYGEN_PATH}" >> "$GITHUB_ENV"
+          echo "Location of proxygen binary in artifact:"
+          find . -name "proxygen"
 
       - name: Deploy API
         shell: bash
