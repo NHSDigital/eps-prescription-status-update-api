@@ -50,15 +50,6 @@ jobs:
           make install
           echo "Installed packages:"
           asdf current
-      
-      - name: Debug installed packages
-        run: |
-          echo "Installed packages:"
-          poetry show --tree
-          echo "Location of Poetry virtual environment:"
-          poetry env info --path
-          echo "Location of proxygen binary:"
-          ls -la "$(poetry run which proxygen)"
 
       - shell: bash
         name: package code
