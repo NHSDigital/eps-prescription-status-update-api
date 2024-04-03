@@ -40,4 +40,5 @@ endpoint_url: https://proxygen.prod.api.platform.nhs.uk
 spec_output_format: json
 EOF
 
-proxygen instance deploy --no-confirm "$environment" "$instance" "$path_to_spec"
+# Run proxygen using the specified path
+/home/runner/work/eps-prescription-status-update-api/eps-prescription-status-update-api/.venv/bin/proxygen instance deploy --no-confirm "$environment" "$instance" "$path_to_spec"
