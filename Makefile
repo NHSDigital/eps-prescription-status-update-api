@@ -137,7 +137,3 @@ aws-configure:
 
 aws-login:
 	aws sso login --sso-session sso-session
-
-debug-proxygen-cli:
-	echo "Location of proxygen-cli binary:"
-	which proxygen-cli

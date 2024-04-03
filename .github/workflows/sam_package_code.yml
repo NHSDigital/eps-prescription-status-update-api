@@ -48,10 +48,8 @@ jobs:
       - name: make install
         run: |
           make install
-
-      - name: Debug proxygen-cli location
-        run: |
-          make debug-proxygen-cli
+          echo "Installed packages:"
+          asdf current
 
       - shell: bash
         name: package code
