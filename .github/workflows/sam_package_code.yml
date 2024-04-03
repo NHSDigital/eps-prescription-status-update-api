@@ -61,10 +61,7 @@ jobs:
           ls -la "$(poetry run which proxygen)"
           echo "Setting PROXYGEN_PATH variable"
           PROXYGEN_PATH="$(poetry run which proxygen)"
-
-      - name: Copy proxygen to artifact directory
-        run: |
-          # Copy proxygen to artifact directory
+          echo "Copy proxygen to artifact directory"
           cp "$PROXYGEN_PATH" .aws-sam/build/
 
       - shell: bash
