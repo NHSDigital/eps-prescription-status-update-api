@@ -56,8 +56,3 @@ RUN asdf install; \
     asdf reshim poetry; \
     asdf reshim nodejs; \
     asdf direnv setup --shell bash --version 2.32.2;
-
-# Install proxygen-cli
-RUN pip install proxygen-cli
-
-CMD ["bash"]

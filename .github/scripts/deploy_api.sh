@@ -1,5 +1,20 @@
 #!/usr/bin/env bash
 
+# Check if proxygen is installed
+if ! command -v proxygen &> /dev/null; then
+    echo "Error: proxygen command not found"
+    echo "Attempting to install proxygen..."
+    # Install proxygen-cli using poetry
+    poetry add proxygen-cli
+    # Check if installation was successful
+    if ! command -v proxygen &> /dev/null; then
+        echo "Error: Failed to install proxygen. Exiting..."
+        exit 1
+    else
+        echo "proxygen successfully installed"
+    fi
+fi
+
 proxygen_private_key_arn=$(aws cloudformation list-exports --query "Exports[?Name=='account-resources:ProxgenPrivateKey'].Value" --output text)
 # proxygen_public_key_arn=$(aws cloudformation list-exports --query "Exports[?Name=='account-resources:ProxgenPublicKey'].Value" --output text)
 
