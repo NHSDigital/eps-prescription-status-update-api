@@ -51,15 +51,10 @@ jobs:
           echo "Installed packages:"
           asdf current
       
-      - name: Check python package
+      - name: Debug installed packages
         run: |
-          asdf list python
-          asdf where python
-      
-      - name: Check poetry package
-        run: |
-          asdf list poetry
-          asdf where poetry
+          echo "Installed packages:"
+          poetry show --tree
 
       - shell: bash
         name: package code
