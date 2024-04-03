@@ -129,7 +129,7 @@ jobs:
           ls -la "$(poetry run which proxygen)"
           echo "Setting PROXYGEN_PATH variable"
           PROXYGEN_PATH="$(poetry run which proxygen)"
-          echo "::set-env name=PROXYGEN_PATH::$PROXYGEN_PATH"
+          echo "PROXYGEN_PATH=${PROXYGEN_PATH}" >> $GITHUB_ENV
 
       - name: Deploy API
         shell: bash
