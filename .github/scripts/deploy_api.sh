@@ -1,5 +1,21 @@
 #!/usr/bin/env bash
 
+# Function to get the full path to the proxygen binary
+get_proxygen_path() {
+    local venv_path="$HOME/.venv/bin/proxygen"
+    if [[ -x "$venv_path" ]]; then
+        echo "$venv_path"
+    else
+        echo "ERROR: Proxygen binary not found in virtual environment." >&2
+        exit 1
+    fi
+}
+
+# Get full path to proxygen binary
+proxygen_path=$(get_proxygen_path)
+
+# Rest of your script remains the same, but update 'proxygen instance deploy' command to use $proxygen_path
+
 proxygen_private_key_arn=$(aws cloudformation list-exports --query "Exports[?Name=='account-resources:ProxgenPrivateKey'].Value" --output text)
 # proxygen_public_key_arn=$(aws cloudformation list-exports --query "Exports[?Name=='account-resources:ProxgenPublicKey'].Value" --output text)
 
@@ -40,4 +56,5 @@ endpoint_url: https://proxygen.prod.api.platform.nhs.uk
 spec_output_format: json
 EOF
 
-proxygen instance deploy --no-confirm "$environment" "$instance" "$path_to_spec"
+# Run proxygen using the binary from the virtual environment
+"$proxygen_path" instance deploy --no-confirm "$environment" "$instance" "$path_to_spec"
