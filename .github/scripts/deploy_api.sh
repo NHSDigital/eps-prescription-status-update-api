@@ -1,21 +1,5 @@
 #!/usr/bin/env bash
 
-# Use poetry installed by ASDF
-# shellcheck source=/home/vscode/.asdf/asdf.sh
-source ~/.asdf/asdf.sh
-
-# Attempt to install proxygen using poetry
-if ! poetry show proxygen-cli &>/dev/null; then
-    echo "Attempting to install proxygen..."
-    poetry add proxygen-cli
-fi
-
-# Check if proxygen is installed, exit if not found
-if ! command -v proxygen &>/dev/null; then
-    echo "Error: Failed to install proxygen. Exiting..."
-    exit 1
-fi
-
 proxygen_private_key_arn=$(aws cloudformation list-exports --query "Exports[?Name=='account-resources:ProxgenPrivateKey'].Value" --output text)
 # proxygen_public_key_arn=$(aws cloudformation list-exports --query "Exports[?Name=='account-resources:ProxgenPublicKey'].Value" --output text)
 
