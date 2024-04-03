@@ -102,6 +102,11 @@ jobs:
           name: ${{ inputs.BUILD_ARTIFACT }}
           path: .
 
+      - name: Print proxygen location in artifact
+        run: |
+          echo "Location of proxygen binary in artifact:"
+          find . -name "proxygen"
+
       - name: release code
         shell: bash
         working-directory: .github/scripts
