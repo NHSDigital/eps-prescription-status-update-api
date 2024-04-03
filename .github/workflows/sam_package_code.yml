@@ -49,6 +49,9 @@ jobs:
         run: |
           make install
 
+      - name: Debug proxygen-cli location
+        run: make debug-proxygen-cli
+
       - shell: bash
         name: package code
         run: |
