@@ -55,9 +55,16 @@ jobs:
           cp .tool-versions ~/
           rm -rf .aws-sam
           export PATH=$PATH:$PWD/node_modules/.bin
-          make sam-build publish
+          make sam-build
           cp Makefile .aws-sam/build/
           cp samconfig_package_and_deploy.toml .aws-sam/build/
+          mkdir -p .aws-sam/build/specification
+          cp -r packages/specification/dist/ .aws-sam/build/specification
+    
+      - shell: bash
+        name: specification code
+        run: |
+          make publish
           mkdir -p .aws-sam/build/specification
           cp -r packages/specification/dist/ .aws-sam/build/specification
 
