@@ -99,11 +99,11 @@ jobs:
           name: ${{ inputs.BUILD_ARTIFACT }}
           path: .aws-sam/build
 
-      # - name: download specification artifact
-      #   uses: actions/download-artifact@v4
-      #   with:
-      #     name: ${{ inputs.SPEC_ARTIFACT }}
-      #     path: .
+      - name: download specification artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ inputs.SPEC_ARTIFACT }}
+          path: .
 
       # - name: Print current directory
       #   run: |
