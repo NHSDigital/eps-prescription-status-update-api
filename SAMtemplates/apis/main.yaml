@@ -143,7 +143,7 @@ Resources:
                           #end
                       #end
                       #set($inputString = "$inputString }")
-                      
+
                   #end
 
                   #if ($includeQueryString)
@@ -173,7 +173,7 @@ Resources:
                       #set($inputString = "$inputString,")
                       #set($inputString = "$inputString @@requestContext@@: $requestContext")
                   #end
-                  
+
                   #set($inputString = "$inputString}")
                   #set($inputString = $inputString.replaceAll("@@",'"'))
                   #set($len = $inputString.length() - 1)

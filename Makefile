@@ -25,6 +25,9 @@ build-specification:
 sam-build: sam-validate compile
 	sam build --template-file SAMtemplates/main_template.yaml --region eu-west-2
 
+sam-build-sandbox: sam-validate-sandbox compile
+	sam build --template-file SAMtemplates/sandbox_template.yaml --region eu-west-2
+
 sam-run-local: sam-build
 	sam local start-api
 
@@ -66,7 +69,10 @@ sam-validate:
 	sam validate --template-file SAMtemplates/state_machines/state_machine_resources.yaml --region eu-west-2
 
 
-sam-deploy-package: guard-artifact_bucket guard-artifact_bucket_prefix guard-stack_name guard-template_file guard-cloud_formation_execution_role guard-LATEST_TRUSTSTORE_VERSION guard-enable_mutual_tls guard-VERSION_NUMBER guard-COMMIT_ID guard-LOG_LEVEL guard-LOG_RETENTION_DAYS guard-TARGET_ENVIRONMENT
+sam-validate-sandbox:
+	sam validate --template-file SAMtemplates/sandbox_template.yaml --region eu-west-2
+
+sam-deploy-package: guard-artifact_bucket guard-artifact_bucket_prefix guard-stack_name guard-template_file guard-cloud_formation_execution_role guard-LATEST_TRUSTSTORE_VERSION guard-enable_mutual_tls guard-VERSION_NUMBER guard-LOG_RETENTION_DAYS guard-TARGET_ENVIRONMENT
 	sam deploy \
 		--template-file $$template_file \
 		--stack-name $$stack_name \
@@ -98,6 +104,7 @@ compile: compile-node
 lint-node: compile-node
 	npm run lint --workspace packages/specification
 	npm run lint --workspace packages/updatePrescriptionStatus
+	npm run lint --workspace packages/sandbox
 
 lint-samtemplates:
 	poetry run cfn-lint -t SAMtemplates/**/*.yaml
@@ -115,11 +122,14 @@ lint: lint-node lint-samtemplates lint-python lint-githubactions lint-githubacti
 
 test: compile
 	npm run test --workspace packages/updatePrescriptionStatus
+	npm run test --workspace packages/sandbox
 
 #Removes build/ + dist/ directories
 clean:
 	rm -rf packages/updatePrescriptionStatus/coverage
 	rm -rf packages/updatePrescriptionStatus/lib
+	rm -rf packages/sandbox/coverage
+	rm -rf packages/sandbox/lib
 	rm -rf .aws-sam
 
 deep-clean: clean
