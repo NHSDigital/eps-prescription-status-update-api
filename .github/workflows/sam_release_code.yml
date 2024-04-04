@@ -18,9 +18,9 @@ on:
       BUILD_ARTIFACT:
         required: true
         type: string
-      # SPEC_ARTIFACT:
-      #   required: true
-      #   type: string
+      SPEC_ARTIFACT:
+        required: true
+        type: string
       TRUSTSTORE_FILE:
         required: true
         type: string

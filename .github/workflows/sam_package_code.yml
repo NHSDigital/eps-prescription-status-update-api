@@ -78,12 +78,12 @@ jobs:
             .aws-sam/build
             .aws-sam/build/specification
 
-      # - uses: actions/upload-artifact@v4
-      #   name: upload specification artifact
-      #   with:
-      #     name: specification_code
-      #     path: |
-      #       .aws-sam/build/specification
+      - uses: actions/upload-artifact@v4
+        name: upload specification artifact
+        with:
+          name: specification_code
+          path: |
+            .aws-sam/build/specification
 
       - shell: bash
         name: package sandbox
