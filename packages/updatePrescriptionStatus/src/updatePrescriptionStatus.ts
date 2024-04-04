@@ -19,7 +19,7 @@ import {persistDataItems} from "./utils/databaseClient"
 
 const logger = new Logger({serviceName: "updatePrescriptionStatus"})
 
-interface DataItem {
+export interface DataItem {
   LastModified: string
   LineItemID: string
   PatientNHSNumber: string
@@ -72,7 +72,7 @@ const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPro
   return response(201, responseEntries)
 }
 
-function getXRequestID(event: APIGatewayProxyEvent, responseEntries: Array<BundleEntry>): string | undefined {
+export function getXRequestID(event: APIGatewayProxyEvent, responseEntries: Array<BundleEntry>): string | undefined {
   const xRequestID = event.headers["x-request-id"]
   if (!xRequestID) {
     const errorMessage = "Missing or empty x-request-id header."
@@ -84,7 +84,7 @@ function getXRequestID(event: APIGatewayProxyEvent, responseEntries: Array<Bundl
   return xRequestID
 }
 
-function castEventBody(body: any, responseEntries: Array<BundleEntry>): Bundle | undefined {
+export function castEventBody(body: any, responseEntries: Array<BundleEntry>): Bundle | undefined {
   if (transactionBundle(body)) {
     return body as Bundle
   } else {
@@ -95,7 +95,7 @@ function castEventBody(body: any, responseEntries: Array<BundleEntry>): Bundle |
   }
 }
 
-function validateEntries(requestEntries: Array<BundleEntry>, responseEntries: Array<BundleEntry>): boolean {
+export function validateEntries(requestEntries: Array<BundleEntry>, responseEntries: Array<BundleEntry>): boolean {
   logger.info("Validating entries.")
   let valid = true
   for (const requestEntry of requestEntries) {
@@ -120,7 +120,7 @@ function validateEntries(requestEntries: Array<BundleEntry>, responseEntries: Ar
   return valid
 }
 
-function buildDataItems(requestEntries: Array<BundleEntry>, xRequestID: string): Array<DataItem> {
+export function buildDataItems(requestEntries: Array<BundleEntry>, xRequestID: string): Array<DataItem> {
   const dataItems: Array<DataItem> = []
 
   for (const requestEntry of requestEntries) {
@@ -156,7 +156,7 @@ function response(statusCode: number, responseEntries: Array<BundleEntry>) {
   }
 }
 
-const handler = middy(lambdaHandler)
+export const handler = middy(lambdaHandler)
   .use(injectLambdaContext(logger, {clearState: true}))
   .use(
     inputOutputLogger({
@@ -170,5 +170,3 @@ const handler = middy(lambdaHandler)
     })
   )
   .use(errorHandler({logger: logger}))
-
-export {DataItem, handler, castEventBody, buildDataItems, getXRequestID, persistDataItems, validateEntries}

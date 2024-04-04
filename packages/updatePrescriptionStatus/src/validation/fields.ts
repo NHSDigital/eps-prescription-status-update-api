@@ -4,7 +4,7 @@ import {Logger} from "@aws-lambda-powertools/logger"
 
 const logger = new Logger({serviceName: "fields"})
 
-function fields(task: Task): string | undefined {
+export function fields(task: Task): string | undefined {
   const requiredFields: Array<Validation> = [
     (t: Task) => t.lastModified ? undefined : "LastModified",
     (t: Task) => t.focus?.identifier?.value ? undefined : "LineItemID",
@@ -27,7 +27,7 @@ function fields(task: Task): string | undefined {
   }
 }
 
-function validateFields(task: Task): ValidationOutcome {
+export function validateFields(task: Task): ValidationOutcome {
   const validationOutcome: ValidationOutcome = {valid: true, issues: undefined}
   try {
     const issue = fields(task)
@@ -43,5 +43,3 @@ function validateFields(task: Task): ValidationOutcome {
   }
   return validationOutcome
 }
-
-export {fields, validateFields}

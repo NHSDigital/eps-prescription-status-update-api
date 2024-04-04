@@ -9,7 +9,7 @@ function addTogether(previousValue: number, currentValue: number): number {
   return previousValue + currentValue
 }
 
-const validateNhsNumber = (nhsNumber: string) => {
+export function validateNhsNumber(nhsNumber: string): boolean {
   // pre-flight checks
   if (
     nhsNumber === undefined ||
@@ -39,5 +39,3 @@ const validateNhsNumber = (nhsNumber: string) => {
   // Do the check digits match?
   return checkDigit === Number(providedCheckDigit)
 }
-
-export {validateNhsNumber}

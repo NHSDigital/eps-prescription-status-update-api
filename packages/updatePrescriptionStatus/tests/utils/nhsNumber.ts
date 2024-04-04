@@ -2,7 +2,7 @@
 
 import {faker} from "@faker-js/faker"
 
-function generateValidNhsNumbers(num: number) {
+export function generateValidNhsNumbers(num: number) {
   const numbers: Array<string> = []
   while (numbers.length < num) {
     const number = faker.datatype.number({min: 100000000, max: 999999999}).toString()
@@ -22,7 +22,7 @@ function generateValidNhsNumbers(num: number) {
   return numbers
 }
 
-function generateInvalidNhsNumbers(num: number) {
+export function generateInvalidNhsNumbers(num: number) {
   const numbers: Array<string> = []
 
   while (numbers.length < num) {
@@ -40,5 +40,3 @@ function generateInvalidNhsNumbers(num: number) {
 
   return numbers
 }
-
-export {generateInvalidNhsNumbers, generateValidNhsNumbers}

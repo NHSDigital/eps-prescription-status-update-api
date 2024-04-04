@@ -21,7 +21,7 @@ function createTransactionCommand(dataItems: Array<DataItem>): TransactWriteItem
   return new TransactWriteItemsCommand({TransactItems: transactItems})
 }
 
-async function persistDataItems(dataItems: Array<DataItem>): Promise<boolean> {
+export async function persistDataItems(dataItems: Array<DataItem>): Promise<boolean> {
   const transactionCommand = createTransactionCommand(dataItems)
   try {
     logger.info("Sending TransactWriteItemsCommand to DynamoDB.", {command: transactionCommand})
@@ -33,5 +33,3 @@ async function persistDataItems(dataItems: Array<DataItem>): Promise<boolean> {
     return false
   }
 }
-
-export {persistDataItems}

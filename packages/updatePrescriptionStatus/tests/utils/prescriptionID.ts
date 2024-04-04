@@ -1,6 +1,6 @@
 import {calculateTotalForCheckDigit, CHECK_DIGIT_VALUES} from "../../src/utils/prescriptionID"
 
-function generateShortFormID(prescriberOdsCode: string): string {
+export function generateShortFormID(prescriberOdsCode: string): string {
   const a = generateRandomHexString(6)
   const b = prescriberOdsCode.padStart(6, "0")
   const c = generateRandomHexString(5)
@@ -21,5 +21,3 @@ function calculateCheckDigit(input: string) {
   const checkDigitIndex = (38 - total) % 37
   return CHECK_DIGIT_VALUES.charAt(checkDigitIndex)
 }
-
-export {generateShortFormID}

@@ -1,6 +1,6 @@
 import {Bundle, BundleEntry} from "fhir/r4"
 
-function bundleWrap(entries: Array<BundleEntry>): Bundle {
+export function bundleWrap(entries: Array<BundleEntry>): Bundle {
   return {
     resourceType: "Bundle",
     type: "transaction-response",
@@ -8,7 +8,7 @@ function bundleWrap(entries: Array<BundleEntry>): Bundle {
   }
 }
 
-function badRequest(diagnostics: string, taskID: string | undefined = undefined): BundleEntry {
+export function badRequest(diagnostics: string, taskID: string | undefined = undefined): BundleEntry {
   const bundleEntry: BundleEntry = {
     response: {
       status: "400 Bad Request",
@@ -42,7 +42,7 @@ function badRequest(diagnostics: string, taskID: string | undefined = undefined)
   return bundleEntry
 }
 
-function accepted(taskID: string): BundleEntry {
+export function accepted(taskID: string): BundleEntry {
   return {
     fullUrl: taskID,
     response: {
@@ -86,7 +86,7 @@ function created(taskID: string): BundleEntry {
   }
 }
 
-function serverError(): BundleEntry {
+export function serverError(): BundleEntry {
   return {
     response: {
       status: "500 Internal Server Error",
@@ -116,8 +116,6 @@ function serverError(): BundleEntry {
   }
 }
 
-function createSuccessResponseEntries(entries: Array<BundleEntry>) {
+export function createSuccessResponseEntries(entries: Array<BundleEntry>) {
   return entries.map(e => created(e.resource!.id!))
 }
-
-export {accepted, badRequest, bundleWrap, createSuccessResponseEntries, serverError}

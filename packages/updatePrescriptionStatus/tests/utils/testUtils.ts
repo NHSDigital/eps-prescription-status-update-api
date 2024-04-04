@@ -11,12 +11,13 @@ import {
   STATUS_CODESYSTEM
 } from "../../src/validation/content"
 
-const TASK_ID_0 = "4d70678c-81e4-4ff4-8c67-17596fd0aa46"
-const TASK_ID_1 = "0ae4daf3-f24b-479d-b8fa-b69e2d873b60"
-const X_REQUEST_ID = "43313002-debb-49e3-85fa-34812c150242"
+export const TASK_ID_0 = "4d70678c-81e4-4ff4-8c67-17596fd0aa46"
+export const TASK_ID_1 = "0ae4daf3-f24b-479d-b8fa-b69e2d873b60"
+export const X_REQUEST_ID = "43313002-debb-49e3-85fa-34812c150242"
+export const DEFAULT_DATE = new Date("2023-09-11T10:11:12Z")
+
 const DEFAULT_HEADERS = {"x-request-id": X_REQUEST_ID}
 const TABLE_NAME = "PrescriptionStatusUpdates"
-const DEFAULT_DATE = new Date("2023-09-11T10:11:12Z")
 
 const TASK_VALUES = [
   {
@@ -41,7 +42,7 @@ const TASK_VALUES = [
   }
 ]
 
-const generateMockEvent = (body: any): APIGatewayProxyEvent => ({
+export const generateMockEvent = (body: any): APIGatewayProxyEvent => ({
   body: body,
   headers: DEFAULT_HEADERS,
   multiValueHeaders: {},
@@ -56,7 +57,7 @@ const generateMockEvent = (body: any): APIGatewayProxyEvent => ({
   pathParameters: null
 })
 
-function generateEntry(index: number) {
+export function generateEntry(index: number) {
   const values = TASK_VALUES[index]
   return {
     resource: {
@@ -73,7 +74,7 @@ function generateEntry(index: number) {
   }
 }
 
-function generateBody(taskCount: number = 1) {
+export function generateBody(taskCount: number = 1) {
   const entries = []
   for (let i = 0; i < taskCount; i++) {
     entries.push(generateEntry(i))
@@ -85,7 +86,7 @@ function generateBody(taskCount: number = 1) {
   }
 }
 
-function generateExpectedItems(itemCount: number = 1) {
+export function generateExpectedItems(itemCount: number = 1) {
   const items = []
   for (let i = 0; i < itemCount; i++) {
     const values = TASK_VALUES[i]
@@ -125,23 +126,11 @@ function generateExpectedItems(itemCount: number = 1) {
 }
 
 // Uses unstable jest method to enable mocking while using ESM. To be replaced in future.
-function mockInternalDependency(modulePath: string, module: object, dependency: string) {
+export function mockInternalDependency(modulePath: string, module: object, dependency: string) {
   const mockDependency = jest.fn()
   jest.unstable_mockModule(modulePath, () => ({
     ...module,
     [dependency]: mockDependency
   }))
   return mockDependency
-}
-
-export {
-  DEFAULT_DATE,
-  generateBody,
-  generateExpectedItems,
-  generateMockEvent,
-  generateEntry,
-  mockInternalDependency,
-  TASK_ID_0,
-  TASK_ID_1,
-  X_REQUEST_ID
 }
