@@ -132,7 +132,7 @@ export function buildDataItems(requestEntries: Array<BundleEntry>, xRequestID: s
       LineItemID: task.focus!.identifier!.value!,
       PatientNHSNumber: task.for!.identifier!.value!,
       PharmacyODSCode: task.owner!.identifier!.value!,
-      PrescriptionID: task.basedOn![0]!.identifier!.value!,
+      PrescriptionID: task.basedOn![0].identifier!.value!,
       RequestID: xRequestID,
       RequestMessage: task,
       Status: task.businessStatus!.coding![0].code!,

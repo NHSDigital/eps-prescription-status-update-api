@@ -42,7 +42,7 @@ describe("Integration tests for validation via updatePrescriptionStatus handler"
     const response: APIGatewayProxyResult = await handler(event, {})
 
     expect(response.statusCode).toBe(400)
-    expect(JSON.parse(response.body!)).toEqual(expected)
+    expect(JSON.parse(response.body)).toEqual(expected)
   })
 
   it("when multiple items all have validation issues, expect 400 status code and messages indicating validation issues", async () => {
@@ -63,6 +63,6 @@ describe("Integration tests for validation via updatePrescriptionStatus handler"
     const response: APIGatewayProxyResult = await handler(event, {})
 
     expect(response.statusCode).toBe(400)
-    expect(JSON.parse(response.body!)).toEqual(expected)
+    expect(JSON.parse(response.body)).toEqual(expected)
   })
 })

@@ -44,7 +44,7 @@ export function lastModified(task: Task): string | undefined {
     return "Date format provided for lastModified is invalid."
   }
 
-  if (lastModified!.valueOf() - today.valueOf() > ONE_DAY_IN_MS) {
+  if (lastModified.valueOf() - today.valueOf() > ONE_DAY_IN_MS) {
     return "Invalid last modified value provided."
   }
 }

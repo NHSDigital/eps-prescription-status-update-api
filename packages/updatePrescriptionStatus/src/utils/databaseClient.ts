@@ -6,7 +6,7 @@ import {DataItem} from "../updatePrescriptionStatus"
 
 const logger = new Logger({serviceName: "databaseClient"})
 const client = new DynamoDBClient({region: "eu-west-2"})
-const tableName = process.env.TABLE_NAME || "PrescriptionStatusUpdates"
+const tableName = process.env.TABLE_NAME ?? "PrescriptionStatusUpdates"
 
 function createTransactionCommand(dataItems: Array<DataItem>): TransactWriteItemsCommand {
   logger.info("Creating transaction command to write data items.")
