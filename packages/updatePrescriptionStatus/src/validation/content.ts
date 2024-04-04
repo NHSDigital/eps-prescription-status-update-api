@@ -116,7 +116,7 @@ export function statuses(task: Task): string | undefined {
   }
 }
 
-function validateContent(task: Task): ValidationOutcome {
+export function validateContent(task: Task): ValidationOutcome {
   const contentValidations: Array<Validation> = [
     businessStatus,
     lastModified,
@@ -129,8 +129,8 @@ function validateContent(task: Task): ValidationOutcome {
 
   const validationOutcome: ValidationOutcome = {valid: true, issues: undefined}
 
+  const issues: Array<string> = []
   contentValidations.forEach((validation: Validation) => {
-    const issues: Array<string> = []
     try {
       const issue = validation(task)
       if (issue) {
@@ -141,11 +141,11 @@ function validateContent(task: Task): ValidationOutcome {
       logger.error(`${message}: ${e}`)
       issues.push(message)
     }
-    if (issues.length > 0) {
-      validationOutcome.valid = false
-      validationOutcome.issues = issues.join(" ")
-    }
   })
+  if (issues.length > 0) {
+    validationOutcome.valid = false
+    validationOutcome.issues = issues.join(" ")
+  }
 
   return validationOutcome
 }

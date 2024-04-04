@@ -1,7 +1,7 @@
 // https://github.com/tbrd/nhs-numbers
 
-import {generateInvalidNhsNumbers, generateValidNhsNumbers} from "./utils/nhsNumber"
-import {validateNhsNumber} from "../src/utils/nhsNumber"
+import {generateInvalidNhsNumbers, generateValidNhsNumbers} from "./nhsNumber"
+import {validateNhsNumber} from "../../src/utils/nhsNumber"
 
 const validNumberExamples = generateValidNhsNumbers(20)
 const invalidNumberExamples = generateInvalidNhsNumbers(20)

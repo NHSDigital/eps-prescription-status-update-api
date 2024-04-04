@@ -19,18 +19,43 @@ import {
   resourceType,
   statuses,
   transactionBundle,
+  validateContent,
   validateTask,
   ValidationOutcome
-} from "../src/validation/content"
+} from "../../src/validation/content"
 
-import valid from "./tasks/valid.json"
-import {generateInvalidNhsNumbers, generateValidNhsNumbers} from "./utils/nhsNumber"
-import {DEFAULT_DATE, generateEntry} from "./utils/testUtils"
+import valid from "../tasks/valid.json"
+import {generateInvalidNhsNumbers, generateValidNhsNumbers} from "../utils/nhsNumber"
+import {DEFAULT_DATE, generateEntry} from "../utils/testUtils"
 
 describe("Unit test for overall task validation", () => {
   it("When task is valid, should return true with no issues.", async () => {
     const expectedOutcome = {valid: true, issues: undefined}
+
     const actual: ValidationOutcome = validateTask(valid as Task)
+
+    expect(actual).toEqual(expectedOutcome)
+  })
+})
+
+describe("Unit test for validateContent", () => {
+  it("When task is valid, should return true with no issues.", async () => {
+    const expectedOutcome = {valid: true, issues: undefined}
+
+    const actual: ValidationOutcome = validateContent(valid as Task)
+
+    expect(actual).toEqual(expectedOutcome)
+  })
+
+  it("When task is invalid in multiple ways, should return false with issues.", async () => {
+    const invalidTask: any = {...valid}
+    invalidTask.for.identifier.value = "invalidNhsNumber"
+    invalidTask.focus.identifier.system = "invalidLineItemIdCodeSystem"
+
+    const expectedOutcome = {valid: false, issues: "NHS number is invalid. Invalid CodeSystem(s) - LineItemID."}
+
+    const actual: ValidationOutcome = validateContent(invalidTask as Task)
+
     expect(actual).toEqual(expectedOutcome)
   })
 })

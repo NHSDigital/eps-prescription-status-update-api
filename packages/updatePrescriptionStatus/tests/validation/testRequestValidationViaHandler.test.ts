@@ -8,17 +8,17 @@ import {
   jest
 } from "@jest/globals"
 
-import {handler} from "../src/updatePrescriptionStatus"
+import {handler} from "../../src/updatePrescriptionStatus"
 import {
   DEFAULT_DATE,
   TASK_ID_0,
   TASK_ID_1,
   generateMockEvent
-} from "./utils/testUtils"
-import {ONE_DAY_IN_MS} from "../src/validation/content"
+} from "../utils/testUtils"
+import {ONE_DAY_IN_MS} from "../../src/validation/content"
 
-import requestMultipleItems from "../../specification/examples/request-multiple-items.json"
-import {accepted, badRequest, bundleWrap} from "../src/utils/responses"
+import requestMultipleItems from "../../../specification/examples/request-multiple-items.json"
+import {accepted, badRequest, bundleWrap} from "../../src/utils/responses"
 
 describe("Integration tests for validation via updatePrescriptionStatus handler", () => {
   beforeEach(() => {
@@ -26,7 +26,7 @@ describe("Integration tests for validation via updatePrescriptionStatus handler"
     jest.useFakeTimers().setSystemTime(DEFAULT_DATE)
   })
 
-  it("when one content validation issue is present in multiple items, expect 400 status code, message indicating validation issues, and message indicating valid item", async () => {
+  it("when one validation issue is present in multiple items, expect 400 status code, message indicating validation issues, and message indicating valid item", async () => {
     const body: any = {...requestMultipleItems}
 
     const now = new Date()
@@ -45,7 +45,7 @@ describe("Integration tests for validation via updatePrescriptionStatus handler"
     expect(JSON.parse(response.body!)).toEqual(expected)
   })
 
-  it("when multiple items all have content validation issues, expect 400 status code and messages indicating validation issues", async () => {
+  it("when multiple items all have validation issues, expect 400 status code and messages indicating validation issues", async () => {
     const body: any = {...requestMultipleItems}
 
     const now = new Date()
