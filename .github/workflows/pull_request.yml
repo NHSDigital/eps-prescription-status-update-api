@@ -67,7 +67,7 @@ jobs:
       TARGET_ENVIRONMENT: dev-pr
       ENABLE_MUTUAL_TLS: false
       BUILD_ARTIFACT: packaged_code
-      SPEC_ARTIFACT: specification_code
+      # SPEC_ARTIFACT: specification_code
       TRUSTSTORE_FILE: psu-truststore.pem
       VERSION_NUMBER: PR-${{ needs.get_issue_number.outputs.issue_number }}
       COMMIT_ID: ${{ needs.get_commit_id.outputs.commit_id }}
@@ -84,7 +84,7 @@ jobs:
       TARGET_ENVIRONMENT: dev-pr
       ENABLE_MUTUAL_TLS: false
       BUILD_ARTIFACT: packaged_sandbox_code
-      SPEC_ARTIFACT: specification_code
+      # SPEC_ARTIFACT: specification_code
       TRUSTSTORE_FILE: psu-sandbox-truststore.pem
       VERSION_NUMBER: PR-${{ needs.get_issue_number.outputs.issue_number }}
       COMMIT_ID: ${{ needs.get_commit_id.outputs.commit_id }}
