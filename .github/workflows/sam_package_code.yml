@@ -55,12 +55,11 @@ jobs:
           cp .tool-versions ~/
           rm -rf .aws-sam
           export PATH=$PATH:$PWD/node_modules/.bin
-          make sam-build
-          # make publish
+          make sam-build publish
           cp Makefile .aws-sam/build/
           cp samconfig_package_and_deploy.toml .aws-sam/build/
           # mkdir -p .aws-sam/build/specification
-          # cp -r packages/specification/dist/ .aws-sam/build/specification
+          cp -r packages/specification/dist/ .aws-sam/build/
 
       - name: List files in .aws-sam/build/
         run: |
@@ -72,7 +71,6 @@ jobs:
           name: packaged_code
           path: |
             .aws-sam/build
-            # packages/updatePrescriptionStatus/lib/get-secrets-layer.zip
 
       # - uses: actions/upload-artifact@v4
       #   name: upload specification artifact
