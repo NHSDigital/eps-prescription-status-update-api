@@ -50,6 +50,11 @@ Conditions:
   ShouldUseSplunk: !Equals
     - true
     - !Ref EnableSplunk
+  
+  IncludeAdditionalPolicies: !Not
+    - !Equals
+      - !Ref AWS::NoValue
+      - !Ref AdditionalPolicies
 
 Resources:
   ExecuteLambdaManagedPolicy:
@@ -83,10 +88,13 @@ Resources:
             - !ImportValue lambda-resources:LambdaInsightsLogGroupPolicy
             - !ImportValue account-resources:CloudwatchEncryptionKMSPolicyArn
             - !ImportValue account-resources:LambdaDecryptSecretsKMSPolicy
-            - !Join
-              - ','
-              - !Ref AdditionalPolicies
-  
+            - !If
+              - IncludeAdditionalPolicies
+              - !Join
+                - ','
+                - !Ref AdditionalPolicies
+              - !Ref AWS::NoValue
+
   LambdaManagedPolicy:
     Type: AWS::IAM::ManagedPolicy
     Properties:
