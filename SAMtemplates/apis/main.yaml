@@ -72,10 +72,11 @@ Resources:
         - .
         - - !Ref StackName
           - !ImportValue eps-route53-resources:EPS-domain
-      CertificateArn: !Ref GenerateCertificate
+      RegionalCertificateArn: !Ref GenerateCertificate
       EndpointConfiguration: 
         Types:
           - REGIONAL
+      SecurityPolicy: TLS_1_2
       MutualTlsAuthentication:
         TruststoreUri: !If
           - ShouldUseMutualTLS
@@ -113,6 +114,7 @@ Resources:
       RestApiId: !Ref RestApiGateway
       ResourceId: !GetAtt RestApiGateway.RootResourceId
       HttpMethod: POST
+      AuthorizationType: NONE
       Integration:
         Type: AWS
         Credentials: !GetAtt HttpApiGatewayResources.Outputs.ApiGwRoleArn

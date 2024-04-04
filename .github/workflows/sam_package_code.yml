@@ -82,4 +82,4 @@ jobs:
         with:
           name: packaged_sandbox_code
           path: |
-            .aws-sam/build
+            ./*/aws-sam/build
