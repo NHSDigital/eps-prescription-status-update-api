@@ -102,6 +102,12 @@ jobs:
           name: ${{ inputs.BUILD_ARTIFACT }}
           path: .
 
+      - name: List contents of downloaded artifact
+        working-directory: ${{ inputs.BUILD_ARTIFACT }}
+        run: |
+          ls -R .
+          find . -name "eps-prescription-status-update-api.resolved.json"
+
       - name: release code
         shell: bash
         working-directory: .github/scripts
@@ -126,8 +132,8 @@ jobs:
       - name: Deploy API
         shell: bash
         working-directory: .github/scripts
-        env:
-          spec_path: eps-prescription-status-update-api.resolved.json
+        # env:
+        #   spec_path: eps-prescription-status-update-api.resolved.json
         run: |
           # Get the directory where proxygen is installed
           proxygen_dir="$(python -m site --user-base)/bin"
@@ -140,14 +146,14 @@ jobs:
           proxygen_path=$(which proxygen)
           echo "Proxygen location: $proxygen_path"
           echo "export PROXYGEN_PATH=\"$proxygen_path\"" >> "$GITHUB_ENV"
-          
+
           # Find the specification file
+          spec_path=$(find . -name "eps-prescription-status-update-api.resolved.json")
           echo "Specification location: $spec_path"
-          cat "$spec_path"
-          # echo "spec_path=\"$spec_path\"" >> "$GITHUB_ENV"
-          
+          echo "spec_path=\"$spec_path\"" >> "$GITHUB_ENV"
+
           # Run the deploy script with the specification path
-          ./deploy_api.sh "$spec_path"
+          ./deploy_api.sh
 
       - name: create_int_release_notes
         uses: ./.github/actions/update_confluence_jira
