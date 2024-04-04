@@ -105,18 +105,18 @@ jobs:
       #     name: ${{ inputs.SPEC_ARTIFACT }}
       #     path: .
 
-      - name: Print current directory
-        run: |
-          pwd
-          ls -R
+      # - name: Print current directory
+      #   run: |
+      #     pwd
+      #     ls -R
 
-      - name: List contents of work folder
-        run: |
-          ls -R /home/runner/work/
+      # - name: List contents of work folder
+      #   run: |
+      #     ls -R /home/runner/work/
 
-      - name: List contents of downloaded artifact
-        run: |
-          ls -R .
+      # - name: List contents of downloaded artifact
+      #   run: |
+      #     ls -R .
 
       - name: release code
         shell: bash
