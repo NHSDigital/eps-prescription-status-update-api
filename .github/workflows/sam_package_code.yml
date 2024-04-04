@@ -44,7 +44,7 @@ jobs:
         run: |
           echo "//npm.pkg.github.com/:_authToken=${NODE_AUTH_TOKEN}" >> ~/.npmrc
           echo "@nhsdigital:registry=https://npm.pkg.github.com" >> ~/.npmrc
-
+          
       - name: make install
         run: |
           make install
@@ -56,7 +56,7 @@ jobs:
           rm -rf .aws-sam
           export PATH=$PATH:$PWD/node_modules/.bin
           make sam-build
-          make publish
+          # make publish
           cp Makefile .aws-sam/build/
           cp samconfig_package_and_deploy.toml .aws-sam/build/
           # mkdir -p .aws-sam/build/specification
@@ -72,7 +72,7 @@ jobs:
           name: packaged_code
           path: |
             .aws-sam/build
-            packages/updatePrescriptionStatus/lib/get-secrets-layer.zip
+            # packages/updatePrescriptionStatus/lib/get-secrets-layer.zip
 
       # - uses: actions/upload-artifact@v4
       #   name: upload specification artifact
