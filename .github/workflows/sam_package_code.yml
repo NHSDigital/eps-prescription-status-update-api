@@ -44,7 +44,17 @@ jobs:
         run: |
           echo "//npm.pkg.github.com/:_authToken=${NODE_AUTH_TOKEN}" >> ~/.npmrc
           echo "@nhsdigital:registry=https://npm.pkg.github.com" >> ~/.npmrc
-          
+
+      - shell: bash
+        name: package code
+        run: |
+          cp .tool-versions ~/
+          rm -rf .aws-sam
+          export PATH=$PATH:$PWD/node_modules/.bin
+          make sam-build
+          cp Makefile .aws-sam/build/
+          cp samconfig_package_and_deploy.toml .aws-sam/build/
+
       - name: make install
         run: |
           make install
@@ -63,16 +73,6 @@ jobs:
           PROXYGEN_PATH="$(poetry run which proxygen)"
           echo "Copy proxygen to artifact directory"
           cp "$PROXYGEN_PATH" .aws-sam/build/
-
-      - shell: bash
-        name: package code
-        run: |
-          cp .tool-versions ~/
-          rm -rf .aws-sam
-          export PATH=$PATH:$PWD/node_modules/.bin
-          make sam-build
-          cp Makefile .aws-sam/build/
-          cp samconfig_package_and_deploy.toml .aws-sam/build/
 
       - uses: actions/upload-artifact@v4
         name: upload build artifact

@@ -119,6 +119,10 @@ jobs:
           VERSION_NUMBER: ${{ inputs.VERSION_NUMBER }}
         run: ./release_code.sh
 
+      - name: Run make install
+        run: |
+          make install
+
       - name: Print proxygen location in artifact
         run: |
           echo "Location of proxygen binary in artifact:"
