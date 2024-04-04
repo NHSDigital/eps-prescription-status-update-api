@@ -103,10 +103,8 @@ jobs:
           path: .
 
       - name: List contents of downloaded artifact
-        working-directory: ${{ inputs.BUILD_ARTIFACT }}
         run: |
-          ls -R ${{ inputs.BUILD_ARTIFACT }}
-          find ${{ inputs.BUILD_ARTIFACT }} -name "eps-prescription-status-update-api.resolved.json"
+          ls -R .
 
       - name: release code
         shell: bash
