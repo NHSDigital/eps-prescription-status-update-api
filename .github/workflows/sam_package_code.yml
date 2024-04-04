@@ -83,5 +83,5 @@ jobs:
         with:
           name: packaged_sandbox_code
           path: |
-            ./aws-sam/build
-            ./README.md 
+            .aws-sam/build
+            README.md 
