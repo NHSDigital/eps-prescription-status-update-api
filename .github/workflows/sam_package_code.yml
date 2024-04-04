@@ -45,6 +45,12 @@ jobs:
           echo "//npm.pkg.github.com/:_authToken=${NODE_AUTH_TOKEN}" >> ~/.npmrc
           echo "@nhsdigital:registry=https://npm.pkg.github.com" >> ~/.npmrc
 
+      - name: make install
+        run: |
+          make install
+          echo "Installed packages:"
+          asdf current
+
       - shell: bash
         name: package code
         run: |
@@ -54,12 +60,6 @@ jobs:
           make sam-build
           cp Makefile .aws-sam/build/
           cp samconfig_package_and_deploy.toml .aws-sam/build/
-
-      - name: make install
-        run: |
-          make install
-          echo "Installed packages:"
-          asdf current
       
       - name: Debug installed packages
         run: |
