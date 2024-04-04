@@ -32,6 +32,10 @@ Parameters:
     Description: Whether to use splunk
     Default: false
     AllowedValues: [true, false]
+  LogLevel:
+    Type: String
+    Description: The log level to set in the lambda
+    Default: INFO
   LogRetentionInDays:
     Type: Number
     Description: How long to keep logs for
@@ -72,12 +76,17 @@ Resources:
     Properties:
       Location: functions/lambda_resources.yaml
       Parameters:
-        CloudWatchKMSKey: !ImportValue account-resources:CloudwatchLogsKmsKeyArn
-        SplunkSubscriptionFilterRole: !ImportValue lambda-resources:SplunkSubscriptionFilterRole
-        SplunkDeliveryStream: !ImportValue lambda-resources:SplunkDeliveryStream
-        EnableSplunk: !Ref EnableSplunk
-        LambdaName: !Sub "${AWS::StackName}-UpdatePrescriptionStatusSandbox"
+        StackName: !Ref AWS::StackName
+        LambdaName: "${AWS::StackName}-UpdatePrescriptionStatusSandbox"
+        LambdaArn: !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:${StackName}-UpdatePrescriptionStatusSandbox
+        AdditionalPolicies: !Join
+          - ','
         LogRetentionInDays: !Ref LogRetentionInDays
+        CloudWatchKMSKeyId: !ImportValue account-resources:CloudwatchLogsKmsKeyArn
+        EnableSplunk: !Ref EnableSplunk
+        SplunkSubscriptionFilterRole: !ImportValue lambda-resources:SplunkSubscriptionFilterRole
+        SplunkDeliveryStreamArn: !ImportValue lambda-resources:SplunkDeliveryStream
+  
   Sandbox:
     Type: AWS::Serverless::Function
     Properties:
