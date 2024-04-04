@@ -134,3 +134,18 @@ export function mockInternalDependency(modulePath: string, module: object, depen
   }))
   return mockDependency
 }
+
+// Uses unstable jest method to enable mocking while using ESM. To be replaced in future.
+export function mockDynamoDBClient() {
+  const mockSend = jest.fn()
+  const mockTransact = jest.fn()
+  jest.unstable_mockModule("@aws-sdk/client-dynamodb", () => {
+    return {
+      DynamoDBClient: jest.fn().mockImplementation(() => ({
+        send: mockSend
+      })),
+      TransactWriteItemsCommand: mockTransact
+    }
+  })
+  return {mockSend, mockTransact}
+}

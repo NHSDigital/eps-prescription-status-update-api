@@ -13,7 +13,8 @@ import {
   TASK_ID_1,
   generateBody,
   generateExpectedItems,
-  generateMockEvent
+  generateMockEvent,
+  mockDynamoDBClient
 } from "./utils/testUtils"
 
 import requestDispatched from "../../specification/examples/request-dispatched.json"
@@ -25,17 +26,7 @@ import responseSingleItem from "../../specification/examples/response-single-ite
 import responseMultipleItems from "../../specification/examples/response-multiple-items.json"
 import {badRequest, bundleWrap, serverError} from "../src/utils/responses"
 
-const mockSend = jest.fn()
-const mockTransact = jest.fn()
-jest.unstable_mockModule("@aws-sdk/client-dynamodb", () => {
-  return {
-    DynamoDBClient: jest.fn().mockImplementation(() => ({
-      send: mockSend
-    })),
-    TransactWriteItemsCommand: mockTransact
-  }
-})
-
+const {mockSend, mockTransact} = mockDynamoDBClient()
 const {handler} = await import("../src/updatePrescriptionStatus")
 
 describe("Integration tests for updatePrescriptionStatus handler", () => {
