@@ -119,6 +119,7 @@ Resources:
         Type: AWS
         Credentials: !GetAtt HttpApiGatewayResources.Outputs.ApiGwRoleArn
         IntegrationHttpMethod: POST
+        Uri: !Sub arn:aws:apigateway:${AWS::Region}:states/StartSyncExecution
         PassthroughBehavior: WHEN_NO_MATCH
         RequestTemplates:
           application/json: !Sub
@@ -200,6 +201,8 @@ Resources:
 
   RestApiGatewayDeployment:
     Type: AWS::ApiGateway::Deployment
+    DependsOn:
+      - UpdatePrescriptionStatusMethod
     Properties:
       RestApiId: !Ref RestApiGateway
       StageName: prod
@@ -210,6 +213,7 @@ Resources:
       RestApiId: !Ref RestApiGateway
       StageName: prod
       DeploymentId: !Ref RestApiGatewayDeployment
+      TracingEnabled: true
       AccessLogSetting:
         DestinationArn: !GetAtt HttpApiGatewayResources.Outputs.ApiGwAccessLogsArn
         Format: '{ "requestTime": "$context.requestTime", "apiId": "$context.apiId", "accountId": "$context.accountId", "resourcePath": "$context.resourcePath", "stage": "$context.stage", "requestId": "$context.requestId", "extendedRequestId": "$context.extendedRequestId", "status": "$context.status", "httpMethod": "$context.httpMethod", "protocol": "$context.protocol", "path": "$context.path", "responseLatency": "$context.responseLatency", "responseLength": "$context.responseLength", "domainName": "$context.domainName", "identity": { "sourceIp": "$context.identity.sourceIp", "userAgent": "$context.identity.userAgent", "clientCert":{ "subjectDN": "$context.identity.clientCert.subjectDN", "issuerDN": "$context.identity.clientCert.issuerDN", "serialNumber": "$context.identity.clientCert.serialNumber", "validityNotBefore": "$context.identity.clientCert.validity.notBefore", "validityNotAfter": "$context.identity.clientCert.validity.notAfter" }}, "integration":{ "error": "$context.integration.error", "integrationStatus": "$context.integration.integrationStatus", "latency": "$context.integration.latency", "requestId": "$context.integration.requestId", "status": "$context.integration.status" }}'
