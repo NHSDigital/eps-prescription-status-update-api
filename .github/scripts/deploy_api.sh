@@ -1,17 +1,5 @@
 #!/usr/bin/env bash
 
-# Check if spec_path argument is provided
-if [ -z "$1" ]; then
-  echo "Error: Specification path argument is missing."
-  exit 1
-fi
-
-# Assign the first argument to spec_path variable
-spec_path="$1"
-cat "$spec_path"
-
-echo "Specification location from the script: $spec_path"
-
 proxygen_private_key_arn=$(aws cloudformation list-exports --query "Exports[?Name=='account-resources:ProxgenPrivateKey'].Value" --output text)
 # proxygen_public_key_arn=$(aws cloudformation list-exports --query "Exports[?Name=='account-resources:ProxgenPublicKey'].Value" --output text)
 
@@ -32,7 +20,7 @@ echo "$client_private_key" > /tmp/client_private_key.pem
 environment=internal-dev
 instance=prescription-status-update
 path_to_proxygen=/home/runner/.local/bin/proxygen
-path_to_spec=./eps-prescription-status-update-api.resolved.json
+path_to_spec=/home/runner/work/eps-prescription-status-update-api/eps-prescription-status-update-api/eps-prescription-status-update-api.resolved.json
 
 # Create ~/.proxygen directory if it doesn't exist
 mkdir -p ~/.proxygen
