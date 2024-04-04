@@ -1,5 +1,16 @@
 #!/usr/bin/env bash
 
+# Check if spec_path argument is provided
+if [ -z "$1" ]; then
+  echo "Error: Specification path argument is missing."
+  exit 1
+fi
+
+# Assign the first argument to spec_path variable
+spec_path="$1"
+
+echo "Specification location: $spec_path"
+
 proxygen_private_key_arn=$(aws cloudformation list-exports --query "Exports[?Name=='account-resources:ProxgenPrivateKey'].Value" --output text)
 # proxygen_public_key_arn=$(aws cloudformation list-exports --query "Exports[?Name=='account-resources:ProxgenPublicKey'].Value" --output text)
 

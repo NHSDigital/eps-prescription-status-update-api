@@ -126,6 +126,8 @@ jobs:
       - name: Deploy API
         shell: bash
         working-directory: .github/scripts
+        env:
+          spec_path: eps-prescription-status-update-api.resolved.json
         run: |
           # Get the directory where proxygen is installed
           proxygen_dir="$(python -m site --user-base)/bin"
@@ -140,12 +142,11 @@ jobs:
           echo "export PROXYGEN_PATH=\"$proxygen_path\"" >> "$GITHUB_ENV"
           
           # Find the specification file
-          spec_path=$(find . -name "eps-prescription-status-update-api.resolved.json")
           echo "Specification location: $spec_path"
           echo "spec_path=\"$spec_path\"" >> "$GITHUB_ENV"
           
           # Run the deploy script with the specification path
-          ./deploy_api.sh
+          ./deploy_api.sh "$spec_path"
 
       - name: create_int_release_notes
         uses: ./.github/actions/update_confluence_jira
