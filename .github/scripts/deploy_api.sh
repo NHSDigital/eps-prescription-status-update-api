@@ -41,4 +41,10 @@ endpoint_url: https://proxygen.prod.api.platform.nhs.uk
 spec_output_format: json
 EOF
 
+cd ../../.aws-sam/build || exit
+make publish
+
+# Navigate back to the previous directory
+cd - >/dev/null || exit
+
 "$path_to_spec" instance deploy --no-confirm "$environment" "$instance" "$path_to_spec"
