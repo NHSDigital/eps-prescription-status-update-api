@@ -124,11 +124,6 @@ jobs:
           which python
           pip install proxygen-cli
 
-      - name: Print proxygen location in artifact
-        run: |
-          echo "Location of proxygen binary in artifact:"
-          find . -name "proxygen"
-
       - name: Deploy API
         shell: bash
         working-directory: .github/scripts
