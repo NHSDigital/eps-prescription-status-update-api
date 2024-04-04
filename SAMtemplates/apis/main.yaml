@@ -73,7 +73,9 @@ Resources:
         - - !Ref StackName
           - !ImportValue eps-route53-resources:EPS-domain
       CertificateArn: !Ref GenerateCertificate
-      EndpointConfiguration: REGIONAL
+      EndpointConfiguration: 
+        Types:
+          - REGIONAL
       MutualTlsAuthentication:
         TruststoreUri: !If
           - ShouldUseMutualTLS
@@ -100,7 +102,7 @@ Resources:
         - - !Ref StackName
           - !ImportValue eps-route53-resources:EPS-domain
       Type: A
-      HostedZoneID: !ImportValue eps-route53-resources:EPS-ZoneID
+      HostedZoneId: !ImportValue eps-route53-resources:EPS-ZoneID
       AliasTarget:
         DNSName: !GetAtt RestApiDomain.RegionalDomainName
         HostedZoneId: !GetAtt RestApiDomain.RegionalHostedZoneId
@@ -109,7 +111,7 @@ Resources:
     Type: AWS::ApiGateway::Method
     Properties:
       RestApiId: !Ref RestApiGateway
-      ResourceId: !GetAtt RestApi.RootResourceId
+      ResourceId: !GetAtt RestApiGateway.RootResourceId
       HttpMethod: POST
       Integration:
         Type: AWS
@@ -130,7 +132,7 @@ Resources:
               #set($inputString = '')
               #set($allParams = $input.params())
               {
-                  "stateMachineArn": !Ref "${UpdatePrescriptionStatusStateMachineArn}",
+                  "stateMachineArn": "${stateMachineArn}",
 
                   #set($inputString = "$inputString,@@body@@: $input.body")
 
@@ -179,6 +181,7 @@ Resources:
                   #set($len = $inputString.length() - 1)
                   "input": "{$util.escapeJavaScript($inputString.substring(1,$len))}"
               }
+            - stateMachineArn: !Ref UpdatePrescriptionStatusStateMachineArn
         IntegrationResponses:
           - StatusCode: 200
             ResponseTemplates:
