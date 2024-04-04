@@ -48,8 +48,6 @@ jobs:
       - name: make install
         run: |
           make install
-          echo "Installed packages:"
-          asdf current
 
       - shell: bash
         name: package code
@@ -60,19 +58,8 @@ jobs:
           make sam-build
           cp Makefile .aws-sam/build/
           cp samconfig_package_and_deploy.toml .aws-sam/build/
-      
-      - name: Debug installed packages
-        run: |
-          echo "Installed packages:"
-          poetry show --tree
-          echo "Location of Poetry virtual environment:"
-          poetry env info --path
-          echo "Location of proxygen binary:"
-          ls -la "$(poetry run which proxygen)"
-          echo "Setting PROXYGEN_PATH variable"
-          PROXYGEN_PATH="$(poetry run which proxygen)"
-          echo "Copy proxygen to artifact directory"
-          cp "$PROXYGEN_PATH" .aws-sam/build/
+          make publish
+          cp packages/specification/dist/eps-prescription-status-update-api.resolved.json .aws-sam/build/
 
       - uses: actions/upload-artifact@v4
         name: upload build artifact

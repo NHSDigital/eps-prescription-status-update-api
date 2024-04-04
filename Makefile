@@ -6,7 +6,7 @@ guard-%:
 
 .PHONY: install build test publish release clean
 
-install: install-node install-python install-hooks publish
+install: install-node install-python install-hooks
 
 #Installs dependencies using poetry.
 install-python:
