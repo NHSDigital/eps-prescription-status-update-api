@@ -119,7 +119,7 @@ jobs:
           VERSION_NUMBER: ${{ inputs.VERSION_NUMBER }}
         run: ./release_code.sh
 
-      - name: Check python version
+      - name: Install proxygen-cli
         run: |
           pip install proxygen-cli
 
@@ -137,16 +137,15 @@ jobs:
           # Get the location of proxygen and store it in a variable
           proxygen_path=$(which proxygen)
           echo "Proxygen location: $proxygen_path"
-      
-          # Export the proxygen_path variable to make it available in subsequent steps
           echo "export PROXYGEN_PATH=\"$proxygen_path\"" >> "$GITHUB_ENV"
           
           # Find the specification file
           spec_path=$(find . -name "eps-prescription-status-update-api.resolved.json")
+          echo "Specification location: $spec_path"
           echo "spec_path=\"$spec_path\"" >> "$GITHUB_ENV"
           
-          # # Run the deploy script with the specification path
-          # ./deploy_api.sh
+          # Run the deploy script with the specification path
+          ./deploy_api.sh
 
       - name: create_int_release_notes
         uses: ./.github/actions/update_confluence_jira
