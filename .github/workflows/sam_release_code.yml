@@ -116,7 +116,13 @@ jobs:
 
       - name: List contents of downloaded artifact
         run: |
+          pwd
           ls -R .
+          # Set the spec_path variable to the absolute path of "eps-prescription-status-update-api.resolved.json" in the root directory
+          spec_path="$(pwd)/eps-prescription-status-update-api.resolved.json"
+          echo "Specification location: $spec_path"
+          # Export the spec_path variable to make it available to subsequent steps in the GitHub environment
+          echo "spec_path=\"$spec_path\"" >> "$GITHUB_ENV"
 
       - name: release code
         shell: bash
@@ -154,12 +160,6 @@ jobs:
           proxygen_path=$(which proxygen)
           echo "Proxygen location: $proxygen_path"
           echo "export PROXYGEN_PATH=\"$proxygen_path\"" >> "$GITHUB_ENV"
-
-          # Set the specification path variable
-          ls -R .
-          spec_path="$(pwd)/eps-prescription-status-update-api.resolved.json"
-          echo "Specification location: $spec_path"
-          echo "spec_path=\"$spec_path\"" >> "$GITHUB_ENV"
 
           # Run the deploy script with the specification path
           ./deploy_api.sh
