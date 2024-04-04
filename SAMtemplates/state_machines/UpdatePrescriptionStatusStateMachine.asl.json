@@ -14,7 +14,8 @@
         "Response.$": "$.Payload",
         "NoFailed.$": "States.ArrayLength($.Payload.issue[?(@.severity ==error)])"
       },
-      "Next": "FHIR Validation Result"
+      "Next": "FHIR Validation Result",
+      "InputPath": "$.body"
     },
     "FHIR Validation Result": {
       "Type": "Choice",
@@ -39,7 +40,6 @@
         "Payload.$": "$",
         "FunctionName": "${UpdatePrescriptionStatusFunctionArn}"
       },
-      "OutputPath": "$.Payload",
       "End": true
     }
   }

@@ -62,6 +62,7 @@ Resources:
           - Effect: Allow
             Action:
               - states:StartSyncExecution
+              - states:StartExecution
             Resource:
               - !Ref StateMachineArn
   
