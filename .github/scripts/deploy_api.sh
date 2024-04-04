@@ -28,9 +28,9 @@ client_private_key=$(aws secretsmanager get-secret-value --secret-id "${client_p
 echo "$proxygen_private_key" > /tmp/proxygen_private_key.pem
 echo "$client_private_key" > /tmp/client_private_key.pem
 
-# environment=internal-dev
-# instance=prescription-status-update
-# path_to_proxygen=/home/runner/.local/bin/proxygen
+environment=internal-dev
+instance=prescription-status-update
+path_to_proxygen=/home/runner/.local/bin/proxygen
 # path_to_spec=packages/specification/dist/eps-prescription-status-update-api.resolved.json
 
 # Create ~/.proxygen directory if it doesn't exist
@@ -58,6 +58,6 @@ EOF
 # Navigate back to the previous directory
 # cd - >/dev/null || exit
 
-/home/runner/.local/bin/proxygen settings list
+"$path_to_proxygen" settings list
 
-# "$path_to_proxygen" instance deploy --no-confirm "$environment" "$instance" "$path_to_spec"
+"$path_to_proxygen" instance deploy --no-confirm "$environment" "$instance" "$spec_path"
