@@ -20,7 +20,7 @@ import {ONE_DAY_IN_MS} from "../src/validation/content"
 import requestMultipleItems from "../../specification/examples/request-multiple-items.json"
 import {accepted, badRequest, bundleWrap} from "../src/utils/responses"
 
-describe("Unit test for validation via updatePrescriptionStatus handler", () => {
+describe("Integration tests for validation via updatePrescriptionStatus handler", () => {
   beforeEach(() => {
     jest.resetModules()
     jest.useFakeTimers().setSystemTime(DEFAULT_DATE)

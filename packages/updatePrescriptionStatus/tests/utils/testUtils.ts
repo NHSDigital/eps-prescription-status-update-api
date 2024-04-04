@@ -1,6 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import {APIGatewayProxyEvent} from "aws-lambda"
+import {jest} from "@jest/globals"
+
 import {
   LINE_ITEM_ID_CODESYSTEM,
   NHS_NUMBER_CODESYSTEM,
@@ -122,12 +124,23 @@ function generateExpectedItems(itemCount: number = 1) {
   return {input: {TransactItems: items}}
 }
 
+// Uses unstable jest method to enable mocking while using ESM. To be replaced in future.
+function mockInternalDependency(modulePath: string, module: object, dependency: string) {
+  const mockDependency = jest.fn()
+  jest.unstable_mockModule(modulePath, () => ({
+    ...module,
+    [dependency]: mockDependency
+  }))
+  return mockDependency
+}
+
 export {
   DEFAULT_DATE,
   generateBody,
   generateExpectedItems,
   generateMockEvent,
   generateEntry,
+  mockInternalDependency,
   TASK_ID_0,
   TASK_ID_1,
   X_REQUEST_ID
