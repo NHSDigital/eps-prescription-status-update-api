@@ -155,8 +155,9 @@ jobs:
           echo "Proxygen location: $proxygen_path"
           echo "export PROXYGEN_PATH=\"$proxygen_path\"" >> "$GITHUB_ENV"
 
-          # Find the specification file
-          spec_path=$(find . -name "eps-prescription-status-update-api.resolved.json")
+          # Set the specification path variable
+          ls -R .
+          spec_path="$(pwd)/eps-prescription-status-update-api.resolved.json"
           echo "Specification location: $spec_path"
           echo "spec_path=\"$spec_path\"" >> "$GITHUB_ENV"
 

@@ -32,7 +32,7 @@ echo "$client_private_key" > /tmp/client_private_key.pem
 environment=internal-dev
 instance=prescription-status-update
 path_to_proxygen=/home/runner/.local/bin/proxygen
-# path_to_spec=packages/specification/dist/eps-prescription-status-update-api.resolved.json
+path_to_spec=./eps-prescription-status-update-api.resolved.json
 
 # Create ~/.proxygen directory if it doesn't exist
 mkdir -p ~/.proxygen
@@ -61,4 +61,4 @@ EOF
 
 "$path_to_proxygen" settings list
 
-"$path_to_proxygen" instance deploy --no-confirm "$environment" "$instance" "$spec_path"
+"$path_to_proxygen" instance deploy --no-confirm "$environment" "$instance" "$path_to_spec"
