@@ -33,9 +33,6 @@ on:
       COMMIT_ID:
         required: true
         type: string
-      LOG_LEVEL:
-        required: true
-        type: string
       LOG_RETENTION_DAYS:
         required: true
         type: string
@@ -103,7 +100,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: ${{ inputs.BUILD_ARTIFACT }}
-          path: .
+          path: .aws-sam/build
 
       - name: download specification artifact
         uses: actions/download-artifact@v4
@@ -130,9 +127,7 @@ jobs:
         env:
           artifact_bucket_prefix: prescription_status_update/${{ inputs.ARTIFACT_BUCKET_PREFIX }}
           COMMIT_ID: ${{ inputs.COMMIT_ID }}
-          deploy_sandbox: ${{ inputs.DEPLOY_SANDBOX }}
           enable_mutual_tls: ${{ inputs.ENABLE_MUTUAL_TLS }}
-          LOG_LEVEL: ${{ inputs.LOG_LEVEL }}
           LOG_RETENTION_DAYS: ${{ inputs.LOG_RETENTION_DAYS }}
           stack_name: ${{ inputs.STACK_NAME }}
           TARGET_ENVIRONMENT: ${{ inputs.TARGET_ENVIRONMENT }}

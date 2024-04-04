@@ -1,21 +1,21 @@
 AWSTemplateFormatVersion: "2010-09-09"
 Transform: AWS::Serverless-2016-10-31
 Description: >
-  prescription status update api
+  prescription status update api sandbox template
 
 # More info about Globals: https://github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
 Globals:
   Function:
-    Timeout: 50
+    Timeout: 30
     MemorySize: 256
     Architectures:
       - x86_64
-    Runtime: nodejs20.x
+    Runtime: nodejs18.x
     Environment:
       Variables:
         NODE_OPTIONS: --enable-source-maps
     Layers:
-      - !Sub "arn:aws:lambda:${AWS::Region}:580247275435:layer:LambdaInsightsExtension:49"
+      - !Sub "arn:aws:lambda:${AWS::Region}:580247275435:layer:LambdaInsightsExtension:38"
 
 Parameters:
   TruststoreVersion:
@@ -35,7 +35,6 @@ Parameters:
   LogRetentionDays:
     Type: Number
     Description: How long to keep logs for
-    Default: 30
     AllowedValues:
       [
         1,
@@ -67,8 +66,8 @@ Conditions:
   ShouldUseSplunk: !Equals [true, !Ref EnableSplunk]
 
 Resources:
-  # updatePrescriptionStatus lambda
-  UpdatePrescriptionStatusResources:
+  # sandbox lambda
+  SandboxResources:
     Type: AWS::Serverless::Application
     Properties:
       Location: lambda_resources.yaml
@@ -77,20 +76,17 @@ Resources:
         SplunkSubscriptionFilterRole: !ImportValue lambda-resources:SplunkSubscriptionFilterRole
         SplunkDeliveryStream: !ImportValue lambda-resources:SplunkDeliveryStream
         EnableSplunk: !Ref EnableSplunk
-        LambdaName: !Sub "${AWS::StackName}-UpdatePrescriptionStatus"
+        LambdaName: !Sub "${AWS::StackName}-UpdatePrescriptionStatusSandbox"
         LogRetentionDays: !Ref LogRetentionDays
-  UpdatePrescriptionStatus:
+  Sandbox:
     Type: AWS::Serverless::Function
     Properties:
-      FunctionName: !Sub "${AWS::StackName}-UpdatePrescriptionStatus"
+      FunctionName: !Sub "${AWS::StackName}-UpdatePrescriptionStatusSandbox"
       CodeUri: ../packages
-      Handler: "updatePrescriptionStatus.handler"
-      Role: !GetAtt UpdatePrescriptionStatusResources.Outputs.LambdaRoleArn
-      Environment:
-        Variables:
-          TABLE_NAME: !Sub "${AWS::StackName}-PrescriptionStatusUpdates"
+      Handler: sandbox.handler
+      Role: !GetAtt SandboxResources.Outputs.LambdaRoleArn
       Events:
-        updatePrescriptionStatus:
+        sandbox:
           Type: HttpApi
           Properties:
             ApiId: !Ref HttpApiGateway
@@ -102,147 +98,9 @@ Resources:
         Minify: true
         Target: "es2020"
         Sourcemap: true
-        tsconfig: updatePrescriptionStatus/tsconfig.json
+        tsconfig: sandbox/tsconfig.json
         EntryPoints:
-          - updatePrescriptionStatus/src/updatePrescriptionStatus.ts
-  # Prescription Status Updates table
-  PrescriptionStatusUpdatesTable:
-    Type: "AWS::DynamoDB::Table"
-    Properties:
-      TableName: !Sub "${AWS::StackName}-PrescriptionStatusUpdates"
-      AttributeDefinitions:
-        - AttributeName: "RequestID"
-          AttributeType: "S"
-        - AttributeName: "PrescriptionID"
-          AttributeType: "S"
-        - AttributeName: "PatientNHSNumber"
-          AttributeType: "S"
-        - AttributeName: "PharmacyODSCode"
-          AttributeType: "S"
-      KeySchema:
-        - AttributeName: "RequestID"
-          KeyType: "HASH"
-        - AttributeName: "PrescriptionID"
-          KeyType: "RANGE"
-      ProvisionedThroughput:
-        ReadCapacityUnits: "5"
-        WriteCapacityUnits: "5"
-      GlobalSecondaryIndexes:
-        - IndexName: "RequestIDIndex"
-          KeySchema:
-            - AttributeName: "RequestID"
-              KeyType: "HASH"
-            - AttributeName: "PrescriptionID"
-              KeyType: "RANGE"
-          Projection:
-            NonKeyAttributes:
-              - "PatientNHSNumber"
-              - "PharmacyODSCode"
-              - "TaskID"
-              - "LineItemID"
-              - "TerminalStatus"
-              - "RequestMessage"
-            ProjectionType: "INCLUDE"
-          ProvisionedThroughput:
-            ReadCapacityUnits: "5"
-            WriteCapacityUnits: "5"
-        - IndexName: "PrescriptionIDIndex"
-          KeySchema:
-            - AttributeName: "PrescriptionID"
-              KeyType: "HASH"
-            - AttributeName: "PatientNHSNumber"
-              KeyType: "RANGE"
-          Projection:
-            NonKeyAttributes:
-              - "PharmacyODSCode"
-              - "TaskID"
-              - "LineItemID"
-              - "TerminalStatus"
-              - "RequestID"
-              - "RequestMessage"
-            ProjectionType: "INCLUDE"
-          ProvisionedThroughput:
-            ReadCapacityUnits: "5"
-            WriteCapacityUnits: "5"
-        - IndexName: "PatientNHSNumberIndex"
-          KeySchema:
-            - AttributeName: "PatientNHSNumber"
-              KeyType: "HASH"
-            - AttributeName: "PrescriptionID"
-              KeyType: "RANGE"
-          Projection:
-            NonKeyAttributes:
-              - "PharmacyODSCode"
-              - "TaskID"
-              - "LineItemID"
-              - "TerminalStatus"
-              - "RequestID"
-              - "RequestMessage"
-            ProjectionType: "INCLUDE"
-          ProvisionedThroughput:
-            ReadCapacityUnits: "5"
-            WriteCapacityUnits: "5"
-        - IndexName: "PharmacyODSCodeIndex"
-          KeySchema:
-            - AttributeName: "PharmacyODSCode"
-              KeyType: "HASH"
-            - AttributeName: "PrescriptionID"
-              KeyType: "RANGE"
-          Projection:
-            NonKeyAttributes:
-              - "PatientNHSNumber"
-              - "TaskID"
-              - "LineItemID"
-              - "TerminalStatus"
-              - "RequestID"
-              - "RequestMessage"
-            ProjectionType: "INCLUDE"
-          ProvisionedThroughput:
-            ReadCapacityUnits: "5"
-            WriteCapacityUnits: "5"
-  DynamoDBReadPolicy:
-    Type: AWS::IAM::ManagedPolicy
-    Properties:
-      Roles:
-        - !GetAtt UpdatePrescriptionStatusResources.Outputs.LambdaRoleName
-      PolicyDocument:
-        Version: "2012-10-17"
-        Statement:
-          - Effect: Allow
-            Action:
-              - dynamodb:GetItem
-              - dynamodb:Scan
-              - dynamodb:Query
-              - dynamodb:BatchGetItem
-              - dynamodb:DescribeTable
-              - dynamodb:GetRecords
-              - dynamodb:ListTables
-            Resource:
-              - !GetAtt PrescriptionStatusUpdatesTable.Arn
-              - !Join [
-                  "",
-                  [!GetAtt PrescriptionStatusUpdatesTable.Arn, "/index/*"],
-                ]
-  DynamoDBWritePolicy:
-    Type: AWS::IAM::ManagedPolicy
-    Properties:
-      Roles:
-        - !GetAtt UpdatePrescriptionStatusResources.Outputs.LambdaRoleName
-      PolicyDocument:
-        Version: "2012-10-17"
-        Statement:
-          - Effect: Allow
-            Action:
-              - dynamodb:BatchWriteItem
-              - dynamodb:DeleteItem
-              - dynamodb:PutItem
-              - dynamodb:UpdateItem
-            Resource:
-              - !GetAtt PrescriptionStatusUpdatesTable.Arn
-              - !Join [
-                  "",
-                  [!GetAtt PrescriptionStatusUpdatesTable.Arn, "/index/*"],
-                ]
+          - sandbox/src/sandbox.ts
 
   # TLS cert for custom domain
   GenerateCertificate:
