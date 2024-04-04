@@ -119,9 +119,10 @@ jobs:
           VERSION_NUMBER: ${{ inputs.VERSION_NUMBER }}
         run: ./release_code.sh
 
-      - name: Run make install
+      - name: Check python version
         run: |
-          make install
+          which python
+          pip install proxygen-cli
 
       - name: Print proxygen location in artifact
         run: |
