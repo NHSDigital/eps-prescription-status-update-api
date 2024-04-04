@@ -25,11 +25,6 @@ Parameters:
   LambdaName:
     Type: String
     Description: Name of lambda we are creating for
-  AccessToSpine:
-    Type: String
-    Description: Whether to use splunk
-    Default: false
-    AllowedValues: [true, false]
   LogRetentionDays:
     Type: Number
     Description: How long to keep logs for
@@ -61,7 +56,6 @@ Parameters:
 
 Conditions:
   ShouldUseSplunk: !Equals [true, !Ref EnableSplunk]
-  AllowAccessToSpine: !Equals [true, !Ref AccessToSpine]
 
 Resources:
   LambdaRole:
@@ -79,10 +73,6 @@ Resources:
         - !ImportValue lambda-resources:LambdaInsightsLogGroupPolicy
         - !ImportValue account-resources:LambdaEncryptCloudwatchKMSPolicy
         - !ImportValue account-resources:LambdaDecryptSecretsKMSPolicy
-        - !If
-          - AllowAccessToSpine
-          - !ImportValue account-resources:LambdaAccessSecretsPolicy
-          - !Ref AWS::NoValue
 
   LambdaManagedPolicy:
     Type: AWS::IAM::ManagedPolicy
