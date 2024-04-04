@@ -119,7 +119,7 @@ Resources:
         Type: AWS
         Credentials: !GetAtt HttpApiGatewayResources.Outputs.ApiGwRoleArn
         IntegrationHttpMethod: POST
-        Uri: !Sub arn:aws:apigateway:${AWS::Region}:states/StartSyncExecution
+        Uri: !Sub arn:aws:apigateway:${AWS::Region}:states:action/StartSyncExecution
         PassthroughBehavior: WHEN_NO_MATCH
         RequestTemplates:
           application/json: !Sub

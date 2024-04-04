@@ -77,9 +77,11 @@ jobs:
           cp Makefile .aws-sam/build/
           cp samconfig_package_and_deploy.toml .aws-sam/build/
 
+      # Readme is included to stop the action flattening the folder structure of aws-sam/build when it is the only item to upload
       - uses: actions/upload-artifact@v4
         name: upload sandbox build artifact
         with:
           name: packaged_sandbox_code
           path: |
-            ./aws-sa?/build
+            ./aws-sam/build
+            README.md 
