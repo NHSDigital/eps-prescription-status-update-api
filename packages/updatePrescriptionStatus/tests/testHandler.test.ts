@@ -8,7 +8,6 @@ import {
   jest
 } from "@jest/globals"
 
-import {handler} from "../src/updatePrescriptionStatus"
 import {
   DEFAULT_DATE,
   TASK_ID_1,
@@ -25,6 +24,19 @@ import requestNoItems from "../../specification/examples/request-no-items.json"
 import responseSingleItem from "../../specification/examples/response-single-item.json"
 import responseMultipleItems from "../../specification/examples/response-multiple-items.json"
 import {badRequest, bundleWrap, serverError} from "../src/utils/responses"
+
+const mockSend = jest.fn()
+const mockTransact = jest.fn()
+jest.unstable_mockModule("@aws-sdk/client-dynamodb", () => {
+  return {
+    DynamoDBClient: jest.fn().mockImplementation(() => ({
+      send: mockSend
+    })),
+    TransactWriteItemsCommand: mockTransact
+  }
+})
+
+const {handler} = await import("../src/updatePrescriptionStatus")
 
 describe("Integration tests for updatePrescriptionStatus handler", () => {
   beforeEach(() => {
@@ -48,31 +60,31 @@ describe("Integration tests for updatePrescriptionStatus handler", () => {
   it("when single item in request, expect a single item sent to DynamoDB", async () => {
     const body = generateBody()
     const event: APIGatewayProxyEvent = generateMockEvent(body)
-
-    jest.spyOn(DynamoDBClient.prototype, "send").mockResolvedValue(undefined as never)
+    const expectedItems = generateExpectedItems()
+    mockTransact.mockReturnValue(expectedItems)
 
     const response: APIGatewayProxyResult = await handler(event, {})
 
     expect(response.statusCode).toEqual(201)
     expect(JSON.parse(response.body)).toEqual(responseSingleItem)
 
-    expect(DynamoDBClient.prototype.send).toHaveBeenCalledTimes(1)
-    expect(DynamoDBClient.prototype.send).toHaveBeenCalledWith(expect.objectContaining(generateExpectedItems()))
+    expect(mockSend).toHaveBeenCalledTimes(1)
+    expect(mockSend).toHaveBeenCalledWith(expect.objectContaining(expectedItems))
   })
 
   it("when multiple items in request, expect multiple items sent to DynamoDB in a single call", async () => {
     const body = generateBody(2)
     const event: APIGatewayProxyEvent = generateMockEvent(body)
-
-    jest.spyOn(DynamoDBClient.prototype, "send").mockResolvedValue(undefined as never)
+    const expectedItems = generateExpectedItems(2)
+    mockTransact.mockReturnValue(expectedItems)
 
     const response: APIGatewayProxyResult = await handler(event, {})
 
     expect(response.statusCode).toEqual(201)
     expect(JSON.parse(response.body)).toEqual(responseMultipleItems)
 
-    expect(DynamoDBClient.prototype.send).toHaveBeenCalledTimes(1)
-    expect(DynamoDBClient.prototype.send).toHaveBeenCalledWith(expect.objectContaining(generateExpectedItems(2)))
+    expect(mockSend).toHaveBeenCalledTimes(1)
+    expect(mockSend).toHaveBeenCalledWith(expect.objectContaining(expectedItems))
   })
 
   it.each([
@@ -119,8 +131,7 @@ describe("Integration tests for updatePrescriptionStatus handler", () => {
 
   it("when dynamo call fails, expect 500 status code and internal server error message", async () => {
     const event = generateMockEvent(requestDispatched)
-
-    jest.spyOn(DynamoDBClient.prototype, "send").mockRejectedValue(new Error("Mocked error") as never)
+    mockSend.mockRejectedValue(new Error() as never)
 
     const response: APIGatewayProxyResult = await handler(event, {})
 
