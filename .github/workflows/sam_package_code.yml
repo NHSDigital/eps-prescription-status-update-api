@@ -60,7 +60,7 @@ jobs:
           cp Makefile .aws-sam/build/
           cp samconfig_package_and_deploy.toml .aws-sam/build/
           mkdir -p .aws-sam/build/specification
-          cp -r packages/specification/dist/ .aws-sam/build/specification
+          cp packages/specification/dist/eps-prescription-status-update-api.resolved.json .aws-sam/build/specification/
 
       - name: List files in .aws-sam/build/
         run: |
