@@ -69,6 +69,7 @@ Resources:
         StackName: !Ref StackName
         LambdaName: !Sub ${StackName}-UpdatePrescriptionStatus
         LambdaArn: !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:${StackName}-UpdatePrescriptionStatus
+        IncludeAdditionalPolicies: true
         AdditionalPolicies: !Join
           - ','
           - - Fn::ImportValue: !Sub ${StackName}:tables:${PrescriptionStatusUpdatesTableName}:TableWritePolicyArn

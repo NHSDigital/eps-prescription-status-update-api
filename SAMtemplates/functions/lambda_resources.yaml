@@ -18,6 +18,11 @@ Parameters:
     Description: Arn of lambda we are creating resources for.
     Default: none
   
+  IncludeAdditionalPolicies:
+    Type: String
+    Description: If any additional policies should be included
+    Default: false
+  
   AdditionalPolicies:
     Type: CommaDelimitedList
     Description: A list of additional policies to attach the lambdas role (comma delimited).
@@ -51,10 +56,9 @@ Conditions:
     - true
     - !Ref EnableSplunk
   
-  IncludeAdditionalPolicies: !Not
-    - !Equals
-      - !Ref AWS::NoValue
-      - !Ref AdditionalPolicies
+  ShouldIncludeAdditionalPolicies: !Equals
+    - true
+    - !Ref IncludeAdditionalPolicies
 
 Resources:
   ExecuteLambdaManagedPolicy:
@@ -89,7 +93,7 @@ Resources:
             - !ImportValue account-resources:CloudwatchEncryptionKMSPolicyArn
             - !ImportValue account-resources:LambdaDecryptSecretsKMSPolicy
             - !If
-              - IncludeAdditionalPolicies
+              - ShouldIncludeAdditionalPolicies
               - !Join
                 - ','
                 - !Ref AdditionalPolicies
