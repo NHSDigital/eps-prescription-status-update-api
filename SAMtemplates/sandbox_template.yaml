@@ -79,8 +79,7 @@ Resources:
         StackName: !Ref AWS::StackName
         LambdaName: "${AWS::StackName}-UpdatePrescriptionStatusSandbox"
         LambdaArn: !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:${StackName}-UpdatePrescriptionStatusSandbox
-        AdditionalPolicies: !Join
-          - ','
+        AdditionalPolicies: !Ref AWS::NoValue
         LogRetentionInDays: !Ref LogRetentionInDays
         CloudWatchKMSKeyId: !ImportValue account-resources:CloudwatchLogsKmsKeyArn
         EnableSplunk: !Ref EnableSplunk
