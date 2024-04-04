@@ -77,7 +77,7 @@ Resources:
       Location: functions/lambda_resources.yaml
       Parameters:
         StackName: !Ref AWS::StackName
-        LambdaName: "${AWS::StackName}-UpdatePrescriptionStatusSandbox"
+        LambdaName: !Sub ${AWS::StackName}-UpdatePrescriptionStatusSandbox
         LambdaArn: !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:${AWS::StackName}-UpdatePrescriptionStatusSandbox
         AdditionalPolicies: !Ref AWS::NoValue
         LogRetentionInDays: !Ref LogRetentionInDays
