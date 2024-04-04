@@ -107,9 +107,9 @@ jobs:
           pwd
           ls -R
 
-      - name: List contents of runner
+      - name: List contents of work folder
         run: |
-          ls -R /home/runner/
+          ls -R /home/runner/work/
 
       - name: List contents of downloaded artifact
         run: |
