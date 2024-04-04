@@ -47,4 +47,6 @@ EOF
 # Navigate back to the previous directory
 # cd - >/dev/null || exit
 
+/home/runner/.local/bin/proxygen settings list
+
 # "$path_to_proxygen" instance deploy --no-confirm "$environment" "$instance" "$path_to_spec"
