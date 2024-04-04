@@ -205,7 +205,6 @@ Resources:
       - UpdatePrescriptionStatusMethod
     Properties:
       RestApiId: !Ref RestApiGateway
-      StageName: prod
 
   RestApiGatewayStage:
     Type: AWS::ApiGateway::Stage
