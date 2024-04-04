@@ -104,6 +104,10 @@ jobs:
 
       - name: List contents of downloaded artifact
         run: |
+          ls -R packaged_code
+
+      - name: List contents of downloaded artifact
+        run: |
           ls -R .
 
       - name: release code
