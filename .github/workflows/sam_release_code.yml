@@ -145,8 +145,8 @@ jobs:
           spec_path=$(find . -name "eps-prescription-status-update-api.resolved.json")
           echo "spec_path=\"$spec_path\"" >> "$GITHUB_ENV"
           
-          # Run the deploy script with the specification path
-          ./deploy_api.sh
+          # # Run the deploy script with the specification path
+          # ./deploy_api.sh
 
       - name: create_int_release_notes
         uses: ./.github/actions/update_confluence_jira
