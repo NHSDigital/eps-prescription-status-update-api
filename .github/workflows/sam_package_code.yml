@@ -59,8 +59,8 @@ jobs:
           make publish
           cp Makefile .aws-sam/build/
           cp samconfig_package_and_deploy.toml .aws-sam/build/
-          mkdir -p .aws-sam/build/specification
-          cp -r packages/specification/dist/ .aws-sam/build/specification
+          # mkdir -p .aws-sam/build/specification
+          # cp -r packages/specification/dist/ .aws-sam/build/specification
 
       - name: List files in .aws-sam/build/
         run: |
@@ -72,7 +72,6 @@ jobs:
           name: packaged_code
           path: |
             .aws-sam/build
-            .aws-sam/build/specification
             packages/updatePrescriptionStatus/lib/get-secrets-layer.zip
 
       # - uses: actions/upload-artifact@v4
