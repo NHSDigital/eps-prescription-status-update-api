@@ -132,10 +132,7 @@ jobs:
       - name: Deploy API
         shell: bash
         working-directory: .github/scripts
-        run: |
-          echo "Location of proxygen binary:"
-          ls -la "${PROXYGEN_PATH}"
-          ./deploy_api.sh
+        run: ./deploy_api.sh
 
       - name: create_int_release_notes
         uses: ./.github/actions/update_confluence_jira
