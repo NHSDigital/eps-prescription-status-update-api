@@ -21,9 +21,6 @@ on:
       SPEC_ARTIFACT:
         required: true
         type: string
-      DEPLOY_SANDBOX:
-        required: true
-        type: boolean
       TRUSTSTORE_FILE:
         required: true
         type: string
