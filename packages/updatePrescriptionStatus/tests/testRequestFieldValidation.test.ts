@@ -3,10 +3,27 @@
 import {expect, describe, it} from "@jest/globals"
 import {Task} from "fhir/r4"
 
-import valid from "./tasks/valid.json"
-import {fields} from "../src/validation/fields"
+import {fields, validateFields} from "../src/validation/fields"
 
-describe("Unit tests for validation of fields", () => {
+import valid from "./tasks/valid.json"
+
+describe("Unit tests for validateFields", () => {
+  it("when all fields present, return valid", async () => {
+    const result = validateFields(valid as Task)
+    expect(result).toEqual({valid: true, issues: undefined})
+  })
+
+  it("when fields missing, return invalid with message", async () => {
+    const invalid: any = {...valid}
+    delete invalid.id
+    delete invalid.basedOn
+
+    const result = validateFields(invalid)
+    expect(result).toEqual({valid: false, issues: "Missing required field(s) - PrescriptionID, TaskID."})
+  })
+})
+
+describe("Unit tests for validation of individual fields", () => {
   it.each([
     {
       missingField: "LastModified",
