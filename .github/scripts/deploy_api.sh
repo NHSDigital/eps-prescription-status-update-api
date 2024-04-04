@@ -8,8 +8,9 @@ fi
 
 # Assign the first argument to spec_path variable
 spec_path="$1"
+cat "$spec_path"
 
-echo "Specification location: $spec_path"
+echo "Specification location from the script: $spec_path"
 
 proxygen_private_key_arn=$(aws cloudformation list-exports --query "Exports[?Name=='account-resources:ProxgenPrivateKey'].Value" --output text)
 # proxygen_public_key_arn=$(aws cloudformation list-exports --query "Exports[?Name=='account-resources:ProxgenPublicKey'].Value" --output text)
