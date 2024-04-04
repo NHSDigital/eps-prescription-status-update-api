@@ -120,6 +120,7 @@ jobs:
       ENABLE_MUTUAL_TLS: false
       DEPLOY_SANDBOX: false
       BUILD_ARTIFACT: packaged_code
+      SPEC_ARTIFACT: specification_code
       TRUSTSTORE_FILE: psu-truststore.pem
       VERSION_NUMBER: ${{needs.tag_release.outputs.version_tag}}
       COMMIT_ID: ${{needs.get_commit_id.outputs.commit_id}}
@@ -144,6 +145,7 @@ jobs:
       ENABLE_MUTUAL_TLS: false
       DEPLOY_SANDBOX: false
       BUILD_ARTIFACT: packaged_code
+      SPEC_ARTIFACT: specification_code
       TRUSTSTORE_FILE: psu-truststore.pem
       VERSION_NUMBER: ${{needs.tag_release.outputs.version_tag}}
       COMMIT_ID: ${{needs.get_commit_id.outputs.commit_id}}
@@ -162,6 +164,7 @@ jobs:
       ENABLE_MUTUAL_TLS: false
       DEPLOY_SANDBOX: false
       BUILD_ARTIFACT: packaged_code
+      SPEC_ARTIFACT: specification_code
       TRUSTSTORE_FILE: psu-truststore.pem
       VERSION_NUMBER: ${{needs.tag_release.outputs.version_tag}}
       COMMIT_ID: ${{needs.get_commit_id.outputs.commit_id}}
@@ -180,6 +183,7 @@ jobs:
       ENABLE_MUTUAL_TLS: false
       DEPLOY_SANDBOX: false
       BUILD_ARTIFACT: packaged_code
+      SPEC_ARTIFACT: specification_code
       TRUSTSTORE_FILE: psu-truststore.pem
       VERSION_NUMBER: ${{needs.tag_release.outputs.version_tag}}
       COMMIT_ID: ${{needs.get_commit_id.outputs.commit_id}}

@@ -56,10 +56,11 @@ jobs:
           rm -rf .aws-sam
           export PATH=$PATH:$PWD/node_modules/.bin
           make sam-build
+          make publish
           cp Makefile .aws-sam/build/
           cp samconfig_package_and_deploy.toml .aws-sam/build/
-          make publish
-          cp packages/specification/dist/eps-prescription-status-update-api.resolved.json .aws-sam/build/
+          mkdir -p .aws-sam/build/spec
+          cp -r packages/specification/dist/ .aws-sam/build/specification
 
       - name: List files in .aws-sam/build/
         run: |
@@ -71,4 +72,11 @@ jobs:
           name: packaged_code
           path: |
             .aws-sam/build
-            packages/updatePrescriptionStatus/lib/get-secrets-layer.zip 
+            packages/updatePrescriptionStatus/lib/get-secrets-layer.zip
+
+      - uses: actions/upload-artifact@v4
+        name: upload specification artifact
+        with:
+          name: specification_code
+          path: |
+            .aws-sam/build/specification
