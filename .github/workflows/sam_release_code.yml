@@ -102,9 +102,10 @@ jobs:
           name: ${{ inputs.BUILD_ARTIFACT }}
           path: .
 
-      - name: List contents of downloaded artifact
+      - name: Print current directory
         run: |
-          ls -R packaged_code
+          pwd
+          ls -R
 
       - name: List contents of downloaded artifact
         run: |
