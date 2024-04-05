@@ -283,4 +283,4 @@ x-nhsd-apim:
     url: https://psu.dev.eps.national.nhs.uk
     security:
       type: mtls
-      secret: kris-mtls-1
+      secret: psu-mtls-1
