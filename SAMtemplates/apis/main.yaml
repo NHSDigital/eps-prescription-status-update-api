@@ -6,34 +6,27 @@ Description: |
 Parameters:
   StackName:
     Type: String
-    Description: The name of the main stack
     Default: none
   
   EnableMutualTLS:
     Type: String
-    Description: Whether to use mutual TLS
   
   TruststoreVersion:
     Type: String
-    Description: TruststoreVersion
   
   UpdatePrescriptionStatusStateMachineName:
     Type: String
-    Description: Name of the UpdatePrescriptionStatus state machine
     Default: none
   
   UpdatePrescriptionStatusStateMachineArn:
     Type: String
-    Description: Arn of the UpdatePrescriptionStatus state machine
     Default: none
 
   LogRetentionInDays:
     Type: Number
-    Description: How long to keep logs for.
   
   EnableSplunk:
     Type: String
-    Description: Whether to use splunk
 
 Conditions:
   ShouldUseMutualTLS: !Equals

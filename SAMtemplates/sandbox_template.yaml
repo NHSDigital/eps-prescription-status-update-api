@@ -20,25 +20,24 @@ Globals:
 Parameters:
   TruststoreVersion:
     Type: String
-    Description: TruststoreVersion
     Default: none
+
   EnableMutualTLS:
     Type: String
-    Description: Whether to use mutual TLS
     Default: false
     AllowedValues: [true, false]
+
   EnableSplunk:
     Type: String
-    Description: Whether to use splunk
     Default: false
     AllowedValues: [true, false]
+
   LogLevel:
     Type: String
-    Description: The log level to set in the lambda
     Default: INFO
+
   LogRetentionInDays:
     Type: Number
-    Description: How long to keep logs for
     AllowedValues:
       [
         1,

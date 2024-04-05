@@ -6,21 +6,17 @@ Description: |
 Parameters:
   StackName:
     Type: String
-    Description: The name of the main stack
 
   LambdaName:
     Type: String
-    Description: Name of lambda we are creating resources for.
     Default: none
   
   LambdaArn:
     Type: String
-    Description: Arn of lambda we are creating resources for.
     Default: none
   
   IncludeAdditionalPolicies:
     Type: String
-    Description: If any additional policies should be included
     Default: false
   
   AdditionalPolicies:
@@ -30,25 +26,20 @@ Parameters:
   
   LogRetentionInDays:
     Type: Number
-    Description: How long to keep logs for.
   
   CloudWatchKMSKeyId:
     Type: String
-    Description: The KMS Key ID used for encrypting logs.
     Default: none
   
   EnableSplunk:
     Type: String
-    Description: Whether to use splunk
   
   SplunkSubscriptionFilterRole:
     Type: String
-    Description: Subscription filter role for sending logs to splunk
     Default: none
   
   SplunkDeliveryStreamArn:
     Type: String
-    Description: Splunk delivery stream
     Default: none
 
 Conditions:
@@ -133,10 +124,6 @@ Outputs:
   LambdaRoleArn:
     Description: LambdaRole ARN
     Value: !GetAtt LambdaRole.Arn
-  
-  LambdaRoleName:
-    Description: LambdaRole name
-    Value: !Ref LambdaRole
 
   ExecuteLambdaPolicyArn:
     Description: Lambda execution policy arn

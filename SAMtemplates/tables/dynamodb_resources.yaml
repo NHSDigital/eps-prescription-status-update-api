@@ -6,17 +6,14 @@ Description: |
 Parameters:
   StackName:
     Type: String
-    Description: The name of the main stack
     Default: none
   
   TableName:
     Type: String
-    Description: The name of the dynamodb table
     Default: none
   
   TableArn:
     Type: String
-    Description: The arn of the dynamodb table
     Default: none
 
 Resources:

@@ -11,16 +11,13 @@ Parameters:
   
   ApiName:
     Type: String
-    Description: The name of the API Gateway
     Default: none
   
   LogRetentionInDays:
     Type: Number
-    Description: How long to keep logs for.
   
   EnableSplunk:
     Type: String
-    Description: Whether to use splunk
 
 Conditions:
   ShouldUseSplunk: !Equals
@@ -71,5 +68,5 @@ Outputs:
     Value: !GetAtt ApiGwRole.Arn
   
   ApiGwAccessLogsArn:
-    Description: ApiGwAccessLogs ARN
+    Description: The API GW access logs ARN
     Value: !GetAtt ApiGwAccessLogs.Arn

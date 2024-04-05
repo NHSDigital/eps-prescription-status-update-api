@@ -6,7 +6,6 @@ Description: |
 Parameters:
   StackName:
     Type: String
-    Description: The name of the main stack
     Default: none
 
 Resources:

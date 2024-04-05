@@ -19,25 +19,20 @@ Globals:
 Parameters:
   StackName:
     Type: String
-    Description: The name of the main stack
     Default: none
   
   PrescriptionStatusUpdatesTableName:
     Type: String
-    Description: The name of the PrescriptionStatusUpdates Table
     Default: none
   
   LogLevel:
     Type: String
-    Description: The log level to set in the lambda
   
   LogRetentionInDays:
     Type: Number
-    Description: How long to keep logs for
   
   EnableSplunk:
     Type: String
-    Description: Whether to use splunk
 
 Resources:
   UpdatePrescriptionStatus:

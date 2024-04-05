@@ -6,26 +6,21 @@ Description: |
 Parameters:
   StackName:
     Type: String
-    Description: The name of the main stack
     Default: none
   
   UpdatePrescriptionStatusFunctionName:
     Type: String
-    Description: The function name of UpdatePrescriptionStatus lambda
     Default: none
   
   UpdatePrescriptionStatusFunctionArn:
     Type: String
-    Description: The function ARN of UpdatePrescriptionStatus lambda
     Default: none
   
   LogRetentionInDays:
     Type: Number
-    Description: How long to keep logs for
   
   EnableSplunk:
     Type: String
-    Description: Whether to use splunk
 
 Resources:
   UpdatePrescriptionStatusStateMachine:
