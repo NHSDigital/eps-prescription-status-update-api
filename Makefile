@@ -112,6 +112,7 @@ lint: lint-node lint-samtemplates lint-python lint-githubactions lint-githubacti
 test: compile
 	npm run test --workspace packages/updatePrescriptionStatus
 	npm run test --workspace packages/sandbox
+	npm run test --workspace packages/specification
 
 #Removes build/ + dist/ directories
 clean:
@@ -119,6 +120,8 @@ clean:
 	rm -rf packages/updatePrescriptionStatus/lib
 	rm -rf packages/sandbox/coverage
 	rm -rf packages/sandbox/lib
+	rm -rf packages/specification/coverage
+	rm -rf packages/specification/lib
 	rm -rf .aws-sam
 
 deep-clean: clean
