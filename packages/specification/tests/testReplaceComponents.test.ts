@@ -1,5 +1,5 @@
 import fs from "fs"
-import {replaceAppLevel0Object} from "../scripts/replaceComponents"
+import {replaceAppLevel0Object} from "../scr/replaceComponents"
 
 describe("replaceAppLevel0Object", () => {
   const jsonFilePath: string = "dist/eps-prescription-status-update-api.resolved.json"
