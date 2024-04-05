@@ -37,7 +37,7 @@ export function validateFields(task: Task): ValidationOutcome {
     }
   } catch(e) {
     const message = `Unhandled error during validation of fields.`
-    logger.error(`${message}: ${e}`)
+    logger.error(message, {error: e})
     validationOutcome.valid = false
     validationOutcome.issues = message
   }

@@ -138,7 +138,7 @@ export function validateContent(task: Task): ValidationOutcome {
       }
     } catch(e) {
       const message = `Unhandled error during validation of ${validation.name}.`
-      logger.error(`${message}: ${e}`)
+      logger.error(message, {error: e})
       issues.push(message)
     }
   })
