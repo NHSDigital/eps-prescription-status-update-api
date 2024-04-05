@@ -6,16 +6,15 @@ proxygen_private_key_arn=$(aws cloudformation list-exports --query "Exports[?Nam
 proxygen_private_key=$(aws secretsmanager get-secret-value --secret-id "${proxygen_private_key_arn}" --query SecretString --output text)
 # proxygen_public_key=$(aws secretsmanager get-secret-value --secret-id "${proxygen_public_key_arn}" --query SecretString --output text)
 
-
-client_private_key_arn=$(aws cloudformation list-exports --query "Exports[?Name=='account-resources:PsuClientKeySecret'].Value" --output text)
+# client_private_key_arn=$(aws cloudformation list-exports --query "Exports[?Name=='account-resources:PsuClientKeySecret'].Value" --output text)
 # client_public_key_arn=$(aws cloudformation list-exports --query "Exports[?Name=='account-resources:PsuClientCertSecret'].Value" --output text)
 
-client_private_key=$(aws secretsmanager get-secret-value --secret-id "${client_private_key_arn}" --query SecretString --output text)
+# client_private_key=$(aws secretsmanager get-secret-value --secret-id "${client_private_key_arn}" --query SecretString --output text)
 # client_public_key=$(aws secretsmanager get-secret-value --secret-id "${client_public_key_arn}" --query SecretString --output text)
 
 # Save private keys to temporary files
 echo "$proxygen_private_key" > /tmp/proxygen_private_key.pem
-echo "$client_private_key" > /tmp/client_private_key.pem
+# echo "$client_private_key" > /tmp/client_private_key.pem
 
 environment=internal-dev
 instance=prescription-status-update
@@ -40,13 +39,5 @@ api: prescription-status-update-api
 endpoint_url: https://proxygen.prod.api.platform.nhs.uk
 spec_output_format: json
 EOF
-
-# cd ../../.aws-sam/build || exit
-# make publish
-
-# Navigate back to the previous directory
-# cd - >/dev/null || exit
-
-"$path_to_proxygen" settings list
 
 "$path_to_proxygen" instance deploy --no-confirm "$environment" "$instance" "$path_to_spec"
