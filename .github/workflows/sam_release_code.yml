@@ -93,36 +93,17 @@ jobs:
           role-to-assume: ${{ secrets.CLOUD_FORMATION_DEPLOY_ROLE }}
           role-session-name: github-actions
 
-      - name: download build artifact
+      - name: Download build artifact
         uses: actions/download-artifact@v4
         with:
           name: ${{ inputs.BUILD_ARTIFACT }}
           path: .aws-sam/build
 
-      - name: download specification artifact
+      - name: Download specification artifact
         uses: actions/download-artifact@v4
         with:
           name: ${{ inputs.SPEC_ARTIFACT }}
           path: .
-
-      # - name: Print current directory
-      #   run: |
-      #     pwd
-      #     ls -R
-
-      # - name: List contents of work folder
-      #   run: |
-      #     ls -R /home/runner/work/
-
-      - name: List contents of downloaded artifact
-        run: |
-          pwd
-          ls -R .
-          # Set the spec_path variable to the absolute path of "eps-prescription-status-update-api.resolved.json" in the root directory
-          spec_path="$(pwd)/eps-prescription-status-update-api.resolved.json"
-          echo "Specification location: $spec_path"
-          # Export the spec_path variable to make it available to subsequent steps in the GitHub environment
-          echo "spec_path=\"$spec_path\"" >> "$GITHUB_ENV"
 
       - name: release code
         shell: bash
@@ -143,11 +124,17 @@ jobs:
         run: |
           pip install proxygen-cli
 
+      - name: Export specification directory
+        run: |
+          # Set the spec_path variable to the absolute path in the root directory
+          spec_path="$(pwd)/eps-prescription-status-update-api.resolved.json"
+          echo "Specification location: $spec_path"
+          # Export the spec_path variable to make it available to subsequent steps
+          echo "spec_path=\"$spec_path\"" >> "$GITHUB_ENV"
+
       - name: Deploy API
         shell: bash
         working-directory: .github/scripts
-        # env:
-        #   spec_path: eps-prescription-status-update-api.resolved.json
         run: |
           # Get the directory where proxygen is installed
           proxygen_dir="$(python -m site --user-base)/bin"
@@ -199,7 +186,7 @@ jobs:
           ref: gh-pages
           path: gh-pages
   
-      - name: update release tag in github pages
+      - name: Update release tag in github pages
         if: ${{ inputs.TARGET_ENVIRONMENT != 'dev-pr' }}
         run: |
           cd gh-pages
