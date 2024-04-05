@@ -43,7 +43,15 @@
             "system": "https://fhir.nhs.uk/Id/ods-organization-code",
             "value": "C9Z1O"
           }
-        }
+        },
+        "input": [
+          {
+            "type": {
+              "text": "Repeat Number"
+            },
+            "valueInteger": 2
+          }
+        ]
       },
       "request": {
         "method": "POST",

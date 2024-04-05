@@ -45,6 +45,14 @@
           }
         }
       },
+      "input": [
+        {
+          "type": {
+            "text": "Repeat Number"
+          },
+          "valueInteger": 2
+        }
+      ],
       "request": {
         "method": "POST",
         "url": "Task"
