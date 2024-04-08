@@ -130,16 +130,18 @@ jobs:
           SPEC_PATH="$(pwd)/eps-prescription-status-update-api.resolved.json"
           echo "Specification location: $SPEC_PATH"
           # Export the spec_path variable to make it available to subsequent steps
-          echo "SPEC_PATH="$SPEC_PATH"" >> "$GITHUB_ENV"
+          echo "export SPEC_PATH=${SPEC_PATH}" >> "$GITHUB_ENV"
 
       - name: Deploy API
         shell: bash
         working-directory: .github/scripts
+        env: 
+          SPEC_PATH: ${{ env.SPEC_PATH }}
         run: |
           # Get the location of proxygen and store it in a variable
           PROXYGEN_PATH=$(which proxygen)
           echo "Proxygen location: $PROXYGEN_PATH"
-          echo "export PROXYGEN_PATH="$PROXYGEN_PATH" >> "$GITHUB_ENV"
+          echo "export PROXYGEN_PATH=${PROXYGEN_PATH}" >> "$GITHUB_ENV"
 
           # Run the deploy script with the specification path
           ./deploy_api.sh
