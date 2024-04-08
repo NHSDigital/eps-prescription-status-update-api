@@ -122,7 +122,6 @@ Resources:
             - |-
               ## Velocity Template used for API Gateway request mapping template
               ## "@@" is used here as a placeholder for '"' to avoid using escape characters.
-              #set($context.requestOverride.header.apigw-request-id = $context.requestId)
 
               #set($includeHeaders = true)
               #set($includeQueryString = true)
