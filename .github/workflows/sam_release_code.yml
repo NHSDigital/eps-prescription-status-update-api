@@ -125,6 +125,15 @@ jobs:
           echo "Proxygen location: $PROXYGEN_PATH"
           echo "export PROXYGEN_PATH=${PROXYGEN_PATH}" >> "$GITHUB_ENV"
 
+      - name: Deploy API Test
+        shell: bash
+        working-directory: .github/scripts
+        env:
+          PROXYGEN_PATH: ${{ env.PROXYGEN_PATH }}
+          SPEC_PATH: ${{ env.SPEC_PATH }}
+          TARGET_ENVIRONMENT: ${{ env.TARGET_ENVIRONMENT }}
+        run: ./deploy_api_test.sh
+
       - name: release code
         shell: bash
         working-directory: .github/scripts
