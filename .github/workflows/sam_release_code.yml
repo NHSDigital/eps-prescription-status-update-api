@@ -56,6 +56,8 @@ on:
         required: false
       DEV_CLOUD_FORMATION_EXECUTE_LAMBDA_ROLE:
         required: false
+      SPEC_PATH:
+        required: true
   
 jobs:
   sam_release_code:
@@ -135,6 +137,8 @@ jobs:
       - name: Deploy API
         shell: bash
         working-directory: .github/scripts
+        env: 
+          SPEC_PATH: ${{ secrets.SPEC_PATH }}
         run: |
           # Get the location of proxygen and store it in a variable
           proxygen_path=$(which proxygen)
