@@ -109,7 +109,7 @@ properties:
             example: C9Z1O
   input:
     type: array
-    description: The eRD Repeat Number with the prescription tracking status updates for eRD prescriptions. This is optional and only required for eRD type prescriptions.
+    description: The eRD Repeat Number, with the prescription tracking status updates for eRD prescriptions. This is optional and only required for eRD type prescriptions.
     items:
       type: object
       required: [_type, valueInteger]
