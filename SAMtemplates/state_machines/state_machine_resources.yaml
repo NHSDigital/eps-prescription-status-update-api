@@ -97,6 +97,10 @@ Resources:
             Resource:
               - !GetAtt StateMachineLogGroup.Arn
               - !Sub ${StateMachineLogGroup.Arn}:log-stream:*
+          - Effect: Allow
+            Action:
+              - logs:DescribeLogGroups
+            Resource: "*"
 
   StateMachineLogGroup:
     Type: AWS::Logs::LogGroup
