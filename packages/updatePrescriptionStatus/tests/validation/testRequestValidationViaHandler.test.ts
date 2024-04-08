@@ -28,9 +28,7 @@ describe("Integration tests for validation via updatePrescriptionStatus handler"
 
   it("when one validation issue is present in multiple items, expect 400 status code, message indicating validation issues, and message indicating valid item", async () => {
     const body: any = {...requestMultipleItems}
-
-    const now = new Date()
-    body.entry[0].resource.lastModified = new Date(now.valueOf() + ONE_DAY_IN_MS + 100000).toISOString()
+    body.entry[0].resource.lastModified = new Date(DEFAULT_DATE.valueOf() + ONE_DAY_IN_MS + 1000).toISOString()
 
     const event: APIGatewayProxyEvent = generateMockEvent(body)
 
@@ -47,9 +45,7 @@ describe("Integration tests for validation via updatePrescriptionStatus handler"
 
   it("when multiple items all have validation issues, expect 400 status code and messages indicating validation issues", async () => {
     const body: any = {...requestMultipleItems}
-
-    const now = new Date()
-    body.entry[0].resource.lastModified = new Date(now.valueOf() + ONE_DAY_IN_MS + 100000).toISOString()
+    body.entry[0].resource.lastModified = new Date(DEFAULT_DATE.valueOf() + ONE_DAY_IN_MS + 1000).toISOString()
 
     delete body.entry[1].resource.basedOn
 
