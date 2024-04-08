@@ -30,10 +30,6 @@ on:
       COMMIT_ID:
         required: true
         type: string
-      LOG_LEVEL:
-        required: false
-        type: string
-        default: INFO
       LOG_RETENTION_DAYS:
         required: true
         type: string
@@ -101,7 +97,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: ${{ inputs.BUILD_ARTIFACT }}
-          path: .
+          path: .aws-sam/build
 
       - name: Download specification artifact
         uses: actions/download-artifact@v4
@@ -116,7 +112,6 @@ jobs:
           artifact_bucket_prefix: prescription_status_update/${{ inputs.ARTIFACT_BUCKET_PREFIX }}
           COMMIT_ID: ${{ inputs.COMMIT_ID }}
           enable_mutual_tls: ${{ inputs.ENABLE_MUTUAL_TLS }}
-          LOG_LEVEL: ${{ inputs.LOG_LEVEL }}
           LOG_RETENTION_DAYS: ${{ inputs.LOG_RETENTION_DAYS }}
           stack_name: ${{ inputs.STACK_NAME }}
           TARGET_ENVIRONMENT: ${{ inputs.TARGET_ENVIRONMENT }}
@@ -129,7 +124,7 @@ jobs:
         run: |
           pip install proxygen-cli
 
-      - name: Export specification directory
+      - name: Export specification path
         run: |
           # Set the spec_path variable to the absolute path in the root directory
           SPEC_PATH="$(pwd)/eps-prescription-status-update-api.resolved.json"
@@ -137,16 +132,21 @@ jobs:
           # Export the spec_path variable to make it available to subsequent steps
           echo "export SPEC_PATH=${SPEC_PATH}" >> "$GITHUB_ENV"
 
-      - name: Deploy API
-        shell: bash
-        working-directory: .github/scripts
+      - name: Export proxygen path
         run: |
           # Get the location of proxygen and store it in a variable
           PROXYGEN_PATH=$(which proxygen)
           echo "Proxygen location: $PROXYGEN_PATH"
           echo "export PROXYGEN_PATH=${PROXYGEN_PATH}" >> "$GITHUB_ENV"
 
-          # Run the deploy script with the specification path
+      - name: Deploy API
+        shell: bash
+        working-directory: .github/scripts
+        env: 
+          SPEC_PATH: ${{ env.SPEC_PATH }}
+          PROXYGEN_PATH: ${{ env.PROXYGEN_PATH }}
+          TARGET_ENVIRONMENT: ${{ inputs.TARGET_ENVIRONMENT }}
+        run: |
           ./deploy_api.sh
 
       - name: create_int_release_notes

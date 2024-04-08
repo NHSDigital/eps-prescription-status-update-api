@@ -1,5 +1,11 @@
 #!/usr/bin/env bash
 
+# Load the environment variables
+
+echo "Proxygen location: $PROXYGEN_PATH"
+echo "Specification location: $SPEC_PATH"
+echo "Target environment: $TARGET_ENVIRONMENT"
+
 proxygen_private_key_arn=$(aws cloudformation list-exports --query "Exports[?Name=='account-resources:ProxgenPrivateKey'].Value" --output text)
 # proxygen_public_key_arn=$(aws cloudformation list-exports --query "Exports[?Name=='account-resources:ProxgenPublicKey'].Value" --output text)
 
