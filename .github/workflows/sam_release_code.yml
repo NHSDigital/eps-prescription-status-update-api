@@ -56,8 +56,6 @@ on:
         required: false
       DEV_CLOUD_FORMATION_EXECUTE_LAMBDA_ROLE:
         required: false
-      SPEC_PATH:
-        required: true
   
 jobs:
   sam_release_code:
@@ -129,21 +127,21 @@ jobs:
       - name: Export specification directory
         run: |
           # Set the spec_path variable to the absolute path in the root directory
-          spec_path="$(pwd)/eps-prescription-status-update-api.resolved.json"
-          echo "Specification location: $spec_path"
+          SPEC_PATH="$(pwd)/eps-prescription-status-update-api.resolved.json"
+          echo "Specification location: $SPEC_PATH"
           # Export the spec_path variable to make it available to subsequent steps
-          echo "SPEC_PATH=\"$spec_path\"" >> "$GITHUB_ENV"
+          echo "SPEC_PATH="$SPEC_PATH"" >> "$GITHUB_ENV"
 
       - name: Deploy API
         shell: bash
         working-directory: .github/scripts
         env: 
-          SPEC_PATH: ${{ secrets.SPEC_PATH }}
+          SPEC_PATH: ${{ env.SPEC_PATH }}
         run: |
           # Get the location of proxygen and store it in a variable
-          proxygen_path=$(which proxygen)
-          echo "Proxygen location: $proxygen_path"
-          echo "export PROXYGEN_PATH=\"$proxygen_path\"" >> "$GITHUB_ENV"
+          PROXYGEN_PATH=$(which proxygen)
+          echo "Proxygen location: $PROXYGEN_PATH"
+          echo "export PROXYGEN_PATH="$PROXYGEN_PATH" >> "$GITHUB_ENV"
 
           # Run the deploy script with the specification path
           ./deploy_api.sh
