@@ -130,26 +130,19 @@ jobs:
           spec_path="$(pwd)/eps-prescription-status-update-api.resolved.json"
           echo "Specification location: $spec_path"
           # Export the spec_path variable to make it available to subsequent steps
-          echo "spec_path=\"$spec_path\"" >> "$GITHUB_ENV"
+          echo "SPEC_PATH=\"$spec_path\"" >> "$GITHUB_ENV"
 
       - name: Deploy API
         shell: bash
         working-directory: .github/scripts
         run: |
-          # Get the directory where proxygen is installed
-          proxygen_dir="$(python -m site --user-base)/bin"
-      
-          # Add the proxygen directory to the PATH
-          export PATH="$PATH:$proxygen_dir"
-          echo "Proxygen dir: $proxygen_dir"
-      
           # Get the location of proxygen and store it in a variable
           proxygen_path=$(which proxygen)
           echo "Proxygen location: $proxygen_path"
           echo "export PROXYGEN_PATH=\"$proxygen_path\"" >> "$GITHUB_ENV"
 
           # Run the deploy script with the specification path
-          ./deploy_api.sh
+          ./deploy_api.sh "$PROXYGEN_PATH" "$SPEC_PATH" "$TARGET_ENVIRONMENT"
 
       - name: create_int_release_notes
         uses: ./.github/actions/update_confluence_jira
