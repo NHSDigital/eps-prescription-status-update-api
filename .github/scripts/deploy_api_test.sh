@@ -1,10 +1,9 @@
 #!/usr/bin/env bash
 
-echo "Proxygen location: $PROXYGEN_PATH"
-echo "Specification location: $SPEC_PATH"
+echo "Proxygen path: $PROXYGEN_PATH"
+echo "Specification path: $SPEC_PATH"
+echo "Stack name: $STACK_NAME" # instance
 echo "Target environment: $TARGET_ENVIRONMENT"
-echo "Version number: $VERSION_NUMBER"
-echo "Stack name: $STACK_NAME"
 
 # Condition to set the environment variable based on TARGET_ENVIRONMENT
 if [ "$TARGET_ENVIRONMENT" != "dev-pr" ]; then

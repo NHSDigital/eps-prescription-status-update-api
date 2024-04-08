@@ -1,5 +1,19 @@
 #!/usr/bin/env bash
 
+echo "Proxygen path: $PROXYGEN_PATH"
+echo "Specification path: $SPEC_PATH"
+echo "Stack name: $STACK_NAME" # instance
+echo "Target environment: $TARGET_ENVIRONMENT"
+
+# Condition to set the environment variable based on TARGET_ENVIRONMENT
+if [ "$TARGET_ENVIRONMENT" != "dev-pr" ]; then
+  environment=int
+else
+  environment=internal-dev
+fi
+
+echo "Environment name: $environment"
+
 proxygen_private_key_arn=$(aws cloudformation list-exports --query "Exports[?Name=='account-resources:ProxgenPrivateKey'].Value" --output text)
 # proxygen_public_key_arn=$(aws cloudformation list-exports --query "Exports[?Name=='account-resources:ProxgenPublicKey'].Value" --output text)
 
@@ -15,11 +29,6 @@ proxygen_private_key=$(aws secretsmanager get-secret-value --secret-id "${proxyg
 # Save private keys to temporary files
 echo "$proxygen_private_key" > /tmp/proxygen_private_key.pem
 # echo "$client_private_key" > /tmp/client_private_key.pem
-
-environment=internal-dev
-instance=prescription-status-update
-path_to_proxygen=/home/runner/.local/bin/proxygen
-path_to_spec=/home/runner/work/eps-prescription-status-update-api/eps-prescription-status-update-api/eps-prescription-status-update-api.resolved.json
 
 # Create ~/.proxygen directory if it doesn't exist
 mkdir -p ~/.proxygen
@@ -40,4 +49,4 @@ endpoint_url: https://proxygen.prod.api.platform.nhs.uk
 spec_output_format: json
 EOF
 
-"$path_to_proxygen" instance deploy --no-confirm "$environment" "$instance" "$path_to_spec"
+"$PROXYGEN_PATH" instance deploy --no-confirm "$environment" "$STACK_NAME" "$SPEC_PATH"

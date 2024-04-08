@@ -131,9 +131,8 @@ jobs:
         env:
           PROXYGEN_PATH: ${{ env.PROXYGEN_PATH }}
           SPEC_PATH: ${{ env.SPEC_PATH }}
-          TARGET_ENVIRONMENT: ${{ inputs.TARGET_ENVIRONMENT }}
-          VERSION_NUMBER: ${{ inputs.VERSION_NUMBER }}
           STACK_NAME: ${{ inputs.STACK_NAME }}
+          TARGET_ENVIRONMENT: ${{ inputs.TARGET_ENVIRONMENT }}
         run: ./deploy_api_test.sh
 
       - name: release code
@@ -155,6 +154,11 @@ jobs:
       - name: Deploy API
         shell: bash
         working-directory: .github/scripts
+        env:
+          PROXYGEN_PATH: ${{ env.PROXYGEN_PATH }}
+          SPEC_PATH: ${{ env.SPEC_PATH }}
+          STACK_NAME: ${{ inputs.STACK_NAME }}
+          TARGET_ENVIRONMENT: ${{ inputs.TARGET_ENVIRONMENT }}
         run: ./deploy_api.sh
 
       - name: create_int_release_notes
