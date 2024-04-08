@@ -1,0 +1,123 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: |
+  PSU DynamoDB tables and related resources
+
+Parameters:
+  StackName:
+    Type: String
+    Default: none
+
+Resources:
+  PrescriptionStatusUpdatesTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub ${StackName}-PrescriptionStatusUpdates
+      AttributeDefinitions:
+        - AttributeName: RequestID
+          AttributeType: S
+        - AttributeName: PrescriptionID
+          AttributeType: S
+        - AttributeName: PatientNHSNumber
+          AttributeType: S
+        - AttributeName: PharmacyODSCode
+          AttributeType: S
+      KeySchema:
+        - AttributeName: RequestID
+          KeyType: HASH
+        - AttributeName: PrescriptionID
+          KeyType: RANGE
+      ProvisionedThroughput:
+        ReadCapacityUnits: '5'
+        WriteCapacityUnits: '5'
+      GlobalSecondaryIndexes:
+        - IndexName: RequestIDIndex
+          KeySchema:
+            - AttributeName: RequestID
+              KeyType: HASH
+            - AttributeName: PrescriptionID
+              KeyType: RANGE
+          Projection:
+            NonKeyAttributes:
+              - PatientNHSNumber
+              - PharmacyODSCode
+              - TaskID
+              - LineItemID
+              - TerminalStatus
+              - RequestMessage
+            ProjectionType: INCLUDE
+          ProvisionedThroughput:
+            ReadCapacityUnits: '5'
+            WriteCapacityUnits: '5'
+        - IndexName: PrescriptionIDIndex
+          KeySchema:
+            - AttributeName: PrescriptionID
+              KeyType: HASH
+            - AttributeName: PatientNHSNumber
+              KeyType: RANGE
+          Projection:
+            NonKeyAttributes:
+              - PharmacyODSCode
+              - TaskID
+              - LineItemID
+              - TerminalStatus
+              - RequestID
+              - RequestMessage
+            ProjectionType: INCLUDE
+          ProvisionedThroughput:
+            ReadCapacityUnits: '5'
+            WriteCapacityUnits: '5'
+        - IndexName: PatientNHSNumberIndex
+          KeySchema:
+            - AttributeName: PatientNHSNumber
+              KeyType: HASH
+            - AttributeName: PrescriptionID
+              KeyType: RANGE
+          Projection:
+            NonKeyAttributes:
+              - PharmacyODSCode
+              - TaskID
+              - LineItemID
+              - TerminalStatus
+              - RequestID
+              - RequestMessage
+            ProjectionType: INCLUDE
+          ProvisionedThroughput:
+            ReadCapacityUnits: '5'
+            WriteCapacityUnits: '5'
+        - IndexName: PharmacyODSCodeIndex
+          KeySchema:
+            - AttributeName: PharmacyODSCode
+              KeyType: HASH
+            - AttributeName: PrescriptionID
+              KeyType: RANGE
+          Projection:
+            NonKeyAttributes:
+              - PatientNHSNumber
+              - TaskID
+              - LineItemID
+              - TerminalStatus
+              - RequestID
+              - RequestMessage
+            ProjectionType: INCLUDE
+          ProvisionedThroughput:
+            ReadCapacityUnits: '5'
+            WriteCapacityUnits: '5'
+  
+  PrescriptionStatusUpdatesResources:
+    Type: AWS::Serverless::Application
+    Properties:
+      Location: dynamodb_resources.yaml
+      Parameters:
+        StackName: !Ref StackName
+        TableName: !Ref PrescriptionStatusUpdatesTable
+        TableArn: !GetAtt PrescriptionStatusUpdatesTable.Arn
+
+Outputs:
+  PrescriptionStatusUpdatesTableName:
+    Description: PrescriptionStatusUpdates table name
+    Value: !Ref PrescriptionStatusUpdatesTable
+  
+  PrescriptionStatusUpdatesTableArn:
+    Description: PrescriptionStatusUpdates table arn
+    Value: !GetAtt PrescriptionStatusUpdatesTable.Arn
