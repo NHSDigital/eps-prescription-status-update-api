@@ -1,0 +1,84 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: |
+  PSU lambda functions and related resources
+
+Globals:
+  Function:
+    Timeout: 50
+    MemorySize: 256
+    Architectures:
+      - x86_64
+    Runtime: nodejs20.x
+    Environment:
+      Variables:
+        NODE_OPTIONS: '--enable-source-maps'
+    Layers:
+      - !Sub arn:aws:lambda:${AWS::Region}:580247275435:layer:LambdaInsightsExtension:49
+
+Parameters:
+  StackName:
+    Type: String
+    Default: none
+  
+  PrescriptionStatusUpdatesTableName:
+    Type: String
+    Default: none
+  
+  LogLevel:
+    Type: String
+  
+  LogRetentionInDays:
+    Type: Number
+  
+  EnableSplunk:
+    Type: String
+
+Resources:
+  UpdatePrescriptionStatus:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub ${StackName}-UpdatePrescriptionStatus
+      CodeUri: ../../packages
+      Handler: updatePrescriptionStatus.handler
+      Role: !GetAtt UpdatePrescriptionStatusResources.Outputs.LambdaRoleArn
+      Environment:
+        Variables:
+          TABLE_NAME: !Ref PrescriptionStatusUpdatesTableName
+          LOG_LEVEL: !Ref LogLevel
+    Metadata:
+      BuildMethod: esbuild
+      BuildProperties:
+        Minify: true
+        Target: es2020
+        Sourcemap: true
+        tsconfig: updatePrescriptionStatus/tsconfig.json
+        EntryPoints:
+          - updatePrescriptionStatus/src/updatePrescriptionStatus.ts
+  
+  UpdatePrescriptionStatusResources:
+    Type: AWS::Serverless::Application
+    Properties:
+      Location: lambda_resources.yaml
+      Parameters:
+        StackName: !Ref StackName
+        LambdaName: !Sub ${StackName}-UpdatePrescriptionStatus
+        LambdaArn: !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:${StackName}-UpdatePrescriptionStatus
+        IncludeAdditionalPolicies: true
+        AdditionalPolicies: !Join
+          - ','
+          - - Fn::ImportValue: !Sub ${StackName}:tables:${PrescriptionStatusUpdatesTableName}:TableWritePolicyArn
+        LogRetentionInDays: !Ref LogRetentionInDays
+        CloudWatchKMSKeyId: !ImportValue account-resources:CloudwatchLogsKmsKeyArn
+        EnableSplunk: !Ref EnableSplunk
+        SplunkSubscriptionFilterRole: !ImportValue lambda-resources:SplunkSubscriptionFilterRole
+        SplunkDeliveryStreamArn: !ImportValue lambda-resources:SplunkDeliveryStream
+
+Outputs:
+  UpdatePrescriptionStatusFunctionName:
+    Description: The function name of the UpdatePrescriptionStatus lambda
+    Value: !Ref UpdatePrescriptionStatus
+
+  UpdatePrescriptionStatusFunctionArn:
+    Description: The function ARN of the UpdatePrescriptionStatus lambda
+    Value: !GetAtt  UpdatePrescriptionStatus.Arn

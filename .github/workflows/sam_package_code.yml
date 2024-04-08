@@ -65,4 +65,23 @@ jobs:
           name: packaged_code
           path: |
             .aws-sam/build
-            packages/updatePrescriptionStatus/lib/get-secrets-layer.zip 
+            SAMtemplates/state_machines/UpdatePrescriptionStatusStateMachine.asl.json
+
+      - shell: bash
+        name: package sandbox
+        run: |
+          cp .tool-versions ~/
+          rm -rf .aws-sam
+          export PATH=$PATH:$PWD/node_modules/.bin
+          make sam-build-sandbox
+          cp Makefile .aws-sam/build/
+          cp samconfig_package_and_deploy.toml .aws-sam/build/
+
+      # Readme is included to stop the action flattening the folder structure of aws-sam/build when it is the only item to upload
+      - uses: actions/upload-artifact@v4
+        name: upload sandbox build artifact
+        with:
+          name: packaged_sandbox_code
+          path: |
+            .aws-sam/build
+            README.md 

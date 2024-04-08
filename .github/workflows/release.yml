@@ -118,12 +118,10 @@ jobs:
       STACK_NAME: psu
       TARGET_ENVIRONMENT: dev
       ENABLE_MUTUAL_TLS: false
-      DEPLOY_SANDBOX: false
       BUILD_ARTIFACT: packaged_code
       TRUSTSTORE_FILE: psu-truststore.pem
       VERSION_NUMBER: ${{needs.tag_release.outputs.version_tag}}
       COMMIT_ID: ${{needs.get_commit_id.outputs.commit_id}}
-      LOG_LEVEL: DEBUG
       LOG_RETENTION_DAYS: 30
       CREATE_INT_RELEASE_NOTES: true
       CREATE_PROD_RELEASE_NOTES: true
@@ -142,12 +140,10 @@ jobs:
       STACK_NAME: psu
       TARGET_ENVIRONMENT: ref
       ENABLE_MUTUAL_TLS: false
-      DEPLOY_SANDBOX: false
       BUILD_ARTIFACT: packaged_code
       TRUSTSTORE_FILE: psu-truststore.pem
       VERSION_NUMBER: ${{needs.tag_release.outputs.version_tag}}
       COMMIT_ID: ${{needs.get_commit_id.outputs.commit_id}}
-      LOG_LEVEL: DEBUG
       LOG_RETENTION_DAYS: 30
     secrets:
       CLOUD_FORMATION_DEPLOY_ROLE: ${{ secrets.REF_CLOUD_FORMATION_DEPLOY_ROLE }}
@@ -160,12 +156,10 @@ jobs:
       STACK_NAME: psu
       TARGET_ENVIRONMENT: qa
       ENABLE_MUTUAL_TLS: false
-      DEPLOY_SANDBOX: false
       BUILD_ARTIFACT: packaged_code
       TRUSTSTORE_FILE: psu-truststore.pem
       VERSION_NUMBER: ${{needs.tag_release.outputs.version_tag}}
       COMMIT_ID: ${{needs.get_commit_id.outputs.commit_id}}
-      LOG_LEVEL: DEBUG
       LOG_RETENTION_DAYS: 30
     secrets:
       CLOUD_FORMATION_DEPLOY_ROLE: ${{ secrets.QA_CLOUD_FORMATION_DEPLOY_ROLE }}
@@ -178,12 +172,10 @@ jobs:
       STACK_NAME: psu
       TARGET_ENVIRONMENT: int
       ENABLE_MUTUAL_TLS: false
-      DEPLOY_SANDBOX: false
       BUILD_ARTIFACT: packaged_code
       TRUSTSTORE_FILE: psu-truststore.pem
       VERSION_NUMBER: ${{needs.tag_release.outputs.version_tag}}
       COMMIT_ID: ${{needs.get_commit_id.outputs.commit_id}}
-      LOG_LEVEL: DEBUG
       LOG_RETENTION_DAYS: 30
       CREATE_INT_RELEASE_NOTES: true
       CREATE_INT_RC_RELEASE_NOTES: true
@@ -202,12 +194,10 @@ jobs:
 #      STACK_NAME: psu
 #      TARGET_ENVIRONMENT: prod
 #      ENABLE_MUTUAL_TLS: true
-#      DEPLOY_SANDBOX: false
 #      BUILD_ARTIFACT: packaged_code
 #      TRUSTSTORE_FILE: psu-truststore.pem
 #      VERSION_NUMBER: ${{needs.tag_release.outputs.version_tag}}
 #      COMMIT_ID: ${{needs.get_commit_id.outputs.commit_id}}
-#      LOG_LEVEL: INFO
 #      LOG_RETENTION_DAYS: 731
 #      MARK_JIRA_RELEASED: true
 #      CREATE_PROD_RELEASE_NOTES: true
