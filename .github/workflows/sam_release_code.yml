@@ -30,6 +30,10 @@ on:
       COMMIT_ID:
         required: true
         type: string
+      LOG_LEVEL:
+        required: false
+        type: string
+        default: INFO
       LOG_RETENTION_DAYS:
         required: true
         type: string
@@ -112,6 +116,7 @@ jobs:
           artifact_bucket_prefix: prescription_status_update/${{ inputs.ARTIFACT_BUCKET_PREFIX }}
           COMMIT_ID: ${{ inputs.COMMIT_ID }}
           enable_mutual_tls: ${{ inputs.ENABLE_MUTUAL_TLS }}
+          LOG_LEVEL: ${{ inputs.LOG_LEVEL }}
           LOG_RETENTION_DAYS: ${{ inputs.LOG_RETENTION_DAYS }}
           stack_name: ${{ inputs.STACK_NAME }}
           TARGET_ENVIRONMENT: ${{ inputs.TARGET_ENVIRONMENT }}
