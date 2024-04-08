@@ -142,10 +142,10 @@ jobs:
       - name: Deploy API
         shell: bash
         working-directory: .github/scripts
-        env: 
-          SPEC_PATH: ${{ env.SPEC_PATH }}
-          PROXYGEN_PATH: ${{ env.PROXYGEN_PATH }}
-          TARGET_ENVIRONMENT: ${{ inputs.TARGET_ENVIRONMENT }}
+        # env: 
+        #   SPEC_PATH: ${{ env.SPEC_PATH }}
+        #   PROXYGEN_PATH: ${{ env.PROXYGEN_PATH }}
+        #   TARGET_ENVIRONMENT: ${{ inputs.TARGET_ENVIRONMENT }}
         run: |
           ./deploy_api.sh
 
