@@ -131,7 +131,8 @@ jobs:
         env:
           PROXYGEN_PATH: ${{ env.PROXYGEN_PATH }}
           SPEC_PATH: ${{ env.SPEC_PATH }}
-          TARGET_ENVIRONMENT: ${{ env.TARGET_ENVIRONMENT }}
+          TARGET_ENVIRONMENT: ${{ inputs.TARGET_ENVIRONMENT }}
+          VERSION_NUMBER: ${{ inputs.VERSION_NUMBER }}
         run: ./deploy_api_test.sh
 
       - name: release code
