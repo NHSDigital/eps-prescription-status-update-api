@@ -131,6 +131,7 @@ Resources:
 
               #set($inputString = '')
               #set($allParams = $input.params())
+              #set($allParams.header.apigw-request-id = $context.requestId)
               {
                   "stateMachineArn": "${stateMachineArn}",
 
