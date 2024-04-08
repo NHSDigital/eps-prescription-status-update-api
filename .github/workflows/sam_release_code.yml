@@ -109,6 +109,10 @@ jobs:
           name: ${{ inputs.SPEC_ARTIFACT }}
           path: .
 
+      - name: List files in the root directory
+        run: |
+          ls -R .
+
       - name: Install proxygen-cli
         run: |
           pip install proxygen-cli

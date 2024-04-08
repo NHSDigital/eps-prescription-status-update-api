@@ -76,6 +76,7 @@ jobs:
           name: specification_code
           path: |
             .aws-sam/build/specification
+            SAMtemplates/state_machines/UpdatePrescriptionStatusStateMachine.asl.json
 
       - shell: bash
         name: Package sandbox
