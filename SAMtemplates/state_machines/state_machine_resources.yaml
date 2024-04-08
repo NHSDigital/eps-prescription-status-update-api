@@ -99,7 +99,7 @@ Resources:
               - !Sub ${StateMachineLogGroup.Arn}:log-stream:*
           - Effect: Allow
             Action:
-              - logs:DescribeLogGroups
+              - logs:ListLogDeliveries
             Resource: "*"
 
   StateMachineLogGroup:
