@@ -142,7 +142,7 @@ jobs:
           echo "export PROXYGEN_PATH=\"$proxygen_path\"" >> "$GITHUB_ENV"
 
           # Run the deploy script with the specification path
-          ./deploy_api.sh "$PROXYGEN_PATH" "$SPEC_PATH" "$TARGET_ENVIRONMENT"
+          ./deploy_api.sh
 
       - name: create_int_release_notes
         uses: ./.github/actions/update_confluence_jira

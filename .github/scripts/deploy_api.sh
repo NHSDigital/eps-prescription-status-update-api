@@ -1,27 +1,11 @@
 #!/usr/bin/env bash
 
-proxygen_path="$PROXYGEN_PATH"
-spec_path="$SPEC_PATH"
-target_environment="$TARGET_ENVIRONMENT"
+# Load the environment variables
+source "$GITHUB_ENV"
 
-if [ -z "$proxygen_path" ]; then
-    echo "Error: PROXYGEN_PATH is not set"
-    exit 1
-fi
-
-if [ -z "$spec_path" ]; then
-    echo "Error: SPEC_PATH is not set"
-    exit 1
-fi
-
-if [ -z "$target_environment" ]; then
-    echo "Error: TARGET_ENVIRONMENT is not set"
-    exit 1
-fi
-
-echo "Proxygen location: $proxygen_path"
-echo "Specification location: $spec_path"
-echo "Target environment: $target_environment"
+echo "Proxygen location: $PROXYGEN_PATH"
+echo "Specification location: $SPEC_PATH"
+echo "Target environment: $TARGET_ENVIRONMENT"
 
 proxygen_private_key_arn=$(aws cloudformation list-exports --query "Exports[?Name=='account-resources:ProxgenPrivateKey'].Value" --output text)
 # proxygen_public_key_arn=$(aws cloudformation list-exports --query "Exports[?Name=='account-resources:ProxgenPublicKey'].Value" --output text)
