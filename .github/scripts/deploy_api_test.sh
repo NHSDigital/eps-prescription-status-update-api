@@ -6,16 +6,17 @@ echo "Target environment: $TARGET_ENVIRONMENT"
 echo "Version number: $VERSION_NUMBER"
 echo "Stack name: $STACK_NAME"
 
-proxygen_private_key="13456789"
-
-echo "$proxygen_private_key" > /tmp/proxygen_private_key.pem
-
 # Condition to set the environment variable based on TARGET_ENVIRONMENT
 if [ "$TARGET_ENVIRONMENT" != "dev-pr" ]; then
   environment=int
 else
   environment=internal-dev
 fi
+
+echo "Environment name: $environment"
+
+proxygen_private_key="13456789"
+echo "$proxygen_private_key" > /tmp/proxygen_private_key.pem
 
 # Create ~/.proxygen directory if it doesn't exist
 mkdir -p ~/.proxygen
