@@ -42,6 +42,8 @@ Resources:
               LogGroupArn: !GetAtt UpdatePrescriptionStatusStateMachineResources.Outputs.StateMachineLogGroupArn
         IncludeExecutionData: true
         Level: ALL
+      Tracing:
+        Enabled: true
   
   UpdatePrescriptionStatusStateMachineResources:
     Type: AWS::Serverless::Application
