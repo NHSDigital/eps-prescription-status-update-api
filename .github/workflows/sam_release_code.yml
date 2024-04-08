@@ -135,8 +135,6 @@ jobs:
       - name: Deploy API
         shell: bash
         working-directory: .github/scripts
-        env: 
-          SPEC_PATH: ${{ env.SPEC_PATH }}
         run: |
           # Get the location of proxygen and store it in a variable
           PROXYGEN_PATH=$(which proxygen)
