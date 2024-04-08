@@ -124,7 +124,7 @@ jobs:
         run: |
           pip install proxygen-cli
 
-      - name: Export specification path
+      - name: Export specification directory
         run: |
           # Set the spec_path variable to the absolute path in the root directory
           SPEC_PATH="$(pwd)/eps-prescription-status-update-api.resolved.json"
@@ -132,21 +132,14 @@ jobs:
           # Export the spec_path variable to make it available to subsequent steps
           echo "export SPEC_PATH=${SPEC_PATH}" >> "$GITHUB_ENV"
 
-      - name: Export proxygen path
+      - name: Deploy API
+        shell: bash
+        working-directory: .github/scripts
         run: |
           # Get the location of proxygen and store it in a variable
           PROXYGEN_PATH=$(which proxygen)
           echo "Proxygen location: $PROXYGEN_PATH"
           echo "export PROXYGEN_PATH=${PROXYGEN_PATH}" >> "$GITHUB_ENV"
-
-      - name: Deploy API
-        shell: bash
-        working-directory: .github/scripts
-        # env: 
-        #   SPEC_PATH: ${{ env.SPEC_PATH }}
-        #   PROXYGEN_PATH: ${{ env.PROXYGEN_PATH }}
-        #   TARGET_ENVIRONMENT: ${{ inputs.TARGET_ENVIRONMENT }}
-        run: |
           ./deploy_api.sh
 
       - name: create_int_release_notes
