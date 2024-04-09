@@ -1,4 +1,4 @@
-AWSTemplateFormatVersion: '2010-09-09'
+AWSTemplateFormatVersion: "2010-09-09"
 Transform: AWS::Serverless-2016-10-31
 Description: |
   Resources for a state machine
@@ -7,11 +7,11 @@ Parameters:
   StackName:
     Type: String
     Default: none
-  
+
   StateMachineName:
     Type: String
     Default: none
-  
+
   StateMachineArn:
     Type: String
     Default: none
@@ -20,21 +20,21 @@ Parameters:
     Type: CommaDelimitedList
     Description: A list of additional policies to attach the state machines role (comma delimited).
     Default: none
-  
+
   LogRetentionInDays:
     Type: Number
-  
+
   CloudWatchKMSKeyId:
     Type: String
     Default: none
-  
+
   EnableSplunk:
     Type: String
-  
+
   SplunkSubscriptionFilterRole:
     Type: String
     Default: none
-  
+
   SplunkDeliveryStreamArn:
     Type: String
     Default: none
@@ -57,7 +57,7 @@ Resources:
               - states:StartExecution
             Resource:
               - !Ref StateMachineArn
-  
+
   StateMachineRole:
     Type: AWS::IAM::Role
     Properties:
@@ -75,15 +75,15 @@ Resources:
               StringEquals:
                 aws:SourceAccount: !Ref AWS::AccountId
       ManagedPolicyArns: !Split
-        - ','
+        - ","
         - !Join
-          - ','
+          - ","
           - - !Ref StateMachineManagedPolicy
             - !ImportValue account-resources:CloudwatchEncryptionKMSPolicyArn
             - !Join
-              - ','
+              - ","
               - !Ref AdditionalPolicies
-  
+
   StateMachineManagedPolicy:
     Type: AWS::IAM::ManagedPolicy
     Properties:
@@ -103,6 +103,10 @@ Resources:
               - logs:ListLogDeliveries
               - logs:CreateLogDelivery
               - logs:GetLogDelivery
+              - logs:UpdateLogDelivery
+              - logs:DeleteLogDelivery
+              - logs:PutResourcePolicy
+              - logs:DescribeResourcePolicies
             Resource: "*"
 
   StateMachineLogGroup:
@@ -111,14 +115,14 @@ Resources:
       LogGroupName: !Sub /aws/stepfunctions/${StateMachineName}
       RetentionInDays: !Ref LogRetentionInDays
       KmsKeyId: !Ref CloudWatchKMSKeyId
-  
+
   StateMachineSplunkSubscriptionFilter:
     Condition: ShouldUseSplunk
     Type: AWS::Logs::SubscriptionFilter
     Properties:
       RoleArn: !Ref SplunkSubscriptionFilterRole
       LogGroupName: !Ref StateMachineLogGroup
-      FilterPattern: ''
+      FilterPattern: ""
       DestinationArn: !Ref SplunkDeliveryStreamArn
 
 Outputs:
