@@ -103,12 +103,16 @@ Resources:
               - logs:ListLogDeliveries
               - logs:CreateLogDelivery
               - logs:GetLogDelivery
+              - logs:UpdateLogDelivery
+              - logs:DeleteLogDelivery
+              - logs:PutResourcePolicy
+              - logs:DescribeResourcePolicies
             Resource: "*"
 
   StateMachineLogGroup:
     Type: AWS::Logs::LogGroup
     Properties:
-      LogGroupName: !Sub /aws/stepfunctions/new${StateMachineName}
+      LogGroupName: !Sub /aws/stepfunctions/${StateMachineName}
       RetentionInDays: !Ref LogRetentionInDays
       KmsKeyId: !Ref CloudWatchKMSKeyId
 
