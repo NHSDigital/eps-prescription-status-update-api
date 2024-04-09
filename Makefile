@@ -59,7 +59,14 @@ sam-list-outputs: guard-AWS_DEFAULT_PROFILE guard-stack_name
 
 sam-validate: 
 	sam validate --template-file SAMtemplates/main_template.yaml --region eu-west-2
-	sam validate --template-file SAMtemplates/lambda_resources.yaml --region eu-west-2
+	sam validate --template-file SAMtemplates/apis/main.yaml --region eu-west-2
+	sam validate --template-file SAMtemplates/apis/api_resources.yaml --region eu-west-2
+	sam validate --template-file SAMtemplates/functions/main.yaml --region eu-west-2
+	sam validate --template-file SAMtemplates/functions/lambda_resources.yaml --region eu-west-2
+	sam validate --template-file SAMtemplates/tables/main.yaml --region eu-west-2
+	sam validate --template-file SAMtemplates/tables/dynamodb_resources.yaml --region eu-west-2
+	sam validate --template-file SAMtemplates/state_machines/main.yaml --region eu-west-2
+	sam validate --template-file SAMtemplates/state_machines/state_machine_resources.yaml --region eu-west-2
 
 sam-validate-sandbox:
 	sam validate --template-file SAMtemplates/sandbox_template.yaml --region eu-west-2
@@ -83,6 +90,8 @@ sam-deploy-package: guard-artifact_bucket guard-artifact_bucket_prefix guard-sta
 			  EnableMutualTLS=$$enable_mutual_tls \
 			  EnableSplunk=true \
 			  LogRetentionDays=$$LOG_RETENTION_DAYS \
+			  LogLevel=$$LOG_LEVEL \
+			  LogRetentionInDays=$$LOG_RETENTION_DAYS \
 			  Env=$$TARGET_ENVIRONMENT
 
 compile-node:
@@ -96,7 +105,7 @@ lint-node: compile-node
 	npm run lint --workspace packages/sandbox
 
 lint-samtemplates:
-	poetry run cfn-lint -t SAMtemplates/*.yaml
+	poetry run cfn-lint -t SAMtemplates/**/*.yaml
 
 lint-python:
 	poetry run flake8 scripts/*.py --config .flake8

@@ -20,21 +20,24 @@ Globals:
 Parameters:
   TruststoreVersion:
     Type: String
-    Description: TruststoreVersion
     Default: none
+
   EnableMutualTLS:
     Type: String
-    Description: Whether to use mutual TLS
     Default: false
     AllowedValues: [true, false]
+
   EnableSplunk:
     Type: String
-    Description: Whether to use splunk
     Default: false
     AllowedValues: [true, false]
-  LogRetentionDays:
+
+  LogLevel:
+    Type: String
+    Default: INFO
+
+  LogRetentionInDays:
     Type: Number
-    Description: How long to keep logs for
     AllowedValues:
       [
         1,
@@ -70,14 +73,17 @@ Resources:
   SandboxResources:
     Type: AWS::Serverless::Application
     Properties:
-      Location: lambda_resources.yaml
+      Location: functions/lambda_resources.yaml
       Parameters:
-        CloudWatchKMSKey: !ImportValue account-resources:CloudwatchLogsKmsKeyArn
-        SplunkSubscriptionFilterRole: !ImportValue lambda-resources:SplunkSubscriptionFilterRole
-        SplunkDeliveryStream: !ImportValue lambda-resources:SplunkDeliveryStream
+        StackName: !Ref AWS::StackName
+        LambdaName: !Sub ${AWS::StackName}-UpdatePrescriptionStatusSandbox
+        LambdaArn: !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:${AWS::StackName}-UpdatePrescriptionStatusSandbox
+        LogRetentionInDays: !Ref LogRetentionInDays
+        CloudWatchKMSKeyId: !ImportValue account-resources:CloudwatchLogsKmsKeyArn
         EnableSplunk: !Ref EnableSplunk
-        LambdaName: !Sub "${AWS::StackName}-UpdatePrescriptionStatusSandbox"
-        LogRetentionDays: !Ref LogRetentionDays
+        SplunkSubscriptionFilterRole: !ImportValue lambda-resources:SplunkSubscriptionFilterRole
+        SplunkDeliveryStreamArn: !ImportValue lambda-resources:SplunkDeliveryStream
+  
   Sandbox:
     Type: AWS::Serverless::Function
     Properties:
@@ -209,7 +215,7 @@ Resources:
           "/",
           ["/aws/apigateway", !Ref "AWS::StackName", !Sub "${HttpApiGateway}"],
         ]
-      RetentionInDays: !Ref LogRetentionDays
+      RetentionInDays: !Ref LogRetentionInDays
       KmsKeyId: !ImportValue account-resources:CloudwatchLogsKmsKeyArn
 
   ApiGwAccessLogsSplunkSubscriptionFilter:
