@@ -45,7 +45,6 @@ const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPro
   if(!requestBundle) {
     return response(400, responseEntries)
   }
-  logger.info("Request audit log", {requestBody: requestBundle})
 
   const requestEntries: Array<BundleEntry> = requestBundle.entry || []
 
@@ -161,11 +160,7 @@ export const handler = middy(lambdaHandler)
   .use(
     inputOutputLogger({
       logger: (request) => {
-        if (request.response) {
-          logger.debug(request)
-        } else {
-          logger.info(request)
-        }
+        logger.info(request)
       }
     })
   )
