@@ -3,7 +3,7 @@
 import {expect, describe, it} from "@jest/globals"
 import {Task} from "fhir/r4"
 
-import {fields, validateFields} from "../../src/validation/fields"
+import {taskFields, validateFields} from "../../src/validation/fields"
 
 import valid from "../tasks/valid.json"
 
@@ -59,7 +59,7 @@ describe("Unit tests for validation of individual fields", () => {
 
     const expected = `Missing required field(s) - ${missingField}.`
 
-    const actual = fields(task as Task)
+    const actual = taskFields(task as Task)
 
     expect(actual).toEqual(expected)
   })

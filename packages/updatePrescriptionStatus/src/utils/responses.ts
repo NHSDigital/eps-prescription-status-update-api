@@ -8,7 +8,7 @@ export function bundleWrap(entries: Array<BundleEntry>): Bundle {
   }
 }
 
-export function badRequest(diagnostics: string, taskID: string | undefined = undefined): BundleEntry {
+export function badRequest(diagnostics: string, fullUrl: string | undefined = undefined): BundleEntry {
   const bundleEntry: BundleEntry = {
     response: {
       status: "400 Bad Request",
@@ -36,15 +36,15 @@ export function badRequest(diagnostics: string, taskID: string | undefined = und
       }
     }
   }
-  if (taskID) {
-    bundleEntry.fullUrl = taskID
+  if (fullUrl) {
+    bundleEntry.fullUrl = fullUrl
   }
   return bundleEntry
 }
 
-export function accepted(taskID: string): BundleEntry {
+export function accepted(fullUrl: string): BundleEntry {
   return {
-    fullUrl: taskID,
+    fullUrl: fullUrl,
     response: {
       status: "200 Accepted",
       outcome: {
@@ -64,9 +64,9 @@ export function accepted(taskID: string): BundleEntry {
   }
 }
 
-function created(taskID: string): BundleEntry {
+function created(fullUrl: string): BundleEntry {
   return {
-    fullUrl: taskID,
+    fullUrl: fullUrl,
     response: {
       status: "201 Created",
       outcome: {
@@ -117,5 +117,5 @@ export function serverError(): BundleEntry {
 }
 
 export function createSuccessResponseEntries(entries: Array<BundleEntry>) {
-  return entries.map(e => created(e.resource!.id!))
+  return entries.map(e => created(e.fullUrl!))
 }

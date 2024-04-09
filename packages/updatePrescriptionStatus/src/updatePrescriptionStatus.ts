@@ -98,6 +98,7 @@ export function validateEntries(requestEntries: Array<BundleEntry>, responseEntr
   logger.info("Validating entries.")
   let valid = true
   for (const requestEntry of requestEntries) {
+    const fullUrl = requestEntry.fullUrl!
     const task = requestEntry.resource as Task
     logger.info("Validating task.", {task: task, id: task.id})
 
@@ -106,12 +107,12 @@ export function validateEntries(requestEntries: Array<BundleEntry>, responseEntr
     let responseEntry: BundleEntry
     if (validationOutcome.valid) {
       logger.info("Task validated successfully.", {task: task, id: task.id})
-      responseEntry = accepted(task.id!)
+      responseEntry = accepted(fullUrl)
     } else {
       const errorMessage = validationOutcome.issues!
       logger.info(`Task failed validation. ${errorMessage}`, {task: task, id: task.id})
       valid = false
-      responseEntry = badRequest(errorMessage, task.id)
+      responseEntry = badRequest(errorMessage, fullUrl)
     }
     responseEntries.push(responseEntry)
   }

@@ -11,6 +11,7 @@ import {
 import {handler} from "../../src/updatePrescriptionStatus"
 import {
   DEFAULT_DATE,
+  FULL_URL_PREFIX,
   TASK_ID_0,
   TASK_ID_1,
   generateMockEvent
@@ -33,8 +34,8 @@ describe("Integration tests for validation via updatePrescriptionStatus handler"
     const event: APIGatewayProxyEvent = generateMockEvent(body)
 
     const expected = bundleWrap([
-      badRequest("Invalid last modified value provided.", TASK_ID_0),
-      accepted(TASK_ID_1)
+      badRequest("Invalid last modified value provided.", FULL_URL_PREFIX + TASK_ID_0),
+      accepted(FULL_URL_PREFIX + TASK_ID_1)
     ])
 
     const response: APIGatewayProxyResult = await handler(event, {})
@@ -52,8 +53,8 @@ describe("Integration tests for validation via updatePrescriptionStatus handler"
     const event: APIGatewayProxyEvent = generateMockEvent(body)
 
     const expected = bundleWrap([
-      badRequest("Invalid last modified value provided.", TASK_ID_0),
-      badRequest("Missing required field(s) - PrescriptionID.", TASK_ID_1)
+      badRequest("Invalid last modified value provided.", FULL_URL_PREFIX + TASK_ID_0),
+      badRequest("Missing required field(s) - PrescriptionID.", FULL_URL_PREFIX + TASK_ID_1)
     ])
 
     const response: APIGatewayProxyResult = await handler(event, {})

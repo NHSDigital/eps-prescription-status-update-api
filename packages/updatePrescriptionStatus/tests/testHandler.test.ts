@@ -10,6 +10,8 @@ import {
 
 import {
   DEFAULT_DATE,
+  FULL_URL_PREFIX,
+  TASK_ID_0,
   TASK_ID_1,
   generateBody,
   generateExpectedItems,
@@ -116,7 +118,7 @@ describe("Integration tests for updatePrescriptionStatus handler", () => {
 
     expect(response.statusCode).toBe(400)
     expect(JSON.parse(response.body)).toEqual(bundleWrap(
-      [badRequest("Missing required field(s) - PharmacyODSCode, TaskID.")]
+      [badRequest("Missing required field(s) - PharmacyODSCode, TaskID.", FULL_URL_PREFIX + TASK_ID_0)]
     ))
   })
 
@@ -138,8 +140,8 @@ describe("Integration tests for updatePrescriptionStatus handler", () => {
 
     expect(response.statusCode).toEqual(400)
     expect(JSON.parse(response.body)).toEqual(bundleWrap([
-      badRequest("Missing required field(s) - PharmacyODSCode, TaskID."),
-      badRequest("Missing required field(s) - PharmacyODSCode.", TASK_ID_1)
+      badRequest("Missing required field(s) - PharmacyODSCode, TaskID.", FULL_URL_PREFIX + TASK_ID_0),
+      badRequest("Missing required field(s) - PharmacyODSCode.", FULL_URL_PREFIX + TASK_ID_1)
     ]))
   })
 

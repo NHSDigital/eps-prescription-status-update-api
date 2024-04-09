@@ -11,6 +11,7 @@ import {
   STATUS_CODESYSTEM
 } from "../../src/validation/content"
 
+export const FULL_URL_PREFIX = "http://example.org/fhir/Task/"
 export const TASK_ID_0 = "4d70678c-81e4-4ff4-8c67-17596fd0aa46"
 export const TASK_ID_1 = "0ae4daf3-f24b-479d-b8fa-b69e2d873b60"
 export const X_REQUEST_ID = "43313002-debb-49e3-85fa-34812c150242"
@@ -60,6 +61,7 @@ export const generateMockEvent = (body: any): APIGatewayProxyEvent => ({
 export function generateEntry(index: number) {
   const values = TASK_VALUES[index]
   return {
+    fullUrl: FULL_URL_PREFIX + values.id,
     resource: {
       resourceType: "Task",
       lastModified: values.lastModified,

@@ -82,7 +82,7 @@ describe("Unit test validateEntries", () => {
   it("when a single entry is valid, returns true with a response in the response bundle", async () => {
     mockValidateTask.mockReturnValue({valid: true, issues: undefined})
 
-    const requestEntries = [{resource: {id: "valid"}}] as Array<BundleEntry>
+    const requestEntries = [{resource: {}, fullUrl: "valid"}] as Array<BundleEntry>
     const responseEntries: Array<BundleEntry> = []
 
     const result = validateEntries(requestEntries, responseEntries)
@@ -100,8 +100,8 @@ describe("Unit test validateEntries", () => {
     mockValidateTask.mockReturnValueOnce({valid: false, issues: "issues"})
 
     const requestEntries = [
-      {resource: {id: "valid"}},
-      {resource: {id: "invalid"}}
+      {resource: {}, fullUrl: "valid"},
+      {resource: {}, fullUrl: "invalid"}
     ] as Array<BundleEntry>
     const responseEntries: Array<BundleEntry> = []
 
