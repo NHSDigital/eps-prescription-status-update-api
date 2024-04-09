@@ -5,19 +5,22 @@ Description: |
 
 # Params passed from the Makefile
 Parameters:
-  TruststoreVersion:
-    Type: String
-    Description: TruststoreVersion
-    Default: none
   EnableMutualTLS:
     Type: String
     Default: false
     AllowedValues:
       - true
       - false
-    LogLevel:
-      Type: String
-      Default: INFO
+
+  TruststoreVersion:
+    Type: String
+    Description: TruststoreVersion
+    Default: none
+
+  LogLevel:
+    Type: String
+    Default: INFO
+
   LogRetentionInDays:
     Type: Number
     Default: 30
