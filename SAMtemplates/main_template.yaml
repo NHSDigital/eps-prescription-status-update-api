@@ -14,7 +14,6 @@ Parameters:
 
   TruststoreVersion:
     Type: String
-    Description: TruststoreVersion
     Default: none
 
   LogLevel:
