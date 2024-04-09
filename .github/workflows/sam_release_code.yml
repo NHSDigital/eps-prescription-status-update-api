@@ -109,10 +109,6 @@ jobs:
           name: ${{ inputs.SPEC_ARTIFACT }}
           path: .
 
-      - name: List files in the root directory
-        run: |
-          ls -R .
-
       - name: Install proxygen-cli
         run: |
           pip install proxygen-cli
@@ -128,16 +124,6 @@ jobs:
           PROXYGEN_PATH=$(which proxygen)
           echo "Proxygen location: $PROXYGEN_PATH"
           echo "PROXYGEN_PATH=${PROXYGEN_PATH}" >> "$GITHUB_ENV"
-
-      - name: Deploy API Test
-        shell: bash
-        working-directory: .github/scripts
-        env:
-          PROXYGEN_PATH: ${{ env.PROXYGEN_PATH }}
-          SPEC_PATH: ${{ env.SPEC_PATH }}
-          STACK_NAME: ${{ inputs.STACK_NAME }}
-          TARGET_ENVIRONMENT: ${{ inputs.TARGET_ENVIRONMENT }}
-        run: ./deploy_api_test.sh
 
       - name: release code
         shell: bash

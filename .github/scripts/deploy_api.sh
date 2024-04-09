@@ -5,9 +5,8 @@ echo "Specification path: $SPEC_PATH"
 echo "Stack name: $STACK_NAME" # instance
 echo "Target environment: $TARGET_ENVIRONMENT"
 
-# Condition to set the environment variable based on TARGET_ENVIRONMENT
 if [ "$TARGET_ENVIRONMENT" != "dev-pr" ]; then
-  environment=int
+  environment=$TARGET_ENVIRONMENT
 else
   environment=internal-dev
 fi
