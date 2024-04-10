@@ -1,7 +1,12 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import {Logger} from "@aws-lambda-powertools/logger"
-import {CodeableConcept, Coding, Task} from "fhir/r4"
+import {
+  BundleEntry,
+  CodeableConcept,
+  Coding,
+  Task
+} from "fhir/r4"
 import {validatePrescriptionID} from "../utils/prescriptionID"
 import {validateNhsNumber} from "../utils/nhsNumber"
 import {validateFields} from "./fields"
@@ -150,11 +155,12 @@ export function validateContent(task: Task): ValidationOutcome {
   return validationOutcome
 }
 
-export function validateTask(task: Task): ValidationOutcome {
-  const fieldsOutcome = validateFields(task)
+export function validateEntry(entry: BundleEntry): ValidationOutcome {
+  const fieldsOutcome = validateFields(entry)
   if (!fieldsOutcome.valid) {
     return fieldsOutcome
   }
 
+  const task = entry.resource as Task
   return validateContent(task)
 }

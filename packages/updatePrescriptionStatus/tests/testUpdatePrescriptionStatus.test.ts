@@ -13,7 +13,7 @@ import {DEFAULT_DATE, X_REQUEST_ID, mockInternalDependency} from "./utils/testUt
 import {APIGatewayProxyEvent} from "aws-lambda"
 
 import * as content from "../src/validation/content"
-const mockValidateTask = mockInternalDependency("../src/validation/content", content, "validateTask")
+const mockValidateEntry = mockInternalDependency("../src/validation/content", content, "validateEntry")
 const {castEventBody, getXRequestID, validateEntries} = await import("../src/updatePrescriptionStatus")
 
 describe("Unit test getXRequestID", () => {
@@ -80,7 +80,7 @@ describe("Unit test castEventBody", () => {
 
 describe("Unit test validateEntries", () => {
   it("when a single entry is valid, returns true with a response in the response bundle", async () => {
-    mockValidateTask.mockReturnValue({valid: true, issues: undefined})
+    mockValidateEntry.mockReturnValue({valid: true, issues: undefined})
 
     const requestEntries = [{resource: {}, fullUrl: "valid"}] as Array<BundleEntry>
     const responseEntries: Array<BundleEntry> = []
@@ -96,8 +96,8 @@ describe("Unit test validateEntries", () => {
   })
 
   it("when one of two entries is invalid, returns false with two responses in the response bundle", async () => {
-    mockValidateTask.mockReturnValueOnce({valid: true, issues: undefined})
-    mockValidateTask.mockReturnValueOnce({valid: false, issues: "issues"})
+    mockValidateEntry.mockReturnValueOnce({valid: true, issues: undefined})
+    mockValidateEntry.mockReturnValueOnce({valid: false, issues: "issues"})
 
     const requestEntries = [
       {resource: {}, fullUrl: "valid"},

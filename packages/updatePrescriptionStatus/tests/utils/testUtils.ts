@@ -11,9 +11,13 @@ import {
   STATUS_CODESYSTEM
 } from "../../src/validation/content"
 
-export const FULL_URL_PREFIX = "http://example.org/fhir/Task/"
 export const TASK_ID_0 = "4d70678c-81e4-4ff4-8c67-17596fd0aa46"
 export const TASK_ID_1 = "0ae4daf3-f24b-479d-b8fa-b69e2d873b60"
+
+const FULL_URL_PREFIX = "http://example.org/fhir/Task/"
+export const FULL_URL_0 = FULL_URL_PREFIX + TASK_ID_0
+export const FULL_URL_1 = FULL_URL_PREFIX + TASK_ID_1
+
 export const X_REQUEST_ID = "43313002-debb-49e3-85fa-34812c150242"
 export const DEFAULT_DATE = new Date("2023-09-11T10:11:12Z")
 
@@ -42,6 +46,10 @@ const TASK_VALUES = [
     lastModified: "2023-09-11T10:11:12Z"
   }
 ]
+
+export function deepCopy(toCopy: object) {
+  return JSON.parse(JSON.stringify(toCopy))
+}
 
 export const generateMockEvent = (body: any): APIGatewayProxyEvent => ({
   body: body,

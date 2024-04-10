@@ -1,10 +1,14 @@
-import {Task} from "fhir/r4"
+import {BundleEntry, Task} from "fhir/r4"
 import {Validation, ValidationOutcome} from "./content"
 import {Logger} from "@aws-lambda-powertools/logger"
 
 const logger = new Logger({serviceName: "fields"})
 
-export function fields(task: Task): string | undefined {
+export function entryFields(entry: BundleEntry): Array<string> {
+  return entry.fullUrl ? [] : ["FullUrl"]
+}
+
+export function taskFields(task: Task): Array<string> {
   const requiredFields: Array<Validation> = [
     (t: Task) => t.lastModified ? undefined : "LastModified",
     (t: Task) => t.focus?.identifier?.value ? undefined : "LineItemID",
@@ -22,18 +26,19 @@ export function fields(task: Task): string | undefined {
       missingFields.push(missingField)
     }
   }
-  if (missingFields.length > 0) {
-    return `Missing required field(s) - ${missingFields.join(", ")}.`
-  }
+  return missingFields
 }
 
-export function validateFields(task: Task): ValidationOutcome {
+export function validateFields(entry: BundleEntry): ValidationOutcome {
   const validationOutcome: ValidationOutcome = {valid: true, issues: undefined}
+  const missingFields: Array<string> = []
+  const task = entry.resource as Task
   try {
-    const issue = fields(task)
-    if (issue) {
+    entryFields(entry).forEach(f => missingFields.push(f))
+    taskFields(task).forEach(f => missingFields.push(f))
+    if (missingFields.length > 0) {
       validationOutcome.valid = false
-      validationOutcome.issues = issue
+      validationOutcome.issues = `Missing required field(s) - ${missingFields.join(", ")}.`
     }
   } catch(e) {
     const message = `Unhandled error during validation of fields.`

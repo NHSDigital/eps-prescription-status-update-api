@@ -7,7 +7,7 @@ import inputOutputLogger from "@middy/input-output-logger"
 import errorHandler from "@nhs/fhir-middy-error-handler"
 import {Bundle, BundleEntry, Task} from "fhir/r4"
 
-import {transactionBundle, validateTask} from "./validation/content"
+import {transactionBundle, validateEntry} from "./validation/content"
 import {
   accepted,
   badRequest,
@@ -97,20 +97,19 @@ export function castEventBody(body: any, responseEntries: Array<BundleEntry>): B
 export function validateEntries(requestEntries: Array<BundleEntry>, responseEntries: Array<BundleEntry>): boolean {
   logger.info("Validating entries.")
   let valid = true
-  for (const requestEntry of requestEntries) {
-    const fullUrl = requestEntry.fullUrl!
-    const task = requestEntry.resource as Task
-    logger.info("Validating task.", {task: task, id: task.id})
+  for (const entry of requestEntries) {
+    const fullUrl = entry.fullUrl!
+    logger.info("Validating entry.", {entry: entry, id: entry.fullUrl})
 
-    const validationOutcome = validateTask(task)
+    const validationOutcome = validateEntry(entry)
 
     let responseEntry: BundleEntry
     if (validationOutcome.valid) {
-      logger.info("Task validated successfully.", {task: task, id: task.id})
+      logger.info("Entry validated successfully.", {entry: entry, id: entry.fullUrl})
       responseEntry = accepted(fullUrl)
     } else {
       const errorMessage = validationOutcome.issues!
-      logger.info(`Task failed validation. ${errorMessage}`, {task: task, id: task.id})
+      logger.info(`Entry failed validation. ${errorMessage}`, {entry: entry, id: entry.fullUrl})
       valid = false
       responseEntry = badRequest(errorMessage, fullUrl)
     }

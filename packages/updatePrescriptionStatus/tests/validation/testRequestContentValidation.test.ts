@@ -20,19 +20,20 @@ import {
   statuses,
   transactionBundle,
   validateContent,
-  validateTask,
+  validateEntry,
   ValidationOutcome
 } from "../../src/validation/content"
 
 import valid from "../tasks/valid.json"
 import {generateInvalidNhsNumbers, generateValidNhsNumbers} from "../utils/nhsNumber"
-import {DEFAULT_DATE, generateEntry} from "../utils/testUtils"
+import {DEFAULT_DATE, FULL_URL_0, generateEntry} from "../utils/testUtils"
 
 describe("Unit test for overall task validation", () => {
   it("When task is valid, should return true with no issues.", async () => {
     const expectedOutcome = {valid: true, issues: undefined}
+    const entry: BundleEntry = {fullUrl: FULL_URL_0, resource: valid as Task}
 
-    const actual: ValidationOutcome = validateTask(valid as Task)
+    const actual: ValidationOutcome = validateEntry(entry)
 
     expect(actual).toEqual(expectedOutcome)
   })
