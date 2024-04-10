@@ -123,8 +123,8 @@ lint: lint-node lint-samtemplates lint-python lint-githubactions lint-githubacti
 test: compile
 	npm run test --workspace packages/updatePrescriptionStatus
 	npm run test --workspace packages/sandbox
+	npm run test --workspace packages/statusLambda
 
-#Removes build/ + dist/ directories
 clean:
 	rm -rf packages/updatePrescriptionStatus/coverage
 	rm -rf packages/updatePrescriptionStatus/lib
@@ -137,7 +137,6 @@ deep-clean: clean
 	find . -name 'node_modules' -type d -prune -exec rm -rf '{}' +
 	poetry env remove --all
 
-#Creates the fully expanded OAS spec in json
 publish:
 	npm run resolve --workspace packages/specification 2> /dev/null
 

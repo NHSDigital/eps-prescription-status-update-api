@@ -1,0 +1,3 @@
+{
+  "jest.jestCommandLine": "/workspaces/eps-prescription-status-update-api/node_modules/.bin/jest"
+}

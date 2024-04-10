@@ -14,6 +14,7 @@ This is the AWS layer that provides an API for EPS Prescription Status Update.
 - `packages/updatePrescriptionStatus/` Handles updating prescription status for the root endpoint.
 - `packages/sandbox` A sandbox endpoint returning an example response.
 - `packages/specification/` This [Open API Specification](https://swagger.io/docs/specification/about/) describes the endpoints, methods and messages.
+- `packages/statusLambda/` Returns the status of the updatePrescriptionStatus endpoint
 - `scripts/` Utilities helpful to developers of this specification.
 - `SAMtemplates/` Contains the SAM templates used to define the stacks.
 - `.devcontainer` Contains a dockerfile and vscode devcontainer definition.

@@ -5,16 +5,20 @@
 			"path": ".."
 		},
 		{
+			"name": "packages/sandbox",
+			"path": "../packages/sandbox"
+		},
+		{
 			"name": "packages/specification",
 			"path": "../packages/specification"
 		},
 		{
-			"name": "packages/updatePrescriptionStatus",
-			"path": "../packages/updatePrescriptionStatus"
+			"name": "packages/statusLambda",
+			"path": "../packages/statusLambda"
 		},
 		{
-			"name": "packages/sandbox",
-			"path": "../packages/sandbox"
+			"name": "packages/updatePrescriptionStatus",
+			"path": "../packages/updatePrescriptionStatus"
 		}
 	],
 	"settings": {

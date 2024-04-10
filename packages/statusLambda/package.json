@@ -1,0 +1,20 @@
+{
+  "name": "statuslambda",
+  "version": "1.0.0",
+  "description": "Lambda of the _status endpoint",
+  "main": "app.js",
+  "author": "SAM CLI",
+  "license": "MIT",
+  "scripts": {
+    "unit": "jest",
+    "lint": "eslint . --ext .ts --max-warnings 0 --fix",
+    "compile": "tsc",
+    "test": "npm run compile && npm run unit"
+  },
+  "dependencies": {
+    "@aws-lambda-powertools/commons": "^2.0.2",
+    "@aws-lambda-powertools/logger": "^2.0.2",
+    "@middy/core": "^5.3.0",
+    "@middy/input-output-logger": "^5.3.0"
+  }
+}

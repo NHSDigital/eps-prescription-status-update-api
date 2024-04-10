@@ -10,13 +10,14 @@
     "type": "git",
     "url": "https://github.com/NHSDigital/eps-prescription-status-update-api"
   },
-  "keywords": [],
+  "keywords": [ ],
   "author": "NHS Digital",
   "license": "MIT",
   "workspaces": [
+    "packages/sandbox",
     "packages/specification",
-    "packages/updatePrescriptionStatus",
-    "packages/sandbox"
+    "packages/statusLambda",
+    "packages/updatePrescriptionStatus"
   ],
   "devDependencies": {
     "@semantic-release/changelog": "^6.0.3",
