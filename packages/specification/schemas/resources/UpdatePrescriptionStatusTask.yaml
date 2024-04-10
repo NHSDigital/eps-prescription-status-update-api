@@ -1,5 +1,5 @@
 type: object
-required: [id, resourceType, basedOn, status, businessStatus, intent, focus, for, lastModified, owner]
+required: [id, resourceType, basedOn, status, businessStatus, intent, focus, for, lastModified, owner, input]
 properties:
   resourceType:
     type: string
@@ -107,3 +107,21 @@ properties:
           value:
             type: string
             example: C9Z1O
+  input:
+    type: array
+    description: The eRD Repeat Number, with the prescription tracking status updates for eRD prescriptions. This is optional and only required for eRD type prescriptions.
+    items:
+      type: object
+      required: [_type, valueInteger]
+      properties:
+        _type: 
+          type: object
+          required: [text]
+          properties:
+            text:
+              type: string
+              enum: [Repeat Number]
+        valueInteger:
+          type: integer
+          minimum: 1
+          maximum: 6          
