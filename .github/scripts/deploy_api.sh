@@ -2,7 +2,8 @@
 
 echo "Proxygen path: $PROXYGEN_PATH"
 echo "Specification path: $SPEC_PATH"
-echo "Stack name: $STACK_NAME" # instance
+# echo "Stack name: $STACK_NAME" # instance
+echo "Stack name: prescription-status-update" # instance
 echo "Target environment: $TARGET_ENVIRONMENT"
 
 if [ "$TARGET_ENVIRONMENT" != "dev-pr" ]; then
@@ -48,4 +49,5 @@ endpoint_url: https://proxygen.prod.api.platform.nhs.uk
 spec_output_format: json
 EOF
 
-"$PROXYGEN_PATH" instance deploy --no-confirm "$environment" "$STACK_NAME" "$SPEC_PATH"
+# "$PROXYGEN_PATH" instance deploy --no-confirm "$environment" "$STACK_NAME" "$SPEC_PATH"
+"$PROXYGEN_PATH" instance deploy --no-confirm "$environment" "prescription-status-update" "$SPEC_PATH"
