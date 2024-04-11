@@ -13,6 +13,12 @@ fi
 
 echo "Environment name: $environment"
 
+# Read the JSON file and update the value associated with x-nhsd-apim.target.url
+jsonObject=$(jq '.["x-nhsd-apim.target.url"] = "https://$STACK_NAME.dev.eps.national.nhs.uk"' "$SPEC_PATH")
+
+# Save the updated JSON object back to the file
+echo "$jsonObject" > "$SPEC_PATH"
+
 proxygen_private_key_arn=$(aws cloudformation list-exports --query "Exports[?Name=='account-resources:ProxgenPrivateKey'].Value" --output text)
 # proxygen_public_key_arn=$(aws cloudformation list-exports --query "Exports[?Name=='account-resources:ProxgenPublicKey'].Value" --output text)
 
