@@ -16,11 +16,11 @@
   "dependencies": {
     "@aws-lambda-powertools/commons": "^2.0.0",
     "@aws-lambda-powertools/logger": "^2.0.0",
-    "@aws-sdk/client-dynamodb": "^3.549.0",
-    "@aws-sdk/util-dynamodb": "^3.549.0",
+    "@aws-sdk/client-dynamodb": "^3.552.0",
+    "@aws-sdk/util-dynamodb": "^3.552.0",
     "@middy/core": "^5.2.6",
     "@middy/input-output-logger": "^5.2.6",
-    "@nhs/fhir-middy-error-handler": "^2.0.0"
+    "@nhs/fhir-middy-error-handler": "^2.0.1"
   },
   "devDependencies": {
     "@types/uuid": "^9.0.8",
