@@ -9,7 +9,7 @@ const invalidNumberExamples = generateInvalidNhsNumbers(20)
 describe("validateNhsNumber", () => {
   describe("validating valid numbers", function () {
     validNumberExamples.forEach(function (validNumber: string) {
-      it("returns TRUE for" + validNumber, function () {
+      it("returns TRUE for " + validNumber, function () {
         expect(validateNhsNumber(validNumber)).toBe(true)
       })
     })

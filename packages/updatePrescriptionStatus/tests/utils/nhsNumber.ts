@@ -1,6 +1,7 @@
 // https://github.com/tbrd/nhs-numbers
 
 import {faker} from "@faker-js/faker"
+import {calculateCheckDigit} from "../../src/utils/nhsNumber"
 
 export function generateValidNhsNumbers(num: number) {
   const numbers: Array<string> = []
@@ -31,16 +32,4 @@ export function generateInvalidNhsNumbers(num: number) {
   }
 
   return numbers
-}
-
-function calculateCheckDigit(numberString: string): number {
-  const digits: Array<number> = numberString.split("").map((n) => Number(n))
-
-  const multipliedTotal = digits.reduce(
-    (previous: number, current: number, index: number) => previous + (current * (10 - index)), 0
-  )
-
-  const remainder = multipliedTotal % 11
-
-  return 11 - remainder
 }
