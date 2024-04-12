@@ -17,7 +17,7 @@ import valid from "../tasks/valid.json"
 export const TASK_ID_0 = "4d70678c-81e4-4ff4-8c67-17596fd0aa46"
 export const TASK_ID_1 = "0ae4daf3-f24b-479d-b8fa-b69e2d873b60"
 
-const FULL_URL_PREFIX = "http://example.org/fhir/Task/"
+const FULL_URL_PREFIX = "urn:uuid:"
 export const FULL_URL_0 = FULL_URL_PREFIX + TASK_ID_0
 export const FULL_URL_1 = FULL_URL_PREFIX + TASK_ID_1
 

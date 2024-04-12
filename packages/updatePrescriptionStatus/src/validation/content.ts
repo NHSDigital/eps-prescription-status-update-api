@@ -39,7 +39,7 @@ export function transactionBundle(body: any): boolean {
 }
 
 export function entryContent(entry: BundleEntry): Array<string> {
-  return entry.fullUrl!.split("/").pop() === entry.resource!.id ? [] : ["Invalid entry fullUrl or task id."]
+  return `urn:uuid:${entry.resource!.id}` === entry.fullUrl! ? [] : ["Invalid entry fullUrl or task id."]
 }
 
 export function lastModified(task: Task): string | undefined {

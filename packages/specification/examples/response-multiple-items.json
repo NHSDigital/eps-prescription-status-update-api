@@ -3,7 +3,7 @@
   "type": "transaction-response",
   "entry": [
     {
-      "fullUrl": "http://example.org/fhir/Task/4d70678c-81e4-4ff4-8c67-17596fd0aa46",
+      "fullUrl": "urn:uuid:4d70678c-81e4-4ff4-8c67-17596fd0aa46",
       "response": {
         "status": "201 Created",
         "outcome": {
@@ -22,7 +22,7 @@
       }
     },
     {
-      "fullUrl": "http://example.org/fhir/Task/0ae4daf3-f24b-479d-b8fa-b69e2d873b60",
+      "fullUrl": "urn:uuid:0ae4daf3-f24b-479d-b8fa-b69e2d873b60",
       "response": {
         "status": "201 Created",
         "outcome": {
