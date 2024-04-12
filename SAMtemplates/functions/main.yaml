@@ -121,3 +121,13 @@ Outputs:
   UpdatePrescriptionStatusFunctionArn:
     Description: The function ARN of the UpdatePrescriptionStatus lambda
     Value: !GetAtt UpdatePrescriptionStatus.Arn
+
+  GSULName:
+    Description: The function name of the GUSL
+    Value: !Ref GUSL
+
+  GSULArn:
+    Description: The function ARN of the GUSL
+    Value: !GetAtt GUSL.Arn
+    Export:
+      Name: !Sub ${StackName}:functions:GSUL:GSULArn
