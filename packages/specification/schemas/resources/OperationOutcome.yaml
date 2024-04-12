@@ -19,7 +19,7 @@ properties:
       lastUpdated:
         type: string
         format: date-time
-        description: Date and time, specified as UTC value, when the prescription item status was updated
+        description: Date and time, specified as UTC value, when the prescription item status was updated.
         example: 2024-04-11T15:36:06Z
   issue:
     type: array
