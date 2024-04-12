@@ -26,7 +26,6 @@ export interface DataItem {
   PharmacyODSCode: string
   PrescriptionID: string
   RequestID: string
-  RequestMessage: Task
   Status: string
   TaskID: string
   TerminalStatus: string
