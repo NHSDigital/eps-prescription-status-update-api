@@ -5,38 +5,42 @@ import {faker} from "@faker-js/faker"
 export function generateValidNhsNumbers(num: number) {
   const numbers: Array<string> = []
   while (numbers.length < num) {
-    const number = faker.number.int({min: 100000000, max: 999999999}).toString()
-    const multipliedTotal = number.split("").reduce((acc, curr, i) => acc + (Number(curr) * (10 - i)), 0)
-    const remainder = multipliedTotal % 11
-    let checkDigit = 11 - remainder
+    const numString = faker.number.int({min: 100000000, max: 999999999}).toString()
+    let checkDigit = calculateCheckDigit(numString)
 
     if (checkDigit === 11) {
       checkDigit = 0
     }
 
     if (checkDigit !== 10) {
-      numbers.push(`${number}${checkDigit}`)
+      numbers.push(`${numString}${checkDigit}`)
     }
   }
-
   return numbers
 }
 
 export function generateInvalidNhsNumbers(num: number) {
   const numbers: Array<string> = []
-
   while (numbers.length < num) {
-    const number = faker.number.int({min: 100000000, max: 999999999}).toString()
-    const multipliedTotal = number.split("").reduce(
-      (acc: number, curr: string, i: number) => acc + (Number(curr) * (10 - i)), 0)
-    const remainder = multipliedTotal % 11
-    const checkDigit = 11 - remainder
+    const numString = faker.number.int({min: 100000000, max: 999999999}).toString()
+    const checkDigit = calculateCheckDigit(numString)
 
-    if (checkDigit === 10) {
-      numbers.push(`${number}${checkDigit}`)
-    }
+    const invalidCheckDigit = (checkDigit + 1) % 10
 
+    numbers.push(`${numString}${invalidCheckDigit}`)
   }
 
   return numbers
+}
+
+function calculateCheckDigit(numberString: string): number {
+  const digits: Array<number> = numberString.split("").map((n) => Number(n))
+
+  const multipliedTotal = digits.reduce(
+    (previous: number, current: number, index: number) => previous + (current * (10 - index)), 0
+  )
+
+  const remainder = multipliedTotal % 11
+
+  return 11 - remainder
 }
