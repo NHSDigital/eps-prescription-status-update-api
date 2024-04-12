@@ -5,7 +5,7 @@ import {marshall} from "@aws-sdk/util-dynamodb"
 import {DataItem} from "../updatePrescriptionStatus"
 
 const logger = new Logger({serviceName: "databaseClient"})
-const client = new DynamoDBClient({region: "eu-west-2"})
+const client = new DynamoDBClient()
 const tableName = process.env.TABLE_NAME ?? "PrescriptionStatusUpdates"
 
 function createTransactionCommand(dataItems: Array<DataItem>): TransactWriteItemsCommand {

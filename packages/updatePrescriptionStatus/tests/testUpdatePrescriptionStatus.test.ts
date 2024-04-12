@@ -92,12 +92,16 @@ describe("Unit test validateEntries", () => {
 
     const validResponseEntry = responseEntries[0]
     expect(validResponseEntry.fullUrl).toEqual("valid")
-    expect(validResponseEntry.response?.status).toEqual("200 Accepted")
+    expect(validResponseEntry.response?.status).toEqual("200 OK")
   })
 
   it("when one of two entries is invalid, returns false with two responses in the response bundle", async () => {
-    mockValidateEntry.mockReturnValueOnce({valid: true, issues: undefined})
-    mockValidateEntry.mockReturnValueOnce({valid: false, issues: "issues"})
+    mockValidateEntry.mockImplementation((entry: any) => {
+      if (entry.fullUrl === "valid") {
+        return {valid: true, issues: undefined}
+      }
+      return {valid: false, issues: "issues"}
+    })
 
     const requestEntries = [
       {resource: {}, fullUrl: "valid"},
@@ -112,7 +116,7 @@ describe("Unit test validateEntries", () => {
 
     const validResponseEntry = responseEntries[0]
     expect(validResponseEntry.fullUrl).toEqual("valid")
-    expect(validResponseEntry.response?.status).toEqual("200 Accepted")
+    expect(validResponseEntry.response?.status).toEqual("200 OK")
 
     const inValidResponseEntry = responseEntries[1]
     expect(inValidResponseEntry.fullUrl).toEqual("invalid")

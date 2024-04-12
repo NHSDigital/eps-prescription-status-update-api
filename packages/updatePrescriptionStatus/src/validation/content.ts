@@ -1,6 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import {Logger} from "@aws-lambda-powertools/logger"
 import {
   BundleEntry,
   CodeableConcept,
@@ -34,8 +33,6 @@ export const BUSINESS_STATUSES = [
   "dispatched",
   "not dispensed"
 ]
-
-const logger = new Logger({serviceName: "requestContentValidation"})
 
 export function transactionBundle(body: any): boolean {
   return body.resourceType === "Bundle" && body.type === "transaction"
@@ -136,15 +133,9 @@ export function validateContent(task: Task): ValidationOutcome {
 
   const issues: Array<string> = []
   contentValidations.forEach((validation: Validation) => {
-    try {
-      const issue = validation(task)
-      if (issue) {
-        issues.push(issue)
-      }
-    } catch(e) {
-      const message = `Unhandled error during validation of ${validation.name}.`
-      logger.error(message, {error: e})
-      issues.push(message)
+    const issue = validation(task)
+    if (issue) {
+      issues.push(issue)
     }
   })
   if (issues.length > 0) {

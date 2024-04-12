@@ -15,7 +15,7 @@
             {
               "severity": "information",
               "code": "success",
-              "diagnostics": "No issues detected during validation."
+              "diagnostics": "Data not committed due to issues in other entries."
             }
           ]
         }

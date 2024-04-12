@@ -46,7 +46,7 @@ export function accepted(fullUrl: string): BundleEntry {
   return {
     fullUrl: fullUrl,
     response: {
-      status: "200 Accepted",
+      status: "200 OK",
       outcome: {
         resourceType: "OperationOutcome",
         meta: {
@@ -56,7 +56,7 @@ export function accepted(fullUrl: string): BundleEntry {
           {
             code: "informational",
             severity: "information",
-            diagnostics: "No issues detected during validation."
+            diagnostics: "Data not committed due to issues in other entries."
           }
         ]
       }
@@ -78,7 +78,7 @@ function created(fullUrl: string): BundleEntry {
           {
             code: "success",
             severity: "information",
-            diagnostics: "No issues detected during validation."
+            diagnostics: "Data not committed due to issues in other entries."
           }
         ]
       }

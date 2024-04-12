@@ -108,7 +108,8 @@ describe("Integration tests for updatePrescriptionStatus handler", () => {
       expect(response.statusCode).toBe(httpResponseCode)
       expect(responseBody).toHaveProperty("resourceType", "Bundle")
       expect(responseBody).toHaveProperty("type", "transaction-response")
-    })
+    }
+  )
 
   it("when missing fields, expect 400 status code and message indicating missing fields", async () => {
     const event: APIGatewayProxyEvent = generateMockEvent(requestMissingFields)
