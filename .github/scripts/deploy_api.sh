@@ -14,7 +14,7 @@ fi
 echo "Environment name: $environment"
 
 # Find and replace the x-nhsd-apim.target.url value
-jq --arg stack_name "$STACK_NAME" 'if .["x-nhsd-apim"].target.url == "https://psu.dev.eps.national.nhs.uk" then .["x-nhsd-apim"].target.url = "https://\($stack_name).dev.eps.national.nhs.uk" else . end' "$SPEC_PATH" > temp.json && mv temp.json "$SPEC_PATH"
+jq --arg stack_name "$STACK_NAME" '.["x-nhsd-apim"].target.url = "https://\($stack_name).dev.eps.national.nhs.uk"' "$SPEC_PATH" > temp.json && mv temp.json "$SPEC_PATH"
 
 proxygen_private_key_arn=$(aws cloudformation list-exports --query "Exports[?Name=='account-resources:ProxgenPrivateKey'].Value" --output text)
 # proxygen_public_key_arn=$(aws cloudformation list-exports --query "Exports[?Name=='account-resources:ProxgenPublicKey'].Value" --output text)
