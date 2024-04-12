@@ -53,6 +53,7 @@ properties:
               - Collected
               - Dispatched
               - Not Dispensed
+              - Ready for Delivery
   intent:
     type: string
     description: Order is the allowed value to indicate the update informs an actionable task.
