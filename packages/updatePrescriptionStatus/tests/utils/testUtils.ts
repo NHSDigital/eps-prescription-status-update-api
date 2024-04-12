@@ -120,22 +120,7 @@ export function generateExpectedItems(itemCount: number = 1) {
           Status: {S: values.businessStatus},
           TaskID: {S: values.id},
           TerminalStatus: {S: values.status},
-          RequestID: {S: X_REQUEST_ID},
-          RequestMessage: {
-            M: {
-              resourceType: {S: "Task"},
-              lastModified: {S: values.lastModified},
-              focus: {M: {identifier: {M: {value: {S: values.lineItemID}, system: {S: LINE_ITEM_ID_CODESYSTEM}}}}},
-              for: {M: {identifier: {M: {value: {S: values.nhsNumber}, system: {S: NHS_NUMBER_CODESYSTEM}}}}},
-              owner: {M: {identifier: {M: {value: {S: values.odsCode}, system: {S: ODS_CODE_CODESYSTEM}}}}},
-              basedOn: {L:
-                [{M: {identifier: {M: {value: {S: values.prescriptionID}, system: {S: PRESCRIPTION_ID_CODESYSTEM}}}}}]},
-              businessStatus: {M: {
-                coding: {L: [{M: {code: {S: values.businessStatus}, system: {S: STATUS_CODESYSTEM}}}]}}},
-              id: {S: values.id},
-              status: {S: values.status}
-            }
-          }
+          RequestID: {S: X_REQUEST_ID}
         }
       }
     })
