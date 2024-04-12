@@ -18,6 +18,7 @@ import {
 } from "../utils/testUtils"
 import {ONE_DAY_IN_MS} from "../../src/validation/content"
 
+import requestSingleItem from "../../../specification/examples/request-dispatched.json"
 import requestMultipleItems from "../../../specification/examples/request-multiple-items.json"
 import {accepted, badRequest, bundleWrap} from "../../src/utils/responses"
 
@@ -55,6 +56,22 @@ describe("Integration tests for validation via updatePrescriptionStatus handler"
     const expected = bundleWrap([
       badRequest("Invalid last modified value provided.", FULL_URL_0),
       badRequest("Missing required field(s) - FullUrl, PrescriptionID.")
+    ])
+
+    const response: APIGatewayProxyResult = await handler(event, {})
+
+    expect(response.statusCode).toBe(400)
+    expect(JSON.parse(response.body)).toEqual(expected)
+  })
+
+  it("when id in entry fullUrl doesn't match that in task, expect 400 status code and messages indicating the issue", async () => {
+    const body: any = deepCopy(requestSingleItem)
+    body.entry[0].fullUrl = "invalid"
+
+    const event: APIGatewayProxyEvent = generateMockEvent(body)
+
+    const expected = bundleWrap([
+      badRequest("Invalid entry fullUrl or task id.", "invalid")
     ])
 
     const response: APIGatewayProxyResult = await handler(event, {})

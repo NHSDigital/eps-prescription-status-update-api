@@ -13,8 +13,8 @@ import {validateFields} from "./fields"
 export type Validation = (task: Task) => string | undefined
 
 export type ValidationOutcome = {
-    valid: boolean,
-    issues: string | undefined
+  valid: boolean,
+  issues: string | undefined
 }
 
 export const ONE_DAY_IN_MS = 86400000
@@ -36,6 +36,10 @@ export const BUSINESS_STATUSES = [
 
 export function transactionBundle(body: any): boolean {
   return body.resourceType === "Bundle" && body.type === "transaction"
+}
+
+export function entryContent(entry: BundleEntry): Array<string> {
+  return entry.fullUrl!.split("/").pop() === entry.resource!.id ? [] : ["Invalid entry fullUrl or task id."]
 }
 
 export function lastModified(task: Task): string | undefined {
@@ -118,7 +122,7 @@ export function statuses(task: Task): string | undefined {
   }
 }
 
-export function validateContent(task: Task): ValidationOutcome {
+export function taskContent(task: Task): Array<string> {
   const contentValidations: Array<Validation> = [
     businessStatus,
     lastModified,
@@ -129,8 +133,6 @@ export function validateContent(task: Task): ValidationOutcome {
     codeSystems
   ]
 
-  const validationOutcome: ValidationOutcome = {valid: true, issues: undefined}
-
   const issues: Array<string> = []
   contentValidations.forEach((validation: Validation) => {
     const issue = validation(task)
@@ -138,6 +140,17 @@ export function validateContent(task: Task): ValidationOutcome {
       issues.push(issue)
     }
   })
+
+  return issues
+}
+
+export function validateContent(entry: BundleEntry): ValidationOutcome {
+  const validationOutcome: ValidationOutcome = {valid: true, issues: undefined}
+  const issues: Array<string> = []
+  const task = entry.resource as Task
+
+  entryContent(entry).forEach(f => issues.push(f))
+  taskContent(task).forEach(f => issues.push(f))
   if (issues.length > 0) {
     validationOutcome.valid = false
     validationOutcome.issues = issues.join(" ")
@@ -152,6 +165,5 @@ export function validateEntry(entry: BundleEntry): ValidationOutcome {
     return fieldsOutcome
   }
 
-  const task = entry.resource as Task
-  return validateContent(task)
+  return validateContent(entry)
 }

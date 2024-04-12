@@ -19,19 +19,25 @@ import {
   resourceType,
   statuses,
   transactionBundle,
-  validateContent,
+  taskContent,
   validateEntry,
-  ValidationOutcome
+  ValidationOutcome,
+  validateContent,
+  entryContent
 } from "../../src/validation/content"
 
-import valid from "../tasks/valid.json"
 import {generateInvalidNhsNumbers, generateValidNhsNumbers} from "../utils/nhsNumber"
-import {DEFAULT_DATE, FULL_URL_0, generateEntry} from "../utils/testUtils"
+import {
+  DEFAULT_DATE,
+  FULL_URL_0,
+  generateEntry,
+  validTask
+} from "../utils/testUtils"
 
 describe("Unit test for overall task validation", () => {
   it("When task is valid, should return true with no issues.", async () => {
     const expectedOutcome = {valid: true, issues: undefined}
-    const entry: BundleEntry = {fullUrl: FULL_URL_0, resource: valid as Task}
+    const entry: BundleEntry = {fullUrl: FULL_URL_0, resource: validTask()}
 
     const actual: ValidationOutcome = validateEntry(entry)
 
@@ -42,22 +48,62 @@ describe("Unit test for overall task validation", () => {
 describe("Unit test for validateContent", () => {
   it("When task is valid, should return true with no issues.", async () => {
     const expectedOutcome = {valid: true, issues: undefined}
+    const entry: BundleEntry = {fullUrl: FULL_URL_0, resource: validTask()}
 
-    const actual: ValidationOutcome = validateContent(valid as Task)
+    const actual: ValidationOutcome = validateContent(entry)
 
     expect(actual).toEqual(expectedOutcome)
   })
 
   it("When task is invalid in multiple ways, should return false with issues.", async () => {
-    const invalidTask: any = {...valid}
-    invalidTask.for.identifier.value = "invalidNhsNumber"
-    invalidTask.focus.identifier.system = "invalidLineItemIdCodeSystem"
+    const task = validTask()
+    task.for!.identifier!.value = "invalidNhsNumber"
+    task.focus!.identifier!.system = "invalidLineItemIdCodeSystem"
+    const entry: BundleEntry = {fullUrl: FULL_URL_0, resource: task}
 
     const expectedOutcome = {valid: false, issues: "NHS number is invalid. Invalid CodeSystem(s) - LineItemID."}
 
-    const actual: ValidationOutcome = validateContent(invalidTask as Task)
+    const actual: ValidationOutcome = validateContent(entry)
 
     expect(actual).toEqual(expectedOutcome)
+  })
+})
+
+describe("Unit test for taskContent", () => {
+  it("When task is valid, should return empty array.", async () => {
+    const task = validTask()
+    const actual: Array<string> = taskContent(task)
+
+    expect(actual).toEqual([])
+  })
+
+  it("When task is invalid in multiple ways, should return array with all issues.", async () => {
+    const task = validTask()
+    task.for!.identifier!.value = "invalidNhsNumber"
+    task.focus!.identifier!.system = "invalidLineItemIdCodeSystem"
+
+    const expectedOutcome = ["NHS number is invalid.", "Invalid CodeSystem(s) - LineItemID."]
+
+    const actual: Array<string> = taskContent(task)
+
+    expect(actual).toEqual(expectedOutcome)
+  })
+})
+
+describe("Unit test for entryContent", () => {
+  it("When entry is valid, should return empty array.", async () => {
+    const entry: BundleEntry = {fullUrl: FULL_URL_0, resource: validTask()}
+    const actual: Array<string> = entryContent(entry)
+
+    expect(actual).toEqual([])
+  })
+
+  it("When entry is invalid, should return array with issue.", async () => {
+    const entry: BundleEntry = {fullUrl: FULL_URL_0, resource: validTask()}
+    entry.fullUrl = "invalid"
+    const actual: Array<string> = entryContent(entry)
+
+    expect(actual).toEqual(["Invalid entry fullUrl or task id."])
   })
 })
 

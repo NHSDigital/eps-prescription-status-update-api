@@ -10,6 +10,9 @@ import {
   PRESCRIPTION_ID_CODESYSTEM,
   STATUS_CODESYSTEM
 } from "../../src/validation/content"
+import {Task} from "fhir/r4"
+
+import valid from "../tasks/valid.json"
 
 export const TASK_ID_0 = "4d70678c-81e4-4ff4-8c67-17596fd0aa46"
 export const TASK_ID_1 = "0ae4daf3-f24b-479d-b8fa-b69e2d873b60"
@@ -49,6 +52,11 @@ const TASK_VALUES = [
 
 export function deepCopy(toCopy: object) {
   return JSON.parse(JSON.stringify(toCopy))
+}
+
+export function validTask(): Task {
+  const task: any = deepCopy(valid)
+  return task as Task
 }
 
 export const generateMockEvent = (body: any): APIGatewayProxyEvent => ({

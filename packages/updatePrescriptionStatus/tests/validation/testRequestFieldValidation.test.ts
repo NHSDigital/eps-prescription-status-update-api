@@ -5,31 +5,30 @@ import {BundleEntry, Task} from "fhir/r4"
 
 import {taskFields, validateFields} from "../../src/validation/fields"
 
-import valid from "../tasks/valid.json"
-import {FULL_URL_0} from "../utils/testUtils"
+import {FULL_URL_0, validTask} from "../utils/testUtils"
 
 describe("Unit tests for validateFields", () => {
   it("when all fields present, return valid", async () => {
-    const entry: BundleEntry = {fullUrl: FULL_URL_0, resource: valid as Task}
+    const entry: BundleEntry = {fullUrl: FULL_URL_0, resource: validTask()}
     const result = validateFields(entry)
     expect(result).toEqual({valid: true, issues: undefined})
   })
 
   it("when fields missing on task, return invalid with message", async () => {
-    const invalid: any = {...valid}
-    delete invalid.id
-    delete invalid.basedOn
-    const entry: BundleEntry = {fullUrl: FULL_URL_0, resource: invalid as Task}
+    const task = validTask()
+    delete task.id
+    delete task.basedOn
+    const entry: BundleEntry = {fullUrl: FULL_URL_0, resource: task}
 
     const result = validateFields(entry)
     expect(result).toEqual({valid: false, issues: "Missing required field(s) - PrescriptionID, TaskID."})
   })
 
   it("when fields missing on entry and task, return invalid with message", async () => {
-    const invalid: any = {...valid}
-    delete invalid.id
-    delete invalid.basedOn
-    const entry: BundleEntry = {fullUrl: FULL_URL_0, resource: invalid as Task}
+    const task = validTask()
+    delete task.id
+    delete task.basedOn
+    const entry: BundleEntry = {fullUrl: FULL_URL_0, resource: task as Task}
     delete entry.fullUrl
 
     const result = validateFields(entry)
@@ -68,7 +67,7 @@ describe("Unit tests for validation of individual fields", () => {
       operation: ((t: Task) => delete t.id)
     }
   ])("When $missingField is missing, should return expected issue.", async ({operation, missingField}) => {
-    const task = {...valid} as any
+    const task = validTask()
     operation(task)
 
     const actual = taskFields(task as Task)
