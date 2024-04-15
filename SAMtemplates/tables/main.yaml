@@ -58,6 +58,7 @@ Resources:
               - TerminalStatus
               - LastModified
               - Status
+            ProjectionType: KEYS_ONLY
           ProvisionedThroughput:
             ReadCapacityUnits: "5"
             WriteCapacityUnits: "5"
