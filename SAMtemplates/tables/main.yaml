@@ -53,11 +53,6 @@ Resources:
             - AttributeName: PatientNHSNumber
               KeyType: HASH
           Projection:
-            NonKeyAttributes:
-              - LineItemID
-              - TerminalStatus
-              - LastModified
-              - Status
             ProjectionType: KEYS_ONLY
           ProvisionedThroughput:
             ReadCapacityUnits: "5"
