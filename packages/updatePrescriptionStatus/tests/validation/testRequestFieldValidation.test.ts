@@ -28,7 +28,7 @@ describe("Unit tests for validateFields", () => {
     const task = validTask()
     delete task.id
     delete task.basedOn
-    const entry: BundleEntry = {fullUrl: FULL_URL_0, resource: task as Task}
+    const entry: BundleEntry = {fullUrl: FULL_URL_0, resource: task}
     delete entry.fullUrl
 
     const result = validateFields(entry)
@@ -70,7 +70,7 @@ describe("Unit tests for validation of individual fields", () => {
     const task = validTask()
     operation(task)
 
-    const actual = taskFields(task as Task)
+    const actual = taskFields(task)
 
     expect(actual).toEqual([missingField])
   })
