@@ -132,6 +132,11 @@ paths:
             schema:
               $ref: "#/components/schemas/UpdatePrescriptionStatusBundle"
             examples:
+              ready-for-delivery:
+                summary: ready-for-delivery
+                description: A request message contains tracking status `Ready for delivery`.
+                value:
+                  $ref: examples/request-ready-for-delivery.json
               dispatched:
                 summary: dispatched
                 description: A request message contains tracking status `Dispatched``.
@@ -251,7 +256,7 @@ components:
             properties:
               fullUrl:
                 type: string
-                example: http://example.org/fhir/Task/4d70678c-81e4-4ff4-8c67-17596fd0aa46
+                example: urn:uuid:4d70678c-81e4-4ff4-8c67-17596fd0aa46
               resource:
                 $ref: "#/components/schemas/UpdatePrescriptionStatusTask"
               request:

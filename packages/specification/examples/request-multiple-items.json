@@ -3,7 +3,7 @@
   "type": "transaction",
   "entry": [
     {
-      "fullUrl": "http://example.org/fhir/Task/4d70678c-81e4-4ff4-8c67-17596fd0aa46",
+      "fullUrl": "urn:uuid:4d70678c-81e4-4ff4-8c67-17596fd0aa46",
       "resource": {
         "resourceType": "Task",
         "id": "4d70678c-81e4-4ff4-8c67-17596fd0aa46",
@@ -11,7 +11,7 @@
           {
             "identifier": {
               "system": "https://fhir.nhs.uk/Id/prescription-order-number",
-              "value": "3F8A06-A83008-3E85AX"
+              "value": "07A66F-A83008-1EEEA0"
             }
           }
         ],
@@ -20,7 +20,7 @@
           "coding": [
             {
               "system": "https://fhir.nhs.uk/CodeSystem/task-businessStatus-nppt",
-              "code": "Ready to collect"
+              "code": "Dispatched"
             }
           ]
         },
@@ -37,7 +37,7 @@
             "value": "9449304130"
           }
         },
-        "lastModified": "2024-01-30T12:01:24Z",
+        "lastModified": "2023-09-11T10:11:12Z",
         "owner": {
           "identifier": {
             "system": "https://fhir.nhs.uk/Id/ods-organization-code",
@@ -51,10 +51,10 @@
       }
     },
     {
-      "fullUrl": "http://example.org/fhir/Task/346d2bfe-7dc0-451b-ad0d-da81833c08da",
+      "fullUrl": "urn:uuid:0ae4daf3-f24b-479d-b8fa-b69e2d873b60",
       "resource": {
         "resourceType": "Task",
-        "id": "346d2bfe-7dc0-451b-ad0d-da81833c08da",
+        "id": "0ae4daf3-f24b-479d-b8fa-b69e2d873b60",
         "basedOn": [
           {
             "identifier": {
@@ -85,7 +85,7 @@
             "value": "9449304130"
           }
         },
-        "lastModified": "2024-01-30T12:01:24Z",
+        "lastModified": "2023-09-11T10:11:12Z",
         "owner": {
           "identifier": {
             "system": "https://fhir.nhs.uk/Id/ods-organization-code",

@@ -123,6 +123,7 @@ jobs:
       TRUSTSTORE_FILE: psu-truststore.pem
       VERSION_NUMBER: ${{needs.tag_release.outputs.version_tag}}
       COMMIT_ID: ${{needs.get_commit_id.outputs.commit_id}}
+      LOG_LEVEL: DEBUG
       LOG_RETENTION_DAYS: 30
       CREATE_INT_RELEASE_NOTES: true
       CREATE_PROD_RELEASE_NOTES: true
@@ -146,6 +147,7 @@ jobs:
       TRUSTSTORE_FILE: psu-truststore.pem
       VERSION_NUMBER: ${{needs.tag_release.outputs.version_tag}}
       COMMIT_ID: ${{needs.get_commit_id.outputs.commit_id}}
+      LOG_LEVEL: DEBUG
       LOG_RETENTION_DAYS: 30
     secrets:
       CLOUD_FORMATION_DEPLOY_ROLE: ${{ secrets.REF_CLOUD_FORMATION_DEPLOY_ROLE }}
@@ -163,6 +165,7 @@ jobs:
       TRUSTSTORE_FILE: psu-truststore.pem
       VERSION_NUMBER: ${{needs.tag_release.outputs.version_tag}}
       COMMIT_ID: ${{needs.get_commit_id.outputs.commit_id}}
+      LOG_LEVEL: DEBUG
       LOG_RETENTION_DAYS: 30
     secrets:
       CLOUD_FORMATION_DEPLOY_ROLE: ${{ secrets.QA_CLOUD_FORMATION_DEPLOY_ROLE }}
@@ -180,6 +183,7 @@ jobs:
       TRUSTSTORE_FILE: psu-truststore.pem
       VERSION_NUMBER: ${{needs.tag_release.outputs.version_tag}}
       COMMIT_ID: ${{needs.get_commit_id.outputs.commit_id}}
+      LOG_LEVEL: DEBUG
       LOG_RETENTION_DAYS: 30
       CREATE_INT_RELEASE_NOTES: true
       CREATE_INT_RC_RELEASE_NOTES: true
@@ -202,6 +206,7 @@ jobs:
 #      TRUSTSTORE_FILE: psu-truststore.pem
 #      VERSION_NUMBER: ${{needs.tag_release.outputs.version_tag}}
 #      COMMIT_ID: ${{needs.get_commit_id.outputs.commit_id}}
+#      LOG_LEVEL: INFO
 #      LOG_RETENTION_DAYS: 731
 #      MARK_JIRA_RELEASED: true
 #      CREATE_PROD_RELEASE_NOTES: true
