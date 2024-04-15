@@ -2,194 +2,154 @@
 import {APIGatewayProxyEvent, APIGatewayProxyResult} from "aws-lambda"
 import {Logger} from "@aws-lambda-powertools/logger"
 import {injectLambdaContext} from "@aws-lambda-powertools/logger/middleware"
-import {DynamoDBClient, PutItemCommand} from "@aws-sdk/client-dynamodb"
-import {marshall} from "@aws-sdk/util-dynamodb"
 import middy from "@middy/core"
 import inputOutputLogger from "@middy/input-output-logger"
 import errorHandler from "@nhs/fhir-middy-error-handler"
+import {Bundle, BundleEntry, Task} from "fhir/r4"
+
+import {transactionBundle, validateEntry} from "./validation/content"
+import {
+  accepted,
+  badRequest,
+  bundleWrap,
+  createSuccessResponseEntries,
+  serverError
+} from "./utils/responses"
+import {persistDataItems} from "./utils/databaseClient"
 
 const logger = new Logger({serviceName: "updatePrescriptionStatus"})
-const client = new DynamoDBClient({region: "eu-west-2"})
-const tableName = process.env.TABLE_NAME
 
-interface DynamoDBItem {
-  RequestID: string | undefined;
-  PrescriptionID: string;
-  PatientNHSNumber: string;
-  PharmacyODSCode: string;
-  TaskID: string;
-  LineItemID: string;
-  TerminalStatus: string;
-  RequestMessage: any;
+export interface DataItem {
+  LastModified: string
+  LineItemID: string
+  PatientNHSNumber: string
+  PharmacyODSCode: string
+  PrescriptionID: string
+  RequestID: string
+  Status: string
+  TaskID: string
+  TerminalStatus: string
 }
 
 const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
-  const xRequestId = event.headers["x-request-id"]
-  let requestBody
-  try {
-    requestBody = JSON.parse(event.body || "")
-  } catch (jsonParseError) {
-    logger.error("Error parsing JSON", {error: jsonParseError})
-    const errorResponseBody = {
-      resourceType: "OperationOutcome",
-      issue: [
-        {
-          code: "value",
-          severity: "error",
-          details: {
-            coding: [
-              {
-                system: "https://fhir.nhs.uk/CodeSystem/http-error-codes",
-                code: "BAD_REQUEST",
-                display: "400: The Server was unable to process the request."
-              }
-            ]
-          }
-        }
-      ]
-    }
-    return {
-      statusCode: 400,
-      body: JSON.stringify(errorResponseBody),
-      headers: {
-        "Content-Type": "application/fhir+json",
-        "Cache-Control": "no-cache"
-      }
-    }
+  let responseEntries: Array<BundleEntry> = []
+
+  const xRequestID = getXRequestID(event, responseEntries)
+  if (!xRequestID) {
+    return response(400, responseEntries)
   }
 
-  const responseBundle: any = {
-    resourceType: "Bundle",
-    type: "transaction-response",
-    entry: []
+  const requestBody = event.body
+  const requestBundle = castEventBody(requestBody, responseEntries)
+  if(!requestBundle) {
+    return response(400, responseEntries)
   }
 
-  const entries = requestBody.entry || []
-  for (const entry of entries) {
-    logger.info("Processing entry", {entry: entry})
-    const entry_resource = entry.resource
+  const requestEntries: Array<BundleEntry> = requestBundle.entry || []
 
-    const dynamoDBItem: DynamoDBItem = {
-      RequestID: xRequestId,
-      PrescriptionID: entry_resource.basedOn?.[0]?.identifier?.value,
-      PatientNHSNumber: entry_resource.for?.identifier?.value,
-      PharmacyODSCode: entry_resource.owner?.identifier?.value,
-      TaskID: entry_resource.id,
-      LineItemID: entry_resource.focus?.identifier?.value,
-      TerminalStatus: entry_resource.status,
-      RequestMessage: entry_resource
-    }
-
-    const invalidFields = []
-    for (const [field, value] of Object.entries(dynamoDBItem)) {
-      if (!value) {
-        logger.info("Invalid value", {field: field, value: value})
-        invalidFields.push(field)
-      }
-    }
-
-    if (invalidFields.length > 0) {
-      const errorMessage = `400: Missing required fields: ${invalidFields.join(", ")}`
-      logger.error("Error message", {errorMessage: errorMessage})
-      const errorResponseBody = {
-        resourceType: "OperationOutcome",
-        issue: [
-          {
-            code: "value",
-            severity: "error",
-            details: {
-              coding: [
-                {
-                  system: "https://fhir.nhs.uk/CodeSystem/http-error-codes",
-                  code: "BAD_REQUEST",
-                  display: errorMessage
-                }
-              ]
-            }
-          }
-        ]
-      }
-      return {
-        statusCode: 400,
-        body: JSON.stringify(errorResponseBody),
-        headers: {
-          "Content-Type": "application/fhir+json",
-          "Cache-Control": "no-cache"
-        }
-      }
-    }
-
-    const item = marshall(dynamoDBItem)
-    logger.info("Marshalled item", {item: item})
-
-    try {
-      const command = new PutItemCommand({
-        TableName: tableName,
-        Item: item
-      })
-      logger.info("Sending PutItemCommand", {command: command})
-      await client.send(command)
-    } catch (error) {
-      logger.error("Error sending PutItemCommand", {error: error})
-      const errorResponseBody = {
-        resourceType: "OperationOutcome",
-        issue: [
-          {
-            code: "exception",
-            severity: "fatal",
-            details: {
-              coding: [
-                {
-                  system: "https://fhir.nhs.uk/CodeSystem/http-error-codes",
-                  code: "SERVER_ERROR",
-                  display: "500: The Server has encountered an error processing the request."
-                }
-              ]
-            }
-          }
-        ]
-      }
-      return {
-        statusCode: 500,
-        body: JSON.stringify(errorResponseBody),
-        headers: {
-          "Content-Type": "application/fhir+json",
-          "Cache-Control": "no-cache"
-        }
-      }
-    }
-
-    const taskResponse = {
-      response: {
-        status: "201 Created",
-        outcome: {
-          resourceType: "OperationOutcome",
-          issue: [
-            {
-              severity: "information",
-              code: "success",
-              diagnostics: "No issues detected during validation"
-            }
-          ]
-        }
-      }
-    }
-    logger.info("Task response", {taskResponse: taskResponse})
-    responseBundle.entry.push(taskResponse)
+  if (requestEntries.length === 0) {
+    logger.info("No entries to process.")
+    return response(200, responseEntries)
   }
 
-  if (entries.length === 0) {
-    logger.info("No entries to process")
-    return {
-      statusCode: 200,
-      body: JSON.stringify(responseBundle)
-    }
+  const entriesValid = validateEntries(requestEntries, responseEntries)
+  if (!entriesValid) {
+    return response(400, responseEntries)
   }
 
-  logger.info("Request audit log", {requestBody: requestBody})
+  const dataItems = buildDataItems(requestEntries, xRequestID)
+
+  const persistSuccess = await persistDataItems(dataItems)
+  if (!persistSuccess) {
+    responseEntries = [serverError()]
+    return response(500, responseEntries)
+  }
+
+  responseEntries = createSuccessResponseEntries(requestEntries)
+  logger.info("Event processed successfully.")
+  return response(201, responseEntries)
+}
+
+export function getXRequestID(event: APIGatewayProxyEvent, responseEntries: Array<BundleEntry>): string | undefined {
+  const xRequestID = event.headers["x-request-id"]
+  if (!xRequestID) {
+    const errorMessage = "Missing or empty x-request-id header."
+    logger.error(errorMessage)
+    const entry: BundleEntry = badRequest(errorMessage)
+    responseEntries.push(entry)
+    return undefined
+  }
+  return xRequestID
+}
+
+export function castEventBody(body: any, responseEntries: Array<BundleEntry>): Bundle | undefined {
+  if (transactionBundle(body)) {
+    return body as Bundle
+  } else {
+    const errorMessage = "Request body does not have resourceType of 'Bundle' and type of 'transaction'."
+    logger.error(errorMessage)
+    const entry: BundleEntry = badRequest(errorMessage)
+    responseEntries.push(entry)
+  }
+}
+
+export function validateEntries(requestEntries: Array<BundleEntry>, responseEntries: Array<BundleEntry>): boolean {
+  logger.info("Validating entries.")
+  let valid = true
+  for (const entry of requestEntries) {
+    const fullUrl = entry.fullUrl!
+    logger.info("Validating entry.", {entry: entry, id: entry.fullUrl})
+
+    const validationOutcome = validateEntry(entry)
+
+    let responseEntry: BundleEntry
+    if (validationOutcome.valid) {
+      logger.info("Entry validated successfully.", {entry: entry, id: entry.fullUrl})
+      responseEntry = accepted(fullUrl)
+    } else {
+      const errorMessage = validationOutcome.issues!
+      logger.info(`Entry failed validation. ${errorMessage}`, {entry: entry, id: entry.fullUrl})
+      valid = false
+      responseEntry = badRequest(errorMessage, fullUrl)
+    }
+    responseEntries.push(responseEntry)
+  }
+  logger.info("Entries validated.")
+  return valid
+}
+
+export function buildDataItems(requestEntries: Array<BundleEntry>, xRequestID: string): Array<DataItem> {
+  const dataItems: Array<DataItem> = []
+
+  for (const requestEntry of requestEntries) {
+    const task = requestEntry.resource as Task
+    logger.info("Building data item for task.", {task: task, id: task.id})
+
+    const dataItem: DataItem = {
+      LastModified: task.lastModified!,
+      LineItemID: task.focus!.identifier!.value!,
+      PatientNHSNumber: task.for!.identifier!.value!,
+      PharmacyODSCode: task.owner!.identifier!.value!,
+      PrescriptionID: task.basedOn![0].identifier!.value!,
+      RequestID: xRequestID,
+      Status: task.businessStatus!.coding![0].code!,
+      TaskID: task.id!,
+      TerminalStatus: task.status
+    }
+
+    dataItems.push(dataItem)
+  }
+  return dataItems
+}
+
+function response(statusCode: number, responseEntries: Array<BundleEntry>) {
   return {
-    statusCode: 201,
-    body: JSON.stringify(responseBundle)
+    statusCode: statusCode,
+    body: JSON.stringify(bundleWrap(responseEntries)),
+    headers: {
+      "Content-Type": "application/fhir+json",
+      "Cache-Control": "no-cache"
+    }
   }
 }
 
@@ -198,11 +158,7 @@ export const handler = middy(lambdaHandler)
   .use(
     inputOutputLogger({
       logger: (request) => {
-        if (request.response) {
-          logger.debug(request)
-        } else {
-          logger.info(request)
-        }
+        logger.info(request)
       }
     })
   )

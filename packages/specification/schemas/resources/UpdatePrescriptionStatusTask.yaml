@@ -1,5 +1,5 @@
 type: object
-required: [id, resourceType, basedOn, status, businessStatus, intent, focus, for, lastModified, owner]
+required: [id, resourceType, basedOn, status, businessStatus, intent, focus, for, lastModified, owner, input]
 properties:
   resourceType:
     type: string
@@ -53,6 +53,7 @@ properties:
               - Collected
               - Dispatched
               - Not Dispensed
+              - Ready for Delivery
   intent:
     type: string
     description: Order is the allowed value to indicate the update informs an actionable task.
@@ -89,7 +90,7 @@ properties:
             example: "9449304130"
   lastModified:
     type: string
-    description: Only the latest last modified date will be displayed to users of the NHS App. This mechanism will be implemented to resolve updates received out of sequence.
+    description: Date and time, specified as UTC value, when the prescription item status was updated. Only the latest last modified date will be displayed to users of the NHS App. This mechanism will be implemented to resolve updates received out of sequence.
     format: date-time
     example: 2024-01-30T12:01:24Z
   owner:
@@ -107,3 +108,21 @@ properties:
           value:
             type: string
             example: C9Z1O
+  input:
+    type: array
+    description: The eRD Repeat Number, with the prescription tracking status updates for eRD prescriptions. This is optional and only required for eRD type prescriptions.
+    items:
+      type: object
+      required: [_type, valueInteger]
+      properties:
+        _type: 
+          type: object
+          required: [text]
+          properties:
+            text:
+              type: string
+              enum: [Repeat Number]
+        valueInteger:
+          type: integer
+          minimum: 1
+          maximum: 6          

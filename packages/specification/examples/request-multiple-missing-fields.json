@@ -43,6 +43,48 @@
         "method": "POST",
         "url": "Task"
       }
+    },
+    {
+      "fullUrl": "urn:uuid:0ae4daf3-f24b-479d-b8fa-b69e2d873b60",
+      "resource": {
+        "resourceType": "Task",
+        "id": "0ae4daf3-f24b-479d-b8fa-b69e2d873b60",
+        "basedOn": [
+          {
+            "identifier": {
+              "system": "https://fhir.nhs.uk/Id/prescription-order-number",
+              "value": "480720-A83008-57FF06"
+            }
+          }
+        ],
+        "status": "in-progress",
+        "businessStatus": {
+          "coding": [
+            {
+              "system": "https://fhir.nhs.uk/CodeSystem/task-businessStatus-nppt",
+              "code": "Ready to collect"
+            }
+          ]
+        },
+        "intent": "order",
+        "focus": {
+          "identifier": {
+            "system": "https://fhir.nhs.uk/Id/prescription-order-item-number",
+            "value": "e3843418-1900-44a1-8f6a-bff8601893b8"
+          }
+        },
+        "for": {
+          "identifier": {
+            "system": "https://fhir.nhs.uk/Id/nhs-number",
+            "value": "9449304130"
+          }
+        },
+        "lastModified": "2023-09-11T10:11:12Z"
+      },
+      "request": {
+        "method": "POST",
+        "url": "Task"
+      }
     }
   ]
 }
