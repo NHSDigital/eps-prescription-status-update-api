@@ -53,6 +53,7 @@ properties:
               - Collected
               - Dispatched
               - Not Dispensed
+              - Ready for Delivery
   intent:
     type: string
     description: Order is the allowed value to indicate the update informs an actionable task.
@@ -89,7 +90,7 @@ properties:
             example: "9449304130"
   lastModified:
     type: string
-    description: Only the latest last modified date will be displayed to users of the NHS App. This mechanism will be implemented to resolve updates received out of sequence.
+    description: Date and time, specified as UTC value, when the prescription item status was updated. Only the latest last modified date will be displayed to users of the NHS App. This mechanism will be implemented to resolve updates received out of sequence.
     format: date-time
     example: 2024-01-30T12:01:24Z
   owner:
