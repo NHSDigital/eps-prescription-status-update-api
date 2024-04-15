@@ -6,7 +6,7 @@ echo "Stack name: $STACK_NAME" # instance
 echo "Target environment: $TARGET_ENVIRONMENT"
 
 aws_environment=$(echo "$TARGET_ENVIRONMENT" | cut -d'-' -f1)
-cho "AWS environment: $aws_environment"
+echo "AWS environment: $aws_environment"
 
 if [ "$TARGET_ENVIRONMENT" != "dev-pr" ]; then
   environment=$TARGET_ENVIRONMENT
