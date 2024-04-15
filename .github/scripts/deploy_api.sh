@@ -19,11 +19,10 @@ echo "Proxy environment: $environment"
 jq --arg stack_name "$STACK_NAME" --arg aws_env "$aws_environment" '.["x-nhsd-apim"].target.url = "https://\($stack_name).\($aws_env).eps.national.nhs.uk"' "$SPEC_PATH" > temp.json && mv temp.json "$SPEC_PATH"
 
 proxygen_private_key_arn=$(aws cloudformation list-exports --query "Exports[?Name=='account-resources:ProxgenPrivateKey'].Value" --output text)
-
 proxygen_private_key=$(aws secretsmanager get-secret-value --secret-id "${proxygen_private_key_arn}" --query SecretString --output text)
 
 # Save private keys to temporary files
-echo "$proxygen_private_key" > /tmp/proxygen_private_key.pem
+echo "$proxygen_private_key" > ./tmp/proxygen_private_key.pem
 
 # Create ~/.proxygen directory if it doesn't exist
 mkdir -p ~/.proxygen
