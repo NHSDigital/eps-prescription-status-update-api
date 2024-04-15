@@ -26,7 +26,7 @@ const lambdaHandler = async (event: requestType): Promise<responseType> => {
     // create query for each prescription and ods code passed in
     const queryParam : QueryCommandInput = {
       TableName: tableName,
-      IndexName: "PrescriptionIDIndex",
+      IndexName: "PharmacyODSCodePrescriptionIDIndex",
       KeyConditionExpression: "PrescriptionID = :inputPrescriptionID AND PharmacyODSCode = :inputPharmacyODSCode",
       ExpressionAttributeValues: {
         ":inputPharmacyODSCode": prescription.odsCode,
