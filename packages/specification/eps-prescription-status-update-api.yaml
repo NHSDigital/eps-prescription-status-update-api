@@ -254,7 +254,7 @@ components:
             properties:
               fullUrl:
                 type: string
-                example: http://example.org/fhir/Task/4d70678c-81e4-4ff4-8c67-17596fd0aa46
+                example: urn:uuid:4d70678c-81e4-4ff4-8c67-17596fd0aa46
               resource:
                 $ref: "#/components/schemas/UpdatePrescriptionStatusTask"
               request:
