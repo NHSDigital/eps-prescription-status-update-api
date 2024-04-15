@@ -1,6 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any, max-len */
 import {APIGatewayProxyEvent, APIGatewayProxyResult} from "aws-lambda"
-import {DynamoDBClient} from "@aws-sdk/client-dynamodb"
 import {
   expect,
   describe,
@@ -99,8 +98,6 @@ describe("Integration tests for updatePrescriptionStatus handler", () => {
     "should return $scenarioDescription",
     async ({example, httpResponseCode}) => {
       const event: APIGatewayProxyEvent = generateMockEvent(example)
-
-      jest.spyOn(DynamoDBClient.prototype, "send").mockResolvedValue(undefined as never)
 
       const response: APIGatewayProxyResult = await handler(event, {})
 

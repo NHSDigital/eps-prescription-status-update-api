@@ -78,7 +78,7 @@ function created(fullUrl: string): BundleEntry {
           {
             code: "success",
             severity: "information",
-            diagnostics: "Data not committed due to issues in other entries."
+            diagnostics: "No issues detected during validation."
           }
         ]
       }

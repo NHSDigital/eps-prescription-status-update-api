@@ -15,7 +15,7 @@
             {
               "severity": "information",
               "code": "success",
-              "diagnostics": "Data not committed due to issues in other entries."
+              "diagnostics": "No issues detected during validation."
             }
           ]
         }
@@ -34,7 +34,7 @@
             {
               "severity": "information",
               "code": "success",
-              "diagnostics": "Data not committed due to issues in other entries."
+              "diagnostics": "No issues detected during validation."
             }
           ]
         }
