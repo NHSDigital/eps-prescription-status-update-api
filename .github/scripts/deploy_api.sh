@@ -16,7 +16,7 @@ fi
 echo "Proxy environment: $environment"
 
 # Find and replace the x-nhsd-apim.target.url value
-jq --arg stack_name "$STACK_NAME" aws_env "$aws_environment" '.["x-nhsd-apim"].target.url = "https://\($stack_name).($aws_env).eps.national.nhs.uk"' "$SPEC_PATH" > temp.json && mv temp.json "$SPEC_PATH"
+jq --arg stack_name "$STACK_NAME" --arg aws_env "$aws_environment" '.["x-nhsd-apim"].target.url = "https://\($stack_name).\($aws_env).eps.national.nhs.uk"' "$SPEC_PATH" > temp.json && mv temp.json "$SPEC_PATH"
 
 proxygen_private_key_arn=$(aws cloudformation list-exports --query "Exports[?Name=='account-resources:ProxgenPrivateKey'].Value" --output text)
 
