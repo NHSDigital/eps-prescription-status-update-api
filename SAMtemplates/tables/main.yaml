@@ -52,7 +52,12 @@ Resources:
           KeySchema:
             - AttributeName: PatientNHSNumber
               KeyType: HASH
-          Projection: {}
+          Projection:
+            NonKeyAttributes:
+              - LineItemID
+              - TerminalStatus
+              - LastModified
+              - Status
           ProvisionedThroughput:
             ReadCapacityUnits: "5"
             WriteCapacityUnits: "5"
