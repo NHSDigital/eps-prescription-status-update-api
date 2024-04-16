@@ -21,7 +21,7 @@
       "Choices": [
         {
           "Not": {
-            "Variable": "$.FhirValidationResult.Response.StatusCode",
+            "Variable": "$.FhirValidationResult.Response.statusCode",
             "NumericEquals": 200
           },
           "Next": "Failed FHIR Validation"
@@ -32,7 +32,14 @@
     "Failed FHIR Validation": {
       "Type": "Pass",
       "End": true,
-      "InputPath": "$.FhirValidationResult.Response"
+      "InputPath": "$.FhirValidationResult.Response",
+      "Parameters": {
+        "Payload": {
+          "statusCode.$": "$.statusCode",
+          "headers.$": "$.headers",
+          "body.$": "States.JsonToString($.body)"
+        }
+      }
     },
     "Update Prescription Status": {
       "Type": "Task",
