@@ -33,7 +33,7 @@ Resources:
       DefinitionSubstitutions:
         FhirValidationFunctionArn: !Join
           - ":"
-          - - !ImportValue fhir-validator-pr-79:FHIRValidatorUKCoreLambdaArn
+          - - !ImportValue fhir-validator:FHIRValidatorUKCoreLambdaArn
             - snap
         UpdatePrescriptionStatusFunctionArn: !Sub ${UpdatePrescriptionStatusFunctionArn}:$LATEST
       Logging:
@@ -56,7 +56,7 @@ Resources:
         AdditionalPolicies: !Join
           - ","
           - - Fn::ImportValue: !Sub ${StackName}:functions:${UpdatePrescriptionStatusFunctionName}:ExecuteLambdaPolicyArn
-            - !ImportValue fhir-validator-pr-79:FHIRValidatorUKCoreExecuteLambdaPolicyArn
+            - !ImportValue fhir-validator:FHIRValidatorUKCoreExecuteLambdaPolicyArn
         LogRetentionInDays: !Ref LogRetentionInDays
         CloudWatchKMSKeyId: !ImportValue account-resources:CloudwatchLogsKmsKeyArn
         EnableSplunk: !Ref EnableSplunk

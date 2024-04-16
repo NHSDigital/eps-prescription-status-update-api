@@ -12,7 +12,7 @@
       "ResultPath": "$.FhirValidationResult",
       "ResultSelector": {
         "Response.$": "$.Payload",
-        "NoFailed.$": "States.ArrayLength($.Payload.issue[?(@.severity ==error)])"
+        "NumberFailedValidation.$": "States.ArrayLength($.Payload.issue[?(@.severity ==error)])"
       },
       "Next": "FHIR Validation Result",
       "InputPath": "$.body"
@@ -21,7 +21,7 @@
       "Type": "Choice",
       "Choices": [
         {
-          "Variable": "$.FhirValidationResult.NoFailed",
+          "Variable": "$.FhirValidationResult.NumberFailedValidation",
           "NumericGreaterThan": 0,
           "Next": "Failed FHIR Validation"
         }
