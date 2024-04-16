@@ -23,14 +23,14 @@ proxygen_private_key=$(aws secretsmanager get-secret-value --secret-id "${proxyg
 
 # Create the .proxygen/tmp directory if it doesn't exist
 mkdir -p ~/.proxygen/tmp
-# Save private keys to temporary files
+# Save the proxygen private key to a temporary file
 echo "$proxygen_private_key" > ~/.proxygen/tmp/proxygen_private_key.pem
 
 # Create credentials.yaml file
 cat <<EOF > ~/.proxygen/credentials.yaml
 client_id: prescription-status-update-api-client
 key_id: eps-cli-key-1
-private_key_path: ~/.proxygen/tmp/proxygen_private_key.pem
+private_key_path: tmp/proxygen_private_key.pem
 base_url: https://identity.prod.api.platform.nhs.uk/realms/api-producers
 client_secret: https://nhsdigital.github.io/identity-service-jwks/jwks/paas/prescription-status-update-api.json
 EOF
