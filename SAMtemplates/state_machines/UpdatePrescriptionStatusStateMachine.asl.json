@@ -15,7 +15,15 @@
         "NumberFailedValidation.$": "States.ArrayLength($.Payload.issue[?(@.severity ==error)])"
       },
       "Next": "Do FHIR Validation Errors Exist",
-      "InputPath": "$.body"
+      "InputPath": "$.body",
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "Next": "CatchAllError"
+        }
+      ]
     },
     "Do FHIR Validation Errors Exist": {
       "Type": "Choice",
@@ -35,7 +43,10 @@
       "Parameters": {
         "Payload": {
           "statusCode": 400,
-          "headers": {"Content-Type":"application/fhir+json","Cache-Control":"no-cache"},
+          "headers": {
+            "Content-Type": "application/fhir+json",
+            "Cache-Control": "no-cache"
+          },
           "body.$": "States.JsonToString($)"
         }
       }
@@ -46,6 +57,37 @@
       "Parameters": {
         "Payload.$": "$",
         "FunctionName": "${UpdatePrescriptionStatusFunctionArn}"
+      },
+      "End": true,
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "Next": "CatchAllError"
+        }
+      ]
+    },
+    "CatchAllError": {
+      "Type": "Pass",
+      "Result": {
+        "Payload": {
+          "statusCode": 500,
+          "headers": {
+            "Content-Type": "application/fhir+json",
+            "Cache-Control": "no-cache"
+          },
+          "body": {
+            "resourceType": "OperationOutcome",
+            "issue": [
+              {
+                "severity": "error",
+                "code": "processing",
+                "diagnostics": "System error"
+              }
+            ]
+          }
+        }
       },
       "End": true
     }
