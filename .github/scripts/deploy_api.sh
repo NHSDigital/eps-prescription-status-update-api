@@ -11,8 +11,10 @@ echo "AWS environment: $aws_environment"
 
 if [ "$TARGET_ENVIRONMENT" != "dev-pr" ]; then
   environment=$TARGET_ENVIRONMENT
+  jq --arg version "$VERSION_NUMBER" '.info.version = $version' "$SPEC_PATH" > temp.json && mv temp.json "$SPEC_PATH"
 else
   environment=internal-dev
+  jq --arg version "$VERSION_NUMBER" '.info.version = $version' "$SPEC_PATH" > temp.json && mv temp.json "$SPEC_PATH"
 fi
 echo "Proxy environment: $environment"
 
