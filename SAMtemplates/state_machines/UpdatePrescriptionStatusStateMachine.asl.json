@@ -1,8 +1,8 @@
 {
   "Comment": "Update Prescription Status State Machine",
-  "StartAt": "FHIR Validation",
+  "StartAt": "Call FHIR Validation",
   "States": {
-    "FHIR Validation": {
+    "Call FHIR Validation": {
       "Type": "Task",
       "Resource": "arn:aws:states:::lambda:invoke",
       "Parameters": {
@@ -14,21 +14,21 @@
         "Response.$": "$.Payload",
         "NumberFailedValidation.$": "States.ArrayLength($.Payload.issue[?(@.severity ==error)])"
       },
-      "Next": "FHIR Validation Result",
+      "Next": "Do FHIR Validation Errors Exist",
       "InputPath": "$.body"
     },
-    "FHIR Validation Result": {
+    "Do FHIR Validation Errors Exist": {
       "Type": "Choice",
       "Choices": [
         {
           "Variable": "$.FhirValidationResult.NumberFailedValidation",
           "NumericGreaterThan": 0,
-          "Next": "Failed FHIR Validation"
+          "Next": "Return Failed FHIR Validation Errors"
         }
       ],
-      "Default": "Update Prescription Status"
+      "Default": "Call Update Prescription Status"
     },
-    "Failed FHIR Validation": {
+    "Return Failed FHIR Validation Errors": {
       "Type": "Pass",
       "End": true,
       "InputPath": "$.FhirValidationResult.Response",
@@ -40,7 +40,7 @@
         }
       }
     },
-    "Update Prescription Status": {
+    "Call Update Prescription Status": {
       "Type": "Task",
       "Resource": "arn:aws:states:::lambda:invoke",
       "Parameters": {
