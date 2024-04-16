@@ -34,8 +34,8 @@
       "InputPath": "$.FhirValidationResult.Response",
       "Parameters": {
         "Payload": {
-          "statusCode": "400",
-          "headers": "{\"Content-Type\":\"application/fhir+json\",\"Cache-Control\":\"no-cache\"}",
+          "statusCode": 400,
+          "headers": {"Content-Type":"application/fhir+json","Cache-Control":"no-cache"},
           "body.$": "States.JsonToString($)"
         }
       }
