@@ -21,20 +21,16 @@ jq --arg stack_name "$STACK_NAME" --arg aws_env "$aws_environment" '.["x-nhsd-ap
 proxygen_private_key_arn=$(aws cloudformation list-exports --query "Exports[?Name=='account-resources:ProxgenPrivateKey'].Value" --output text)
 proxygen_private_key=$(aws secretsmanager get-secret-value --secret-id "${proxygen_private_key_arn}" --query SecretString --output text)
 
-# Create the tmp directory if it doesn't exist
-mkdir -p ./tmp
-
+# Create the .proxygen/tmp directory if it doesn't exist
+mkdir -p ~/.proxygen/tmp
 # Save private keys to temporary files
-echo "$proxygen_private_key" > ./tmp/proxygen_private_key.pem
-
-# Create ~/.proxygen directory if it doesn't exist
-mkdir -p ~/.proxygen
+echo "$proxygen_private_key" > ~/.proxygen/tmp/proxygen_private_key.pem
 
 # Create credentials.yaml file
 cat <<EOF > ~/.proxygen/credentials.yaml
 client_id: prescription-status-update-api-client
 key_id: eps-cli-key-1
-private_key_path: ./tmp/proxygen_private_key.pem
+private_key_path: ~/.proxygen/tmp/proxygen_private_key.pem
 base_url: https://identity.prod.api.platform.nhs.uk/realms/api-producers
 client_secret: https://nhsdigital.github.io/identity-service-jwks/jwks/paas/prescription-status-update-api.json
 EOF
