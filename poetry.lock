@@ -1723,4 +1723,4 @@ termcolor = ">=2.3,<3.0"
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.12"
-content-hash = "2bac950c2f00c611269c11726dd23c2c23f73b3897331dd2cee9393daff74193"
+content-hash = "27ffb7df389e78189cb3c6ec534e69d9fe645e4bc986b1836e43c6bf3b60bca8"
