@@ -11,7 +11,8 @@
       },
       "ResultPath": "$.FhirValidationResult",
       "ResultSelector": {
-        "Response.$": "$.Payload"
+        "Response.$": "$.Payload",
+        "NoFailed.$": "States.ArrayLength($.Payload.issue[?(@.severity ==error)])"
       },
       "Next": "FHIR Validation Result",
       "InputPath": "$.body"
@@ -20,10 +21,8 @@
       "Type": "Choice",
       "Choices": [
         {
-          "Not": {
-            "Variable": "$.FhirValidationResult.Response.statusCode",
-            "NumericEquals": 200
-          },
+          "Variable": "$.FhirValidationResult.NoFailed",
+          "NumericGreaterThan": 0,
           "Next": "Failed FHIR Validation"
         }
       ],
@@ -35,9 +34,9 @@
       "InputPath": "$.FhirValidationResult.Response",
       "Parameters": {
         "Payload": {
-          "statusCode.$": "$.statusCode",
-          "headers.$": "$.headers",
-          "body.$": "States.JsonToString($.body)"
+          "statusCode": "400",
+          "headers": "{\"Content-Type\":\"application/fhir+json\",\"Cache-Control\":\"no-cache\"}",
+          "body.$": "States.JsonToString($.)"
         }
       }
     },
