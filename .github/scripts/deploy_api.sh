@@ -65,7 +65,7 @@ EOF
 
 
 # Store the API key secret using Proxygen CLI
-"$PROXYGEN_PATH" put --mtls-cert "$client_cert" --mtls-key "$client_private_key" "$environment" psu-mtls-2
+"$PROXYGEN_PATH" secret put --mtls-cert "$client_cert" --mtls-key "$client_private_key" "$environment" psu-mtls-2
 
 # Deploy the api instance using Proxygen CLI
 "$PROXYGEN_PATH" instance deploy --no-confirm "$environment" "$STACK_NAME" "$SPEC_PATH"
