@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 
+echo "Version number: $VERSION_NUMBER"
 echo "Proxygen path: $PROXYGEN_PATH"
 echo "Specification path: $SPEC_PATH"
 echo "Stack name: $STACK_NAME" # instance
