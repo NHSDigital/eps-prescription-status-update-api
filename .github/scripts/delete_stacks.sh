@@ -26,7 +26,7 @@ done
 echo
 echo "getting proxygen key"
 echo
-# Retrieve the proxygen private key and client private key and cert from AWS Secrets Manager
+# Retrieve the proxygen private key
 proxygen_private_key_arn=$(aws cloudformation list-exports --query "Exports[?Name=='account-resources:ProxgenPrivateKey'].Value" --output text)
 proxygen_private_key=$(aws secretsmanager get-secret-value --secret-id "${proxygen_private_key_arn}" --query SecretString --output text)
 
@@ -66,7 +66,7 @@ do
   PULL_REQUEST=${i//prescription-status-update-pr-/}
   PULL_REQUEST=${PULL_REQUEST//-sandbox/}
   echo "Checking pull request id ${PULL_REQUEST}"
-    URL="https://api.github.com/repos/NHSDigital/eps-prescription-status-update-api/pulls/${PULL_REQUEST}"
+  URL="https://api.github.com/repos/NHSDigital/eps-prescription-status-update-api/pulls/${PULL_REQUEST}"
   RESPONSE=$(curl "${URL}" 2>/dev/null)
   STATE=$(echo "${RESPONSE}" | jq -r .state)
   if [ "$STATE" == "closed" ]; then
