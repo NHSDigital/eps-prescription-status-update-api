@@ -60,7 +60,7 @@ do
   STATE=$(echo "${RESPONSE}" | jq -r .state)
   if [ "$STATE" == "closed" ]; then
     echo "** going to delete apigee deployment $i as state is ${STATE} **"
-    poetry run proxygen instance delete --no-confirm "${i}"
+    # poetry run proxygen instance delete --no-confirm "${i}"
   else
     echo "not going to delete apigee deployment $i as state is ${STATE}"
   fi
