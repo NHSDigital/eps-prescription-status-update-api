@@ -2,7 +2,7 @@
 
 echo "Proxygen path: $PROXYGEN_PATH"
 echo "Specification path: $SPEC_PATH"
-echo "Specification version number: $VERSION_NUMBER"
+echo "Specification version: $VERSION_NUMBER"
 echo "Stack name: $STACK_NAME"
 echo "Target environment: $TARGET_ENVIRONMENT"
 
