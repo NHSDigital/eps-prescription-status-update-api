@@ -18,12 +18,31 @@ jobs:
 
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
-      - name: Checkout local github scripts
+      - name: Checkout local code
         uses: actions/checkout@v4
         with:
           ref: ${{ env.BRANCH_NAME }}
-          sparse-checkout: |
-            .github/scripts
+          fetch-depth: 0
+
+      - name: Cache asdf
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.asdf
+          key: ${{ runner.os }}-asdf-${{ hashFiles('**/.tool-versions') }}
+          restore-keys: |
+            ${{ runner.os }}-asdf-
+
+      - name: Install asdf dependencies in .tool-versions
+        uses: asdf-vm/actions/install@05e0d2ed97b598bfce82fd30daf324ae0c4570e6
+        with:
+          asdf_branch: v0.11.3
+        env:
+          PYTHON_CONFIGURE_OPTS: --enable-shared
+
+      - name: make install
+        run: |
+          make install
 
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
