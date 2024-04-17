@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 
+echo "checking cloudformation stacks"
 ACTIVE_STACKS=$(aws cloudformation list-stacks | jq -r '.StackSummaries[] | select ( .StackStatus != "DELETE_COMPLETE" ) | select( .StackName | capture("^psu-(sandbox-)?pr-(\\d+)$") ) | .StackName ')
 
 mapfile -t ACTIVE_STACKS_ARRAY <<< "$ACTIVE_STACKS"
@@ -21,9 +22,13 @@ do
   fi
 done
 
+echo "getting proxygen key"
 # Retrieve the proxygen private key and client private key and cert from AWS Secrets Manager
 proxygen_private_key_arn=$(aws cloudformation list-exports --query "Exports[?Name=='account-resources:ProxgenPrivateKey'].Value" --output text)
 proxygen_private_key=$(aws secretsmanager get-secret-value --secret-id "${proxygen_private_key_arn}" --query SecretString --output text)
+
+# Create the .proxygen/tmp directory if it doesn't exist
+mkdir -p ~/.proxygen/tmp
 
 # Save the proxygen private key, client private key, and client cert to temporary files
 echo "$proxygen_private_key" > ~/.proxygen/tmp/proxygen_private_key.pem
@@ -46,6 +51,7 @@ endpoint_url: https://proxygen.prod.api.platform.nhs.uk
 spec_output_format: json
 EOF
 
+echo "checking apigee deployments"
 ACTIVE_APIGEE=$(poetry run proxygen instance list --env internal-dev | awk 'NR > 2 {print $3}')
 mapfile -t ACTIVE_APIGEE_ARRAY <<< "$ACTIVE_APIGEE"
 
