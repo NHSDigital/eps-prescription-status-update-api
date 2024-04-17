@@ -15,7 +15,6 @@
         "NumberFailedValidation.$": "States.ArrayLength($.Payload.issue[?(@.severity ==error)])"
       },
       "Next": "Do FHIR Validation Errors Exist",
-      "InputPath": "$.body",
       "Catch": [
         {
           "ErrorEquals": [
