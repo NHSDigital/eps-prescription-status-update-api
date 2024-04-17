@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 
 echo "checking cloudformation stacks"
+echo
 ACTIVE_STACKS=$(aws cloudformation list-stacks | jq -r '.StackSummaries[] | select ( .StackStatus != "DELETE_COMPLETE" ) | select( .StackName | capture("^psu-(sandbox-)?pr-(\\d+)$") ) | .StackName ')
 
 mapfile -t ACTIVE_STACKS_ARRAY <<< "$ACTIVE_STACKS"
@@ -22,7 +23,9 @@ do
   fi
 done
 
+echo
 echo "getting proxygen key"
+echo
 # Retrieve the proxygen private key and client private key and cert from AWS Secrets Manager
 proxygen_private_key_arn=$(aws cloudformation list-exports --query "Exports[?Name=='account-resources:ProxgenPrivateKey'].Value" --output text)
 proxygen_private_key=$(aws secretsmanager get-secret-value --secret-id "${proxygen_private_key_arn}" --query SecretString --output text)
@@ -51,7 +54,9 @@ endpoint_url: https://proxygen.prod.api.platform.nhs.uk
 spec_output_format: json
 EOF
 
+echo
 echo "checking apigee deployments"
+echo
 ACTIVE_APIGEE=$(poetry run proxygen instance list --env internal-dev | awk 'NR > 2 {print $3}')
 mapfile -t ACTIVE_APIGEE_ARRAY <<< "$ACTIVE_APIGEE"
 
@@ -66,7 +71,7 @@ do
   STATE=$(echo "${RESPONSE}" | jq -r .state)
   if [ "$STATE" == "closed" ]; then
     echo "** going to delete apigee deployment $i as state is ${STATE} **"
-    # poetry run proxygen instance delete --no-confirm "${i}"
+    poetry run proxygen instance delete --no-confirm "${i}"
   else
     echo "not going to delete apigee deployment $i as state is ${STATE}"
   fi
