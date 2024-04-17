@@ -3,7 +3,7 @@
 echo "Version number: $VERSION_NUMBER"
 echo "Proxygen path: $PROXYGEN_PATH"
 echo "Specification path: $SPEC_PATH"
-echo "Stack name: $STACK_NAME" # instance
+echo "Stack name: $STACK_NAME"
 echo "Target environment: $TARGET_ENVIRONMENT"
 
 # Extract the AWS environment name from the target environment
@@ -23,6 +23,22 @@ case "$TARGET_ENVIRONMENT" in
         ;;
 esac
 echo "Proxy environment: $environment"
+
+# Determine the proxy instance based on the provided $STACK_NAME
+case "$STACK_NAME" in
+    psu)
+        instance=prescription-status-update
+        ;;
+    psu-pr-*)
+        # Extracting the PR ID from $STACK_NAME
+        pr_id=$(echo "$STACK_NAME" | cut -d'-' -f3)
+        instance=prescription-status-update-pr-$pr_id
+        ;;
+    *)
+        instance=$STACK_NAME
+        ;;
+esac
+echo "Proxy instance: $instance"
 
 # Find and replace the specification version number 
 jq --arg version "$VERSION_NUMBER" '.info.version = $version' "$SPEC_PATH" > temp.json && mv temp.json "$SPEC_PATH"
@@ -68,4 +84,4 @@ EOF
 "$PROXYGEN_PATH" secret put --mtls-cert ~/.proxygen/tmp/client_cert.pem --mtls-key ~/.proxygen/tmp/client_private_key.pem "$environment" psu-mtls-1
 
 # Deploy the API instance using Proxygen CLI
-"$PROXYGEN_PATH" instance deploy --no-confirm "$environment" "$STACK_NAME" "$SPEC_PATH"
+"$PROXYGEN_PATH" instance deploy --no-confirm "$environment" "$instance" "$SPEC_PATH"
