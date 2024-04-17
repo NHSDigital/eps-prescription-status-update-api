@@ -42,4 +42,4 @@ properties:
                         enum: [success]
                       diagnostics:
                         type: string
-                        enum: [No issues detected during validation]
+                        enum: [Data not committed due to issues in other entries.]

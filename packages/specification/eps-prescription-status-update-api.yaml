@@ -2,8 +2,7 @@
 # for the Prescription Status Update API
 # owned by NHS Digital (https://digital.nhs.uk/)
 
-openapi: 3.0.0
-x-nhs-api-spec-guid: 816f3e79-1d81-4ae7-af54-dcd4a739d01a
+openapi: 3.0.3
 info:
   title: Prescription Status Update API
   version: "0.0.1"
@@ -115,7 +114,6 @@ servers:
     description: "Production"
 
 paths:
-
   /:
     post:
       operationId: prescription-status-update-bundle
@@ -194,8 +192,12 @@ paths:
                 $ref: "#/components/schemas/OperationOutcome"
               example:
                   $ref: examples/error-ods-code.json
-
+      security:
+        - app-level0: []
 components:
+  securitySchemes:
+    app-level0:
+      $ref: https://proxygen.ptl.api.platform.nhs.uk/components/securitySchemes/app-level0
   parameters:
     BearerAuthorisation:
       in: header
@@ -254,7 +256,7 @@ components:
             properties:
               fullUrl:
                 type: string
-                example: http://example.org/fhir/Task/4d70678c-81e4-4ff4-8c67-17596fd0aa46
+                example: urn:uuid:4d70678c-81e4-4ff4-8c67-17596fd0aa46
               resource:
                 $ref: "#/components/schemas/UpdatePrescriptionStatusTask"
               request:
@@ -273,3 +275,17 @@ components:
       $ref: "schemas/components/ResponseBundle.yaml"
     OperationOutcome:
       $ref: schemas/resources/OperationOutcome.yaml
+x-nhsd-apim:
+  temporary: false
+  monitoring: false
+  access:
+  - title: Application Restricted
+    grants:
+      app-level0: []
+  target:
+    type: hosted
+    healthcheck: /_status
+    url: https://psu.dev.eps.national.nhs.uk
+    security:
+      type: mtls
+      secret: psu-mtls-1

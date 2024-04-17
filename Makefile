@@ -8,11 +8,9 @@ guard-%:
 
 install: install-node install-python install-hooks
 
-#Installs dependencies using poetry.
 install-python:
 	poetry install
 
-#Installs dependencies using npm.
 install-node:
 	npm install --legacy-peer-deps
 
@@ -124,12 +122,15 @@ test: compile
 	npm run test --workspace packages/updatePrescriptionStatus
 	npm run test --workspace packages/sandbox
 	npm run test --workspace packages/statusLambda
+	npm run test --workspace packages/specification
 
 clean:
 	rm -rf packages/updatePrescriptionStatus/coverage
 	rm -rf packages/updatePrescriptionStatus/lib
 	rm -rf packages/sandbox/coverage
 	rm -rf packages/sandbox/lib
+	rm -rf packages/specification/coverage
+	rm -rf packages/specification/lib
 	rm -rf .aws-sam
 
 deep-clean: clean
@@ -139,6 +140,8 @@ deep-clean: clean
 
 publish:
 	npm run resolve --workspace packages/specification 2> /dev/null
+	npm run compile --workspace packages/specification 2> /dev/null
+	npm run replace-components --workspace packages/specification 2> /dev/null
 
 check-licenses: check-licenses-node check-licenses-python
 
