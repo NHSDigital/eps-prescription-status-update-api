@@ -10,10 +10,11 @@ import {validatePrescriptionID} from "../utils/prescriptionID"
 import {validateNhsNumber} from "../utils/nhsNumber"
 import {validateFields} from "./fields"
 
-export type Validation = (task: Task) => string | undefined
+export type TaskValidation = (task: Task) => string | undefined
+export type BundleEntryValidation = (bundleEntry: BundleEntry) => string | undefined
 
 export type ValidationOutcome = {
-  valid: boolean,
+  valid: boolean
   issues: string | undefined
 }
 
@@ -82,12 +83,12 @@ export function resourceType(task: Task): string | undefined {
 }
 
 export function codeSystems(task: Task): string | undefined {
-  const systems: Array<Validation> = [
-    (t: Task) => t.focus!.identifier!.system === LINE_ITEM_ID_CODESYSTEM ? undefined : "LineItemID",
-    (t: Task) => t.for!.identifier!.system === NHS_NUMBER_CODESYSTEM ? undefined : "PatientNHSNumber",
-    (t: Task) => t.owner!.identifier!.system === ODS_CODE_CODESYSTEM ? undefined : "PharmacyODSCode",
-    (t: Task) => t.basedOn![0].identifier!.system === PRESCRIPTION_ID_CODESYSTEM ? undefined : "PrescriptionID",
-    (t: Task) => t.businessStatus!.coding![0].system === STATUS_CODESYSTEM ? undefined : "Status"
+  const systems: Array<TaskValidation> = [
+    (t: Task) => (t.focus!.identifier!.system === LINE_ITEM_ID_CODESYSTEM ? undefined : "LineItemID"),
+    (t: Task) => (t.for!.identifier!.system === NHS_NUMBER_CODESYSTEM ? undefined : "PatientNHSNumber"),
+    (t: Task) => (t.owner!.identifier!.system === ODS_CODE_CODESYSTEM ? undefined : "PharmacyODSCode"),
+    (t: Task) => (t.basedOn![0].identifier!.system === PRESCRIPTION_ID_CODESYSTEM ? undefined : "PrescriptionID"),
+    (t: Task) => (t.businessStatus!.coding![0].system === STATUS_CODESYSTEM ? undefined : "Status")
   ]
   const incorrectCodeSystems: Array<string> = []
   for (const system of systems) {
@@ -123,7 +124,7 @@ export function statuses(task: Task): string | undefined {
 }
 
 export function taskContent(task: Task): Array<string> {
-  const contentValidations: Array<Validation> = [
+  const contentValidations: Array<TaskValidation> = [
     businessStatus,
     lastModified,
     nhsNumber,
@@ -134,7 +135,7 @@ export function taskContent(task: Task): Array<string> {
   ]
 
   const issues: Array<string> = []
-  contentValidations.forEach((validation: Validation) => {
+  contentValidations.forEach((validation: TaskValidation) => {
     const issue = validation(task)
     if (issue) {
       issues.push(issue)
@@ -149,8 +150,8 @@ export function validateContent(entry: BundleEntry): ValidationOutcome {
   const issues: Array<string> = []
   const task = entry.resource as Task
 
-  entryContent(entry).forEach(f => issues.push(f))
-  taskContent(task).forEach(f => issues.push(f))
+  entryContent(entry).forEach((f) => issues.push(f))
+  taskContent(task).forEach((f) => issues.push(f))
   if (issues.length > 0) {
     validationOutcome.valid = false
     validationOutcome.issues = issues.join(" ")

@@ -45,30 +45,40 @@ jobs:
           echo "//npm.pkg.github.com/:_authToken=${NODE_AUTH_TOKEN}" >> ~/.npmrc
           echo "@nhsdigital:registry=https://npm.pkg.github.com" >> ~/.npmrc
           
-      - name: make install
+      - name: Run make install
         run: |
           make install
 
       - shell: bash
-        name: package code
+        name: Package code
         run: |
           cp .tool-versions ~/
           rm -rf .aws-sam
           export PATH=$PATH:$PWD/node_modules/.bin
+          make publish
           make sam-build
           cp Makefile .aws-sam/build/
           cp samconfig_package_and_deploy.toml .aws-sam/build/
+          mkdir -p .aws-sam/build/specification
+          cp packages/specification/dist/eps-prescription-status-update-api.resolved.json .aws-sam/build/specification/
 
       - uses: actions/upload-artifact@v4
-        name: upload build artifact
+        name: Upload build artifact
         with:
           name: packaged_code
           path: |
             .aws-sam/build
             SAMtemplates/state_machines/UpdatePrescriptionStatusStateMachine.asl.json
 
+      - uses: actions/upload-artifact@v4
+        name: Upload specification artifact
+        with:
+          name: specification_code
+          path: |
+            .aws-sam/build/specification
+
       - shell: bash
-        name: package sandbox
+        name: Package sandbox
         run: |
           cp .tool-versions ~/
           rm -rf .aws-sam
@@ -79,9 +89,9 @@ jobs:
 
       # Readme is included to stop the action flattening the folder structure of aws-sam/build when it is the only item to upload
       - uses: actions/upload-artifact@v4
-        name: upload sandbox build artifact
+        name: Upload sandbox build artifact
         with:
           name: packaged_sandbox_code
           path: |
             .aws-sam/build
-            README.md 
+            README.md
