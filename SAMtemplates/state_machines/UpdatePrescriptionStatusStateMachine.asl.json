@@ -1,8 +1,8 @@
 {
   "Comment": "Update Prescription Status State Machine",
-  "StartAt": "FHIR Validation",
+  "StartAt": "Call FHIR Validation",
   "States": {
-    "FHIR Validation": {
+    "Call FHIR Validation": {
       "Type": "Task",
       "Resource": "arn:aws:states:::lambda:invoke",
       "Parameters": {
@@ -12,33 +12,73 @@
       "ResultPath": "$.FhirValidationResult",
       "ResultSelector": {
         "Response.$": "$.Payload",
-        "NoFailed.$": "States.ArrayLength($.Payload.issue[?(@.severity ==error)])"
+        "NumberFailedValidation.$": "States.ArrayLength($.Payload.issue[?(@.severity ==error)])"
       },
-      "Next": "FHIR Validation Result",
-      "InputPath": "$.body"
+      "Next": "Do FHIR Validation Errors Exist",
+      "InputPath": "$.body",
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "Next": "CatchAllError"
+        }
+      ]
     },
-    "FHIR Validation Result": {
+    "Do FHIR Validation Errors Exist": {
       "Type": "Choice",
       "Choices": [
         {
-          "Variable": "$.FhirValidationResult.NoFailed",
+          "Variable": "$.FhirValidationResult.NumberFailedValidation",
           "NumericGreaterThan": 0,
-          "Next": "Failed FHIR Validation"
+          "Next": "Return Failed FHIR Validation Errors"
         }
       ],
-      "Default": "Update Prescription Status"
+      "Default": "Call Update Prescription Status"
     },
-    "Failed FHIR Validation": {
+    "Return Failed FHIR Validation Errors": {
       "Type": "Pass",
       "End": true,
-      "InputPath": "$.FhirValidationResult.Response"
+      "InputPath": "$.FhirValidationResult.Response",
+      "Parameters": {
+        "Payload": {
+          "statusCode": 400,
+          "headers": {
+            "Content-Type": "application/fhir+json",
+            "Cache-Control": "no-cache"
+          },
+          "body.$": "States.JsonToString($)"
+        }
+      }
     },
-    "Update Prescription Status": {
+    "Call Update Prescription Status": {
       "Type": "Task",
       "Resource": "arn:aws:states:::lambda:invoke",
       "Parameters": {
         "Payload.$": "$",
         "FunctionName": "${UpdatePrescriptionStatusFunctionArn}"
+      },
+      "End": true,
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "Next": "CatchAllError"
+        }
+      ]
+    },
+    "CatchAllError": {
+      "Type": "Pass",
+      "Result": {
+        "Payload": {
+          "statusCode": 500,
+          "headers": {
+            "Content-Type": "application/fhir+json",
+            "Cache-Control": "no-cache"
+          },
+          "body": "{\"resourceType\":\"OperationOutcome\",\"issue\":[{\"severity\":\"error\",\"code\":\"processing\",\"diagnostics\":\"System error\"}]}"
+        }
       },
       "End": true
     }

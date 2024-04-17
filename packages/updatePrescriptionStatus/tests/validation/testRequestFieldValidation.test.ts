@@ -34,37 +34,46 @@ describe("Unit tests for validateFields", () => {
     const result = validateFields(entry)
     expect(result).toEqual({valid: false, issues: "Missing required field(s) - FullUrl, PrescriptionID, TaskID."})
   })
+
+  it("when fields missing on entry, return invalid with message", async () => {
+    const task = validTask()
+    const entry: BundleEntry = {fullUrl: FULL_URL_0, resource: task}
+    delete entry.resource
+
+    const result = validateFields(entry)
+    expect(result).toEqual({valid: false, issues: "Missing required field(s) - Resource."})
+  })
 })
 
 describe("Unit tests for validation of individual fields", () => {
   it.each([
     {
       missingField: "LastModified",
-      operation: ((t: Task) => delete t.lastModified)
+      operation: (t: Task) => delete t.lastModified
     },
     {
       missingField: "LineItemID",
-      operation: ((t: Task) => delete t.focus)
+      operation: (t: Task) => delete t.focus
     },
     {
       missingField: "PatientNHSNumber",
-      operation: ((t: Task) => delete t.for)
+      operation: (t: Task) => delete t.for
     },
     {
       missingField: "PharmacyODSCode",
-      operation: ((t: Task) => delete t.owner)
+      operation: (t: Task) => delete t.owner
     },
     {
       missingField: "PrescriptionID",
-      operation: ((t: Task) => delete t.basedOn)
+      operation: (t: Task) => delete t.basedOn
     },
     {
       missingField: "Status",
-      operation: ((t: Task) => delete t.businessStatus)
+      operation: (t: Task) => delete t.businessStatus
     },
     {
       missingField: "TaskID",
-      operation: ((t: Task) => delete t.id)
+      operation: (t: Task) => delete t.id
     }
   ])("When $missingField is missing, should return expected issue.", async ({operation, missingField}) => {
     const task = validTask()
