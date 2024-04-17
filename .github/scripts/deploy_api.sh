@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 
-echo "Version number: $VERSION_NUMBER"
 echo "Proxygen path: $PROXYGEN_PATH"
 echo "Specification path: $SPEC_PATH"
+echo "Specification version number: $VERSION_NUMBER"
 echo "Stack name: $STACK_NAME"
 echo "Target environment: $TARGET_ENVIRONMENT"
 
@@ -30,9 +30,16 @@ case "$STACK_NAME" in
         instance=prescription-status-update
         ;;
     psu-pr-*)
-        # Extracting the PR ID from $STACK_NAME
-        pr_id=$(echo "$STACK_NAME" | cut -d'-' -f3)
-        instance=prescription-status-update-pr-$pr_id
+        if [[ $STACK_NAME == psu-pr-* ]]; then
+            # Extracting the PR ID from $STACK_NAME
+            pr_id=$(echo "$STACK_NAME" | cut -d'-' -f3)
+            # Check if it's a sandbox environment
+            if [[ $STACK_NAME == *sandbox ]]; then
+                instance=prescription-status-update-pr-$pr_id-sandbox
+            else
+                instance=prescription-status-update-pr-$pr_id
+            fi
+        fi
         ;;
     *)
         instance=$STACK_NAME
