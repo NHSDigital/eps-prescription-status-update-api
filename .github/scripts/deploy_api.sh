@@ -46,6 +46,9 @@ jq --arg version "$VERSION_NUMBER" '.info.version = $version' "$SPEC_PATH" > tem
 # Find and replace the x-nhsd-apim.target.url value
 jq --arg stack_name "$STACK_NAME" --arg aws_env "$aws_environment" '.["x-nhsd-apim"].target.url = "https://\($stack_name).\($aws_env).eps.national.nhs.uk"' "$SPEC_PATH" > temp.json && mv temp.json "$SPEC_PATH"
 
+# Find and replace the servers object
+jq --arg env "$environment" --arg inst "$instance" '.servers = [ { "url": "https://\($env).api.service.nhs.uk/\($inst)" } ]' "$SPEC_PATH" > temp.json && mv temp.json "$SPEC_PATH"
+
 # Retrieve the proxygen private key and client private key and cert from AWS Secrets Manager
 proxygen_private_key_arn=$(aws cloudformation list-exports --query "Exports[?Name=='account-resources:ProxgenPrivateKey'].Value" --output text)
 client_private_key_arn=$(aws cloudformation list-exports --query "Exports[?Name=='account-resources:PsuClientKeySecret'].Value" --output text)
