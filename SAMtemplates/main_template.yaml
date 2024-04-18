@@ -11,15 +11,15 @@ Parameters:
     AllowedValues:
       - true
       - false
-  
+
   TruststoreVersion:
     Type: String
     Default: none
-  
+
   LogLevel:
     Type: String
     Default: INFO
-  
+
   LogRetentionInDays:
     Type: Number
     Default: 30
