@@ -55,7 +55,7 @@ Resources:
         tsconfig: updatePrescriptionStatus/tsconfig.json
         EntryPoints:
           - updatePrescriptionStatus/src/updatePrescriptionStatus.ts
-  
+
   UpdatePrescriptionStatusResources:
     Type: AWS::Serverless::Application
     Properties:
@@ -68,6 +68,25 @@ Resources:
         AdditionalPolicies: !Join
           - ','
           - - Fn::ImportValue: !Sub ${StackName}:tables:${PrescriptionStatusUpdatesTableName}:TableWritePolicyArn
+        LogRetentionInDays: !Ref LogRetentionInDays
+        CloudWatchKMSKeyId: !ImportValue account-resources:CloudwatchLogsKmsKeyArn
+        EnableSplunk: !Ref EnableSplunk
+        SplunkSubscriptionFilterRole: !ImportValue lambda-resources:SplunkSubscriptionFilterRole
+        SplunkDeliveryStreamArn: !ImportValue lambda-resources:SplunkDeliveryStream
+
+  StatusLambda:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub "${AWS::StackName}-statusLambda"
+      CodeUri: ../../packages
+      Handler: statusLambda.handler
+
+  StatusLambdaResources:
+    Type: AWS::Serverless::Application
+    Properties:
+      Location: lambda_resources_status.yaml
+      Parameters:
+        LambdaName: !Sub ${AWS::StackName}-statusLambda"
         LogRetentionInDays: !Ref LogRetentionInDays
         CloudWatchKMSKeyId: !ImportValue account-resources:CloudwatchLogsKmsKeyArn
         EnableSplunk: !Ref EnableSplunk
