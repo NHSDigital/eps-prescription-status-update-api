@@ -100,9 +100,10 @@ compile-node:
 compile: compile-node
 
 lint-node: compile-node
-	npm run lint --workspace packages/specification
 	npm run lint --workspace packages/updatePrescriptionStatus
 	npm run lint --workspace packages/sandbox
+	npm run lint --workspace packages/specification
+	npm run lint --workspace packages/statusLambda
 
 lint-samtemplates:
 	poetry run cfn-lint -t SAMtemplates/**/*.yaml
@@ -121,8 +122,8 @@ lint: lint-node lint-samtemplates lint-python lint-githubactions lint-githubacti
 test: compile
 	npm run test --workspace packages/updatePrescriptionStatus
 	npm run test --workspace packages/sandbox
-	npm run test --workspace packages/statusLambda
 	npm run test --workspace packages/specification
+	npm run test --workspace packages/statusLambda
 
 clean:
 	rm -rf packages/updatePrescriptionStatus/coverage
@@ -131,6 +132,8 @@ clean:
 	rm -rf packages/sandbox/lib
 	rm -rf packages/specification/coverage
 	rm -rf packages/specification/lib
+	rm -rf packages/statusLambda/coverage
+	rm -rf packages/statusLambda/lib
 	rm -rf .aws-sam
 
 deep-clean: clean
@@ -146,7 +149,10 @@ publish:
 check-licenses: check-licenses-node check-licenses-python
 
 check-licenses-node:
-	npm run check-licenses
+	npm run check-licenses --workspace packages/updatePrescriptionStatus
+	npm run check-licenses --workspace packages/sandbox
+	npm run check-licenses --workspace packages/specification
+	npm run check-licenses --workspace packages/statusLambda
 
 check-licenses-python:
 	scripts/check_python_licenses.sh
