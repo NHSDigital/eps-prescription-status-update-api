@@ -18,11 +18,11 @@ Parameters:
     Type: String
     Default: false
     AllowedValues: [true, false]
-  
+
   LogLevel:
     Type: String
     Default: INFO
-  
+
   LogRetentionInDays:
     Type: Number
     Default: 30
