@@ -1,7 +1,9 @@
 import {APIGatewayProxyEvent, APIGatewayProxyResult} from "aws-lambda"
-import {Logger, injectLambdaContext} from "@aws-lambda-powertools/logger"
+import {Logger} from "@aws-lambda-powertools/logger"
+import {injectLambdaContext} from "@aws-lambda-powertools/logger/middleware"
 import middy from "@middy/core"
 import inputOutputLogger from "@middy/input-output-logger"
+import errorHandler from "@nhs/fhir-middy-error-handler"
 
 const logger = new Logger({serviceName: "status"})
 
@@ -18,8 +20,12 @@ const logger = new Logger({serviceName: "status"})
  */
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-const lambdaHandler = async (_event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
-  // Check connection to spine using code common with updatePrescriptionStatus...
+const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
+  logger.appendKeys({
+    "x-request-id": event.headers["x-request-id"],
+    "x-correlation-id": event.headers["x-correlation-id"],
+    "apigw-request-id": event.requestContext.requestId
+  })
 
   const commitId = process.env.COMMIT_ID
   const versionNumber = process.env.VERSION_NUMBER
@@ -31,13 +37,14 @@ const lambdaHandler = async (_event: APIGatewayProxyEvent): Promise<APIGatewayPr
       versionNumber: versionNumber
     }),
     headers: {
-      "Content-Type": "application/fhir+json"
+      "Content-Type": "application/health+json",
+      "Cache-Control": "no-cache"
     }
   }
 }
 
 export const handler = middy(lambdaHandler)
-  .use(injectLambdaContext(logger))
+  .use(injectLambdaContext(logger, {clearState: true}))
   .use(
     inputOutputLogger({
       logger: (request) => {
@@ -45,3 +52,4 @@ export const handler = middy(lambdaHandler)
       }
     })
   )
+  .use(errorHandler({logger: logger}))

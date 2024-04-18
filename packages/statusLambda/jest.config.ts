@@ -1,15 +1,9 @@
-/*
- * For a detailed explanation regarding each configuration property and type check, visit:
- * https://jestjs.io/docs/configuration
- */
+import defaultConfig from "../../jest.default.config"
+import type {JestConfigWithTsJest} from "ts-jest"
 
-export default {
-  transform: {
-    "^.+\\.ts?$": "ts-jest"
-  },
-  clearMocks: true,
-  collectCoverage: true,
-  coverageDirectory: "coverage",
-  coverageProvider: "v8",
-  testMatch: ["**/tests/*.test.ts"]
+const jestConfig: JestConfigWithTsJest = {
+  ...defaultConfig,
+  "rootDir": "./"
 }
+
+export default jestConfig
