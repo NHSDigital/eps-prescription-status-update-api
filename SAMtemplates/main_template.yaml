@@ -96,3 +96,103 @@ Resources:
         UpdatePrescriptionStatusFunctionArn: !GetAtt Functions.Outputs.UpdatePrescriptionStatusFunctionArn
         LogRetentionInDays: !Ref LogRetentionInDays
         EnableSplunk: !Ref EnableSplunk
+
+  # Http api
+  HttpApiGateway:
+    Type: AWS::Serverless::HttpApi
+    Properties:
+      StageName: Prod
+      DefaultRouteSettings:
+        DetailedMetricsEnabled: true
+      Domain:
+        DomainName:
+          Fn::Join:
+            - "."
+            - - !Ref "AWS::StackName"
+              - Fn::ImportValue: eps-route53-resources:EPS-domain
+        CertificateArn: !Ref GenerateCertificate
+        Route53:
+          HostedZoneId:
+            Fn::ImportValue: eps-route53-resources:EPS-ZoneID
+        EndpointConfiguration: REGIONAL
+        SecurityPolicy: TLS_1_2
+        MutualTlsAuthentication:
+          TruststoreUri:
+            "Fn::If":
+              - ShouldUseMutualTLS
+              - Fn::Join:
+                  - "/"
+                  - - "s3:/"
+                    - !Select [
+                        5,
+                        !Split [
+                          ":",
+                          Fn::ImportValue: account-resources:TrustStoreBucket,
+                        ],
+                      ]
+                    - "psu-truststore.pem"
+              - !Ref "AWS::NoValue"
+          TruststoreVersion:
+            "Fn::If":
+              - ShouldUseMutualTLS
+              - !Ref TruststoreVersion
+              - !Ref "AWS::NoValue"
+      DisableExecuteApiEndpoint:
+        "Fn::If":
+          - ShouldUseMutualTLS
+          - true
+          - !Ref "AWS::NoValue"
+      AccessLogSettings:
+        DestinationArn: !GetAtt ApiGwAccessLogs.Arn
+        Format: "{ \
+          \"requestTime\": \"$context.requestTime\", \
+          \"apiId\": \"$context.apiId\", \
+          \"accountId\": \"$context.accountId\", \
+          \"resourcePath\": \"$context.resourcePath\", \
+          \"stage\": \"$context.stage\", \
+          \"requestId\": \"$context.requestId\", \
+          \"extendedRequestId\": \"$context.extendedRequestId\", \
+          \"status\": \"$context.status\", \
+          \"httpMethod\": \"$context.httpMethod\", \
+          \"protocol\": \"$context.protocol\", \
+          \"path\": \"$context.path\", \
+          \"responseLatency\": \"$context.responseLatency\", \
+          \"responseLength\": \"$context.responseLength\",
+          \"domainName\": \"$context.domainName\", \
+          \"identity\": { \
+          \"sourceIp\": \"$context.identity.sourceIp\", \
+          \"userAgent\": \"$context.identity.userAgent\", \
+          \"clientCert\":{ \
+          \"subjectDN\": \"$context.identity.clientCert.subjectDN\", \
+          \"issuerDN\": \"$context.identity.clientCert.issuerDN\", \
+          \"serialNumber\": \"$context.identity.clientCert.serialNumber\", \
+          \"validityNotBefore\": \"$context.identity.clientCert.validity.notBefore\", \
+          \"validityNotAfter\": \"$context.identity.clientCert.validity.notAfter\" \
+          }}, \
+          \"integration\":{ \
+          \"error\": \"$context.integration.error\", \
+          \"integrationStatus\": \"$context.integration.integrationStatus\", \
+          \"latency\": \"$context.integration.latency\", \
+          \"requestId\": \"$context.integration.requestId\", \
+          \"status\": \"$context.integration.status\" \
+          }}"
+
+  ApiGwAccessLogs:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName:
+        !Join [
+          "/",
+          ["/aws/apigateway", !Ref "AWS::StackName", !Sub "${HttpApiGateway}"],
+        ]
+      RetentionInDays: !Ref LogRetentionInDays
+      KmsKeyId: !ImportValue account-resources:CloudwatchLogsKmsKeyArn
+
+  ApiGwAccessLogsSplunkSubscriptionFilter:
+    Condition: ShouldUseSplunk
+    Type: AWS::Logs::SubscriptionFilter
+    Properties:
+      RoleArn: !ImportValue lambda-resources:SplunkSubscriptionFilterRole
+      LogGroupName: !Ref ApiGwAccessLogs
+      FilterPattern: "" # All logs
+      DestinationArn: !ImportValue lambda-resources:SplunkDeliveryStream
