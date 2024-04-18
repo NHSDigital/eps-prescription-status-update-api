@@ -99,6 +99,25 @@ Resources:
         LogRetentionInDays: !Ref LogRetentionInDays
         EnableSplunk: !Ref EnableSplunk
 
+  # TLS cert for custom domain
+  GenerateCertificate:
+    Type: AWS::CertificateManager::Certificate
+    Properties:
+      ValidationMethod: DNS
+      DomainName:
+        Fn::Join:
+          - "."
+          - - !Ref "AWS::StackName"
+            - Fn::ImportValue: eps-route53-resources:EPS-domain
+      DomainValidationOptions:
+        - DomainName:
+            Fn::Join:
+              - "."
+              - - !Ref "AWS::StackName"
+                - Fn::ImportValue: eps-route53-resources:EPS-domain
+          HostedZoneId:
+            Fn::ImportValue: eps-route53-resources:EPS-ZoneID
+
   # Http api
   HttpApiGateway:
     Type: AWS::Serverless::HttpApi
