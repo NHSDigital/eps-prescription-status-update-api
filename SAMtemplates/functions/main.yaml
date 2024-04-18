@@ -130,4 +130,4 @@ Outputs:
     Description: The function ARN of the GetStatusUpdates lambda
     Value: !GetAtt GetStatusUpdates.Arn
     Export:
-      Name: !Sub ${StackName}:functions:${GetStatusUpdates}:FunctionArn
+      Name: !Sub ${StackName}:functions:GetStatusUpdates:FunctionArn
