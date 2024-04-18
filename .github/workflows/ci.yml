@@ -115,8 +115,9 @@ jobs:
       ARTIFACT_BUCKET_PREFIX: ${{needs.tag_release.outputs.version_tag}}-sandbox
       STACK_NAME: psu-sandbox
       TARGET_ENVIRONMENT: dev
-      ENABLE_MUTUAL_TLS: false
+      ENABLE_MUTUAL_TLS: true
       BUILD_ARTIFACT: packaged_sandbox_code
+      SPEC_ARTIFACT: specification_code
       TRUSTSTORE_FILE: psu-truststore.pem
       VERSION_NUMBER: ${{needs.tag_release.outputs.version_tag}}
       COMMIT_ID: ${{needs.get_commit_id.outputs.commit_id}}
