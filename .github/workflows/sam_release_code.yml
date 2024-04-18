@@ -18,6 +18,9 @@ on:
       BUILD_ARTIFACT:
         required: true
         type: string
+      SPEC_ARTIFACT:
+        required: true
+        type: string
       TRUSTSTORE_FILE:
         required: true
         type: string
@@ -94,11 +97,33 @@ jobs:
           role-to-assume: ${{ secrets.CLOUD_FORMATION_DEPLOY_ROLE }}
           role-session-name: github-actions
 
-      - name: download build artifact
+      - name: Download build artifact
         uses: actions/download-artifact@v4
         with:
           name: ${{ inputs.BUILD_ARTIFACT }}
           path: .
+
+      - name: Download specification artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ inputs.SPEC_ARTIFACT }}
+          path: .
+
+      - name: Install proxygen-cli
+        run: |
+          pip install proxygen-cli
+
+      - name: Export specification path
+        run: |
+          SPEC_PATH="$(pwd)/eps-prescription-status-update-api.resolved.json"
+          echo "Specification location: $SPEC_PATH"
+          echo "SPEC_PATH=${SPEC_PATH}" >> "$GITHUB_ENV"
+
+      - name: Export proxygen path
+        run: |
+          PROXYGEN_PATH=$(which proxygen)
+          echo "Proxygen location: $PROXYGEN_PATH"
+          echo "PROXYGEN_PATH=${PROXYGEN_PATH}" >> "$GITHUB_ENV"
 
       - name: release code
         shell: bash
@@ -115,6 +140,17 @@ jobs:
           TRUSTSTORE_FILE: ${{ inputs.TRUSTSTORE_FILE }}
           VERSION_NUMBER: ${{ inputs.VERSION_NUMBER }}
         run: ./release_code.sh
+
+      - name: Deploy API
+        shell: bash
+        working-directory: .github/scripts
+        env:
+          VERSION_NUMBER: ${{ inputs.VERSION_NUMBER }}
+          PROXYGEN_PATH: ${{ env.PROXYGEN_PATH }}
+          SPEC_PATH: ${{ env.SPEC_PATH }}
+          STACK_NAME: ${{ inputs.STACK_NAME }}
+          TARGET_ENVIRONMENT: ${{ inputs.TARGET_ENVIRONMENT }}
+        run: ./deploy_api.sh
 
       - name: create_int_release_notes
         uses: ./.github/actions/update_confluence_jira
@@ -151,7 +187,7 @@ jobs:
           ref: gh-pages
           path: gh-pages
   
-      - name: update release tag in github pages
+      - name: Update release tag in github pages
         if: ${{ inputs.TARGET_ENVIRONMENT != 'dev-pr' }}
         run: |
           cd gh-pages

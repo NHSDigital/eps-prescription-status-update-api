@@ -117,8 +117,9 @@ jobs:
       ARTIFACT_BUCKET_PREFIX: ${{needs.tag_release.outputs.version_tag}}
       STACK_NAME: psu
       TARGET_ENVIRONMENT: dev
-      ENABLE_MUTUAL_TLS: false
+      ENABLE_MUTUAL_TLS: true
       BUILD_ARTIFACT: packaged_code
+      SPEC_ARTIFACT: specification_code
       TRUSTSTORE_FILE: psu-truststore.pem
       VERSION_NUMBER: ${{needs.tag_release.outputs.version_tag}}
       COMMIT_ID: ${{needs.get_commit_id.outputs.commit_id}}
@@ -156,8 +157,9 @@ jobs:
       ARTIFACT_BUCKET_PREFIX: ${{needs.tag_release.outputs.version_tag}}
       STACK_NAME: psu
       TARGET_ENVIRONMENT: ref
-      ENABLE_MUTUAL_TLS: false
+      ENABLE_MUTUAL_TLS: true
       BUILD_ARTIFACT: packaged_code
+      SPEC_ARTIFACT: specification_code
       TRUSTSTORE_FILE: psu-truststore.pem
       VERSION_NUMBER: ${{needs.tag_release.outputs.version_tag}}
       COMMIT_ID: ${{needs.get_commit_id.outputs.commit_id}}
@@ -173,8 +175,9 @@ jobs:
       ARTIFACT_BUCKET_PREFIX: ${{needs.tag_release.outputs.version_tag}}
       STACK_NAME: psu
       TARGET_ENVIRONMENT: qa
-      ENABLE_MUTUAL_TLS: false
+      ENABLE_MUTUAL_TLS: true
       BUILD_ARTIFACT: packaged_code
+      SPEC_ARTIFACT: specification_code
       TRUSTSTORE_FILE: psu-truststore.pem
       VERSION_NUMBER: ${{needs.tag_release.outputs.version_tag}}
       COMMIT_ID: ${{needs.get_commit_id.outputs.commit_id}}
@@ -190,8 +193,9 @@ jobs:
       ARTIFACT_BUCKET_PREFIX: ${{needs.tag_release.outputs.version_tag}}
       STACK_NAME: psu
       TARGET_ENVIRONMENT: int
-      ENABLE_MUTUAL_TLS: false
+      ENABLE_MUTUAL_TLS: true
       BUILD_ARTIFACT: packaged_code
+      SPEC_ARTIFACT: specification_code
       TRUSTSTORE_FILE: psu-truststore.pem
       VERSION_NUMBER: ${{needs.tag_release.outputs.version_tag}}
       COMMIT_ID: ${{needs.get_commit_id.outputs.commit_id}}
