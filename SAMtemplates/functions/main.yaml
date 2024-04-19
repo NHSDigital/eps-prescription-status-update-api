@@ -121,3 +121,11 @@ Outputs:
   UpdatePrescriptionStatusFunctionArn:
     Description: The function ARN of the UpdatePrescriptionStatus lambda
     Value: !GetAtt  UpdatePrescriptionStatus.Arn
+
+  StatusLambdaFunctionName:
+    Description: The function name of the Status lambda
+    Value: !Ref  StatusLambda
+  
+  StatusLambdaArn:
+    Description: The function ARN of the Status lambda
+    Value: !GetAtt  StatusLambda.Arn
