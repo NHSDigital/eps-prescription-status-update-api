@@ -260,7 +260,7 @@ Resources:
         AdditionalPolicies: !Join
           - ','
           - - Fn::ImportValue: !Sub ${StackName}:state-machines:${UpdatePrescriptionStatusStateMachineName}:ExecuteStateMachinePolicy
-            # - Fn::ImportValue: !Sub ${StackName}:functions:${StatusLambdaFunctionName}:ExecuteLambdaPolicyArn
+            - Fn::ImportValue: !Sub ${StackName}:functions:${StatusLambdaFunctionName}:ExecuteLambdaPolicyArn
         ApiName: !Sub ${StackName}-apigw
         LogRetentionInDays: !Ref LogRetentionInDays
         EnableSplunk: !Ref EnableSplunk
