@@ -34,6 +34,12 @@ Parameters:
   EnableSplunk:
     Type: String
 
+  VersionNumber:
+    Type: String
+
+  CommitId:
+    Type: String
+
 Resources:
   UpdatePrescriptionStatus:
     Type: AWS::Serverless::Function
@@ -81,6 +87,10 @@ Resources:
       CodeUri: ../../packages
       Handler: statusLambda.handler
       Role: !GetAtt StatusLambdaResources.Outputs.LambdaRoleArn
+      Environment:
+        Variables:
+          VERSION_NUMBER: !Ref VersionNumber
+          COMMIT_ID: !Ref CommitId
 
   StatusLambdaResources:
     Type: AWS::Serverless::Application

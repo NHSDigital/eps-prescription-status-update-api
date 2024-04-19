@@ -52,6 +52,15 @@ Parameters:
     AllowedValues:
       - true
       - false
+
+  VersionNumber:
+    Type: String
+    Default: "xxx"
+
+  CommitId:
+    Type: String
+    Default: "xxx"
+    
 Resources:
   Tables:
     Type: AWS::Serverless::Application
@@ -83,6 +92,8 @@ Resources:
         LogLevel: !Ref LogLevel
         LogRetentionInDays: !Ref LogRetentionInDays
         EnableSplunk: !Ref EnableSplunk
+        VersionNumber: !Ref VersionNumber
+        CommitId: !Ref CommitId
   
   StateMachines:
     Type: AWS::Serverless::Application
