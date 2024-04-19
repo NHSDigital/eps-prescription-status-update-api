@@ -104,9 +104,15 @@ Resources:
   StatusLambdaResources:
     Type: AWS::Serverless::Application
     Properties:
-      Location: lambda_resources_status.yaml
+      Location: lambda_resources.yaml
       Parameters:
-        LambdaName: !Sub ${AWS::StackName}-statusLambda"
+        StackName: !Ref StackName
+        LambdaName: !Sub ${StackName}-status
+        LambdaArn: !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:${StackName}-status
+        IncludeAdditionalPolicies: true
+        AdditionalPolicies: !Join
+          - ","
+          - - !ImportValue account-resources:LambdaAccessSecretsPolicy
         LogRetentionInDays: !Ref LogRetentionInDays
         CloudWatchKMSKeyId: !ImportValue account-resources:CloudwatchLogsKmsKeyArn
         EnableSplunk: !Ref EnableSplunk
