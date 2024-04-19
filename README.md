@@ -166,7 +166,7 @@ These are used to do common commands
 - `test` Runs unit tests for all code
 
 #### Publish targets
-- `publish` Outputs the specification as a **single file** into the `build/` directory. This is used when uploading to Apigee, which requires the spec as a single file.
+- `publish` Outputs the specification as a **single file** into the `dist/` directory. This is used when uploading to Apigee, which requires the spec as a single file.
 
 #### Compiling
 
