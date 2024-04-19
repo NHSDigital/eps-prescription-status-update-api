@@ -80,6 +80,7 @@ Resources:
       FunctionName: !Sub "${AWS::StackName}-statusLambda"
       CodeUri: ../../packages
       Handler: statusLambda.handler
+      Role: !GetAtt StatusLambdaResources.Outputs.LambdaRoleArn
 
   StatusLambdaResources:
     Type: AWS::Serverless::Application
