@@ -60,7 +60,7 @@ Parameters:
   CommitId:
     Type: String
     Default: "xxx"
-    
+
 Resources:
   Tables:
     Type: AWS::Serverless::Application
@@ -103,5 +103,7 @@ Resources:
         StackName: !Ref AWS::StackName
         UpdatePrescriptionStatusFunctionName: !GetAtt Functions.Outputs.UpdatePrescriptionStatusFunctionName
         UpdatePrescriptionStatusFunctionArn: !GetAtt Functions.Outputs.UpdatePrescriptionStatusFunctionArn
+        StatusLambdaFunctionName: !GetAtt Functions.Outputs.StatusLambdaFunctionName
+        StatusLambdaArn: !GetAtt Functions.Outputs.StatusLambdaArn
         LogRetentionInDays: !Ref LogRetentionInDays
         EnableSplunk: !Ref EnableSplunk

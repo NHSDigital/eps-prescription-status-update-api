@@ -16,6 +16,14 @@ Parameters:
     Type: String
     Default: none
 
+  StatusLambdaFunctionName:
+    Type: String
+    Default: none
+
+  StatusLambdaArn:
+    Type: String
+    Default: none
+
   LogRetentionInDays:
     Type: Number
 
