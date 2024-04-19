@@ -207,7 +207,7 @@ Resources:
       StageDescription:
         DataTraceEnabled: true
         LoggingLevel: INFO
-      StageName: prod
+      StageName: logging
 
   RestApiGatewayStage:
     Type: AWS::ApiGateway::Stage
