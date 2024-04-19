@@ -30,12 +30,11 @@ const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPro
   const commitId = process.env.COMMIT_ID
   const versionNumber = process.env.VERSION_NUMBER
 
+  const statusBody = {commitId: commitId, versionNumber: versionNumber}
+
   return {
     statusCode: 200,
-    body: JSON.stringify({
-      commitId: commitId,
-      versionNumber: versionNumber
-    }),
+    body: JSON.stringify(statusBody),
     headers: {
       "Content-Type": "application/health+json",
       "Cache-Control": "no-cache"
