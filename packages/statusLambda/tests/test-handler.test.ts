@@ -9,12 +9,12 @@ import {
   it
 } from "@jest/globals"
 import {handler} from "../src/statusLambda"
-import helloworldContext from "./helloworldContext"
+import mockContext from "./mockContext"
 import mockAPIGatewayProxyEvent from "./mockAPIGatewayProxyEvent"
 
 const mock = new MockAdapter(axios)
 
-const dummyContext = helloworldContext
+const dummyContext = mockContext
 
 describe("Unit test for status check", function () {
   let originalEnv: {[key: string]: string | undefined}
