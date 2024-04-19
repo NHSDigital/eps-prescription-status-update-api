@@ -79,6 +79,8 @@ Resources:
         TruststoreVersion: !Ref TruststoreVersion
         UpdatePrescriptionStatusStateMachineName: !GetAtt StateMachines.Outputs.UpdatePrescriptionStatusStateMachineName
         UpdatePrescriptionStatusStateMachineArn: !GetAtt StateMachines.Outputs.UpdatePrescriptionStatusStateMachineArn
+        StatusLambdaFunctionName: !GetAtt Functions.Outputs.StatusLambdaFunctionName
+        StatusLambdaFunctionArn: !GetAtt Functions.Outputs.StatusLambdaFunctionArn
         LogRetentionInDays: !Ref LogRetentionInDays
         EnableSplunk: !Ref EnableSplunk
   
@@ -103,7 +105,5 @@ Resources:
         StackName: !Ref AWS::StackName
         UpdatePrescriptionStatusFunctionName: !GetAtt Functions.Outputs.UpdatePrescriptionStatusFunctionName
         UpdatePrescriptionStatusFunctionArn: !GetAtt Functions.Outputs.UpdatePrescriptionStatusFunctionArn
-        StatusLambdaFunctionName: !GetAtt Functions.Outputs.StatusLambdaFunctionName
-        StatusLambdaArn: !GetAtt Functions.Outputs.StatusLambdaArn
         LogRetentionInDays: !Ref LogRetentionInDays
         EnableSplunk: !Ref EnableSplunk

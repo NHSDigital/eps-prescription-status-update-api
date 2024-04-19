@@ -126,6 +126,6 @@ Outputs:
     Description: The function name of the Status lambda
     Value: !Ref  StatusLambda
   
-  StatusLambdaArn:
+  StatusLambdaFunctionArn:
     Description: The function ARN of the Status lambda
     Value: !GetAtt  StatusLambda.Arn
