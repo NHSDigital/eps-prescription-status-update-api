@@ -204,6 +204,9 @@ Resources:
       - UpdatePrescriptionStatusMethod
     Properties:
       RestApiId: !Ref RestApiGateway
+      StageDescription:
+        DataTraceEnabled: true
+        LoggingLevel: INFO
 
   RestApiGatewayStage:
     Type: AWS::ApiGateway::Stage
