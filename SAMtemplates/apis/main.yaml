@@ -206,10 +206,31 @@ Resources:
       MethodResponses:
         - StatusCode: '200'
 
+  StatusLambdaMethodResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId: !Ref RestApiGateway
+      ParentId: !GetAtt RestApiGateway.RootResourceId
+      PathPart: _status
+  
+  StatusLambdaMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref RestApiGateway
+      ResourceId: !Ref StatusLambdaMethodResource
+      HttpMethod: GET
+      AuthorizationType: NONE
+      Integration:
+        Type: AWS_PROXY
+        Credentials: !GetAtt RestApiGatewayResources.Outputs.ApiGwRoleArn
+        IntegrationHttpMethod: POST
+        Uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${StatusLambdaFunctionArn}/invocations
+
   RestApiGatewayDeployment:
     Type: AWS::ApiGateway::Deployment
     DependsOn:
       - UpdatePrescriptionStatusMethod
+      - StatusLambdaMethod
     Properties:
       RestApiId: !Ref RestApiGateway
 
@@ -239,6 +260,7 @@ Resources:
         AdditionalPolicies: !Join
           - ','
           - - Fn::ImportValue: !Sub ${StackName}:state-machines:${UpdatePrescriptionStatusStateMachineName}:ExecuteStateMachinePolicy
+            # - Fn::ImportValue: !Sub ${StackName}:functions:${StatusLambdaFunctionName}:ExecuteLambdaPolicyArn
         ApiName: !Sub ${StackName}-apigw
         LogRetentionInDays: !Ref LogRetentionInDays
         EnableSplunk: !Ref EnableSplunk
