@@ -80,13 +80,13 @@ Resources:
         SplunkSubscriptionFilterRole: !ImportValue lambda-resources:SplunkSubscriptionFilterRole
         SplunkDeliveryStreamArn: !ImportValue lambda-resources:SplunkDeliveryStream
 
-  StatusLambda:
+  StatusLambdaFunction:
     Type: AWS::Serverless::Function
     Properties:
-      FunctionName: !Sub "${AWS::StackName}-statusLambda"
+      FunctionName: !Sub ${StackName}-statusLambda
       CodeUri: ../../packages
       Handler: statusLambda.handler
-      Role: !GetAtt StatusLambdaResources.Outputs.LambdaRoleArn
+      Role: !GetAtt StatusLambdaFunctionResources.Outputs.LambdaRoleArn
       Environment:
         Variables:
           VERSION_NUMBER: !Ref VersionNumber
@@ -101,14 +101,14 @@ Resources:
         EntryPoints:
           - statusLambda/src/statusLambda.ts
 
-  StatusLambdaResources:
+  StatusLambdaFunctionResources:
     Type: AWS::Serverless::Application
     Properties:
       Location: lambda_resources.yaml
       Parameters:
         StackName: !Ref StackName
-        LambdaName: !Sub ${StackName}-status
-        LambdaArn: !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:${StackName}-status
+        LambdaName: !Sub ${StackName}-statusLambda
+        LambdaArn: !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:${StackName}-statusLambda
         IncludeAdditionalPolicies: true
         AdditionalPolicies: !Join
           - ","
@@ -130,8 +130,8 @@ Outputs:
 
   StatusLambdaFunctionName:
     Description: The function name of the Status lambda
-    Value: !Ref  StatusLambda
+    Value: !Ref  StatusLambdaFunction
   
   StatusLambdaFunctionArn:
     Description: The function ARN of the Status lambda
-    Value: !GetAtt  StatusLambda.Arn
+    Value: !GetAtt  StatusLambdaFunction.Arn
