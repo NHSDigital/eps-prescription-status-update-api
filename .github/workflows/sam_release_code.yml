@@ -115,28 +115,19 @@ jobs:
           name: python_dependency_files
           path: .
   
-      # using git commit sha for version of action to ensure we have stable version
-      - name: Install asdf
-        uses: asdf-vm/actions/setup@05e0d2ed97b598bfce82fd30daf324ae0c4570e6
-        with:
-          asdf_branch: v0.11.3
-  
-      - name: Cache asdf
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.asdf
-          key: ${{ runner.os }}-asdf-${{ hashFiles('**/.tool-versions') }}
-          restore-keys: |
-            ${{ runner.os }}-asdf-
+      - name: Determine python versions
+        shell: bash -leo pipefail {0}
+        id: get_versions
+        run: |
+          python="$(grep -v '#' .tool-versions | grep python | awk '{print $2}')"
+          echo "python=${python}" >> $GITHUB_OUTPUT
 
-      - name: Install asdf dependencies in .tool-versions
-        uses: asdf-vm/actions/install@05e0d2ed97b598bfce82fd30daf324ae0c4570e6
+      # version 5.1 of setup-python
+      - name: Install Python
+        uses: actions/setup-python@82c7e631bb3cdc910f68e0081d67478d79c6982d
         with:
-          asdf_branch: v0.11.3
-        env:
-          PYTHON_CONFIGURE_OPTS: --enable-shared
-     
+          python-version: ${{ steps.get_versions.outputs.python }}
+      
       - name: Install proxygen-cli
         run: |
           make install-python
