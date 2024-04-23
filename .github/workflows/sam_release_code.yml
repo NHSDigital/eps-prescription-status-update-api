@@ -109,7 +109,7 @@ jobs:
           name: ${{ inputs.SPEC_ARTIFACT }}
           path: .
 
-      - name: Download specification artifact
+      - name: Download python dependency artifact
         uses: actions/download-artifact@v4
         with:
           name: python_dependency_files
