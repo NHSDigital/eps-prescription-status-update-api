@@ -36,7 +36,7 @@ const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPro
     "nhsd-correlation-id": event.headers["nhsd-correlation-id"],
     "nhsd-request-id": event.headers["nhsd-request-id"],
     "x-correlation-id": event.headers["x-correlation-id"],
-    "apigw-request-id": event.requestContext.requestId
+    "apigw-request-id": event.headers["apigw-request-id"]
   })
   let responseEntries: Array<BundleEntry> = []
 
