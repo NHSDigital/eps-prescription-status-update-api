@@ -134,7 +134,7 @@ paths:
             examples:
               ready-for-delivery:
                 summary: ready-for-delivery
-                description: A request message contains tracking status `Ready for delivery`.
+                description: A request message contains tracking status `Ready for Delivery`.
                 value:
                   $ref: examples/request-ready-for-delivery.json
               dispatched:
