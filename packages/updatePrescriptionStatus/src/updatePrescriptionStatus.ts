@@ -32,16 +32,26 @@ export interface DataItem {
 }
 
 const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
+  logger.appendKeys({
+    "nhsd-correlation-id": event.headers["nhsd-correlation-id"],
+    "nhsd-request-id": event.headers["nhsd-request-id"],
+    "x-correlation-id": event.headers["x-correlation-id"],
+    "apigw-request-id": event.headers["apigw-request-id"]
+  })
   let responseEntries: Array<BundleEntry> = []
 
   const xRequestID = getXRequestID(event, responseEntries)
+
   if (!xRequestID) {
     return response(400, responseEntries)
   }
+  logger.appendKeys({
+    "x-request-id": xRequestID
+  })
 
   const requestBody = event.body
   const requestBundle = castEventBody(requestBody, responseEntries)
-  if(!requestBundle) {
+  if (!requestBundle) {
     return response(400, responseEntries)
   }
 
