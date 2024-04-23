@@ -133,10 +133,11 @@ jobs:
         run: |
           poetry_version="$(grep -v '#' .tool-versions | grep poetry | awk '{print $2}')"
           export POETRY_HOME=~/.poetry
-          python3 -m venv $POETRY_HOME
+          python -m venv $POETRY_HOME
           $POETRY_HOME/bin/pip install poetry=="${poetry_version}"
+          python --version
           $POETRY_HOME/bin/poetry --version
-          make install-python
+          $POETRY_HOME/bin/poetry install
 
       - name: Export specification path
         run: |
