@@ -5,6 +5,10 @@
 			"path": ".."
 		},
 		{
+			"name": "packages/gsul",
+			"path": "../packages/gsul"
+		},
+		{
 			"name": "packages/sandbox",
 			"path": "../packages/sandbox"
 		},
