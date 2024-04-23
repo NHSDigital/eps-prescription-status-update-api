@@ -115,9 +115,10 @@ jobs:
           name: python_dependency_files
           path: .
   
+      # get python version from asdf .tool-versions file
       - name: Determine python versions
         shell: bash -leo pipefail {0}
-        id: get_versions
+        id: get_python_version
         run: |
           python="$(grep -v '#' .tool-versions | grep python | awk '{print $2}')"
           echo "python=${python}" >> $GITHUB_OUTPUT
@@ -126,7 +127,7 @@ jobs:
       - name: Install Python
         uses: actions/setup-python@82c7e631bb3cdc910f68e0081d67478d79c6982d
         with:
-          python-version: ${{ steps.get_versions.outputs.python }}
+          python-version: ${{ steps.get_python_version.outputs.python }}
       
       - name: Install proxygen-cli
         run: |
