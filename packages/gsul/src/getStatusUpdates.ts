@@ -36,26 +36,19 @@ export const buildResult = (
   inputPrescription: inputPrescriptionType,
   items: Array<itemType>
 ): outputPrescriptionType => {
-  // store an empty map of itemId to latest update
-  const uniqueItemMap: Map<string, itemType> = new Map()
-
-  for (const item of items) {
-    // if the itemId hasn't been seen store the update
-    if (!uniqueItemMap.has(item.itemId)) {
-      uniqueItemMap.set(item.itemId, item)
-    } else {
-      // if the existing update is older overwrite it
-      const prev = uniqueItemMap.get(item.itemId)
-      if (Date.parse(prev.lastUpdateDateTime) < Date.parse(item.lastUpdateDateTime)) {
-        uniqueItemMap.set(item.itemId, item)
-      }
-    }
-  }
+  // get unique item ids with the latest update based on lastUpdateDateTime
+  const uniqueItems: Array<itemType> = Object.values(
+    items.reduce(function (r, e) {
+      if (!r[e.itemId]) r[e.itemId] = e
+      else if (e.lastUpdateDateTime > r[e.itemId].lastUpdateDateTime) r[e.itemId] = e
+      return r
+    }, {})
+  )
 
   const result: outputPrescriptionType = {
     prescriptionID: inputPrescription.prescriptionID,
     onboarded: items.length > 0,
-    items: [...uniqueItemMap.values()]
+    items: uniqueItems
   }
   return result
 }
