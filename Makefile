@@ -66,7 +66,6 @@ sam-validate:
 	sam validate --template-file SAMtemplates/state_machines/main.yaml --region eu-west-2
 	sam validate --template-file SAMtemplates/state_machines/state_machine_resources.yaml --region eu-west-2
 
-
 sam-validate-sandbox:
 	sam validate --template-file SAMtemplates/sandbox_template.yaml --region eu-west-2
 
@@ -88,8 +87,6 @@ sam-deploy-package: guard-artifact_bucket guard-artifact_bucket_prefix guard-sta
 			  TruststoreVersion=$$LATEST_TRUSTSTORE_VERSION \
 			  EnableMutualTLS=$$enable_mutual_tls \
 			  EnableSplunk=true \
-			  VersionNumber=$$VERSION_NUMBER \
-			  CommitId=$$COMMIT_ID \
 			  LogLevel=$$LOG_LEVEL \
 			  LogRetentionInDays=$$LOG_RETENTION_DAYS \
 			  Env=$$TARGET_ENVIRONMENT

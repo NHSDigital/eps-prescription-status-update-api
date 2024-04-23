@@ -26,9 +26,6 @@ echo "Proxy environment: $environment"
 
 # Determine the proxy instance based on the provided $STACK_NAME
 case "$STACK_NAME" in
-    psu)
-        instance=prescription-status-update
-        ;;
     psu-pr-*)
         if [[ $STACK_NAME == psu-pr-* ]]; then
             # Extracting the PR ID from $STACK_NAME
@@ -39,6 +36,13 @@ case "$STACK_NAME" in
             else
                 instance=prescription-status-update-pr-$pr_id
             fi
+        fi
+        ;;
+    psu-*)
+        if [[ $STACK_NAME == *-sandbox ]]; then
+            instance=prescription-status-update-sandbox
+        else
+            instance=prescription-status-update
         fi
         ;;
     *)
