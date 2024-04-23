@@ -39,8 +39,7 @@ export const buildResult = (
   // get unique item ids with the latest update based on lastUpdateDateTime
   const uniqueItems: Array<itemType> = Object.values(
     items.reduce(function (r, e) {
-      if (!r[e.itemId]) r[e.itemId] = e
-      else if (Date.parse(e.lastUpdateDateTime) > Date.parse(r[e.itemId].lastUpdateDateTime)) r[e.itemId] = e
+      if (!r[e.itemId] || Date.parse(e.lastUpdateDateTime) > Date.parse(r[e.itemId].lastUpdateDateTime)) r[e.itemId] = e
       return r
     }, {})
   )
