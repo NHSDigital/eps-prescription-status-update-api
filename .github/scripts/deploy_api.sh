@@ -38,7 +38,7 @@ case "$STACK_NAME" in
             fi
         fi
         ;;
-    psu-*)
+    psu*)
         if [[ $STACK_NAME == *-sandbox ]]; then
             instance=prescription-status-update-sandbox
         else
