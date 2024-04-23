@@ -25,7 +25,7 @@ const jestConfig: JestConfigWithTsJest = {
   collectCoverage: true,
   coverageDirectory: "coverage",
   coverageProvider: "v8",
-  testMatch: ["**/tests/*.test.ts"],
+  testMatch: ["**/tests/**/*.test.ts"],
   testEnvironment: "node",
   extensionsToTreatAsEsm: [".ts"],
   verbose: true,
