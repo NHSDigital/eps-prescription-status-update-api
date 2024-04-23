@@ -1,6 +1,5 @@
-import {QueryCommandInput, DynamoDBDocumentClient} from "@aws-sdk/lib-dynamodb"
-import {DynamoDBClient} from "@aws-sdk/client-dynamodb"
-import {runDynamoDBQuery} from "../src/dynamoDBclient"
+import {DynamoDBDocumentClient} from "@aws-sdk/lib-dynamodb"
+import {getItemsUpdatesForPrescription} from "../src/dynamoDBclient"
 import {Logger} from "@aws-lambda-powertools/logger"
 import {
   expect,
@@ -10,9 +9,6 @@ import {
 } from "@jest/globals"
 
 const logger = new Logger({serviceName: "GSUL_TEST"})
-
-const client = new DynamoDBClient({region: "eu-west-2"})
-const docClient = DynamoDBDocumentClient.from(client)
 
 describe("testing dynamoDBClient", () => {
   beforeEach(() => {
@@ -34,22 +30,11 @@ describe("testing dynamoDBClient", () => {
   })
 
   it("should call dynamo once and return expected items", async () => {
-    const queryParams: QueryCommandInput = {
-      TableName: "tableName",
-      IndexName: "indexName",
-      KeyConditionExpression: "PrescriptionID = :inputPrescriptionID AND PharmacyODSCode = :inputPharmacyODSCode",
-      ExpressionAttributeValues: {
-        ":inputPharmacyODSCode": "odsCode",
-        ":inputPrescriptionID": "prescriptionID"
-      }
-    }
-
-    const queryResults = await runDynamoDBQuery(queryParams, docClient, logger)
+    const queryResults = await getItemsUpdatesForPrescription("prescriptionID", "odsCode", logger)
 
     expect(DynamoDBDocumentClient.prototype.send).toHaveBeenCalledTimes(1)
     expect(queryResults).toMatchObject([
       {
-        prescriptionID: "abc",
         itemId: "item_1",
         latestStatus: "latest_status",
         isTerminalState: "is_terminal_status",
@@ -99,27 +84,16 @@ describe("testing pagination in dynamoDBClient", () => {
   })
 
   it("should handle pagination", async () => {
-    const queryParams: QueryCommandInput = {
-      TableName: "tableName",
-      IndexName: "indexName",
-      KeyConditionExpression: "PrescriptionID = :inputPrescriptionID AND PharmacyODSCode = :inputPharmacyODSCode",
-      ExpressionAttributeValues: {
-        ":inputPharmacyODSCode": "odsCode",
-        ":inputPrescriptionID": "prescriptionID"
-      }
-    }
-    const queryResults = await runDynamoDBQuery(queryParams, docClient, logger)
+    const queryResults = await getItemsUpdatesForPrescription("prescriptionID", "odsCode", logger)
 
     expect(queryResults).toMatchObject([
       {
-        prescriptionID: "abc",
         itemId: "item_1",
         latestStatus: "first_status",
         isTerminalState: "is_terminal_status",
         lastUpdateDateTime: "1970-01-01T00:00:00Z"
       },
       {
-        prescriptionID: "abc",
         itemId: "item_1",
         latestStatus: "second_status",
         isTerminalState: "is_terminal_status",

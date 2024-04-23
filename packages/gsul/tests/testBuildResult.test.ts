@@ -1,12 +1,11 @@
 import {buildResult} from "../src/getStatusUpdates"
 import {inputPrescriptionType} from "../src/schema/request"
-import {DynamoDBResult} from "../src/schema/result"
-import {outputPrescriptionType} from "../src/schema/response"
+import {outputPrescriptionType, itemType} from "../src/schema/response"
 
 type scenariosType = {
   scenarioDescription: string
   inputPrescriptions: inputPrescriptionType
-  queryResults: Array<DynamoDBResult>
+  queryResults: Array<itemType>
   expectedResult: outputPrescriptionType
 }
 const scenarios: Array<scenariosType> = [
@@ -18,7 +17,6 @@ const scenarios: Array<scenariosType> = [
     },
     queryResults: [
       {
-        prescriptionID: "abc",
         itemId: "item_1",
         latestStatus: "latest_status",
         isTerminalState: "is_terminal_status",
@@ -59,14 +57,12 @@ const scenarios: Array<scenariosType> = [
     },
     queryResults: [
       {
-        prescriptionID: "abc",
         itemId: "item_1",
         latestStatus: "early_status",
         isTerminalState: "is_terminal_status",
         lastUpdateDateTime: "1970-01-01T00:00:00Z"
       },
       {
-        prescriptionID: "abc",
         itemId: "item_1",
         latestStatus: "latest_status",
         isTerminalState: "is_terminal_status",
@@ -94,28 +90,24 @@ const scenarios: Array<scenariosType> = [
     },
     queryResults: [
       {
-        prescriptionID: "abc",
         itemId: "item_1",
         latestStatus: "item_1_status",
         isTerminalState: "is_terminal_status",
         lastUpdateDateTime: "1970-01-01T00:00:00Z"
       },
       {
-        prescriptionID: "abc",
         itemId: "item_1",
         latestStatus: "latest_item_1_status",
         isTerminalState: "is_terminal_status",
         lastUpdateDateTime: "1972-01-01T00:00:00Z"
       },
       {
-        prescriptionID: "abc",
         itemId: "item_2",
         latestStatus: "item_2_status",
         isTerminalState: "is_terminal_status",
         lastUpdateDateTime: "1971-01-01T00:00:00Z"
       },
       {
-        prescriptionID: "abc",
         itemId: "item_2",
         latestStatus: "early_item_2_status",
         isTerminalState: "is_terminal_status",
