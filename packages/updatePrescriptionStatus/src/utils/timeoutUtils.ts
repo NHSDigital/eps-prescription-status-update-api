@@ -2,8 +2,6 @@ export interface Timeout {
   isTimeout: true
 }
 
-export class TimeoutError extends Error {}
-
 export async function jobWithTimeout<T>(timeoutMS: number, job: Promise<T>): Promise<T | Timeout> {
   const timeoutPromise: Promise<Timeout> = new Promise((resolve) => {
     setTimeout(() => {

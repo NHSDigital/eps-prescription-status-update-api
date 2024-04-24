@@ -3,7 +3,7 @@ import {DynamoDBClient, TransactWriteItem, TransactWriteItemsCommand} from "@aws
 import {marshall} from "@aws-sdk/util-dynamodb"
 
 import {DataItem} from "../updatePrescriptionStatus"
-import {Timeout, TimeoutError} from "./timeoutUtils"
+import {Timeout} from "./timeoutUtils"
 
 const logger = new Logger({serviceName: "databaseClient"})
 const client = new DynamoDBClient()
@@ -31,10 +31,6 @@ export async function persistDataItems(dataItems: Array<DataItem>): Promise<bool
     return true
   } catch (e) {
     logger.error("Error sending TransactWriteItemsCommand to DynamoDB.", {error: e})
-    if (e instanceof TimeoutError) {
-      logger.info("DynamoDB operation timed out.")
-      return {isTimeout: true}
-    }
     return false
   }
 }
