@@ -147,5 +147,5 @@ export function serverError(): BundleEntry {
 }
 
 export function createSuccessResponseEntries(entries: Array<BundleEntry>) {
-  return entries.map(e => created(e.fullUrl!))
+  return entries.map((e) => created(e.fullUrl!))
 }
