@@ -35,9 +35,9 @@ info:
 
     It conforms to the [FHIR](https://digital.nhs.uk/developer/guides-and-documentation/our-api-technologies#fhir) global standard for health care data exchange, specifically to [FHIR R4 (v4.0.1)](https://hl7.org/fhir/r4/).
 
-    It includes some country-specific FHIR extensions, which are built against FHIR UK Core, specifically [UK Core R4 (v4.0.1)](https://simplifier.net/HL7FHIRUKCoreR4/).
+    It includes some country-specific FHIR extensions, which are built against FHIR UK Core, specifically [UK Core STU3 (v0.0.9)](https://simplifier.net/HL7FHIRUKCoreR4/).
 
-    You do not need to know much about FHIR to use this API. The API only supports POST requests containing FHIR messages.
+    You do not need to know much about FHIR to use this API. The API only supports POST requests containing FHIR transactions.
 
     FHIR APIs are just RESTful APIs that follow specific rules.
     These rules mean:
@@ -134,7 +134,7 @@ paths:
             examples:
               ready-for-delivery:
                 summary: ready-for-delivery
-                description: A request message contains tracking status `Ready for delivery`.
+                description: A request message contains tracking status `Ready for Delivery`.
                 value:
                   $ref: examples/request-ready-for-delivery.json
               dispatched:
