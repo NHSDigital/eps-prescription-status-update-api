@@ -70,9 +70,7 @@ const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPro
   }
 
   const dataItems = buildDataItems(requestEntries, xRequestID)
-
   const persistSuccess = persistDataItems(dataItems)
-
   const persistResponse = await jobWithTimeout(LAMBDA_TIMEOUT_MS, persistSuccess)
 
   if (hasTimedOut(persistResponse)) {
