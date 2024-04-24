@@ -96,17 +96,17 @@ uvloop = ["uvloop (>=0.15.2)"]
 
 [[package]]
 name = "boto3"
-version = "1.34.89"
+version = "1.34.90"
 description = "The AWS SDK for Python"
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "boto3-1.34.89-py3-none-any.whl", hash = "sha256:f9166f485d64b012d46acd212fb29a45b195a85ff66a645b05b06d9f7572af36"},
-    {file = "boto3-1.34.89.tar.gz", hash = "sha256:e0940e43810fe82f5b77442c751491fcc2768af7e7c3e8c15ea158e1ca9b586c"},
+    {file = "boto3-1.34.90-py3-none-any.whl", hash = "sha256:b2e5cb5b95efcc881e25a3bc872d7a24e75ff4e76f368138e4baf7b9d6ee3422"},
+    {file = "boto3-1.34.90.tar.gz", hash = "sha256:2824e3dd18743ca50e5b10439d20e74647b1416e8a94509cb30beac92d27a18d"},
 ]
 
 [package.dependencies]
-botocore = ">=1.34.89,<1.35.0"
+botocore = ">=1.34.90,<1.35.0"
 jmespath = ">=0.7.1,<2.0.0"
 s3transfer = ">=0.10.0,<0.11.0"
 
@@ -115,13 +115,13 @@ crt = ["botocore[crt] (>=1.21.0,<2.0a0)"]
 
 [[package]]
 name = "botocore"
-version = "1.34.89"
+version = "1.34.90"
 description = "Low-level, data-driven core of boto 3."
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "botocore-1.34.89-py3-none-any.whl", hash = "sha256:35205ed7db13058a3f7114c28e93058a8ff1490dfc6a5b5dff9c581c738fbf59"},
-    {file = "botocore-1.34.89.tar.gz", hash = "sha256:6624b69bcdf2c5d0568b7bc9cbac13e605f370e7ea06710c61e2e2dc76831141"},
+    {file = "botocore-1.34.90-py3-none-any.whl", hash = "sha256:d48f152498e2c60b43ce25b579d26642346a327b6fb2c632d57219e0a4f63392"},
+    {file = "botocore-1.34.90.tar.gz", hash = "sha256:113cd4c0cb63e13163ccbc2bb13d551be314ba7f8ba5bfab1c51a19ca01aa133"},
 ]
 
 [package.dependencies]
@@ -1076,13 +1076,13 @@ tests = ["pytest", "pytest-cov", "pytest-lazy-fixtures"]
 
 [[package]]
 name = "proxygen-cli"
-version = "2.1.8"
+version = "2.1.10"
 description = "CLI for interacting with NHSD APIM's proxygen service"
 optional = false
 python-versions = "<4.0,>=3.9"
 files = [
-    {file = "proxygen_cli-2.1.8-py3-none-any.whl", hash = "sha256:af44716e770a560b9173ce3b2c3d518dc46b0624d62739f680752080345b12ba"},
-    {file = "proxygen_cli-2.1.8.tar.gz", hash = "sha256:46ee2db582336ebfc4f1b52795ea40126208a4d021a1b77ba1a22f53430e530e"},
+    {file = "proxygen_cli-2.1.10-py3-none-any.whl", hash = "sha256:2186288e86836f1109d0799c8db0ded6fc01037a838e5ec16ef2462744902eab"},
+    {file = "proxygen_cli-2.1.10.tar.gz", hash = "sha256:54b36a5efa59747929cf731481619e7647f3c0531c34f02bc8a781ee0d712d73"},
 ]
 
 [package.dependencies]
@@ -1737,4 +1737,4 @@ termcolor = ">=2.3,<3.0"
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.12"
-content-hash = "087bda8e47972a656a964e6c6c262dcf908da9753a7f7f36ae8dafc2b6c3d804"
+content-hash = "2a6cb79a2fcd083f4463d01d8bd5a522a3f238db2c9d4f8b08727b5290204d86"
