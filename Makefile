@@ -150,10 +150,7 @@ publish:
 check-licenses: check-licenses-node check-licenses-python
 
 check-licenses-node:
-	npm run check-licenses --workspace packages/updatePrescriptionStatus
-	npm run check-licenses --workspace packages/sandbox
-	npm run check-licenses --workspace packages/specification
-	npm run check-licenses --workspace packages/statusLambda
+	npm run check-licenses
 
 check-licenses-python:
 	scripts/check_python_licenses.sh
