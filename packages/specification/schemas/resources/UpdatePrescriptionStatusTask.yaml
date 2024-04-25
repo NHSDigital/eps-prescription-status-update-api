@@ -1,5 +1,5 @@
 type: object
-required: [id, resourceType, basedOn, status, businessStatus, intent, focus, for, lastModified, owner, input]
+required: [id, resourceType, basedOn, status, businessStatus, intent, focus, for, lastModified, owner]
 properties:
   resourceType:
     type: string
@@ -53,7 +53,7 @@ properties:
               - Collected
               - Dispatched
               - Not Dispensed
-              - Ready for Delivery
+              - Ready for Dispatch
   intent:
     type: string
     description: Order is the allowed value to indicate the update informs an actionable task.
@@ -110,9 +110,10 @@ properties:
             example: C9Z1O
   input:
     type: array
-    description: The eRD aea  4 , with the prescription tracking status updates for eRD prescriptions. This is optional and only required for eRD type prescriptions.
+    description: The eRD Repeat Number, with the prescription tracking status updates for eRD prescriptions. This is optional and only required for eRD type prescriptions.
     items:
       type: object
+      required: [_type, valueInteger]
       properties:
         _type: 
           type: object
