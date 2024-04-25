@@ -17,9 +17,6 @@ install-node:
 install-hooks: install-python
 	poetry run pre-commit install --install-hooks --overwrite
 
-build-specification:
-	$(MAKE) --directory=packages/specification build
-
 sam-build: sam-validate compile
 	sam build --template-file SAMtemplates/main_template.yaml --region eu-west-2
 
