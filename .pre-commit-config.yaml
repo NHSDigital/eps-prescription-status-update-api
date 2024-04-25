@@ -32,6 +32,15 @@ repos:
         types_or: [ts, tsx, javascript, jsx, json]
         pass_filenames: false
 
+      - id: lint-gsul
+        name: Lint gsul
+        entry: npm
+        args: ["run", "--prefix=packages/gsul", "lint"]
+        language: system
+        files: ^packages\/gsul
+        types_or: [ts, tsx, javascript, jsx, json]
+        pass_filenames: false
+
       - id: lint-sandbox
         name: Lint sandbox
         entry: npm
@@ -40,7 +49,7 @@ repos:
         files: ^packages\/sandbox
         types_or: [ts, tsx, javascript, jsx, json]
         pass_filenames: false
-      
+
       - id: lint-statusLambda
         name: Lint statusLambda
         entry: npm
@@ -65,7 +74,7 @@ repos:
         language: system
         files: ^SAMtemplates
         pass_filenames: false
-      
+
       - id: lint-githubactions
         name: Lint github actions
         entry: make
