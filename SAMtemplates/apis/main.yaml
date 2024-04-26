@@ -236,7 +236,7 @@ Resources:
       RestApiId: !Ref RestApiGateway
       StageName: prod-v1
 
-  # stage name below should match stage name above 
+  # stage name below should match stage name above
   RestApiGatewayStage:
     Type: AWS::ApiGateway::Stage
     Properties:
