@@ -74,6 +74,14 @@ describe("Unit tests for validation of individual fields", () => {
     {
       missingField: "TaskID",
       operation: (t: Task) => delete t.id
+    },
+    {
+      missingField: "PrescriptionID",
+      operation: (t: Task) => (t.basedOn = [])
+    },
+    {
+      missingField: "Status",
+      operation: (t: Task) => (t.businessStatus = {coding: []})
     }
   ])("When $missingField is missing, should return expected issue.", async ({operation, missingField}) => {
     const task = validTask()
