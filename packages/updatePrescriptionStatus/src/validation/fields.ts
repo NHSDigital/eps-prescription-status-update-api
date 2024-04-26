@@ -23,7 +23,7 @@ export function taskFields(task: Task): Array<string> {
     (t: Task) => (t.for?.identifier?.value ? undefined : "PatientNHSNumber"),
     (t: Task) => (t.owner?.identifier?.value ? undefined : "PharmacyODSCode"),
     (t: Task) => (t.basedOn?.[0]?.identifier?.value ? undefined : "PrescriptionID"),
-    (t: Task) => (t.businessStatus?.coding?.[0].code ? undefined : "Status"),
+    (t: Task) => (t.businessStatus?.coding?.[0]?.code ? undefined : "Status"),
     (t: Task) => (t.id ? undefined : "TaskID"),
     (t: Task) => (t.status ? undefined : "TerminalStatus")
   ]
