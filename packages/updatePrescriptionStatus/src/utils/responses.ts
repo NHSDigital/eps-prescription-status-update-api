@@ -25,9 +25,9 @@ export function badRequest(diagnostics: string, fullUrl: string | undefined = un
             details: {
               coding: [
                 {
-                  system: "https://fhir.nhs.uk/CodeSystem/Spine-ErrorOrWarningCode",
-                  code: "INVALID_VALUE",
-                  display: "Invalid value"
+                  system: "https://fhir.nhs.uk/CodeSystem/http-error-codes",
+                  code: "BAD_REQUEST",
+                  display: "400: The Server was unable to process the request."
                 }
               ]
             }
@@ -135,7 +135,7 @@ export function serverError(): BundleEntry {
                 {
                   system: "https://fhir.nhs.uk/CodeSystem/http-error-codes",
                   code: "SERVER_ERROR",
-                  display: "Server error"
+                  display: "500: The Server has encountered an error processing the request."
                 }
               ]
             }
