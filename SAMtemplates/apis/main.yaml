@@ -226,6 +226,7 @@ Resources:
         IntegrationHttpMethod: POST
         Uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${StatusLambdaFunctionArn}/invocations
 
+  # if you add a new endpoint, then change the stage name
   RestApiGatewayDeployment:
     Type: AWS::ApiGateway::Deployment
     DependsOn:
@@ -233,12 +234,14 @@ Resources:
       - StatusLambdaMethod
     Properties:
       RestApiId: !Ref RestApiGateway
+      StageName: prod-v1
 
+  # stage name below should match stage name above 
   RestApiGatewayStage:
     Type: AWS::ApiGateway::Stage
     Properties:
       RestApiId: !Ref RestApiGateway
-      StageName: prod
+      StageName: prod-v1
       DeploymentId: !Ref RestApiGatewayDeployment
       TracingEnabled: true
       AccessLogSetting:
