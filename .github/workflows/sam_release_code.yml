@@ -9,7 +9,10 @@ on:
       ARTIFACT_BUCKET_PREFIX:
         required: true
         type: string
-      TARGET_ENVIRONMENT:
+      AWS_ENVIRONMENT:
+        required: true
+        type: string
+      APIGEE_ENVIRONMENT:
         required: true
         type: string
       ENABLE_MUTUAL_TLS:
@@ -64,7 +67,7 @@ on:
 jobs:
   sam_release_code:
     runs-on: ubuntu-latest
-    environment: ${{ inputs.TARGET_ENVIRONMENT }}
+    environment: ${{ inputs.AWS_ENVIRONMENT }}
     permissions:
       id-token: write
       contents: write
@@ -163,7 +166,7 @@ jobs:
           LOG_LEVEL: ${{ inputs.LOG_LEVEL }}
           LOG_RETENTION_DAYS: ${{ inputs.LOG_RETENTION_DAYS }}
           stack_name: ${{ inputs.STACK_NAME }}
-          TARGET_ENVIRONMENT: ${{ inputs.TARGET_ENVIRONMENT }}
+          TARGET_ENVIRONMENT: ${{ inputs.AWS_ENVIRONMENT }}
           template_file: template.yaml
           TRUSTSTORE_FILE: ${{ inputs.TRUSTSTORE_FILE }}
           VERSION_NUMBER: ${{ inputs.VERSION_NUMBER }}
@@ -177,7 +180,8 @@ jobs:
           PROXYGEN_PATH: ${{ env.PROXYGEN_PATH }}
           SPEC_PATH: ${{ env.SPEC_PATH }}
           STACK_NAME: ${{ inputs.STACK_NAME }}
-          TARGET_ENVIRONMENT: ${{ inputs.TARGET_ENVIRONMENT }}
+          AWS_ENVIRONMENT: ${{ inputs.AWS_ENVIRONMENT }}
+          APIGEE_ENVIRONMENT: ${{ inputs.APIGEE_ENVIRONMENT }}
         run: poetry run ./deploy_api.sh
 
       - name: create_int_release_notes
@@ -216,16 +220,16 @@ jobs:
           path: gh-pages
   
       - name: Update release tag in github pages
-        if: ${{ inputs.TARGET_ENVIRONMENT != 'dev-pr' }}
+        if: ${{ !startsWith(inputs.STACK_NAME, 'psu-pr-') }}
         run: |
           cd gh-pages
           NOW=$(date +'%Y-%m-%dT%H:%M:%S')
-          echo "tag,release_datetime" > _data/${{ inputs.TARGET_ENVIRONMENT }}_latest.csv
-          echo "${{ inputs.VERSION_NUMBER }},${NOW}" >> _data/${{ inputs.TARGET_ENVIRONMENT }}_latest.csv
-          echo "${{ inputs.VERSION_NUMBER }},${NOW}" >> _data/${{ inputs.TARGET_ENVIRONMENT }}_deployments.csv
+          echo "tag,release_datetime" > _data/${{ inputs.APIGEE_ENVIRONMENT }}_latest.csv
+          echo "${{ inputs.VERSION_NUMBER }},${NOW}" >> _data/${{ inputs.APIGEE_ENVIRONMENT }}_latest.csv
+          echo "${{ inputs.VERSION_NUMBER }},${NOW}" >> _data/${{ inputs.APIGEE_ENVIRONMENT }}_deployments.csv
           git config user.name github-actions
           git config user.email github-actions@github.com
-          git add _data/${{ inputs.TARGET_ENVIRONMENT }}_latest.csv
-          git add _data/${{ inputs.TARGET_ENVIRONMENT }}_deployments.csv
-          git commit -m 'update releases for ${{ inputs.TARGET_ENVIRONMENT }}'
+          git add _data/${{ inputs.APIGEE_ENVIRONMENT }}_latest.csv
+          git add _data/${{ inputs.APIGEE_ENVIRONMENT }}_deployments.csv
+          git commit -m 'update releases for ${{ inputs.APIGEE_ENVIRONMENT }}'
           parallel --retries 10 --delay 3 ::: "git pull --rebase && git push"
