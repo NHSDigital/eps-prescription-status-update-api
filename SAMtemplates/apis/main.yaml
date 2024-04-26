@@ -241,7 +241,6 @@ Resources:
     Type: AWS::ApiGateway::Stage
     Properties:
       RestApiId: !Ref RestApiGateway
-      StageName: prod-v1
       DeploymentId: !Ref RestApiGatewayDeployment
       TracingEnabled: true
       AccessLogSetting:
