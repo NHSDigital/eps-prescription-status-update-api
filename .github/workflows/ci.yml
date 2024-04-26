@@ -91,7 +91,8 @@ jobs:
     with:
       ARTIFACT_BUCKET_PREFIX: ${{needs.tag_release.outputs.version_tag}}
       STACK_NAME: psu
-      TARGET_ENVIRONMENT: dev
+      AWS_ENVIRONMENT: dev
+      APIGEE_ENVIRONMENT: internal-dev
       ENABLE_MUTUAL_TLS: true
       BUILD_ARTIFACT: packaged_code
       SPEC_ARTIFACT: specification_code
@@ -114,7 +115,8 @@ jobs:
     with:
       ARTIFACT_BUCKET_PREFIX: ${{needs.tag_release.outputs.version_tag}}-sandbox
       STACK_NAME: psu-sandbox
-      TARGET_ENVIRONMENT: dev
+      AWS_ENVIRONMENT: dev
+      APIGEE_ENVIRONMENT: internal-dev-sandbox
       ENABLE_MUTUAL_TLS: true
       BUILD_ARTIFACT: packaged_sandbox_code
       SPEC_ARTIFACT: specification_code
@@ -131,7 +133,8 @@ jobs:
     with:
       ARTIFACT_BUCKET_PREFIX: ${{needs.tag_release.outputs.version_tag}}
       STACK_NAME: psu
-      TARGET_ENVIRONMENT: qa
+      AWS_ENVIRONMENT: qa
+      APIGEE_ENVIRONMENT: internal-qa
       ENABLE_MUTUAL_TLS: true
       BUILD_ARTIFACT: packaged_code
       SPEC_ARTIFACT: specification_code
