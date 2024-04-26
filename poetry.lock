@@ -1076,13 +1076,13 @@ tests = ["pytest", "pytest-cov", "pytest-lazy-fixtures"]
 
 [[package]]
 name = "proxygen-cli"
-version = "2.1.10"
+version = "2.1.11"
 description = "CLI for interacting with NHSD APIM's proxygen service"
 optional = false
 python-versions = "<4.0,>=3.9"
 files = [
-    {file = "proxygen_cli-2.1.10-py3-none-any.whl", hash = "sha256:2186288e86836f1109d0799c8db0ded6fc01037a838e5ec16ef2462744902eab"},
-    {file = "proxygen_cli-2.1.10.tar.gz", hash = "sha256:54b36a5efa59747929cf731481619e7647f3c0531c34f02bc8a781ee0d712d73"},
+    {file = "proxygen_cli-2.1.11-py3-none-any.whl", hash = "sha256:fff12b74bc62b18dd2eb246b53391952127d9c87d32f8e227eb3e22b60318366"},
+    {file = "proxygen_cli-2.1.11.tar.gz", hash = "sha256:6a9533b2c91c2172e7d266963bf20287acc2682e7df7a7da4d5c21fb672d5921"},
 ]
 
 [package.dependencies]
@@ -1737,4 +1737,4 @@ termcolor = ">=2.3,<3.0"
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.12"
-content-hash = "74914aee9123e043c7963268dcb32b1c7a67af8c9bc90ed3dcc27bfd5e4113f0"
+content-hash = "3aec99a59a9a48185006d50db1713d300c1ae0ec90e2fca7175e94970d4e8e85"
