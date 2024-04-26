@@ -1,4 +1,4 @@
-AWSTemplateFormatVersion: '2010-09-09'
+AWSTemplateFormatVersion: "2010-09-09"
 Transform: AWS::Serverless-2016-10-31
 Description: |
   PSU resources
@@ -10,15 +10,15 @@ Parameters:
     AllowedValues:
       - true
       - false
-  
+
   TruststoreVersion:
     Type: String
     Default: none
-  
+
   LogLevel:
     Type: String
     Default: INFO
-  
+
   LogRetentionInDays:
     Type: Number
     Default: 30
@@ -45,7 +45,7 @@ Parameters:
       - 2922
       - 3288
       - 3653
-  
+
   EnableSplunk:
     Type: String
     Default: false
@@ -68,7 +68,7 @@ Resources:
       Location: tables/main.yaml
       Parameters:
         StackName: !Ref AWS::StackName
-  
+
   Apis:
     Type: AWS::Serverless::Application
     Properties:
@@ -83,7 +83,7 @@ Resources:
         StatusLambdaFunctionArn: !GetAtt Functions.Outputs.StatusLambdaFunctionArn
         LogRetentionInDays: !Ref LogRetentionInDays
         EnableSplunk: !Ref EnableSplunk
-  
+
   Functions:
     Type: AWS::Serverless::Application
     Properties:
@@ -96,7 +96,7 @@ Resources:
         EnableSplunk: !Ref EnableSplunk
         VersionNumber: !Ref VersionNumber
         CommitId: !Ref CommitId
-  
+
   StateMachines:
     Type: AWS::Serverless::Application
     Properties:
