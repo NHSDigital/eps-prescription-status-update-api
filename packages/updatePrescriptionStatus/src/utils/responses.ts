@@ -21,16 +21,7 @@ export function badRequest(diagnostics: string, fullUrl: string | undefined = un
           {
             code: "processing",
             severity: "error",
-            diagnostics: diagnostics,
-            details: {
-              coding: [
-                {
-                  system: "https://fhir.nhs.uk/CodeSystem/http-error-codes",
-                  code: "BAD_REQUEST",
-                  display: "400: The Server was unable to process the request."
-                }
-              ]
-            }
+            diagnostics: diagnostics
           }
         ]
       }
@@ -45,7 +36,7 @@ export function badRequest(diagnostics: string, fullUrl: string | undefined = un
 export function timeoutResponse(): BundleEntry {
   return {
     response: {
-      status: "408 The request timed out",
+      status: "504 The request timed out",
       outcome: {
         resourceType: "OperationOutcome",
         meta: {
@@ -55,16 +46,7 @@ export function timeoutResponse(): BundleEntry {
           {
             code: "timeout",
             severity: "fatal",
-            diagnostics: "The server has timed out while processing the request sent by the client.",
-            details: {
-              coding: [
-                {
-                  system: "https://fhir.nhs.uk/CodeSystem/http-error-codes",
-                  code: "TIMEOUT",
-                  display: "408: The request timed out."
-                }
-              ]
-            }
+            diagnostics: "The Server has timed out while processing the request sent by the client."
           }
         ]
       }
@@ -129,16 +111,7 @@ export function serverError(): BundleEntry {
           {
             code: "exception",
             severity: "fatal",
-            diagnostics: "The Server has encountered an error processing the request.",
-            details: {
-              coding: [
-                {
-                  system: "https://fhir.nhs.uk/CodeSystem/http-error-codes",
-                  code: "SERVER_ERROR",
-                  display: "500: The Server has encountered an error processing the request."
-                }
-              ]
-            }
+            diagnostics: "The Server has encountered an error processing the request."
           }
         ]
       }
