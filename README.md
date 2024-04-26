@@ -125,10 +125,6 @@ There are `make` commands that are run as part of the CI pipeline and help alias
 - `install-hooks` Installs git pre commit hooks
 - `install` Runs all install targets
 
-#### Build targets
-
-- `build-specification` Builds the specification component
-
 #### SAM targets
 
 These are used to do common commands
