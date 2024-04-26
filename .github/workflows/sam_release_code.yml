@@ -52,6 +52,9 @@ on:
       MARK_JIRA_RELEASED:
         type: boolean
         default: false
+      DEPLOY_APIGEE:
+        type: boolean
+        default: true
     secrets:
       CLOUD_FORMATION_DEPLOY_ROLE:
         required: true
@@ -175,6 +178,7 @@ jobs:
       - name: Deploy API
         shell: bash
         working-directory: .github/scripts
+        if: ${{ inputs.DEPLOY_APIGEE == true && always() && !failure() && !cancelled() }}
         env:
           VERSION_NUMBER: ${{ inputs.VERSION_NUMBER }}
           PROXYGEN_PATH: ${{ env.PROXYGEN_PATH }}
