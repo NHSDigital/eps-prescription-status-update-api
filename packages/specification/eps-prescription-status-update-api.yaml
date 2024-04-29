@@ -275,6 +275,8 @@ components:
       $ref: "schemas/components/ResponseBundle.yaml"
     OperationOutcome:
       $ref: schemas/resources/OperationOutcome.yaml
+security:
+        - app-level3: []
 x-nhsd-apim:
   temporary: false
   monitoring: false
