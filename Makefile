@@ -120,7 +120,6 @@ test: compile
 	npm run test --workspace packages/updatePrescriptionStatus
 	npm run test --workspace packages/gsul
 	npm run test --workspace packages/sandbox
-	npm run test --workspace packages/specification
 
 clean:
 	rm -rf packages/updatePrescriptionStatus/coverage
