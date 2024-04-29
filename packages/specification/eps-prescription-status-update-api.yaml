@@ -193,11 +193,11 @@ paths:
               example:
                   $ref: examples/error-ods-code.json
       security:
-        - app-level0: []
+        - app-level3: []
 components:
   securitySchemes:
-    app-level0:
-      $ref: https://proxygen.ptl.api.platform.nhs.uk/components/securitySchemes/app-level0
+    app-level3:
+      $ref: https://proxygen.prod.api.platform.nhs.uk/components/securitySchemes/app-level3
   parameters:
     BearerAuthorisation:
       in: header
@@ -281,7 +281,7 @@ x-nhsd-apim:
   access:
   - title: Application Restricted
     grants:
-      app-level0: []
+      app-level3: []
   target:
     type: hosted
     healthcheck: /_status
