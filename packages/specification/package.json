@@ -8,7 +8,6 @@
     "lint": "swagger-cli validate eps-prescription-status-update-api.yaml",
     "resolve": "swagger-cli bundle eps-prescription-status-update-api.yaml -r -o dist/eps-prescription-status-update-api.resolved.json",
     "clean": "rm -rf lib coverage",
-    "test": "npm run clean && npm run resolve && npm run compile && npm run replace-components && npm run unit",
     "check-licenses": "license-checker --failOn GPL --failOn LGPL --start ../.."
   },
   "author": "NHS Digital",
