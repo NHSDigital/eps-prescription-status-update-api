@@ -55,7 +55,7 @@ spec_output_format: json
 EOF
 
 echo
-echo "checking apigee deployments"
+echo "checking apigee deployments on internal-dev"
 echo
 ACTIVE_APIGEE=$(poetry run proxygen instance list --env internal-dev | awk 'NR > 2 {print $3}')
 mapfile -t ACTIVE_APIGEE_ARRAY <<< "$ACTIVE_APIGEE"
@@ -72,6 +72,29 @@ do
   if [ "$STATE" == "closed" ]; then
     echo "** going to delete apigee deployment $i as state is ${STATE} **"
     poetry run proxygen instance delete --no-confirm internal-dev "${i}"
+  else
+    echo "not going to delete apigee deployment $i as state is ${STATE}"
+  fi
+done
+
+echo
+echo "checking apigee deployments on internal-dev-sandbox"
+echo
+ACTIVE_APIGEE=$(poetry run proxygen instance list --env internal-dev-sandbox | awk 'NR > 2 {print $3}')
+mapfile -t ACTIVE_APIGEE_ARRAY <<< "$ACTIVE_APIGEE"
+
+for i in "${ACTIVE_APIGEE_ARRAY[@]}"
+do
+  echo "Checking if apigee deployment $i has open pull request"
+  PULL_REQUEST=${i//prescription-status-update-pr-/}
+  PULL_REQUEST=${PULL_REQUEST//-sandbox/}
+  echo "Checking pull request id ${PULL_REQUEST}"
+  URL="https://api.github.com/repos/NHSDigital/eps-prescription-status-update-api/pulls/${PULL_REQUEST}"
+  RESPONSE=$(curl "${URL}" 2>/dev/null)
+  STATE=$(echo "${RESPONSE}" | jq -r .state)
+  if [ "$STATE" == "closed" ]; then
+    echo "** going to delete apigee deployment $i as state is ${STATE} **"
+    poetry run proxygen instance delete --no-confirm internal-dev-sandbox "${i}"
   else
     echo "not going to delete apigee deployment $i as state is ${STATE}"
   fi
