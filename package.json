@@ -10,21 +10,24 @@
     "type": "git",
     "url": "https://github.com/NHSDigital/eps-prescription-status-update-api"
   },
-  "keywords": [],
+  "keywords": [ ],
   "author": "NHS Digital",
   "license": "MIT",
   "workspaces": [
+    "packages/gsul",
+    "packages/sandbox",
     "packages/specification",
+    "packages/statusLambda",
     "packages/updatePrescriptionStatus"
   ],
   "devDependencies": {
     "@semantic-release/changelog": "^6.0.3",
-    "@semantic-release/release-notes-generator": "^12.1.0",
-    "@types/aws-lambda": "^8.10.134",
+    "@semantic-release/release-notes-generator": "^13.0.0",
+    "@types/aws-lambda": "^8.10.137",
     "@types/jest": "^29.5.12",
-    "@types/node": "^20.11.29",
-    "@typescript-eslint/eslint-plugin": "^7.3.1",
-    "@typescript-eslint/parser": "^7.3.1",
+    "@types/node": "^20.12.7",
+    "@typescript-eslint/eslint-plugin": "^7.7.1",
+    "@typescript-eslint/parser": "^7.7.1",
     "aws-lambda": "^1.0.7",
     "conventional-changelog-eslint": "^5.0.0",
     "eslint": "^8.57.0",
@@ -35,10 +38,11 @@
     "jest-junit": "^16.0.0",
     "license-checker": "^25.0.1",
     "prettier": "^3.2.5",
-    "semantic-release": "^23.0.5",
+    "prettier-eslint": "^16.3.0",
+    "semantic-release": "^23.0.8",
     "ts-jest": "^29.1.2",
     "ts-node": "^10.9.2",
-    "typescript": "^5.3.3"
+    "typescript": "^5.4.5"
   },
   "dependencies": {
     "esbuild": "^0.20.1"
