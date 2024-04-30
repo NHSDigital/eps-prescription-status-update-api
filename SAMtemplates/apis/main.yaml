@@ -226,8 +226,7 @@ Resources:
         IntegrationHttpMethod: POST
         Uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${StatusLambdaFunctionArn}/invocations
 
-  # if you add a new endpoint, then need to manually force a deployment
-  # aws apigateway create-deployment --rest-api-id <CHANGE ME> --stage-name prod --description 'Deployed from CLI'
+  # if you add a new endpoint, then change the stage name
   RestApiGatewayDeployment:
     Type: AWS::ApiGateway::Deployment
     DependsOn:
@@ -235,13 +234,13 @@ Resources:
       - StatusLambdaMethod
     Properties:
       RestApiId: !Ref RestApiGateway
+      StageName: prod-v1
 
   RestApiGatewayStage:
     Type: AWS::ApiGateway::Stage
     Properties:
       RestApiId: !Ref RestApiGateway
       DeploymentId: !Ref RestApiGatewayDeployment
-      StageName: prod
       TracingEnabled: true
       AccessLogSetting:
         DestinationArn: !GetAtt RestApiGatewayResources.Outputs.ApiGwAccessLogsArn
