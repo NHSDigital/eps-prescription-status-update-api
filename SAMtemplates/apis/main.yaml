@@ -22,6 +22,14 @@ Parameters:
     Type: String
     Default: none
 
+  StatusLambdaFunctionName:
+    Type: String
+    Default: none
+
+  StatusLambdaFunctionArn:
+    Type: String
+    Default: none
+
   LogRetentionInDays:
     Type: Number
   
@@ -198,18 +206,40 @@ Resources:
       MethodResponses:
         - StatusCode: '200'
 
+  StatusLambdaMethodResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId: !Ref RestApiGateway
+      ParentId: !GetAtt RestApiGateway.RootResourceId
+      PathPart: _status
+  
+  StatusLambdaMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref RestApiGateway
+      ResourceId: !Ref StatusLambdaMethodResource
+      HttpMethod: GET
+      AuthorizationType: NONE
+      Integration:
+        Type: AWS_PROXY
+        Credentials: !GetAtt RestApiGatewayResources.Outputs.ApiGwRoleArn
+        IntegrationHttpMethod: POST
+        Uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${StatusLambdaFunctionArn}/invocations
+
+  # if you add a new endpoint, then change the stage name
   RestApiGatewayDeployment:
     Type: AWS::ApiGateway::Deployment
     DependsOn:
       - UpdatePrescriptionStatusMethod
+      - StatusLambdaMethod
     Properties:
       RestApiId: !Ref RestApiGateway
+      StageName: prod-v1
 
   RestApiGatewayStage:
     Type: AWS::ApiGateway::Stage
     Properties:
       RestApiId: !Ref RestApiGateway
-      StageName: prod
       DeploymentId: !Ref RestApiGatewayDeployment
       TracingEnabled: true
       AccessLogSetting:
@@ -231,6 +261,7 @@ Resources:
         AdditionalPolicies: !Join
           - ','
           - - Fn::ImportValue: !Sub ${StackName}:state-machines:${UpdatePrescriptionStatusStateMachineName}:ExecuteStateMachinePolicy
+            - Fn::ImportValue: !Sub ${StackName}:functions:${StatusLambdaFunctionName}:ExecuteLambdaPolicyArn
         ApiName: !Sub ${StackName}-apigw
         LogRetentionInDays: !Ref LogRetentionInDays
         EnableSplunk: !Ref EnableSplunk

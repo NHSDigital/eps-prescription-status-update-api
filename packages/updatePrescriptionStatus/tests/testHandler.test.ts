@@ -132,7 +132,7 @@ describe("Integration tests for updatePrescriptionStatus handler", () => {
     expect(JSON.parse(response.body)).toEqual(bundleWrap([serverError()]))
   })
 
-  it("when data store update times out, expect 408 status code and relevant error message", async () => {
+  it("when data store update times out, expect 504 status code and relevant error message", async () => {
     mockSend.mockImplementation(() => new Promise(() => {}))
 
     const event: APIGatewayProxyEvent = generateMockEvent(requestDispatched)
@@ -141,7 +141,7 @@ describe("Integration tests for updatePrescriptionStatus handler", () => {
     await jest.advanceTimersByTimeAsync(LAMBDA_TIMEOUT_MS)
 
     const response = await eventHandler
-    expect(response.statusCode).toBe(408)
+    expect(response.statusCode).toBe(504)
     expect(JSON.parse(response.body)).toEqual(bundleWrap([timeoutResponse()]))
   })
 
