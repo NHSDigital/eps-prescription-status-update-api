@@ -10,7 +10,7 @@ describe("Unit test for app handler", () => {
   it("returns a success response", async () => {
     const result: APIGatewayProxyResult = await handler(mockEvent, dummyContext)
 
-    expect(result.statusCode).toEqual(200)
+    expect(result.statusCode).toEqual(201)
     expect(result.body).toEqual(JSON.stringify(successData))
   })
   it("returns a response with the correct MIME type", async () => {

@@ -2,7 +2,7 @@
 
 echo "checking cloudformation stacks"
 echo
-ACTIVE_STACKS=$(aws cloudformation list-stacks | jq -r '.StackSummaries[] | select ( .StackStatus != "DELETE_COMPLETE" ) | select( .StackName | capture("^psu-(sandbox-)?pr-(\\d+)$") ) | .StackName ')
+ACTIVE_STACKS=$(aws cloudformation list-stacks | jq -r '.StackSummaries[] | select ( .StackStatus != "DELETE_COMPLETE" ) | select( .StackName | capture("^psu-pr-(\\d+)(-sandbox)?$") ) | .StackName ')
 
 mapfile -t ACTIVE_STACKS_ARRAY <<< "$ACTIVE_STACKS"
 
@@ -10,7 +10,7 @@ for i in "${ACTIVE_STACKS_ARRAY[@]}"
 do 
   echo "Checking if stack $i has open pull request"
   PULL_REQUEST=${i//psu-pr-/}
-  PULL_REQUEST=${PULL_REQUEST//psu-sandbox-pr-/}
+  PULL_REQUEST=${PULL_REQUEST//-sandbox/}
   echo "Checking pull request id ${PULL_REQUEST}"
   URL="https://api.github.com/repos/NHSDigital/eps-prescription-status-update-api/pulls/${PULL_REQUEST}"
   RESPONSE=$(curl "${URL}" 2>/dev/null)
