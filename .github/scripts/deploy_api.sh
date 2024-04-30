@@ -17,6 +17,12 @@ else
 fi
 echo "Proxy instance: $instance"
 
+# Find and replace the title
+title=$(jq '.info.title')
+if [[ $STACK_NAME == psu-pr-* ]]; then
+    jq --arg title "[PR-$pr_id] $title" '.info.title = $title' "$SPEC_PATH" > temp.json && mv temp.json "$SPEC_PATH"
+fi
+
 # Find and replace the specification version number 
 jq --arg version "$VERSION_NUMBER" '.info.version = $version' "$SPEC_PATH" > temp.json && mv temp.json "$SPEC_PATH"
 
