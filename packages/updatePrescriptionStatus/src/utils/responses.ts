@@ -21,16 +21,7 @@ export function badRequest(diagnostics: string, fullUrl: string | undefined = un
           {
             code: "processing",
             severity: "error",
-            diagnostics: diagnostics,
-            details: {
-              coding: [
-                {
-                  system: "https://fhir.nhs.uk/CodeSystem/Spine-ErrorOrWarningCode",
-                  code: "INVALID_VALUE",
-                  display: "Invalid value"
-                }
-              ]
-            }
+            diagnostics: diagnostics
           }
         ]
       }
@@ -40,6 +31,27 @@ export function badRequest(diagnostics: string, fullUrl: string | undefined = un
     bundleEntry.fullUrl = fullUrl
   }
   return bundleEntry
+}
+
+export function timeoutResponse(): BundleEntry {
+  return {
+    response: {
+      status: "504 The request timed out",
+      outcome: {
+        resourceType: "OperationOutcome",
+        meta: {
+          lastUpdated: new Date().toISOString()
+        },
+        issue: [
+          {
+            code: "timeout",
+            severity: "fatal",
+            diagnostics: "The Server has timed out while processing the request sent by the client."
+          }
+        ]
+      }
+    }
+  }
 }
 
 export function accepted(fullUrl: string): BundleEntry {
@@ -99,16 +111,7 @@ export function serverError(): BundleEntry {
           {
             code: "exception",
             severity: "fatal",
-            diagnostics: "The Server has encountered an error processing the request.",
-            details: {
-              coding: [
-                {
-                  system: "https://fhir.nhs.uk/CodeSystem/http-error-codes",
-                  code: "SERVER_ERROR",
-                  display: "Server error"
-                }
-              ]
-            }
+            diagnostics: "The Server has encountered an error processing the request."
           }
         ]
       }
@@ -117,5 +120,5 @@ export function serverError(): BundleEntry {
 }
 
 export function createSuccessResponseEntries(entries: Array<BundleEntry>) {
-  return entries.map(e => created(e.fullUrl!))
+  return entries.map((e) => created(e.fullUrl!))
 }

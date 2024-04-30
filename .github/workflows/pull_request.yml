@@ -64,7 +64,8 @@ jobs:
     with:
       STACK_NAME: psu-pr-${{needs.get_issue_number.outputs.issue_number}}
       ARTIFACT_BUCKET_PREFIX: PR-${{needs.get_issue_number.outputs.issue_number}}
-      TARGET_ENVIRONMENT: dev-pr
+      AWS_ENVIRONMENT: dev
+      APIGEE_ENVIRONMENT: internal-dev
       ENABLE_MUTUAL_TLS: false
       BUILD_ARTIFACT: packaged_code
       SPEC_ARTIFACT: specification_code
@@ -72,6 +73,7 @@ jobs:
       VERSION_NUMBER: PR-${{ needs.get_issue_number.outputs.issue_number }}
       COMMIT_ID: ${{ needs.get_commit_id.outputs.commit_id }}
       LOG_RETENTION_DAYS: 30
+      DEPLOY_APIGEE: true
     secrets:
       CLOUD_FORMATION_DEPLOY_ROLE: ${{ secrets.DEV_CLOUD_FORMATION_DEPLOY_ROLE }}
 
@@ -81,7 +83,8 @@ jobs:
     with:
       STACK_NAME: psu-pr-${{needs.get_issue_number.outputs.issue_number}}-sandbox
       ARTIFACT_BUCKET_PREFIX: PR-${{needs.get_issue_number.outputs.issue_number}}-sandbox
-      TARGET_ENVIRONMENT: dev-pr
+      AWS_ENVIRONMENT: dev
+      APIGEE_ENVIRONMENT: internal-dev-sandbox
       ENABLE_MUTUAL_TLS: false
       BUILD_ARTIFACT: packaged_sandbox_code
       SPEC_ARTIFACT: specification_code
@@ -89,5 +92,6 @@ jobs:
       VERSION_NUMBER: PR-${{ needs.get_issue_number.outputs.issue_number }}
       COMMIT_ID: ${{ needs.get_commit_id.outputs.commit_id }}
       LOG_RETENTION_DAYS: 30
+      DEPLOY_APIGEE: true
     secrets:
       CLOUD_FORMATION_DEPLOY_ROLE: ${{ secrets.DEV_CLOUD_FORMATION_DEPLOY_ROLE }}

@@ -19,7 +19,7 @@ const logger = new Logger({serviceName: "sandbox"})
 
 const lambdaHandler = async (): Promise<APIGatewayProxyResult> => {
   return {
-    statusCode: 200,
+    statusCode: 201,
     body: JSON.stringify(successData),
     headers: {
       "Content-Type": "application/fhir+json",
