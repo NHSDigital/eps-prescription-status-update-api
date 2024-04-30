@@ -1,7 +1,7 @@
 // Adapted from: https://github.com/tbrd/nhs-numbers
 
 export function validateNhsNumber(nhsNumber: string): boolean {
-  if (!nhsNumber || nhsNumber.length !== 10 || !/^\d+$/.test(nhsNumber)) {
+  if (nhsNumber === undefined || nhsNumber === null || Number.isNaN(Number(nhsNumber))) {
     return false
   }
 
@@ -13,9 +13,9 @@ export function validateNhsNumber(nhsNumber: string): boolean {
     calculatedCheckDigit = 0
   }
 
-  const providedCheckDigit = parseInt(chars[9])
+  const providedCheckDigit = chars[9]
 
-  return calculatedCheckDigit === providedCheckDigit
+  return calculatedCheckDigit === Number(providedCheckDigit)
 }
 
 export function calculateCheckDigit(numberString: string): number {
