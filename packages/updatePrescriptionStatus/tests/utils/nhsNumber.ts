@@ -20,7 +20,6 @@ export function generateValidNhsNumbers(num: number) {
   return numbers
 }
 
-// AEA-4027 Invalid NHS Numbers accepted in PSU
 export function generateInvalidNhsNumbers(num: number) {
   const numbers: Array<string> = []
   while (numbers.length < num) {
