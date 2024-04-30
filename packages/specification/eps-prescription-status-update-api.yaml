@@ -285,7 +285,7 @@ x-nhsd-apim:
     grants:
       app-level3: []
   target:
-    type: hosted
+    type: external
     healthcheck: /_status
     url: https://psu.dev.eps.national.nhs.uk
     security:

@@ -14,6 +14,7 @@ This is the AWS layer that provides an API for EPS Prescription Status Update.
 - `packages/updatePrescriptionStatus/` Handles updating prescription status for the root endpoint.
 - `packages/sandbox` A sandbox endpoint returning an example response.
 - `packages/specification/` This [Open API Specification](https://swagger.io/docs/specification/about/) describes the endpoints, methods and messages.
+- `packages/statusLambda/` Returns the status of the updatePrescriptionStatus endpoint
 - `scripts/` Utilities helpful to developers of this specification.
 - `SAMtemplates/` Contains the SAM templates used to define the stacks.
 - `.devcontainer` Contains a dockerfile and vscode devcontainer definition.
@@ -125,10 +126,6 @@ There are `make` commands that are run as part of the CI pipeline and help alias
 - `install-hooks` Installs git pre commit hooks
 - `install` Runs all install targets
 
-#### Build targets
-
-- `build-specification` Builds the specification component
-
 #### SAM targets
 
 These are used to do common commands
@@ -165,7 +162,7 @@ These are used to do common commands
 - `test` Runs unit tests for all code
 
 #### Publish targets
-- `publish` Outputs the specification as a **single file** into the `build/` directory. This is used when uploading to Apigee, which requires the spec as a single file.
+- `publish` Outputs the specification as a **single file** into the `dist/` directory. This is used when uploading to Apigee, which requires the spec as a single file.
 
 #### Compiling
 
