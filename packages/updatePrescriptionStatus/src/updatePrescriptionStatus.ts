@@ -76,7 +76,7 @@ const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPro
   if (hasTimedOut(persistResponse)) {
     responseEntries = [timeoutResponse()]
     logger.info("DynamoDB operation timed out.")
-    return response(504, responseEntries)
+    return response(408, responseEntries)
   }
 
   if (!persistResponse) {
