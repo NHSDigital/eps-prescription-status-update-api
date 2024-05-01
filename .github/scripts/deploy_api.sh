@@ -18,7 +18,7 @@ fi
 echo "Proxy instance: $instance"
 
 # Find and replace the title
-title=$(jq '.info.title')
+title=$(jq '.info.title' "$SPEC_PATH")
 if [[ $STACK_NAME == psu-pr-* ]]; then
     jq --arg title "[PR-$pr_id] $title" '.info.title = $title' "$SPEC_PATH" > temp.json && mv temp.json "$SPEC_PATH"
 fi
