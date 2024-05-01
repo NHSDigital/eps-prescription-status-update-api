@@ -39,6 +39,8 @@ describe("Integration tests for updatePrescriptionStatus handler", () => {
   beforeEach(() => {
     jest.resetModules()
     jest.clearAllMocks()
+    jest.resetAllMocks()
+    jest.clearAllTimers()
     jest.useFakeTimers().setSystemTime(DEFAULT_DATE)
   })
 
@@ -183,12 +185,18 @@ describe("Integration tests for updatePrescriptionStatus handler", () => {
   })
 
   it("when x-request-id header is mixed case, expect it to work", async () => {
+
     const body = generateBody()
     const event: APIGatewayProxyEvent = generateMockEvent(body)
     delete event.headers["x-request-id"]
     event.headers["X-Request-id"] = "43313002-debb-49e3-85fa-34812c150242"
+
+    const expectedItems = generateExpectedItems()
+    mockTransact.mockReturnValue(expectedItems)
+
     const response: APIGatewayProxyResult = await handler(event, {})
 
     expect(response.statusCode).toEqual(201)
+
   })
 })
