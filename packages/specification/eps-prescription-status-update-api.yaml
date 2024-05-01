@@ -139,7 +139,7 @@ paths:
                   $ref: examples/request-ready-to-dispatch.json
               ready-to-dispatch-partial:
                 summary: ready-to-dispatch-partial
-                description: A request message contains tracking status `Ready to Dispatch`.
+                description: A request message contains tracking status `Ready to Dispatch - Partial`.
                 value:
                   $ref: examples/request-ready-to-dispatch-partial.json
               dispatched:
