@@ -181,4 +181,14 @@ describe("Integration tests for updatePrescriptionStatus handler", () => {
     expect(response.statusCode).toEqual(400)
     expect(JSON.parse(response.body)).toEqual(bundleWrap([badRequest("Missing or empty x-request-id header.")]))
   })
+
+  it("when x-request-id header is mixed case, expect it to work", async () => {
+    const body = generateBody()
+    const event: APIGatewayProxyEvent = generateMockEvent(body)
+    delete event.headers["x-request-id"]
+    event.headers["X-Request-id"] = "43313002-debb-49e3-85fa-34812c150242"
+    const response: APIGatewayProxyResult = await handler(event, {})
+
+    expect(response.statusCode).toEqual(201)
+  })
 })
