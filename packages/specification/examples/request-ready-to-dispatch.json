@@ -11,7 +11,7 @@
           {
             "identifier": {
               "system": "https://fhir.nhs.uk/Id/prescription-order-number",
-              "value": "24F5DA-A83008-7EFE6Z"
+              "value": "2FB9A1-A83008-160701"
             }
           }
         ],
@@ -20,7 +20,7 @@
           "coding": [
             {
               "system": "https://fhir.nhs.uk/CodeSystem/task-businessStatus-nppt",
-              "code": "Ready for Dispatch"
+              "code": "Ready to Dispatch"
             }
           ]
         },

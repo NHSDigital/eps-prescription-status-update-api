@@ -132,11 +132,16 @@ paths:
             schema:
               $ref: "#/components/schemas/UpdatePrescriptionStatusBundle"
             examples:
-              ready-for-dispatch:
-                summary: ready-for-dispatch
-                description: A request message contains tracking status `Ready for Dispatch`.
+              ready-to-dispatch:
+                summary: ready-to-dispatch
+                description: A request message contains tracking status `Ready to Dispatch`.
                 value:
-                  $ref: examples/request-ready-for-dispatch.json
+                  $ref: examples/request-ready-to-dispatch.json
+              ready-to-dispatch-partial:
+                summary: ready-to-dispatch-partial
+                description: A request message contains tracking status `Ready to Dispatch`.
+                value:
+                  $ref: examples/request-ready-to-dispatch-partial.json
               dispatched:
                 summary: dispatched
                 description: A request message contains tracking status `Dispatched``.
