@@ -238,7 +238,7 @@ jobs:
       LOG_RETENTION_DAYS: 30
       DEPLOY_APIGEE: true
     secrets:
-      CLOUD_FORMATION_DEPLOY_ROLE: ${{ secrets.DEV_CLOUD_FORMATION_DEPLOY_ROLE }}
+      CLOUD_FORMATION_DEPLOY_ROLE: ${{ secrets.INT_CLOUD_FORMATION_DEPLOY_ROLE }}
 
   release_prod:
     needs: [tag_release, release_int, release_int_sandbox, package_code, get_commit_id]
