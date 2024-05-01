@@ -10,7 +10,7 @@
     "type": "git",
     "url": "https://github.com/NHSDigital/eps-prescription-status-update-api"
   },
-  "keywords": [ ],
+  "keywords": [],
   "author": "NHS Digital",
   "license": "MIT",
   "workspaces": [
@@ -45,6 +45,9 @@
     "typescript": "^5.4.5"
   },
   "dependencies": {
+    "@aws-sdk/client-sso-oidc": "^3.565.0",
+    "@aws-sdk/client-sts": "^3.565.0",
+    "@aws-sdk/util-dynamodb": "^3.565.0",
     "esbuild": "^0.20.1"
   }
 }
