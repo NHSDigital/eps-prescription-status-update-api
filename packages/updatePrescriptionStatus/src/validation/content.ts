@@ -31,6 +31,8 @@ export const BUSINESS_STATUSES = [
   "ready to collect",
   "ready to collect - partial",
   "collected",
+  "ready to dispatch",
+  "ready to dispatch - partial",
   "dispatched",
   "not dispensed"
 ]
