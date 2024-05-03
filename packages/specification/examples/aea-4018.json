@@ -1,0 +1,66 @@
+//psu-pr-185-UpdatePrescriptionStatus
+{
+    "headers": {
+      "nhsd-correlation-id": "c69290d0-39b4-4ea5-99b3-8e004b45f687",
+      "x-request-id": "3f03c9df-111e-4746-ad9b-3a0c8ee65f89",
+      "nhsd-request-id": "502f0453-057b-4856-accc-96c826348617",
+      "x-correlation-id": "5a847426-a6e1-4a42-94ed-921c76e1f8d5"
+    },
+    "body": {
+      "resourceType": "Bundle",
+      "type": "transaction",
+      "entry": [
+        {
+          "fullUrl": "urn:uuid:4d70678c-81e4-4ff4-8c67-17596fd0aa46",
+          "resource": {
+            "resourceType": "Task",
+            "id": "4d70678c-81e4-4ff4-8c67-17596fd0aa46",
+            "basedOn": [
+              {
+                "identifier": {
+                  "system": "https://fhir.nhs.uk/Id/prescription-order-number"
+                }
+              }
+            ],
+            "status": "completed",
+            "businessStatus": {
+              "coding": [
+                {
+                  "system": "https://fhir.nhs.uk/CodeSystem/task-businessStatus-nppt",
+                  "code": "Dispatched"
+                }
+              ]
+            },
+            "intent": "order",
+            "focus": {
+              "identifier": {
+                "system": "https://fhir.nhs.uk/Id/prescription-order-item-number",
+                "value": "6989b7bd-8db6-428c-a593-4022e3044c00"
+              }
+            },
+            "for": {
+              "identifier": {
+                "system": "https://fhir.nhs.uk/Id/nhs-number",
+                "value": "9449304130"
+              }
+            },
+            "lastModified": "2024-01-30T12:01:24Z",
+            "owner": {
+              "identifier": {
+                "system": "https://fhir.nhs.uk/Id/ods-organization-code",
+                "value": "C9Z1O"
+              }
+            }
+          },
+          "request": {
+            "method": "POST",
+            "url": "Task"
+          }
+        }
+      ]
+    },
+    "requestContext": {
+      "requestId": "1AEEB159-CC53-4897-9E6F-93725DC89A4F"
+    }
+  }
+  
