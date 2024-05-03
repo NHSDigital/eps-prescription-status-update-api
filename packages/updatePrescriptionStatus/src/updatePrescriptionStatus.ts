@@ -6,9 +6,14 @@ import middy from "@middy/core"
 import inputOutputLogger from "@middy/input-output-logger"
 import errorHandler from "@nhs/fhir-middy-error-handler"
 import {Bundle, BundleEntry, Task} from "fhir/r4"
+import {Ajv} from 'ajv'
 import {persistDataItems} from "./utils/databaseClient"
 import {jobWithTimeout, hasTimedOut} from "./utils/timeoutUtils"
 import {transactionBundle, validateEntry} from "./validation/content"
+import {fhirBundleSchemaYaml} from "../../specification/schemas/resources/updatePrescriptionStatus"
+
+
+
 import {
   accepted,
   badRequest,
@@ -52,6 +57,7 @@ const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPro
   })
 
   const requestBody = event.body
+  console.log(requestBody, '********')
   const requestBundle = castEventBody(requestBody, responseEntries)
   if (!requestBundle) {
     return response(400, responseEntries)
@@ -101,8 +107,23 @@ export function getXRequestID(event: APIGatewayProxyEvent, responseEntries: Arra
   return xRequestID
 }
 
+const ajv = new Ajv()
+const validateJSON = ajv.compile(fhirBundleSchemaYaml)
+
+export function validateBundle(body: any, responseEntries: Array<BundleEntry>): boolean {
+  const valid = validateJSON(body);
+  if (!valid) {
+    const errorMessage = `Request body is not a valid FHIR Bundle: ${ajv.errorsText(validateJSON.errors)}`;
+    logger.error(errorMessage);
+    const entry: BundleEntry = badRequest(errorMessage);
+    responseEntries.push(entry);
+    return false;
+  }
+  return true;
+}
+
 export function castEventBody(body: any, responseEntries: Array<BundleEntry>): Bundle | undefined {
-  if (transactionBundle(body)) {
+  if (transactionBundle(body) && validateBundle(body, responseEntries)) {
     return body as Bundle
   } else {
     const errorMessage = "Request body does not have resourceType of 'Bundle' and type of 'transaction'."

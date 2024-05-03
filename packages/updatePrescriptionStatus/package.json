@@ -20,12 +20,13 @@
     "@aws-sdk/util-dynamodb": "^3.556.0",
     "@middy/core": "^5.2.6",
     "@middy/input-output-logger": "^5.2.6",
-    "@nhs/fhir-middy-error-handler": "^2.0.3"
+    "@nhs/fhir-middy-error-handler": "^2.0.3",
+    "ajv": "^8.13.0"
   },
   "devDependencies": {
     "@faker-js/faker": "^8.4.1",
+    "@types/fhir": "^0.0.41",
     "@types/uuid": "^9.0.8",
-    "aws-sdk-client-mock": "^4.0.0",
-    "@types/fhir": "^0.0.41"
+    "aws-sdk-client-mock": "^4.0.0"
   }
 }
