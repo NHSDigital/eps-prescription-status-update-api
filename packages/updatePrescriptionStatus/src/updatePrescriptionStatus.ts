@@ -5,6 +5,7 @@ import {injectLambdaContext} from "@aws-lambda-powertools/logger/middleware"
 import middy from "@middy/core"
 import inputOutputLogger from "@middy/input-output-logger"
 import errorHandler from "@nhs/fhir-middy-error-handler"
+import httpHeaderNormalizer from "@middy/http-header-normalizer"
 import {Bundle, BundleEntry, Task} from "fhir/r4"
 import {Ajv} from 'ajv'
 import {persistDataItems} from "./utils/databaseClient"
@@ -195,6 +196,7 @@ function response(statusCode: number, responseEntries: Array<BundleEntry>) {
 
 export const handler = middy(lambdaHandler)
   .use(injectLambdaContext(logger, {clearState: true}))
+  .use(httpHeaderNormalizer())
   .use(
     inputOutputLogger({
       logger: (request) => {

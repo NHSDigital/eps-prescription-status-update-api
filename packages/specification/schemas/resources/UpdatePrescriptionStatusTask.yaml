@@ -53,7 +53,8 @@ properties:
               - Collected
               - Dispatched
               - Not Dispensed
-              - Ready for Dispatch
+              - Ready to Dispatch
+              - Ready to Dispatch - Partial
   intent:
     type: string
     description: Order is the allowed value to indicate the update informs an actionable task.
