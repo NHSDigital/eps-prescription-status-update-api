@@ -47,7 +47,7 @@ pre-commit = "^3.7.0"
 cfn-lint = "^0.87.1"
 black = "^24.4.2"
 flake8 = "^7.0.0"
-jinja2 = "^3.1.3"
+jinja2 = "^3.1.4"
 pip-licenses = "^4.4.0"
 
 [build-system]
