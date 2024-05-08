@@ -24,15 +24,23 @@ import requestMultipleMissingFields from "../../specification/examples/request-m
 import requestNoItems from "../../specification/examples/request-no-items.json"
 import responseSingleItem from "../../specification/examples/response-single-item.json"
 import responseMultipleItems from "../../specification/examples/response-multiple-items.json"
-import {badRequest, bundleWrap, serverError} from "../src/utils/responses"
+import {
+  badRequest,
+  bundleWrap,
+  serverError,
+  timeoutResponse
+} from "../src/utils/responses"
 
 const {mockSend, mockTransact} = mockDynamoDBClient()
 const {handler} = await import("../src/updatePrescriptionStatus")
+const LAMBDA_TIMEOUT_MS = 9500 // 9.5 sec
 
 describe("Integration tests for updatePrescriptionStatus handler", () => {
   beforeEach(() => {
     jest.resetModules()
     jest.clearAllMocks()
+    jest.resetAllMocks()
+    jest.clearAllTimers()
     jest.useFakeTimers().setSystemTime(DEFAULT_DATE)
   })
 
@@ -94,19 +102,16 @@ describe("Integration tests for updatePrescriptionStatus handler", () => {
       httpResponseCode: 200,
       scenarioDescription: "200 status code if there are no entries to process"
     }
-  ])(
-    "should return $scenarioDescription",
-    async ({example, httpResponseCode}) => {
-      const event: APIGatewayProxyEvent = generateMockEvent(example)
+  ])("should return $scenarioDescription", async ({example, httpResponseCode}) => {
+    const event: APIGatewayProxyEvent = generateMockEvent(example)
 
-      const response: APIGatewayProxyResult = await handler(event, {})
+    const response: APIGatewayProxyResult = await handler(event, {})
 
-      const responseBody = JSON.parse(response.body)
-      expect(response.statusCode).toBe(httpResponseCode)
-      expect(responseBody).toHaveProperty("resourceType", "Bundle")
-      expect(responseBody).toHaveProperty("type", "transaction-response")
-    }
-  )
+    const responseBody = JSON.parse(response.body)
+    expect(response.statusCode).toBe(httpResponseCode)
+    expect(responseBody).toHaveProperty("resourceType", "Bundle")
+    expect(responseBody).toHaveProperty("type", "transaction-response")
+  })
 
   it("when missing fields, expect 400 status code and message indicating missing fields", async () => {
     const event: APIGatewayProxyEvent = generateMockEvent(requestMissingFields)
@@ -114,9 +119,9 @@ describe("Integration tests for updatePrescriptionStatus handler", () => {
     const response: APIGatewayProxyResult = await handler(event, {})
 
     expect(response.statusCode).toBe(400)
-    expect(JSON.parse(response.body)).toEqual(bundleWrap(
-      [badRequest("Missing required field(s) - PharmacyODSCode, TaskID.", FULL_URL_0)]
-    ))
+    expect(JSON.parse(response.body)).toEqual(
+      bundleWrap([badRequest("Missing required field(s) - PharmacyODSCode, TaskID.", FULL_URL_0)])
+    )
   })
 
   it("when dynamo call fails, expect 500 status code and internal server error message", async () => {
@@ -129,6 +134,19 @@ describe("Integration tests for updatePrescriptionStatus handler", () => {
     expect(JSON.parse(response.body)).toEqual(bundleWrap([serverError()]))
   })
 
+  it("when data store update times out, expect 504 status code and relevant error message", async () => {
+    mockSend.mockImplementation(() => new Promise(() => {}))
+
+    const event: APIGatewayProxyEvent = generateMockEvent(requestDispatched)
+    const eventHandler: Promise<APIGatewayProxyResult> = handler(event, {})
+
+    await jest.advanceTimersByTimeAsync(LAMBDA_TIMEOUT_MS)
+
+    const response = await eventHandler
+    expect(response.statusCode).toBe(504)
+    expect(JSON.parse(response.body)).toEqual(bundleWrap([timeoutResponse()]))
+  })
+
   it("when multiple tasks have missing fields, expect 400 status code and messages indicating missing fields", async () => {
     const body: any = {...requestMultipleMissingFields}
     const event: APIGatewayProxyEvent = generateMockEvent(body)
@@ -136,10 +154,12 @@ describe("Integration tests for updatePrescriptionStatus handler", () => {
     const response: APIGatewayProxyResult = await handler(event, {})
 
     expect(response.statusCode).toEqual(400)
-    expect(JSON.parse(response.body)).toEqual(bundleWrap([
-      badRequest("Missing required field(s) - PharmacyODSCode, TaskID.", FULL_URL_0),
-      badRequest("Missing required field(s) - PharmacyODSCode.", FULL_URL_1)
-    ]))
+    expect(JSON.parse(response.body)).toEqual(
+      bundleWrap([
+        badRequest("Missing required field(s) - PharmacyODSCode, TaskID.", FULL_URL_0),
+        badRequest("Missing required field(s) - PharmacyODSCode.", FULL_URL_1)
+      ])
+    )
   })
 
   it("when x-request-id header is present but empty, expect 400 status code and relevant error message", async () => {
@@ -162,5 +182,21 @@ describe("Integration tests for updatePrescriptionStatus handler", () => {
 
     expect(response.statusCode).toEqual(400)
     expect(JSON.parse(response.body)).toEqual(bundleWrap([badRequest("Missing or empty x-request-id header.")]))
+  })
+
+  it("when x-request-id header is mixed case, expect it to work", async () => {
+
+    const body = generateBody()
+    const event: APIGatewayProxyEvent = generateMockEvent(body)
+    delete event.headers["x-request-id"]
+    event.headers["X-Request-id"] = "43313002-debb-49e3-85fa-34812c150242"
+
+    const expectedItems = generateExpectedItems()
+    mockTransact.mockReturnValue(expectedItems)
+
+    const response: APIGatewayProxyResult = await handler(event, {})
+
+    expect(response.statusCode).toEqual(201)
+
   })
 })

@@ -32,6 +32,15 @@ repos:
         types_or: [ts, tsx, javascript, jsx, json]
         pass_filenames: false
 
+      - id: lint-gsul
+        name: Lint gsul
+        entry: npm
+        args: ["run", "--prefix=packages/gsul", "lint"]
+        language: system
+        files: ^packages\/gsul
+        types_or: [ts, tsx, javascript, jsx, json]
+        pass_filenames: false
+
       - id: lint-sandbox
         name: Lint sandbox
         entry: npm
@@ -41,13 +50,14 @@ repos:
         types_or: [ts, tsx, javascript, jsx, json]
         pass_filenames: false
 
-      - id: oas-build-checks
-        name: Build OAS
-        entry: make
-        args: ["build-specification"]
+      - id: lint-statusLambda
+        name: Lint statusLambda
+        entry: npm
+        args: ["run", "--prefix=packages/statusLambda", "lint"]
         language: system
-        files: ^(examples|packages\/specification)
-        types_or: [json, yaml]
+        files: ^packages\/statusLambda
+        types_or: [ts, tsx, javascript, jsx, json]
+        pass_filenames: false
 
       - id: lint-samtemplates
         name: Lint sam templates
@@ -56,7 +66,7 @@ repos:
         language: system
         files: ^SAMtemplates
         pass_filenames: false
-      
+
       - id: lint-githubactions
         name: Lint github actions
         entry: make

@@ -65,7 +65,14 @@ jobs:
         id: output_version_tag
         run: |
           VERSION_TAG=$(git rev-parse --short HEAD)
-          NEXT_VERSION=$(npx semantic-release --dry-run | grep -i 'The next release version is' | sed -E 's/.* ([[:digit:].]+)$/\1/')
+          npx semantic-release --dry-run > semantic-release-output.log
+          NEXT_VERSION=$(grep -i 'The next release version is' semantic-release-output.log | sed -E 's/.* ([[:digit:].]+)$/\1/')
+          if [ -z "${NEXT_VERSION}" ]
+          then
+            echo "Could not get next tag. Here is the log from semantic-release"
+            cat semantic-release-output.log
+            exit 1
+          fi
           tagFormat=$(jq -r .tagFormat .releaserc)
           if [ "${tagFormat}" = "null" ]
           then
@@ -91,7 +98,8 @@ jobs:
     with:
       ARTIFACT_BUCKET_PREFIX: ${{needs.tag_release.outputs.version_tag}}
       STACK_NAME: psu
-      TARGET_ENVIRONMENT: dev
+      AWS_ENVIRONMENT: dev
+      APIGEE_ENVIRONMENT: internal-dev
       ENABLE_MUTUAL_TLS: true
       BUILD_ARTIFACT: packaged_code
       SPEC_ARTIFACT: specification_code
@@ -101,6 +109,7 @@ jobs:
       LOG_RETENTION_DAYS: 30
       CREATE_INT_RELEASE_NOTES: true
       CREATE_PROD_RELEASE_NOTES: true
+      DEPLOY_APIGEE: true
     secrets:
       CLOUD_FORMATION_DEPLOY_ROLE: ${{ secrets.DEV_CLOUD_FORMATION_DEPLOY_ROLE }}
       DEV_CLOUD_FORMATION_CHECK_VERSION_ROLE: ${{ secrets.DEV_CLOUD_FORMATION_CHECK_VERSION_ROLE }}
@@ -114,7 +123,8 @@ jobs:
     with:
       ARTIFACT_BUCKET_PREFIX: ${{needs.tag_release.outputs.version_tag}}-sandbox
       STACK_NAME: psu-sandbox
-      TARGET_ENVIRONMENT: dev
+      AWS_ENVIRONMENT: dev
+      APIGEE_ENVIRONMENT: internal-dev-sandbox
       ENABLE_MUTUAL_TLS: true
       BUILD_ARTIFACT: packaged_sandbox_code
       SPEC_ARTIFACT: specification_code
@@ -122,6 +132,7 @@ jobs:
       VERSION_NUMBER: ${{needs.tag_release.outputs.version_tag}}
       COMMIT_ID: ${{needs.get_commit_id.outputs.commit_id}}
       LOG_RETENTION_DAYS: 30
+      DEPLOY_APIGEE: true
     secrets:
       CLOUD_FORMATION_DEPLOY_ROLE: ${{ secrets.DEV_CLOUD_FORMATION_DEPLOY_ROLE }}
 
@@ -131,7 +142,8 @@ jobs:
     with:
       ARTIFACT_BUCKET_PREFIX: ${{needs.tag_release.outputs.version_tag}}
       STACK_NAME: psu
-      TARGET_ENVIRONMENT: qa
+      AWS_ENVIRONMENT: qa
+      APIGEE_ENVIRONMENT: internal-qa
       ENABLE_MUTUAL_TLS: true
       BUILD_ARTIFACT: packaged_code
       SPEC_ARTIFACT: specification_code
@@ -139,5 +151,6 @@ jobs:
       VERSION_NUMBER: ${{needs.tag_release.outputs.version_tag}}
       COMMIT_ID: ${{needs.get_commit_id.outputs.commit_id}}
       LOG_RETENTION_DAYS: 30
+      DEPLOY_APIGEE: true
     secrets:
       CLOUD_FORMATION_DEPLOY_ROLE: ${{ secrets.QA_CLOUD_FORMATION_DEPLOY_ROLE }}

@@ -5,18 +5,21 @@ import {injectLambdaContext} from "@aws-lambda-powertools/logger/middleware"
 import middy from "@middy/core"
 import inputOutputLogger from "@middy/input-output-logger"
 import errorHandler from "@nhs/fhir-middy-error-handler"
+import httpHeaderNormalizer from "@middy/http-header-normalizer"
 import {Bundle, BundleEntry, Task} from "fhir/r4"
-
+import {persistDataItems} from "./utils/databaseClient"
+import {jobWithTimeout, hasTimedOut} from "./utils/timeoutUtils"
 import {transactionBundle, validateEntry} from "./validation/content"
 import {
   accepted,
   badRequest,
   bundleWrap,
   createSuccessResponseEntries,
-  serverError
+  serverError,
+  timeoutResponse
 } from "./utils/responses"
-import {persistDataItems} from "./utils/databaseClient"
 
+const LAMBDA_TIMEOUT_MS = 9500
 const logger = new Logger({serviceName: "updatePrescriptionStatus"})
 
 export interface DataItem {
@@ -68,9 +71,16 @@ const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPro
   }
 
   const dataItems = buildDataItems(requestEntries, xRequestID)
+  const persistSuccess = persistDataItems(dataItems)
+  const persistResponse = await jobWithTimeout(LAMBDA_TIMEOUT_MS, persistSuccess)
 
-  const persistSuccess = await persistDataItems(dataItems)
-  if (!persistSuccess) {
+  if (hasTimedOut(persistResponse)) {
+    responseEntries = [timeoutResponse()]
+    logger.info("DynamoDB operation timed out.")
+    return response(504, responseEntries)
+  }
+
+  if (!persistResponse) {
     responseEntries = [serverError()]
     return response(500, responseEntries)
   }
@@ -165,6 +175,7 @@ function response(statusCode: number, responseEntries: Array<BundleEntry>) {
 
 export const handler = middy(lambdaHandler)
   .use(injectLambdaContext(logger, {clearState: true}))
+  .use(httpHeaderNormalizer())
   .use(
     inputOutputLogger({
       logger: (request) => {
