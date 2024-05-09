@@ -55,7 +55,7 @@ info:
     For more details see [Network access for APIs](https://digital.nhs.uk/developer/guides-and-documentation/network-access-for-apis).
 
     ## Security and Authorisation
-    This API only supports application-restricted access, meaning we authenticate the calling application but not the end user.
+    This API only supports [application-restricted access](https://digital.nhs.uk/developer/guides-and-documentation/security-and-authorisation#application-restricted-apis), meaning we authenticate the calling application but not the end user.
 
     The end user could be:
     a healthcare worker - in which case you must ensure they are authenticated and suitably authorised locally
