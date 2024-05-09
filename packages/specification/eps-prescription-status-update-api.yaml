@@ -134,7 +134,7 @@ paths:
       summary: Update prescription status
       description: |
         ## Overview
-        Status updates to be provided on prescription items to allow users of the NHS App and Third-party App consumers to track the progress of their prescriptions and when ready to collect.
+        Status updates to be provided on prescription items to allow users of the NHS App and third-party app consumers to track the progress of their prescriptions and when ready to collect.
       parameters:
         - $ref: "#/components/parameters/BearerAuthorisation"
         - $ref: "#/components/parameters/RequestID"
