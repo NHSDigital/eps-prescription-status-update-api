@@ -1,4 +1,4 @@
-AWSTemplateFormatVersion: '2010-09-09'
+AWSTemplateFormatVersion: "2010-09-09"
 Transform: AWS::Serverless-2016-10-31
 Description: |
   PSU API's and related resources
@@ -7,32 +7,32 @@ Parameters:
   StackName:
     Type: String
     Default: none
-  
+
   EnableMutualTLS:
     Type: String
-  
+
   TruststoreVersion:
     Type: String
-  
+
   UpdatePrescriptionStatusStateMachineName:
     Type: String
     Default: none
-  
+
   UpdatePrescriptionStatusStateMachineArn:
     Type: String
     Default: none
 
-  StatusLambdaFunctionName:
+  StatusFunctionName:
     Type: String
     Default: none
 
-  StatusLambdaFunctionArn:
+  StatusFunctionArn:
     Type: String
     Default: none
 
   LogRetentionInDays:
     Type: Number
-  
+
   EnableSplunk:
     Type: String
 
@@ -77,7 +77,7 @@ Resources:
         - - !Ref StackName
           - !ImportValue eps-route53-resources:EPS-domain
       RegionalCertificateArn: !Ref GenerateCertificate
-      EndpointConfiguration: 
+      EndpointConfiguration:
         Types:
           - REGIONAL
       SecurityPolicy: TLS_1_2
@@ -90,7 +90,7 @@ Resources:
               - !Select
                 - 5
                 - !Split
-                  - ':'
+                  - ":"
                   - !ImportValue account-resources:TrustStoreBucket
               - psu-truststore.pem
           - !Ref AWS::NoValue
@@ -204,7 +204,7 @@ Resources:
 
                 $payload.Payload.body
       MethodResponses:
-        - StatusCode: '200'
+        - StatusCode: "200"
 
   StatusLambdaMethodResource:
     Type: AWS::ApiGateway::Resource
@@ -212,7 +212,7 @@ Resources:
       RestApiId: !Ref RestApiGateway
       ParentId: !GetAtt RestApiGateway.RootResourceId
       PathPart: _status
-  
+
   StatusLambdaMethod:
     Type: AWS::ApiGateway::Method
     Properties:
@@ -224,7 +224,7 @@ Resources:
         Type: AWS_PROXY
         Credentials: !GetAtt RestApiGatewayResources.Outputs.ApiGwRoleArn
         IntegrationHttpMethod: POST
-        Uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${StatusLambdaFunctionArn}/invocations
+        Uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${StatusFunctionArn}/invocations
 
   # *********************************************************************
   # if you add a new endpoint, then change the name of this resource
@@ -250,7 +250,7 @@ Resources:
       AccessLogSetting:
         DestinationArn: !GetAtt RestApiGatewayResources.Outputs.ApiGwAccessLogsArn
         Format: '{ "requestTime": "$context.requestTime", "apiId": "$context.apiId", "accountId": "$context.accountId", "resourcePath": "$context.resourcePath", "stage": "$context.stage", "requestId": "$context.requestId", "extendedRequestId": "$context.extendedRequestId", "status": "$context.status", "httpMethod": "$context.httpMethod", "protocol": "$context.protocol", "path": "$context.path", "responseLatency": "$context.responseLatency", "responseLength": "$context.responseLength", "domainName": "$context.domainName", "identity": { "sourceIp": "$context.identity.sourceIp", "userAgent": "$context.identity.userAgent", "clientCert":{ "subjectDN": "$context.identity.clientCert.subjectDN", "issuerDN": "$context.identity.clientCert.issuerDN", "serialNumber": "$context.identity.clientCert.serialNumber", "validityNotBefore": "$context.identity.clientCert.validity.notBefore", "validityNotAfter": "$context.identity.clientCert.validity.notAfter" }}, "integration":{ "error": "$context.integration.error", "integrationStatus": "$context.integration.integrationStatus", "latency": "$context.integration.latency", "requestId": "$context.integration.requestId", "status": "$context.integration.status" }}'
-  
+
   RestApiDomainMapping:
     Type: AWS::ApiGateway::BasePathMapping
     Properties:
@@ -264,9 +264,9 @@ Resources:
       Location: api_resources.yaml
       Parameters:
         AdditionalPolicies: !Join
-          - ','
+          - ","
           - - Fn::ImportValue: !Sub ${StackName}:state-machines:${UpdatePrescriptionStatusStateMachineName}:ExecuteStateMachinePolicy
-            - Fn::ImportValue: !Sub ${StackName}:functions:${StatusLambdaFunctionName}:ExecuteLambdaPolicyArn
+            - Fn::ImportValue: !Sub ${StackName}:functions:${StatusFunctionName}:ExecuteLambdaPolicyArn
         ApiName: !Sub ${StackName}-apigw
         LogRetentionInDays: !Ref LogRetentionInDays
         EnableSplunk: !Ref EnableSplunk
