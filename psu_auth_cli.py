@@ -163,7 +163,7 @@ def encode_jwt(api_key, creds_dir, env, expiry, kid, standalone=True):
 
 
 @cli.command()
-@click.option("-t", "--encoded_jwt", help="the jwt")
+@click.option("-t", "--encoded_jwt", help="The encoded JWT to exchange with the authorisation server", prompt=True)
 @click.option("-e", "--env", default="internal-dev", help="The target environment, defaults to 'internal-dev'")
 def exchange_tokens(encoded_jwt, env):
     console.print(f"Exchanging tokens with [bold]https://{env}.api.service.nhs.uk/oauth2/token[/bold]...", style="info")
@@ -181,7 +181,7 @@ def exchange_tokens(encoded_jwt, env):
     body = json.loads(res.text)
 
     if status_code != 200:
-        log_key_value("Error", "Failed to exchange tokens."), "error"
+        log_key_value("Error", "Failed to exchange tokens.", "error")
         console.print("--------------------------------------------", style="error")
         log_key_value("Status Code", status_code, "error")
         for key, value in body.items():
