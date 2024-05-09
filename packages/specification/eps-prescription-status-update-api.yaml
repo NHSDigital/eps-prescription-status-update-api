@@ -17,7 +17,7 @@ info:
     The overall aim of the service is to reduce burden to front line NHS services by reducing the number of routine patient queries about their prescriptions.
 
     ## Who can use this API
-    The prescription status query API is intended for NHS England internal use only; however, the specification of the data stores will be required by dispensing suppliers so they can provide and push the information required a central NHS data store.
+    The prescription status query API is intended for NHS England internal use only; however, the specification of the data stores will be required by dispensing suppliers so they can provide and push the information required to a central NHS data store.
         
     ## Related APIs
     * [Electronic Prescriptions Service](https://digital.nhs.uk/developer/api-catalogue/electronic-prescription-service-fhir): The national service for creating and dispensing prescriptions across health and social care.
