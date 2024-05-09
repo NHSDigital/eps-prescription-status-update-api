@@ -7,7 +7,7 @@ from time import time
 from datetime import datetime
 from rich.console import Console
 from rich.theme import Theme
-from rich.prompt import Confirm
+from rich.prompt import Confirm, Prompt
 
 
 cli_theme = Theme({
@@ -36,19 +36,68 @@ def cli():
     pass
 
 
-@click.option("--creds_dir", default="/home/vscode/.ssh",
-              help="the directory containing any key pairs & psu-cred.json, defaults to '/home/vscode/.ssh'")
-def create_creds_file():
-    pass
+@cli.command()
+@click.option("-d", "--creds_dir", default="/home/vscode/.ssh",
+              help="The directory containing any key pairs & psu-cred.json, defaults to '/home/vscode/.ssh'")
+def update_creds(creds_dir):
+    try:
+        with open(f"{creds_dir}/psu_creds.json", "r") as f:
+            psu_creds = json.load(f)
+    except FileNotFoundError:
+        console.print(f"PSU creds file does not exist, will create file at [bold]{creds_dir}/psu_creds.json[/bold]",
+                      style="info")
+        psu_creds = {}
+
+    add_keys = True
+    while add_keys:
+        console.print("Please enter the credential details:", style="info")
+        env = Prompt.ask("[bold italic purple4]Environment")
+        key = Prompt.ask("[bold italic purple4]API key")
+
+        if env in psu_creds:
+            is_correct = Confirm.ask(
+                f"[deep_sky_blue4]Credentials for {env} already exist, do you want to overwrite them?")
+        else:
+            is_correct = Confirm.ask("[deep_sky_blue4]Is this correct?")
+
+        if is_correct:
+            psu_creds[env] = key
+
+        add_keys = Confirm.ask("[deep_sky_blue4]Do you want to continue adding credentials?")
+        console.print("--------------------------------------------", style="info")
+
+    with open(f"{creds_dir}/psu_creds.json", "w+") as f:
+        json.dump(psu_creds, f)
+    console.print("Credentials updated!", style="success")
 
 
 @cli.command()
-@click.option("--api_key", default=None, help="the api key, defaults to the value of <env> in psu-creds.json")
-@click.option("--creds_dir", default="/home/vscode/.ssh",
-              help="the directory containing any key pairs & psu-cred.json, defaults to '/home/vscode/.ssh'")
-@click.option("--env", default="internal-dev", help="the target environment, defaults to 'internal-dev'")
-@click.option("--expiry", default=300, help="The JWT expiry in seconds, defaults to 300(5mins)")
-@click.option("--kid", default=None, help="the kid of the key pair, defaults to 'psu-<env>'")
+@click.option("-d", "--creds_dir", default="/home/vscode/.ssh",
+              help="The directory containing any key pairs & psu-cred.json, defaults to '/home/vscode/.ssh'")
+def list_creds(creds_dir):
+    console.print(f"Getting PSU credentials file at [bold]{creds_dir}/psu_creds.json[/bold]...", style="info")
+    try:
+        with open(f"{creds_dir}/psu_creds.json", "r") as f:
+            psu_creds = json.load(f)
+    except FileNotFoundError:
+        log_key_value("Error", "PSU credentials file not found.", "error")
+        console.print_exception()
+        exit()
+    console.print("--------------------------------------------", style="config")
+    log_heading("PSU Credentials:", "config")
+    for key, value in psu_creds.items():
+        log_key_value(key, value, "config")
+    console.print("--------------------------------------------", style="config")
+    console.print("Complete!", style="success")
+
+
+@cli.command()
+@click.option("-k", "--api_key", default=None, help="The api key, defaults to the value of <env> in psu-creds.json")
+@click.option("-d", "--creds_dir", default="/home/vscode/.ssh",
+              help="The directory containing any key pairs & psu-cred.json, defaults to '/home/vscode/.ssh'")
+@click.option("-e", "--env", default="internal-dev", help="The target environment, defaults to 'internal-dev'")
+@click.option("-x", "--expiry", default=300, help="The JWT expiry in seconds, defaults to 300(5mins)")
+@click.option("-i", "--kid", default=None, help="The kid of the key pair, defaults to 'psu-<env>'")
 def encode_jwt(api_key, creds_dir, env, expiry, kid, standalone=True):
     kid = kid if kid else f"psu-{env}"
 
@@ -77,7 +126,7 @@ def encode_jwt(api_key, creds_dir, env, expiry, kid, standalone=True):
     log_key_value("Expiry", expiry, "config")
     console.print("--------------------------------------------", style="config")
 
-    is_config_ok = Confirm.ask("Is this correct?")
+    is_config_ok = Confirm.ask("[purple4]Is this correct?")
     if not is_config_ok:
         exit()
     console.print("--------------------------------------------", style="config")
@@ -114,8 +163,8 @@ def encode_jwt(api_key, creds_dir, env, expiry, kid, standalone=True):
 
 
 @cli.command()
-@click.option("--encoded_jwt", help="the jwt")
-@click.option("--env", default="internal-dev", help="the target environment, defaults to 'internal-dev'")
+@click.option("-t", "--encoded_jwt", help="the jwt")
+@click.option("-e", "--env", default="internal-dev", help="The target environment, defaults to 'internal-dev'")
 def exchange_tokens(encoded_jwt, env):
     console.print(f"Exchanging tokens with [bold]https://{env}.api.service.nhs.uk/oauth2/token[/bold]...", style="info")
     data = {
@@ -152,12 +201,12 @@ def exchange_tokens(encoded_jwt, env):
 
 
 @cli.command()
-@click.option("--api_key", default=None, help="the api key, defaults to the value of <env> in psu-creds.json")
-@click.option("--creds_dir", default="/home/vscode/.ssh",
-              help="the directory containing any key pairs & psu-cred.json, defaults to '/home/vscode/.ssh'")
-@click.option("--env", default="internal-dev", help="the target environment, defaults to 'internal-dev'")
-@click.option("--expiry", default=300, help="The JWT expiry in seconds, defaults to 300(5mins)")
-@click.option("--kid", default=None, help="the kid of the key pair, defaults to 'psu-<env>'")
+@click.option("-k", "--api_key", default=None, help="The api key, defaults to the value of <env> in psu-creds.json")
+@click.option("-d", "--creds_dir", default="/home/vscode/.ssh",
+              help="The directory containing any key pairs & psu-cred.json, defaults to '/home/vscode/.ssh'")
+@click.option("-e", "--env", default="internal-dev", help="The target environment, defaults to 'internal-dev'")
+@click.option("-x", "--expiry", default=300, help="The JWT expiry in seconds, defaults to 300(5mins)")
+@click.option("-i", "--kid", default=None, help="The KID of the key pair, defaults to 'psu-<env>'")
 @click.pass_context
 def auth(ctx, api_key, creds_dir, env, expiry, kid):
     console.print("Authenticating...", style="info")
