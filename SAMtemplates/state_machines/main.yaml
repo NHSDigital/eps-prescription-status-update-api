@@ -22,6 +22,10 @@ Parameters:
   EnableSplunk:
     Type: String
 
+  FihrValidatorStackName:
+    Type: String
+    Default: fhir-validator
+
 Resources:
   UpdatePrescriptionStatusStateMachine:
     Type: AWS::Serverless::StateMachine
@@ -33,7 +37,7 @@ Resources:
       DefinitionSubstitutions:
         FhirValidationFunctionArn: !Join
           - ":"
-          - - !ImportValue fhir-validator:FHIRValidatorUKCoreLambdaArn
+          - - Fn::ImportValue: !Sub ${FihrValidatorStackName}:FHIRValidatorUKCoreLambdaArn
             - snap
         UpdatePrescriptionStatusFunctionArn: !Sub ${UpdatePrescriptionStatusFunctionArn}:$LATEST
       Logging:
@@ -56,7 +60,7 @@ Resources:
         AdditionalPolicies: !Join
           - ","
           - - Fn::ImportValue: !Sub ${StackName}:functions:${UpdatePrescriptionStatusFunctionName}:ExecuteLambdaPolicyArn
-            - !ImportValue fhir-validator:FHIRValidatorUKCoreExecuteLambdaPolicyArn
+            - Fn::ImportValue: !Sub ${FihrValidatorStackName}:FHIRValidatorUKCoreExecuteLambdaPolicyArn
         LogRetentionInDays: !Ref LogRetentionInDays
         CloudWatchKMSKeyId: !ImportValue account-resources:CloudwatchLogsKmsKeyArn
         EnableSplunk: !Ref EnableSplunk
