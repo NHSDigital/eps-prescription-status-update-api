@@ -35,9 +35,9 @@ info:
 
     It conforms to the [FHIR](https://digital.nhs.uk/developer/guides-and-documentation/our-api-technologies#fhir) global standard for health care data exchange, specifically to [FHIR R4 (v4.0.1)](https://hl7.org/fhir/r4/).
 
-    It includes some country-specific FHIR extensions, which are built against FHIR UK Core, specifically [UK Core R4 (v4.0.1)](https://simplifier.net/HL7FHIRUKCoreR4/).
+    It includes some country-specific FHIR extensions, which are built against FHIR UK Core, specifically [UK Core STU3 (v0.0.9)](https://simplifier.net/HL7FHIRUKCoreR4/).
 
-    You do not need to know much about FHIR to use this API. The API only supports POST requests containing FHIR messages.
+    You do not need to know much about FHIR to use this API. The API only supports POST requests containing FHIR transactions.
 
     FHIR APIs are just RESTful APIs that follow specific rules.
     These rules mean:
@@ -132,11 +132,16 @@ paths:
             schema:
               $ref: "#/components/schemas/UpdatePrescriptionStatusBundle"
             examples:
-              ready-for-delivery:
-                summary: ready-for-delivery
-                description: A request message contains tracking status `Ready for delivery`.
+              ready-to-dispatch:
+                summary: ready-to-dispatch
+                description: A request message contains tracking status `Ready to Dispatch`.
                 value:
-                  $ref: examples/request-ready-for-delivery.json
+                  $ref: examples/request-ready-to-dispatch.json
+              ready-to-dispatch-partial:
+                summary: ready-to-dispatch-partial
+                description: A request message contains tracking status `Ready to Dispatch - Partial`.
+                value:
+                  $ref: examples/request-ready-to-dispatch-partial.json
               dispatched:
                 summary: dispatched
                 description: A request message contains tracking status `Dispatched``.
@@ -283,7 +288,7 @@ x-nhsd-apim:
     grants:
       app-level0: []
   target:
-    type: hosted
+    type: external
     healthcheck: /_status
     url: https://psu.dev.eps.national.nhs.uk
     security:

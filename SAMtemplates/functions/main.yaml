@@ -1,4 +1,4 @@
-AWSTemplateFormatVersion: '2010-09-09'
+AWSTemplateFormatVersion: "2010-09-09"
 Transform: AWS::Serverless-2016-10-31
 Description: |
   PSU lambda functions and related resources
@@ -12,7 +12,7 @@ Globals:
     Runtime: nodejs20.x
     Environment:
       Variables:
-        NODE_OPTIONS: '--enable-source-maps'
+        NODE_OPTIONS: "--enable-source-maps"
     Layers:
       - !Sub arn:aws:lambda:${AWS::Region}:580247275435:layer:LambdaInsightsExtension:49
 
@@ -20,18 +20,24 @@ Parameters:
   StackName:
     Type: String
     Default: none
-  
+
   PrescriptionStatusUpdatesTableName:
     Type: String
     Default: none
-  
+
   LogLevel:
     Type: String
-  
+
   LogRetentionInDays:
     Type: Number
-  
+
   EnableSplunk:
+    Type: String
+
+  VersionNumber:
+    Type: String
+
+  CommitId:
     Type: String
 
 Resources:
@@ -55,7 +61,7 @@ Resources:
         tsconfig: updatePrescriptionStatus/tsconfig.json
         EntryPoints:
           - updatePrescriptionStatus/src/updatePrescriptionStatus.ts
-  
+
   UpdatePrescriptionStatusResources:
     Type: AWS::Serverless::Application
     Properties:
@@ -66,8 +72,86 @@ Resources:
         LambdaArn: !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:${StackName}-UpdatePrescriptionStatus
         IncludeAdditionalPolicies: true
         AdditionalPolicies: !Join
-          - ','
+          - ","
           - - Fn::ImportValue: !Sub ${StackName}:tables:${PrescriptionStatusUpdatesTableName}:TableWritePolicyArn
+        LogRetentionInDays: !Ref LogRetentionInDays
+        CloudWatchKMSKeyId: !ImportValue account-resources:CloudwatchLogsKmsKeyArn
+        EnableSplunk: !Ref EnableSplunk
+        SplunkSubscriptionFilterRole: !ImportValue lambda-resources:SplunkSubscriptionFilterRole
+        SplunkDeliveryStreamArn: !ImportValue lambda-resources:SplunkDeliveryStream
+
+  GetStatusUpdates:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub ${StackName}-GetStatusUpdates
+      CodeUri: ../../packages
+      Handler: getStatusUpdates.handler
+      Role: !GetAtt GetStatusUpdatesResources.Outputs.LambdaRoleArn
+      Environment:
+        Variables:
+          TABLE_NAME: !Ref PrescriptionStatusUpdatesTableName
+          LOG_LEVEL: !Ref LogLevel
+    Metadata:
+      BuildMethod: esbuild
+      BuildProperties:
+        Minify: true
+        Target: es2020
+        Sourcemap: true
+        tsconfig: gsul/tsconfig.json
+        EntryPoints:
+          - gsul/src/getStatusUpdates.ts
+
+  GetStatusUpdatesResources:
+    Type: AWS::Serverless::Application
+    Properties:
+      Location: lambda_resources.yaml
+      Parameters:
+        StackName: !Ref StackName
+        LambdaName: !Sub ${StackName}-GetStatusUpdates
+        LambdaArn: !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:${StackName}-GetStatusUpdates
+        IncludeAdditionalPolicies: true
+        AdditionalPolicies: !Join
+          - ","
+          - - Fn::ImportValue: !Sub ${StackName}:tables:${PrescriptionStatusUpdatesTableName}:TableReadPolicyArn
+        LogRetentionInDays: !Ref LogRetentionInDays
+        CloudWatchKMSKeyId: !ImportValue account-resources:CloudwatchLogsKmsKeyArn
+        EnableSplunk: !Ref EnableSplunk
+        SplunkSubscriptionFilterRole: !ImportValue lambda-resources:SplunkSubscriptionFilterRole
+        SplunkDeliveryStreamArn: !ImportValue lambda-resources:SplunkDeliveryStream
+
+  StatusLambdaFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub ${StackName}-statusLambda
+      CodeUri: ../../packages
+      Handler: statusLambda.handler
+      Role: !GetAtt StatusLambdaFunctionResources.Outputs.LambdaRoleArn
+      Environment:
+        Variables:
+          VERSION_NUMBER: !Ref VersionNumber
+          COMMIT_ID: !Ref CommitId
+    Metadata:
+      BuildMethod: esbuild
+      BuildProperties:
+        Minify: true
+        Target: es2020
+        Sourcemap: true
+        tsconfig: statusLambda/tsconfig.json
+        EntryPoints:
+          - statusLambda/src/statusLambda.ts
+
+  StatusLambdaFunctionResources:
+    Type: AWS::Serverless::Application
+    Properties:
+      Location: lambda_resources.yaml
+      Parameters:
+        StackName: !Ref StackName
+        LambdaName: !Sub ${StackName}-statusLambda
+        LambdaArn: !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:${StackName}-statusLambda
+        IncludeAdditionalPolicies: true
+        AdditionalPolicies: !Join
+          - ","
+          - - !ImportValue account-resources:LambdaAccessSecretsPolicy
         LogRetentionInDays: !Ref LogRetentionInDays
         CloudWatchKMSKeyId: !ImportValue account-resources:CloudwatchLogsKmsKeyArn
         EnableSplunk: !Ref EnableSplunk
@@ -81,4 +165,22 @@ Outputs:
 
   UpdatePrescriptionStatusFunctionArn:
     Description: The function ARN of the UpdatePrescriptionStatus lambda
-    Value: !GetAtt  UpdatePrescriptionStatus.Arn
+    Value: !GetAtt UpdatePrescriptionStatus.Arn
+
+  GetStatusUpdatesFunctionName:
+    Description: The function name of the GetStatusUpdates lambda
+    Value: !Ref GetStatusUpdates
+
+  GetStatusUpdatesFunctionArn:
+    Description: The function ARN of the GetStatusUpdates lambda
+    Value: !GetAtt GetStatusUpdates.Arn
+    Export:
+      Name: !Sub ${StackName}:functions:GetStatusUpdates:FunctionArn
+
+  StatusLambdaFunctionName:
+    Description: The function name of the Status lambda
+    Value: !Ref  StatusLambdaFunction
+  
+  StatusLambdaFunctionArn:
+    Description: The function ARN of the Status lambda
+    Value: !GetAtt  StatusLambdaFunction.Arn

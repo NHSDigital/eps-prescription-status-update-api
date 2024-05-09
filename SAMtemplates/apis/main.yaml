@@ -22,6 +22,14 @@ Parameters:
     Type: String
     Default: none
 
+  StatusLambdaFunctionName:
+    Type: String
+    Default: none
+
+  StatusLambdaFunctionArn:
+    Type: String
+    Default: none
+
   LogRetentionInDays:
     Type: Number
 
@@ -198,10 +206,37 @@ Resources:
       MethodResponses:
         - StatusCode: "200"
 
-  RestApiGatewayDeployment:
+  StatusLambdaMethodResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId: !Ref RestApiGateway
+      ParentId: !GetAtt RestApiGateway.RootResourceId
+      PathPart: _status
+  
+  StatusLambdaMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref RestApiGateway
+      ResourceId: !Ref StatusLambdaMethodResource
+      HttpMethod: GET
+      AuthorizationType: NONE
+      Integration:
+        Type: AWS_PROXY
+        Credentials: !GetAtt RestApiGatewayResources.Outputs.ApiGwRoleArn
+        IntegrationHttpMethod: POST
+        Uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${StatusLambdaFunctionArn}/invocations
+
+  # *********************************************************************
+  # if you add a new endpoint, then change the name of this resource
+  # also need to change it in RestApiGatewayStage.Properties.DeploymentId
+  # *********************************************************************
+  RestApiGatewayDeploymentV1:
     Type: AWS::ApiGateway::Deployment
     DependsOn:
+      # see note above if you add something in here when you add a new endpoint
       - UpdatePrescriptionStatusMethod
+      - StatusLambdaMethod
+      # see note above if you add something in here when you add a new endpoint
     Properties:
       RestApiId: !Ref RestApiGateway
 
@@ -209,8 +244,8 @@ Resources:
     Type: AWS::ApiGateway::Stage
     Properties:
       RestApiId: !Ref RestApiGateway
+      DeploymentId: !Ref RestApiGatewayDeploymentV1
       StageName: prod
-      DeploymentId: !Ref RestApiGatewayDeployment
       TracingEnabled: true
       AccessLogSetting:
         DestinationArn: !GetAtt RestApiGatewayResources.Outputs.ApiGwAccessLogsArn
@@ -231,6 +266,7 @@ Resources:
         AdditionalPolicies: !Join
           - ","
           - - Fn::ImportValue: !Sub ${StackName}:state-machines:${UpdatePrescriptionStatusStateMachineName}:ExecuteStateMachinePolicy
+            - Fn::ImportValue: !Sub ${StackName}:functions:${StatusLambdaFunctionName}:ExecuteLambdaPolicyArn
         ApiName: !Sub ${StackName}-apigw
         LogRetentionInDays: !Ref LogRetentionInDays
         EnableSplunk: !Ref EnableSplunk
