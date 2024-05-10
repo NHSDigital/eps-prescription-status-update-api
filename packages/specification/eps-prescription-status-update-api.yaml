@@ -84,6 +84,8 @@ info:
     |----------|-------------|-------|
     | FHIR libraries and SDKs | Various open source libraries for integrating with FHIR APIs. | [FHIR libraries and SDKs](https://digital.nhs.uk/developer/guides-and-documentation/api-technologies-at-nhs-digital#fhir-libraries-and-sdks) |
     | nhs-number | Python package containing utilities for NHS numbers including validity checks, normalisation and generation. | [GitHub repo](https://github.com/uk-fci/nhs-number) \| [Python Package index](https://pypi.org/project/nhs-number/) \| [Docs](https://nhs-number.uk-fci.tech/) |
+    | Prescription Status Update API | Source code for the EPS Prescription Status Update API | [GitHub](https://github.com/NHSDigital/eps-prescription-status-update-ap) |
+    | EPS FHIR Validator Lambda | An AWS Lambda function that validates FHIR R4 messages | [GitHub](https://github.com/NHSDigital/eps-FHIR-validator-lambda) |
 
     ## Environment and testing
     | Environment      | Base URL                                                            |
