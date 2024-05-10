@@ -69,3 +69,8 @@ EOF
 
 # Deploy the API instance using Proxygen CLI
 "$PROXYGEN_PATH" instance deploy --no-confirm "$APIGEE_ENVIRONMENT" "$instance" "$SPEC_PATH"
+
+# Deploy the API spec if in the int environment
+if [[ $APIGEE_ENVIRONMENT == int ]]; then
+    "$PROXYGEN_PATH" spec publish --no-confirm "$SPEC_PATH"
+fi
