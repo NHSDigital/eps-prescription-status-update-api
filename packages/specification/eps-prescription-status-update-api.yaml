@@ -61,7 +61,7 @@ info:
     The end user could be:
 
     * a healthcare worker - in which case you must ensure they are authenticated and suitably authorised locally
-    * not present at all - for example as part of a back end process to check NHS numbers for data flowing from one system to another
+    * not present at all - for example as part of a back end process integrated with a shipping system
 
 
     To use this access mode, use the following security pattern:
