@@ -121,7 +121,6 @@ test: compile
 	npm run test --workspace packages/updatePrescriptionStatus
 	npm run test --workspace packages/gsul
 	npm run test --workspace packages/sandbox
-	npm run test --workspace packages/specification
 	npm run test --workspace packages/statusLambda
 
 clean:
@@ -140,10 +139,8 @@ deep-clean: clean
 	find . -name 'node_modules' -type d -prune -exec rm -rf '{}' +
 	poetry env remove --all
 
-publish:
-	npm run resolve --workspace packages/specification 2> /dev/null
-	npm run compile --workspace packages/specification 2> /dev/null
-	npm run replace-components --workspace packages/specification 2> /dev/null
+build-specification:
+	$(MAKE) --directory=packages/specification build
 
 check-licenses: check-licenses-node check-licenses-python
 

@@ -87,8 +87,8 @@ Resources:
         TruststoreVersion: !Ref TruststoreVersion
         UpdatePrescriptionStatusStateMachineName: !GetAtt StateMachines.Outputs.UpdatePrescriptionStatusStateMachineName
         UpdatePrescriptionStatusStateMachineArn: !GetAtt StateMachines.Outputs.UpdatePrescriptionStatusStateMachineArn
-        StatusLambdaFunctionName: !GetAtt Functions.Outputs.StatusLambdaFunctionName
-        StatusLambdaFunctionArn: !GetAtt Functions.Outputs.StatusLambdaFunctionArn
+        StatusFunctionName: !GetAtt Functions.Outputs.StatusFunctionName
+        StatusFunctionArn: !GetAtt Functions.Outputs.StatusFunctionArn
         LogRetentionInDays: !Ref LogRetentionInDays
         EnableSplunk: !Ref EnableSplunk
 
