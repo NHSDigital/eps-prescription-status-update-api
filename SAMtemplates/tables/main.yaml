@@ -7,6 +7,15 @@ Parameters:
   StackName:
     Type: String
     Default: none
+  EnableScaling:
+    Type: String
+    Default: true
+    AllowedValues:
+      - true
+      - false
+
+Conditions:
+  EnableScalingCondition: !Equals [!Ref EnableScaling, false]
 
 Resources:
   PrescriptionStatusUpdatesTable:
@@ -71,6 +80,7 @@ Resources:
   PrescriptionStatusUpdatesTableWriteScalingTarget:
     Type: AWS::ApplicationAutoScaling::ScalableTarget
     DependsOn: PrescriptionStatusUpdatesTable
+    Condition: EnableScalingCondition
     Properties:
       MaxCapacity: 100
       MinCapacity: 5
@@ -81,6 +91,7 @@ Resources:
 
   PrescriptionStatusUpdatesTableWriteScalingPolicy:
     Type: AWS::ApplicationAutoScaling::ScalingPolicy
+    Condition: EnableScalingCondition
     Properties:
       PolicyName: PrescriptionStatusUpdatesTableWriteScalingPolicy
       PolicyType: TargetTrackingScaling
@@ -95,6 +106,7 @@ Resources:
   PrescriptionStatusUpdatesTableReadScalingTarget:
     Type: AWS::ApplicationAutoScaling::ScalableTarget
     DependsOn: PrescriptionStatusUpdatesTable
+    Condition: EnableScalingCondition
     Properties:
       MaxCapacity: 100
       MinCapacity: 5
@@ -105,6 +117,7 @@ Resources:
 
   PrescriptionStatusUpdatesTableReadScalingPolicy:
     Type: AWS::ApplicationAutoScaling::ScalingPolicy
+    Condition: EnableScalingCondition
     Properties:
       PolicyName: PrescriptionStatusUpdatesTableReadScalingPolicy
       PolicyType: TargetTrackingScaling
@@ -119,6 +132,7 @@ Resources:
   PharmacyIndexScalingTarget:
     Type: AWS::ApplicationAutoScaling::ScalableTarget
     DependsOn: PrescriptionStatusUpdatesTable
+    Condition: EnableScalingCondition
     Properties:
       MaxCapacity: 100
       MinCapacity: 5
@@ -129,6 +143,7 @@ Resources:
 
   PharmacyIndexScalingPolicy:
     Type: AWS::ApplicationAutoScaling::ScalingPolicy
+    Condition: EnableScalingCondition
     Properties:
       PolicyName: PharmacyIndexScalingPolicy
       PolicyType: TargetTrackingScaling
