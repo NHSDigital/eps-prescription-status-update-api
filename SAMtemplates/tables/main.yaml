@@ -92,15 +92,16 @@ Resources:
         PredefinedMetricSpecification:
           PredefinedMetricType: DynamoDBWriteCapacityUtilization
 
-  # PharmacyIndexWriteScalingTarget:
-  #   Type: AWS::ApplicationAutoScaling::ScalableTarget
-  #   Properties:
-  #     MaxCapacity: 100
-  #     MinCapacity: 5
-  #     ResourceId: !Sub index/${PrescriptionStatusUpdatesTable}/PharmacyODSCodePrescriptionIDIndex
-  #     RoleARN: !Sub arn:aws:iam::${AWS::AccountId}:role/aws-service-role/dynamodb.application-autoscaling.amazonaws.com/AWSServiceRoleForApplicationAutoScaling_DynamoDBTable
-  #     ScalableDimension: "dynamodb:index:WriteCapacityUnits"
-  #     ServiceNamespace: dynamodb
+  PharmacyIndexWriteScalingTarget:
+    Type: AWS::ApplicationAutoScaling::ScalableTarget
+    DependsOn: PrescriptionStatusUpdatesTable
+    Properties:
+      MaxCapacity: 100
+      MinCapacity: 5
+      ResourceId: !Sub index/${PrescriptionStatusUpdatesTable}/index/PharmacyODSCodePrescriptionIDIndex
+      RoleARN: !Sub arn:aws:iam::${AWS::AccountId}:role/aws-service-role/dynamodb.application-autoscaling.amazonaws.com/AWSServiceRoleForApplicationAutoScaling_DynamoDBTable
+      ScalableDimension: "dynamodb:index:WriteCapacityUnits"
+      ServiceNamespace: dynamodb
 
   # PharmacyIndexWriteScalingPolicy:
   #   Type: AWS::ApplicationAutoScaling::ScalingPolicy
