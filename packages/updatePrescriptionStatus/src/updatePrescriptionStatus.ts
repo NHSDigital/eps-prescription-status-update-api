@@ -34,6 +34,14 @@ export interface DataItem {
   TerminalStatus: string
 }
 
+// add function that checks for duplicate requests
+// takes the array of data items and the requestEntries array
+// create empty collection of existing items
+// loop through the dataItems looking for the TaskID
+// if item exists with that task id send a 409
+// if not send a 200
+//see if you can add logs like validateEntries
+
 const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
   logger.appendKeys({
     "nhsd-correlation-id": event.headers["nhsd-correlation-id"],
@@ -71,6 +79,9 @@ const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPro
   }
 
   const dataItems = buildDataItems(requestEntries, xRequestID)
+
+  // call ceckForDuplicates here if it trhows 409
+  // do something with persist success maybe?
   const persistSuccess = persistDataItems(dataItems)
   const persistResponse = await jobWithTimeout(LAMBDA_TIMEOUT_MS, persistSuccess)
 
