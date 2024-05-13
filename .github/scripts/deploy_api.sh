@@ -17,6 +17,12 @@ else
 fi
 echo "Proxy instance: $instance"
 
+# Find and replace the title
+title=$(jq -r '.info.title' "$SPEC_PATH")
+if [[ $STACK_NAME == psu-pr-* ]]; then
+    jq --arg title "[PR-$pr_id] $title" '.info.title = $title' "$SPEC_PATH" > temp.json && mv temp.json "$SPEC_PATH"
+fi
+
 # Find and replace the specification version number 
 jq --arg version "$VERSION_NUMBER" '.info.version = $version' "$SPEC_PATH" > temp.json && mv temp.json "$SPEC_PATH"
 
@@ -30,6 +36,12 @@ else
     jq --arg env "$APIGEE_ENVIRONMENT" --arg inst "$instance" '.servers = [ { "url": "https://\($env).api.service.nhs.uk/\($inst)" } ]' "$SPEC_PATH" > temp.json && mv temp.json "$SPEC_PATH"
 fi
 
+# Find and replace securitySchemes
+if [[ $APIGEE_ENVIRONMENT == prod ]]; then
+    jq '.components.securitySchemes."app-level3" = {"$ref": "https://proxygen.prod.api.platform.nhs.uk/components/securitySchemes/app-level3"}' "$SPEC_PATH" > temp.json && mv temp.json "$SPEC_PATH"
+else
+    jq '.components.securitySchemes."app-level3" = {"$ref": "https://proxygen.ptl.api.platform.nhs.uk/components/securitySchemes/app-level3"}' "$SPEC_PATH" > temp.json && mv temp.json "$SPEC_PATH"
+fi
 # Retrieve the proxygen private key and client private key and cert from AWS Secrets Manager
 proxygen_private_key_arn=$(aws cloudformation list-exports --query "Exports[?Name=='account-resources:ProxgenPrivateKey'].Value" --output text)
 client_private_key_arn=$(aws cloudformation list-exports --query "Exports[?Name=='account-resources:PsuClientKeySecret'].Value" --output text)
@@ -69,3 +81,8 @@ EOF
 
 # Deploy the API instance using Proxygen CLI
 "$PROXYGEN_PATH" instance deploy --no-confirm "$APIGEE_ENVIRONMENT" "$instance" "$SPEC_PATH"
+
+# Deploy the API spec if in the int environment
+if [[ $APIGEE_ENVIRONMENT == int ]]; then
+    "$PROXYGEN_PATH" spec publish --no-confirm "$SPEC_PATH"
+fi
