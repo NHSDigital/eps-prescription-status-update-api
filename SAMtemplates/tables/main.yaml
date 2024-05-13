@@ -12,7 +12,9 @@ Parameters:
     Type: String
 
 Conditions:
-  EnableScalingCondition: !Equals [!Ref EnableScaling, false]
+  EnableScalingCondition: !Equals
+    - true
+    - !Ref EnableScaling
 
 Resources:
   PrescriptionStatusUpdatesTable:
