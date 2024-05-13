@@ -203,6 +203,15 @@ Resources:
                 #end
 
                 $payload.Payload.body
+          - StatusCode: 400
+            ResponseTemplates:
+              application/json: |-
+               #set($context.responseOverride.status = 400)
+                {
+                 "error": "Bad Request"
+                }
+       
+
       MethodResponses:
         - StatusCode: '200'
 
