@@ -37,7 +37,7 @@ argparse = "^1.4.0"
 pre-commit = "^3.7.1"
 pytest = "^8.2.0"
 cfn-lint = "^0.87.2"
-pyjwt = "^2.8.0"
+pyjwt = {extras = ["crypto"], version = "^2.8.0"}
 proxygen-cli = "^2.1.14"
 
 [tool.poetry.scripts]
@@ -49,6 +49,8 @@ black = "^24.4.2"
 flake8 = "^7.0.0"
 jinja2 = "^3.1.4"
 pip-licenses = "^4.4.0"
+click = "^8.1.7"
+rich = "^13.7.1"
 
 [build-system]
 requires = ["poetry>=0.12"]
