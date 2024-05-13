@@ -7,12 +7,9 @@ Parameters:
   StackName:
     Type: String
     Default: none
+
   EnableScaling:
     Type: String
-    Default: true
-    AllowedValues:
-      - true
-      - false
 
 Conditions:
   EnableScalingCondition: !Equals [!Ref EnableScaling, false]

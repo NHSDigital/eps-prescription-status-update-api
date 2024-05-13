@@ -53,6 +53,13 @@ Parameters:
       - true
       - false
 
+  EnableScaling:
+    Type: String
+    Default: true
+    AllowedValues:
+      - true
+      - false
+
   VersionNumber:
     Type: String
     Default: "xxx"
