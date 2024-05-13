@@ -103,18 +103,18 @@ Resources:
       ScalableDimension: "dynamodb:index:WriteCapacityUnits"
       ServiceNamespace: dynamodb
 
-  # PharmacyIndexWriteScalingPolicy:
-  #   Type: AWS::ApplicationAutoScaling::ScalingPolicy
-  #   Properties:
-  #     PolicyName: PharmacyIndexWriteScalingPolicy
-  #     PolicyType: TargetTrackingScaling
-  #     ScalingTargetId: !Ref PharmacyIndexWriteScalingTarget
-  #     TargetTrackingScalingPolicyConfiguration:
-  #       TargetValue: 70
-  #       ScaleInCooldown: 60
-  #       ScaleOutCooldown: 60
-  #       PredefinedMetricSpecification:
-  #         PredefinedMetricType: DynamoDBWriteCapacityUtilization
+  PharmacyIndexWriteScalingPolicy:
+    Type: AWS::ApplicationAutoScaling::ScalingPolicy
+    Properties:
+      PolicyName: PharmacyIndexWriteScalingPolicy
+      PolicyType: TargetTrackingScaling
+      ScalingTargetId: !Ref PharmacyIndexWriteScalingTarget
+      TargetTrackingScalingPolicyConfiguration:
+        TargetValue: 70
+        ScaleInCooldown: 60
+        ScaleOutCooldown: 60
+        PredefinedMetricSpecification:
+          PredefinedMetricType: DynamoDBWriteCapacityUtilization
 
 Outputs:
   PrescriptionStatusUpdatesTableName:
