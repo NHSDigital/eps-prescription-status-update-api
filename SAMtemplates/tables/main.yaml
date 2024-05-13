@@ -98,7 +98,7 @@ Resources:
     Properties:
       MaxCapacity: 100
       MinCapacity: 5
-      ResourceId: !Sub index/${PrescriptionStatusUpdatesTable}/index/PharmacyODSCodePrescriptionIDIndex
+      ResourceId: !Sub table/${PrescriptionStatusUpdatesTable}/index/PharmacyODSCodePrescriptionIDIndex
       RoleARN: !Sub arn:aws:iam::${AWS::AccountId}:role/aws-service-role/dynamodb.application-autoscaling.amazonaws.com/AWSServiceRoleForApplicationAutoScaling_DynamoDBTable
       ScalableDimension: "dynamodb:index:WriteCapacityUnits"
       ServiceNamespace: dynamodb
