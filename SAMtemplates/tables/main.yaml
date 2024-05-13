@@ -91,28 +91,28 @@ Resources:
         PredefinedMetricSpecification:
           PredefinedMetricType: DynamoDBReadCapacityUtilization
 
-  PrescriptionStatusUpdatesTableReadScalingTarget:
-    Type: AWS::ApplicationAutoScaling::ScalableTarget
-    Properties:
-      MaxCapacity: 100
-      MinCapacity: 5
-      ResourceId: !Sub table/${PrescriptionStatusUpdatesTable}
-      RoleARN: !Sub arn:aws:iam::${AWS::AccountId}:role/aws-service-role/dynamodb.application-autoscaling.amazonaws.com/AWSServiceRoleForApplicationAutoScaling_DynamoDBTable
-      ScalableDimension: "dynamodb:table:WriteCapacityUnits"
-      ServiceNamespace: dynamodb
+  # PrescriptionStatusUpdatesTableReadScalingTarget:
+  #   Type: AWS::ApplicationAutoScaling::ScalableTarget
+  #   Properties:
+  #     MaxCapacity: 100
+  #     MinCapacity: 5
+  #     ResourceId: !Sub table/${PrescriptionStatusUpdatesTable}
+  #     RoleARN: !Sub arn:aws:iam::${AWS::AccountId}:role/aws-service-role/dynamodb.application-autoscaling.amazonaws.com/AWSServiceRoleForApplicationAutoScaling_DynamoDBTable
+  #     ScalableDimension: "dynamodb:table:WriteCapacityUnits"
+  #     ServiceNamespace: dynamodb
 
-  PrescriptionStatusUpdatesTableReadScalingPolicy:
-    Type: AWS::ApplicationAutoScaling::ScalingPolicy
-    Properties:
-      PolicyName: PrescriptionStatusUpdatesTableWriteScalingPolicy
-      PolicyType: TargetTrackingScaling
-      ScalingTargetId: !Ref PrescriptionStatusUpdatesTableReadScalingTarget
-      TargetTrackingScalingPolicyConfiguration:
-        TargetValue: 70
-        ScaleInCooldown: 60
-        ScaleOutCooldown: 60
-        PredefinedMetricSpecification:
-          PredefinedMetricType: DynamoDBWriteCapacityUtilization
+  # PrescriptionStatusUpdatesTableReadScalingPolicy:
+  #   Type: AWS::ApplicationAutoScaling::ScalingPolicy
+  #   Properties:
+  #     PolicyName: PrescriptionStatusUpdatesTableWriteScalingPolicy
+  #     PolicyType: TargetTrackingScaling
+  #     ScalingTargetId: !Ref PrescriptionStatusUpdatesTableReadScalingTarget
+  #     TargetTrackingScalingPolicyConfiguration:
+  #       TargetValue: 70
+  #       ScaleInCooldown: 60
+  #       ScaleOutCooldown: 60
+  #       PredefinedMetricSpecification:
+  #         PredefinedMetricType: DynamoDBWriteCapacityUtilization
 
   PharmacyIndexScalingTarget:
     Type: AWS::ApplicationAutoScaling::ScalableTarget
