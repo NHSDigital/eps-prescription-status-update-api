@@ -59,18 +59,22 @@ Resources:
               - LastModified
               - Status
             ProjectionType: INCLUDE
-          ProvisionedThroughput:
-            ReadCapacityUnits: 5
-            WriteCapacityUnits: 5
+          ProvisionedThroughput: !If
+            - EnableScalingCondition
+            - ReadCapacityUnits: 5
+              WriteCapacityUnits: 5
+            - !Ref "AWS::NoValue"
         - IndexName: PatientNHSNumberIndex
           KeySchema:
             - AttributeName: PatientNHSNumber
               KeyType: HASH
           Projection:
             ProjectionType: KEYS_ONLY
-          ProvisionedThroughput:
-            ReadCapacityUnits: 5
-            WriteCapacityUnits: 5
+          ProvisionedThroughput: !If
+            - EnableScalingCondition
+            - ReadCapacityUnits: 5
+              WriteCapacityUnits: 5
+            - !Ref "AWS::NoValue"
 
   PrescriptionStatusUpdatesResources:
     Type: AWS::Serverless::Application
