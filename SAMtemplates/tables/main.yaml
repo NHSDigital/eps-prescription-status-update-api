@@ -12,7 +12,7 @@ Parameters:
     Type: String
 
 Conditions:
-  EnableScalingCondition: !Equals
+  EnableDynamoDBAutoScaling: !Equals
     - true
     - !Ref EnableScaling
 
@@ -36,11 +36,11 @@ Resources:
         - AttributeName: TaskID
           KeyType: RANGE
       BillingMode: !If
-        - EnableScalingCondition
+        - EnableDynamoDBAutoScaling
         - PROVISIONED
         - PAY_PER_REQUEST
       ProvisionedThroughput: !If
-        - EnableScalingCondition
+        - EnableDynamoDBAutoScaling
         - ReadCapacityUnits: 5
           WriteCapacityUnits: 5
         - !Ref "AWS::NoValue"
@@ -60,7 +60,7 @@ Resources:
               - Status
             ProjectionType: INCLUDE
           ProvisionedThroughput: !If
-            - EnableScalingCondition
+            - EnableDynamoDBAutoScaling
             - ReadCapacityUnits: 5
               WriteCapacityUnits: 5
             - !Ref "AWS::NoValue"
@@ -71,7 +71,7 @@ Resources:
           Projection:
             ProjectionType: KEYS_ONLY
           ProvisionedThroughput: !If
-            - EnableScalingCondition
+            - EnableDynamoDBAutoScaling
             - ReadCapacityUnits: 5
               WriteCapacityUnits: 5
             - !Ref "AWS::NoValue"
@@ -88,7 +88,7 @@ Resources:
   PrescriptionStatusUpdatesTableWriteScalingTarget:
     Type: AWS::ApplicationAutoScaling::ScalableTarget
     DependsOn: PrescriptionStatusUpdatesTable
-    Condition: EnableScalingCondition
+    Condition: EnableDynamoDBAutoScaling
     Properties:
       MaxCapacity: 100
       MinCapacity: 5
@@ -99,7 +99,7 @@ Resources:
 
   PrescriptionStatusUpdatesTableWriteScalingPolicy:
     Type: AWS::ApplicationAutoScaling::ScalingPolicy
-    Condition: EnableScalingCondition
+    Condition: EnableDynamoDBAutoScaling
     Properties:
       PolicyName: PrescriptionStatusUpdatesTableWriteScalingPolicy
       PolicyType: TargetTrackingScaling
@@ -114,7 +114,7 @@ Resources:
   PrescriptionStatusUpdatesTableReadScalingTarget:
     Type: AWS::ApplicationAutoScaling::ScalableTarget
     DependsOn: PrescriptionStatusUpdatesTable
-    Condition: EnableScalingCondition
+    Condition: EnableDynamoDBAutoScaling
     Properties:
       MaxCapacity: 100
       MinCapacity: 5
@@ -125,7 +125,7 @@ Resources:
 
   PrescriptionStatusUpdatesTableReadScalingPolicy:
     Type: AWS::ApplicationAutoScaling::ScalingPolicy
-    Condition: EnableScalingCondition
+    Condition: EnableDynamoDBAutoScaling
     Properties:
       PolicyName: PrescriptionStatusUpdatesTableReadScalingPolicy
       PolicyType: TargetTrackingScaling
@@ -140,7 +140,7 @@ Resources:
   PharmacyIndexScalingTarget:
     Type: AWS::ApplicationAutoScaling::ScalableTarget
     DependsOn: PrescriptionStatusUpdatesTable
-    Condition: EnableScalingCondition
+    Condition: EnableDynamoDBAutoScaling
     Properties:
       MaxCapacity: 100
       MinCapacity: 5
@@ -151,7 +151,7 @@ Resources:
 
   PharmacyIndexScalingPolicy:
     Type: AWS::ApplicationAutoScaling::ScalingPolicy
-    Condition: EnableScalingCondition
+    Condition: EnableDynamoDBAutoScaling
     Properties:
       PolicyName: PharmacyIndexScalingPolicy
       PolicyType: TargetTrackingScaling
