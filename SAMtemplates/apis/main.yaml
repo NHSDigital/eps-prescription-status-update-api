@@ -210,7 +210,7 @@ Resources:
                 {
                  "error": "Bad Request"
                 }
-      requestValidators:
+      RequestValidators:
         requestBody:
           validateRequestBody: true
           validateRequestParameters: false
@@ -221,7 +221,32 @@ Resources:
 
       MethodResponses:
         - StatusCode: "200"
-
+        
+   TrailingCommaValidator:
+    Type: AWS::ApiGateway::RequestValidator
+    Properties:
+      Name: 'trailing-comma-validator'
+      RestApiId: !Ref RestApiGateway
+      ValidateRequestBody: true
+      ValidateRequestParameters: false
+      RequestModels:
+        'application/json': |-
+          {
+            "$schema": "http://json-schema.org/draft-04/schema#",
+            "type": "object",
+            "additionalProperties": false,
+            "patternProperties": {
+              "^[^}]+$": {
+                "type": "object",
+                "additionalProperties": false,
+                "patternProperties": {
+                  "^[^,]+$": {
+                    "type": "object"
+                  }
+                }
+              }
+            }
+          }
   StatusLambdaMethodResource:
     Type: AWS::ApiGateway::Resource
     Properties:
@@ -286,26 +311,3 @@ Resources:
         ApiName: !Sub ${StackName}-apigw
         LogRetentionInDays: !Ref LogRetentionInDays
         EnableSplunk: !Ref EnableSplunk
-
-RequestValidators:
-  - name: 'trailing-comma-validator'
-    validateRequestBody: true
-    validateRequestParameters: false
-    requestModels:
-      'application/json': |-
-        {
-          "$schema": "http://json-schema.org/draft-04/schema#",
-          "type": "object",
-          "additionalProperties": false,
-          "patternProperties": {
-            "^[^}]+$": {
-              "type": "object",
-              "additionalProperties": false,
-              "patternProperties": {
-                "^[^,]+$": {
-                  "type": "object"
-                }
-              }
-            }
-          }
-        }
