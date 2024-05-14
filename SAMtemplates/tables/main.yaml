@@ -41,9 +41,11 @@ Resources:
         - PAY_PER_REQUEST
       ProvisionedThroughput: !If
         - EnableScalingCondition
-        - 
-          ReadCapacityUnits: 5
-          WriteCapacityUnits: 5
+        - !If
+          - EnableScalingCondition
+          - ReadCapacityUnits: 5
+            WriteCapacityUnits: 5
+          - !Ref "AWS::NoValue"
         - !Ref "AWS::NoValue"
       GlobalSecondaryIndexes:
         - IndexName: PharmacyODSCodePrescriptionIDIndex
