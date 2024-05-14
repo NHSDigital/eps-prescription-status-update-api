@@ -54,7 +54,7 @@ const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPro
   })
 
   const requestBody = event.body
-  console.log(requestBody, '********')
+  console.log(requestBody, "********")
   const requestBundle = castEventBody(requestBody, responseEntries)
   if (!requestBundle) {
     return response(400, responseEntries)
