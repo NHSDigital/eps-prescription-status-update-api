@@ -41,8 +41,8 @@ Resources:
         - PAY_PER_REQUEST
       ProvisionedThroughput: !If
         - EnableDynamoDBAutoScaling
-        - ReadCapacityUnits: 5
-          WriteCapacityUnits: 5
+        - ReadCapacityUnits: 1
+          WriteCapacityUnits: 1
         - !Ref "AWS::NoValue"
       GlobalSecondaryIndexes:
         - IndexName: PharmacyODSCodePrescriptionIDIndex
@@ -61,8 +61,8 @@ Resources:
             ProjectionType: INCLUDE
           ProvisionedThroughput: !If
             - EnableDynamoDBAutoScaling
-            - ReadCapacityUnits: 5
-              WriteCapacityUnits: 5
+            - ReadCapacityUnits: 1
+              WriteCapacityUnits: 1
             - !Ref "AWS::NoValue"
         - IndexName: PatientNHSNumberIndex
           KeySchema:
@@ -72,8 +72,8 @@ Resources:
             ProjectionType: KEYS_ONLY
           ProvisionedThroughput: !If
             - EnableDynamoDBAutoScaling
-            - ReadCapacityUnits: 5
-              WriteCapacityUnits: 5
+            - ReadCapacityUnits: 1
+              WriteCapacityUnits: 1
             - !Ref "AWS::NoValue"
 
   PrescriptionStatusUpdatesResources:
@@ -91,7 +91,7 @@ Resources:
     Condition: EnableDynamoDBAutoScaling
     Properties:
       MaxCapacity: 100
-      MinCapacity: 5
+      MinCapacity: 1
       ResourceId: !Sub table/${PrescriptionStatusUpdatesTable}
       RoleARN: !Sub arn:aws:iam::${AWS::AccountId}:role/aws-service-role/dynamodb.application-autoscaling.amazonaws.com/AWSServiceRoleForApplicationAutoScaling_DynamoDBTable
       ScalableDimension: "dynamodb:table:WriteCapacityUnits"
@@ -117,7 +117,7 @@ Resources:
     Condition: EnableDynamoDBAutoScaling
     Properties:
       MaxCapacity: 100
-      MinCapacity: 5
+      MinCapacity: 1
       ResourceId: !Sub table/${PrescriptionStatusUpdatesTable}
       RoleARN: !Sub arn:aws:iam::${AWS::AccountId}:role/aws-service-role/dynamodb.application-autoscaling.amazonaws.com/AWSServiceRoleForApplicationAutoScaling_DynamoDBTable
       ScalableDimension: "dynamodb:table:ReadCapacityUnits"
@@ -143,7 +143,7 @@ Resources:
     Condition: EnableDynamoDBAutoScaling
     Properties:
       MaxCapacity: 100
-      MinCapacity: 5
+      MinCapacity: 1
       ResourceId: !Sub table/${PrescriptionStatusUpdatesTable}/index/PharmacyODSCodePrescriptionIDIndex
       RoleARN: !Sub arn:aws:iam::${AWS::AccountId}:role/aws-service-role/dynamodb.application-autoscaling.amazonaws.com/AWSServiceRoleForApplicationAutoScaling_DynamoDBTable
       ScalableDimension: "dynamodb:index:WriteCapacityUnits"
