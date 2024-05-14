@@ -206,47 +206,24 @@ Resources:
           - StatusCode: 400
             ResponseTemplates:
               application/json: |-
-               #set($context.responseOverride.status = 400)
+                #set($inputRoot = $input.path('$.errorMessage'))
                 {
-                 "error": "Bad Request"
+                  "error": "$inputRoot"
                 }
-      RequestValidators:
-        requestBody:
-          validateRequestBody: true
-          validateRequestParameters: false
-        requestValidatorOptions:
-          requestValidatorName: 'trailing-comma-validator'
-          validateRequestBody: true
-          validateRequestParameters: false   
+       
 
       MethodResponses:
         - StatusCode: "200"
-        
-   TrailingCommaValidator:
-    Type: AWS::ApiGateway::RequestValidator
-    Properties:
-      Name: 'trailing-comma-validator'
-      RestApiId: !Ref RestApiGateway
-      ValidateRequestBody: true
-      ValidateRequestParameters: false
-      RequestModels:
-        'application/json': |-
-          {
-            "$schema": "http://json-schema.org/draft-04/schema#",
-            "type": "object",
-            "additionalProperties": false,
-            "patternProperties": {
-              "^[^}]+$": {
-                "type": "object",
-                "additionalProperties": false,
-                "patternProperties": {
-                  "^[^,]+$": {
-                    "type": "object"
-                  }
-                }
-              }
-            }
-          }
+        - StatusCode: 400
+          ResponseModels:
+            application/json: 'Empty'
+          ResponseParameters:
+            'method.response.header.Access-Control-Allow-Headers': '''Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'''
+            'method.response.header.Access-Control-Allow-Methods': '''GET,OPTIONS,POST,PUT,DELETE'''
+            'method.response.header.Access-Control-Allow-Origin': '''*'''
+          StatusCode: '400'
+
+
   StatusLambdaMethodResource:
     Type: AWS::ApiGateway::Resource
     Properties:
