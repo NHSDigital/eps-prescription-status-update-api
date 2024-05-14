@@ -53,6 +53,13 @@ Parameters:
       - true
       - false
 
+  EnableDynamoDBAutoScaling:
+    Type: String
+    Default: true
+    AllowedValues:
+      - true
+      - false
+
   VersionNumber:
     Type: String
     Default: "xxx"
@@ -68,6 +75,7 @@ Resources:
       Location: tables/main.yaml
       Parameters:
         StackName: !Ref AWS::StackName
+        EnableDynamoDBAutoScaling: !Ref EnableDynamoDBAutoScaling
 
   Apis:
     Type: AWS::Serverless::Application
