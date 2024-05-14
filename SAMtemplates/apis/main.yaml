@@ -210,7 +210,14 @@ Resources:
                 {
                  "error": "Bad Request"
                 }
-       
+      requestValidators:
+        requestBody:
+          validateRequestBody: true
+          validateRequestParameters: false
+        requestValidatorOptions:
+          requestValidatorName: 'trailing-comma-validator'
+          validateRequestBody: true
+          validateRequestParameters: false   
 
       MethodResponses:
         - StatusCode: "200"
@@ -279,3 +286,26 @@ Resources:
         ApiName: !Sub ${StackName}-apigw
         LogRetentionInDays: !Ref LogRetentionInDays
         EnableSplunk: !Ref EnableSplunk
+
+RequestValidators:
+  - name: 'trailing-comma-validator'
+    validateRequestBody: true
+    validateRequestParameters: false
+    requestModels:
+      'application/json': |-
+        {
+          "$schema": "http://json-schema.org/draft-04/schema#",
+          "type": "object",
+          "additionalProperties": false,
+          "patternProperties": {
+            "^[^}]+$": {
+              "type": "object",
+              "additionalProperties": false,
+              "patternProperties": {
+                "^[^,]+$": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
