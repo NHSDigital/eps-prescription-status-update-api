@@ -84,7 +84,7 @@ sam-deploy-package: guard-artifact_bucket guard-artifact_bucket_prefix guard-sta
 			  TruststoreVersion=$$LATEST_TRUSTSTORE_VERSION \
 			  EnableMutualTLS=$$enable_mutual_tls \
 			  EnableSplunk=true \
-				EnableScaling=$$DYNAMODB_AUTOSCALE \
+				EnableDynamoDBAutoScaling=$$DYNAMODB_AUTOSCALE \
 			  VersionNumber=$$VERSION_NUMBER \
 			  CommitId=$$COMMIT_ID \
 			  LogLevel=$$LOG_LEVEL \

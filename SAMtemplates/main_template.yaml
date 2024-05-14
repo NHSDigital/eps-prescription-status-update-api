@@ -53,7 +53,7 @@ Parameters:
       - true
       - false
 
-  EnableScaling:
+  EnableDynamoDBAutoScaling:
     Type: String
     Default: true
     AllowedValues:
@@ -75,7 +75,7 @@ Resources:
       Location: tables/main.yaml
       Parameters:
         StackName: !Ref AWS::StackName
-        EnableScaling: !Ref EnableScaling
+        EnableDynamoDBAutoScaling: !Ref EnableDynamoDBAutoScaling
 
   Apis:
     Type: AWS::Serverless::Application
