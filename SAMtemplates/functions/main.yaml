@@ -158,6 +158,37 @@ Resources:
         SplunkSubscriptionFilterRole: !ImportValue lambda-resources:SplunkSubscriptionFilterRole
         SplunkDeliveryStreamArn: !ImportValue lambda-resources:SplunkDeliveryStream
 
+  CapabilityStatement:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub ${StackName}-CapabilityStatement
+      CodeUri: ../../packages
+      Handler: capabilityStatement.handler
+      Role: !GetAtt CapabilityStatementResources.Outputs.LambdaRoleArn
+    Metadata:
+      BuildMethod: esbuild
+      BuildProperties:
+        Minify: true
+        Target: es2020
+        Sourcemap: true
+        tsconfig: capabilityStatement/tsconfig.json
+        EntryPoints:
+          - capabilityStatement/src/capabilityStatement.ts
+
+  CapabilityStatementResources:
+    Type: AWS::Serverless::Application
+    Properties:
+      Location: lambda_resources.yaml
+      Parameters:
+        StackName: !Ref StackName
+        LambdaName: !Sub ${StackName}-CapabilityStatement
+        LambdaArn: !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:${StackName}-CapabilityStatement
+        LogRetentionInDays: !Ref LogRetentionInDays
+        CloudWatchKMSKeyId: !ImportValue account-resources:CloudwatchLogsKmsKeyArn
+        EnableSplunk: !Ref EnableSplunk
+        SplunkSubscriptionFilterRole: !ImportValue lambda-resources:SplunkSubscriptionFilterRole
+        SplunkDeliveryStreamArn: !ImportValue lambda-resources:SplunkDeliveryStream
+
 Outputs:
   UpdatePrescriptionStatusFunctionName:
     Description: The function name of the UpdatePrescriptionStatus lambda
@@ -184,3 +215,11 @@ Outputs:
   StatusFunctionArn:
     Description: The function ARN of the Status lambda
     Value: !GetAtt Status.Arn
+
+  CapabilityStatementFunctionName:
+    Description: The function name of the CapabilityStatement lambda
+    Value: !Ref CapabilityStatement
+
+  CapabilityStatementFunctionArn:
+    Description: The function ARN of the CapabilityStatement lambda
+    Value: !GetAtt CapabilityStatement.Arn

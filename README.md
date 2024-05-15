@@ -1,20 +1,23 @@
 # EPS Prescription Status Update API
 
-![Build](https://github.com/NHSDigital/eps-prescription-status-update-api/actions/workflows/ci.yml/badge.svg?branch=main)   
-![Release](https://github.com/NHSDigital/eps-prescription-status-update-api/actions/workflows/release.yml/badge.svg?branch=main)   
+![Build](https://github.com/NHSDigital/eps-prescription-status-update-api/actions/workflows/ci.yml/badge.svg?branch=main)  
+![Release](https://github.com/NHSDigital/eps-prescription-status-update-api/actions/workflows/release.yml/badge.svg?branch=main)
 
 ## Versions and deployments
-Version release history can be found ot https://github.com/NHSDigital/eps-prescription-status-update-api/releases.   
-We use eslint convention for commit messages for commits to main branch. Descriptions for the types of changes in a release can be found in the [contributing guidelines](./CONTRIBUTING.md)   
+
+Version release history can be found ot https://github.com/NHSDigital/eps-prescription-status-update-api/releases.  
+We use eslint convention for commit messages for commits to main branch. Descriptions for the types of changes in a release can be found in the [contributing guidelines](./CONTRIBUTING.md)  
 Deployment history can be found at https://nhsdigital.github.io/eps-prescription-status-update-api/
 
 ## Introduction
+
 This is the AWS layer that provides an API for EPS Prescription Status Update.
 
 - `packages/updatePrescriptionStatus/` Handles updating prescription status for the root endpoint.
 - `packages/sandbox` A sandbox endpoint returning an example response.
 - `packages/specification/` This [Open API Specification](https://swagger.io/docs/specification/about/) describes the endpoints, methods and messages.
 - `packages/statusLambda/` Returns the status of the updatePrescriptionStatus endpoint
+- `packages/capabilityStatement/` Returns a static capability statement.
 - `scripts/` Utilities helpful to developers of this specification.
 - `SAMtemplates/` Contains the SAM templates used to define the stacks.
 - `.devcontainer` Contains a dockerfile and vscode devcontainer definition.
@@ -162,6 +165,7 @@ These are used to do common commands
 - `test` Runs unit tests for all code
 
 #### Publish targets
+
 - `publish` Outputs the specification as a **single file** into the `dist/` directory. This is used when uploading to Apigee, which requires the spec as a single file.
 
 #### Compiling
@@ -212,16 +216,16 @@ Workflows are in the `.github/workflows` folder:
 - `pr-link.yaml` This workflow template links Pull Requests to Jira tickets and runs when a pull request is opened.
 - `pull_request.yml` Called when pull request is opened or updated. Calls sam_package_code and sam_release_code to build and deploy the code. Deploys to dev AWS account. The main stack deployed adopts the naming convention psu-pr-<PULL_REQUEST_ID>, while the sandbox stack follows the pattern psu-sandbox-pr-<PULL_REQUEST_ID>
 - `quality_checks.yml` Runs check-licenses, lint, test and SonarCloud scan against the repo. Called from pull_request.yml and release.yml
-- `release.yml` Runs on demand to create a release and deploy to all environments. 
+- `release.yml` Runs on demand to create a release and deploy to all environments.
 - `sam_package_code.yml` Packages code and uploads to a github artifact for later deployment.
 - `sam_release_code.yml` Release code built by sam_package_code.yml to an environment.
 
-
 ### Github pages
 
-Github pages is used to display deployment information. The source for github pages is in the gh-pages branch.   
-As part of the ci and release workflows, the release tag (either the short commit SHA or release tag) is appended to _data/{environment}_deployments.csv so we have a history of releases and replaced in _data/{environment}_latest.csv so we now what the latest released version is.   
+Github pages is used to display deployment information. The source for github pages is in the gh-pages branch.  
+As part of the ci and release workflows, the release tag (either the short commit SHA or release tag) is appended to \_data/{environment}\_deployments.csv so we have a history of releases and replaced in \_data/{environment}\_latest.csv so we now what the latest released version is.  
 There are different makefile targets in this branch. These are
+
 - `run-jekyll` - runs the site locally so changes can be previewed during development
 - `sync-main` - syncs common files from main branch to gh-pages branch. You must commit and push after running this
 - `install-python` installs python dependencies
