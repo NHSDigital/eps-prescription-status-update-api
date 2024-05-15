@@ -4,9 +4,10 @@
   "files": [],
   // Building this project will build all of the following:
   "references": [
-    { "path": "packages/gsul" },
-    { "path": "packages/updatePrescriptionStatus" },
-    { "path": "packages/sandbox" },
-    { "path": "packages/statusLambda" }
+    {"path": "packages/gsul"},
+    {"path": "packages/updatePrescriptionStatus"},
+    {"path": "packages/sandbox"},
+    {"path": "packages/statusLambda"},
+    {"path": "packages/capabilityStatement"}
   ]
 }

@@ -55,6 +55,9 @@ on:
       DEPLOY_APIGEE:
         type: boolean
         default: true
+      DYNAMODB_AUTOSCALE:
+        type: boolean
+        default: true
     secrets:
       CLOUD_FORMATION_DEPLOY_ROLE:
         required: true
@@ -173,6 +176,7 @@ jobs:
           template_file: template.yaml
           TRUSTSTORE_FILE: ${{ inputs.TRUSTSTORE_FILE }}
           VERSION_NUMBER: ${{ inputs.VERSION_NUMBER }}
+          DYNAMODB_AUTOSCALE: ${{ inputs.DYNAMODB_AUTOSCALE }}
         run: ./release_code.sh
 
       - name: Deploy API
