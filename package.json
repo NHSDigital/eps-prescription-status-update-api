@@ -18,7 +18,8 @@
     "packages/sandbox",
     "packages/specification",
     "packages/statusLambda",
-    "packages/updatePrescriptionStatus"
+    "packages/updatePrescriptionStatus",
+    "packages/capabilityStatement"
   ],
   "devDependencies": {
     "@semantic-release/changelog": "^6.0.3",

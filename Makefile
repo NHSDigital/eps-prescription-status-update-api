@@ -102,6 +102,7 @@ lint-node: compile-node
 	npm run lint --workspace packages/sandbox
 	npm run lint --workspace packages/specification
 	npm run lint --workspace packages/statusLambda
+	npm run lint --workspace packages/capabilityStatement
 
 lint-samtemplates:
 	poetry run cfn-lint -t SAMtemplates/**/*.yaml
@@ -122,6 +123,7 @@ test: compile
 	npm run test --workspace packages/gsul
 	npm run test --workspace packages/sandbox
 	npm run test --workspace packages/statusLambda
+	npm run test --workspace packages/capabilityStatement
 
 clean:
 	rm -rf packages/updatePrescriptionStatus/coverage
@@ -132,6 +134,8 @@ clean:
 	rm -rf packages/specification/lib
 	rm -rf packages/statusLambda/coverage
 	rm -rf packages/statusLambda/lib
+	rm -rf packages/capabilityStatement/coverage
+	rm -rf packages/capabilityStatement/lib
 	rm -rf .aws-sam
 
 deep-clean: clean
