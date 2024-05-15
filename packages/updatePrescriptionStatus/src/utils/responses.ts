@@ -156,7 +156,7 @@ export function acceptedDuplicate(): BundleEntry {
   return {
     response: {
       status: "200 OK",
-      lastModified: new Date().toISOString(),
+      lastModified: new Date().toISOString(), //double check
       outcome: {
         resourceType: "OperationOutcome",
         meta: {

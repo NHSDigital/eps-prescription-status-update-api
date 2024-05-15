@@ -64,7 +64,9 @@ describe("Unit test castEventBody", () => {
 
     expect(result).toEqual(undefined)
     expect(responseEntries.length).toEqual(1)
-    expect(responseEntries[0]).toEqual(badRequest("Request body does not have resourceType of 'Bundle' and type of 'transaction'."))
+    expect(responseEntries[0]).toEqual(
+      badRequest("Request body does not have resourceType of 'Bundle' and type of 'transaction'.")
+    )
   })
 
   it("when body has correct resourceType and type, return bundle and no response entries", async () => {
@@ -123,3 +125,37 @@ describe("Unit test validateEntries", () => {
     expect(inValidResponseEntry.response?.status).toEqual("400 Bad Request")
   })
 })
+
+// describe("Unit test checkForDuplicates", () => {
+//   it("when there are only duplicate results a 409 is returned for all of them", () => {
+//     const mockDataItems: Array<DataItem> = [
+//       {
+//         LastModified: "2024-05-15T12:00:00Z",
+//         LineItemID: "line123",
+//         PatientNHSNumber: "1234567890",
+//         PharmacyODSCode: "pharmacy123",
+//         PrescriptionID: "prescription123",
+//         RequestID: "request123",
+//         Status: "completed",
+//         TaskID: "task123",
+//         TerminalStatus: "completed"
+//       },
+//       {
+//         LastModified: "2024-05-15T12:00:00Z",
+//         LineItemID: "line456",
+//         PatientNHSNumber: "0987654321",
+//         PharmacyODSCode: "pharmacy456",
+//         PrescriptionID: "prescription456",
+//         RequestID: "request456",
+//         Status: "in-progress",
+//         TaskID: "task456",
+//         TerminalStatus: "in-progress"
+//       }
+//     ]
+
+//     const responseEntries = checkForDuplicates(mockDataItems)
+
+//     expect(responseEntries.length).toBe(0)
+//     expect(responseEntries.every((entry) => entry.response?.status === "409 Conflict")).toBeTruthy()
+//   })
+// })
