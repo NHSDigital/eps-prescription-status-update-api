@@ -1,0 +1,89 @@
+{
+  "resourceType": "CapabilityStatement",
+  "id": "apim-medicines-prescriptionstatusupdate",
+  "extension": [
+    {
+      "url": "https://fhir.nhs.uk/StructureDefinition/Extension-NHSDigital-CapabilityStatement-Package",
+      "extension": [
+        {
+          "url": "FHIRPackage",
+          "extension": [
+            {
+              "url": "name",
+              "valueString": "fhir.r4.ukcore.stu3.currentbuild"
+            },
+            {
+              "url": "version",
+              "valueString": "0.0.9-pre-release"
+            }
+          ]
+        },
+        {
+          "url": "openApi",
+          "extension": [
+            {
+              "url": "documentation",
+              "valueUrl": "https://digital.nhs.uk/developer/api-catalogue/prescription-status-update-fhir"
+            },
+            {
+              "url": "description",
+              "valueString": "Prescription Status Update - FHIR API"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "url": "https://fhir.nhs.uk/CapabilityStatement/apim-medicines-prescriptionstatusupdate",
+  "version": "1.0.0",
+  "name": "APIMMedicinesPrescriptionStatusUpdate",
+  "status": "active",
+  "date": "2024-04-30T00:00:00+00:00",
+  "publisher": "NHS England",
+  "description": "Capability Statement for NHS England Prescription Status Update API",
+  "kind": "instance",
+  "implementationGuide": [
+    "https://simplifier.net/guide/nhsdigital-medicines",
+    "https://simplifier.net/guide/nhsdigital"
+  ],
+  "fhirVersion": "4.0.1",
+  "format": ["application/fhir+json"],
+  "implementation": {
+    "description": "Base URL for the Prescriptions for Patients API",
+    "url": "https://api.service.nhs.uk/prescription-status-update"
+  },
+  "rest": [
+    {
+      "mode": "server",
+      "security": {
+        "service": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/restful-security-service",
+                "code": "OAuth",
+                "display": "OAuth"
+              }
+            ]
+          }
+        ]
+      },
+      "resource": [
+        {
+          "type": "Bundle",
+          "profile": "https://fhir.hl7.org.uk/StructureDefinition/UKCore-Bundle"
+        },
+        {
+          "type": "Task",
+          "profile": "https://fhir.hl7.org.uk/StructureDefinition/UKCore-Task"
+        }
+      ],
+      "interaction": [
+        {
+          "code": "transaction",
+          "documentation": "Transaction bundles which include Task resources. Each Task resource represents a single status update for an individual line item on a prescription. Only transaction Bundles are supported by this API"
+        }
+      ]
+    }
+  ]
+}
