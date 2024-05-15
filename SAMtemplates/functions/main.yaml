@@ -245,7 +245,7 @@ Resources:
   RestApiGatewayResources:
     Type: AWS::Serverless::Application
     Properties:
-      Location: api_resources.yaml
+      Location: ../apis/api_resources.yaml
       Parameters:
         AdditionalPolicies: !Join
           - ","
