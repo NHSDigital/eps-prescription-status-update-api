@@ -89,6 +89,8 @@ Resources:
         UpdatePrescriptionStatusStateMachineArn: !GetAtt StateMachines.Outputs.UpdatePrescriptionStatusStateMachineArn
         StatusFunctionName: !GetAtt Functions.Outputs.StatusFunctionName
         StatusFunctionArn: !GetAtt Functions.Outputs.StatusFunctionArn
+        CapabilityStatementFunctionName: !GetAtt Functions.Outputs.CapabilityStatementFunctionName
+        CapabilityStatementFunctionArn: !GetAtt Functions.Outputs.CapabilityStatementFunctionArn
         LogRetentionInDays: !Ref LogRetentionInDays
         EnableSplunk: !Ref EnableSplunk
 
