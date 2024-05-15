@@ -203,25 +203,8 @@ Resources:
                 #end
 
                 $payload.Payload.body
-          - StatusCode: 400
-            ResponseTemplates:
-              application/json: |-
-                #set($inputRoot = $input.path('$.errorMessage'))
-                {
-                  "error": "$inputRoot"
-                }
-       
       MethodResponses:
         - StatusCode: "200"
-          ResponseModels:
-            application/json: 'Empty'
-        - StatusCode: "400"
-          ResponseModels:
-            application/json: 'Error'
-          ResponseParameters:
-            'method.response.header.Access-Control-Allow-Headers': '''Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'''
-            'method.response.header.Access-Control-Allow-Methods': '''GET,OPTIONS,POST,PUT,DELETE'''
-            'method.response.header.Access-Control-Allow-Origin': '''*'''
 
   StatusLambdaMethodResource:
     Type: AWS::ApiGateway::Resource
