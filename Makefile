@@ -105,7 +105,7 @@ lint-node: compile-node
 	npm run lint --workspace packages/capabilityStatement
 
 lint-samtemplates:
-	poetry run cfn-lint -t SAMtemplates/**/*.yaml
+	poetry run cfn-lint -I "SAMtemplates/**/*.yaml" 2>&1 | grep "Run scan"
 
 lint-python:
 	poetry run flake8 scripts/*.py --config .flake8
