@@ -35,7 +35,7 @@ requests = "^2.31.0"
 boto3 = "^1.34.106"
 argparse = "^1.4.0"
 pre-commit = "^3.7.1"
-pytest = "^8.2.0"
+pytest = "^8.2.1"
 cfn-lint = "^0.87.3"
 pyjwt = {extras = ["crypto"], version = "^2.8.0"}
 proxygen-cli = "^2.1.14"
