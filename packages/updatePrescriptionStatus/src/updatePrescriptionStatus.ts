@@ -12,11 +12,9 @@ import {jobWithTimeout, hasTimedOut} from "./utils/timeoutUtils"
 import {transactionBundle, validateEntry} from "./validation/content"
 import {
   accepted,
-  acceptedDuplicate,
   badRequest,
   bundleWrap,
   createSuccessResponseEntries,
-  conflictDuplicate,
   serverError,
   timeoutResponse
 } from "./utils/responses"
@@ -73,18 +71,6 @@ const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPro
   }
 
   const dataItems = buildDataItems(requestEntries, xRequestID)
-
-  // call ceckForDuplicates here if it trhows 409
-  const duplicateResponseEntries = checkForDuplicates(dataItems)
-
-  const hasDuplicates = duplicateResponseEntries.some(
-    (entry) => entry.response?.status?.includes("409 Conflict") ?? false
-  )
-
-  if (hasDuplicates) {
-    logger.info("Duplicate Task items were found.")
-    return response(409, responseEntries)
-  }
 
   const persistSuccess = persistDataItems(dataItems)
   const persistResponse = await jobWithTimeout(LAMBDA_TIMEOUT_MS, persistSuccess)
@@ -175,22 +161,6 @@ export function buildDataItems(requestEntries: Array<BundleEntry>, xRequestID: s
     dataItems.push(dataItem)
   }
   return dataItems
-}
-
-export function checkForDuplicates(dataItems: Array<DataItem>): Array<BundleEntry> {
-  const responseEntries: Array<BundleEntry> = []
-  const existingTasks = new Set<string>()
-
-  for (const item of dataItems) {
-    if (existingTasks.has(item.TaskID)) {
-      responseEntries.push(conflictDuplicate(item.TaskID))
-    } else {
-      existingTasks.add(item.TaskID)
-      // if not send a 200
-      responseEntries.push(acceptedDuplicate())
-    }
-  }
-  return responseEntries
 }
 
 function response(statusCode: number, responseEntries: Array<BundleEntry>) {

@@ -125,37 +125,3 @@ describe("Unit test validateEntries", () => {
     expect(inValidResponseEntry.response?.status).toEqual("400 Bad Request")
   })
 })
-
-// describe("Unit test checkForDuplicates", () => {
-//   it("when there are only duplicate results a 409 is returned for all of them", () => {
-//     const mockDataItems: Array<DataItem> = [
-//       {
-//         LastModified: "2024-05-15T12:00:00Z",
-//         LineItemID: "line123",
-//         PatientNHSNumber: "1234567890",
-//         PharmacyODSCode: "pharmacy123",
-//         PrescriptionID: "prescription123",
-//         RequestID: "request123",
-//         Status: "completed",
-//         TaskID: "task123",
-//         TerminalStatus: "completed"
-//       },
-//       {
-//         LastModified: "2024-05-15T12:00:00Z",
-//         LineItemID: "line456",
-//         PatientNHSNumber: "0987654321",
-//         PharmacyODSCode: "pharmacy456",
-//         PrescriptionID: "prescription456",
-//         RequestID: "request456",
-//         Status: "in-progress",
-//         TaskID: "task456",
-//         TerminalStatus: "in-progress"
-//       }
-//     ]
-
-//     const responseEntries = checkForDuplicates(mockDataItems)
-
-//     expect(responseEntries.length).toBe(0)
-//     expect(responseEntries.every((entry) => entry.response?.status === "409 Conflict")).toBeTruthy()
-//   })
-// })
