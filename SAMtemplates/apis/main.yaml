@@ -120,7 +120,7 @@ Resources:
         DNSName: !GetAtt RestApiDomain.RegionalDomainName
         HostedZoneId: !GetAtt RestApiDomain.RegionalHostedZoneId
 
-  UpdatePrescriptionStatusMethod:
+  UpdatePrescriptionStatusMethod: # Only accepts application/json and not application/fhir+json
     Type: AWS::ApiGateway::Method
     Properties:
       RestApiId: !Ref RestApiGateway
