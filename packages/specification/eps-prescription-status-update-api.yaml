@@ -225,9 +225,13 @@ paths:
       responses:
         "200":
           description: Successful retrieval of metadata.
+      security:
+        - app-level0: []
 
 components:
   securitySchemes:
+    app-level0:
+      $ref: https://proxygen.prod.api.platform.nhs.uk/components/securitySchemes/app-level0
     app-level3:
       $ref: https://proxygen.prod.api.platform.nhs.uk/components/securitySchemes/app-level3
   parameters:
