@@ -218,6 +218,14 @@ paths:
                 $ref: examples/error-ods-code.json
       security:
         - app-level3: []
+  /metadata:
+    get:
+      operationId: prescription-status-update-metadata
+      summary: Prescription status update metadata
+      responses:
+        "200":
+          description: Successful retrieval of metadata.
+
 components:
   securitySchemes:
     app-level3:
@@ -303,7 +311,7 @@ security:
   - app-level3: []
 x-nhsd-apim:
   temporary: false
-  monitoring: false
+  monitoring: true
   access:
     - title: Application Restricted
       grants:
