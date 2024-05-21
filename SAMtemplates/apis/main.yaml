@@ -215,10 +215,9 @@ Resources:
             SelectionPattern: ^4\d{2}.* 
             ResponseTemplates:
               application/json: |-
-                #set($errorMessageObj = $util.parseJson($input.path('$.errorMessage')))
-                {
-                  "message": "$errorMessageObj.message"
-                }
+                #set($context.responseOverride.header[Content-Type] = "application/fhir+json")
+                "{\"resourceType\":\"OperationOutcome\",\"issue\":      [{\"severity\":\"error\",\"code\":\"processing\",      \"diagnostics\":\"System error\"}]}"
+
       MethodResponses:
         - StatusCode: "200"
         - StatusCode: "400"
