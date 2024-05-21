@@ -16,11 +16,15 @@ info:
     This includes letting patients know when their prescription is ready to collect.
     The overall aim of the service is to reduce burden to front line NHS services by reducing the number of routine patient queries about their prescriptions.
 
+    You can:
+    * Enable patients to know when their prescription is ready
+    * Enable dispensing suppliers to push status information about electronic prescriptions
+
     ## Who can use this API
     The Prescription Status Update API is intended for NHS England internal use only; however, the specification of the data stores will be required by dispensing suppliers so they can provide and push the information required to a central NHS data store.
         
     ## Related APIs
-    The following APIs are related to the "Prescription Status Update API:
+    The following APIs are related to the "Prescription Status Update" API:
     * [Electronic Prescriptions Service](https://digital.nhs.uk/developer/api-catalogue/electronic-prescription-service-fhir): the national service for creating and dispensing prescriptions across health and social care.
     * [Prescriptions for Patients](https://digital.nhs.uk/developer/api-catalogue/prescriptions-for-patients): the national service to retrieve prescriptions data for individual patients from the Electronic Prescription Service (EPS), for use in patient-facing applications.
 
@@ -61,7 +65,7 @@ info:
     The end user could be:
 
     * a healthcare worker - in which case you must ensure they are authenticated and suitably authorised locally
-    * not present at all - for example as part of a back end process integrated with a shipping system
+    * not present at all - for example as part of a back end process to check NHS numbers for data flowing from one system to another
 
 
     To use this access mode, use the following security pattern:
