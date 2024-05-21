@@ -21,14 +21,15 @@ function createTransactionCommand(dataItems: Array<DataItem>): TransactWriteItem
       Put: {
         TableName: tableName,
         Item: marshall(d),
-        ConditionExpression: "attribute_not_exists(d.TaskID) AND attribute_not_exists(d.PrescriptionID)"
+        ConditionExpression: "attribute_not_exists(TaskID) AND attribute_not_exists(PrescriptionID)",
+        ReturnValuesOnConditionCheckFailure: "ALL_OLD"
       }
     }
   })
   return new TransactWriteItemsCommand({TransactItems: transactItems})
 }
 
-export async function persistDataItems(dataItems: Array<DataItem>): Promise<boolean | Timeout> {
+export async function persistDataItems(dataItems: Array<DataItem>): Promise<boolean | Timeout | string> {
   const transactionCommand = createTransactionCommand(dataItems)
   try {
     logger.info("Sending TransactWriteItemsCommand to DynamoDB.", {command: transactionCommand})
@@ -36,9 +37,9 @@ export async function persistDataItems(dataItems: Array<DataItem>): Promise<bool
     logger.info("TransactWriteItemsCommand sent to DynamoDB successfully.", {command: transactionCommand})
     return true
   } catch (e) {
-    if (e === ConditionalCheckFailedException) {
+    if (e instanceof ConditionalCheckFailedException) {
       logger.error("Duplicate updates were detected during TransactWriteItemsCommand to DynamoDB.", {error: e})
-      return false
+      return e.name
     } else {
       logger.error("Error sending TransactWriteItemsCommand to DynamoDB.", {error: e})
       return false

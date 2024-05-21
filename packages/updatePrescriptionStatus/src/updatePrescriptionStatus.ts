@@ -75,6 +75,13 @@ const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPro
   const persistSuccess = persistDataItems(dataItems)
   const persistResponse = await jobWithTimeout(LAMBDA_TIMEOUT_MS, persistSuccess)
 
+  // if ((await persistSuccess) === "ConditionalCheckFailedException") {
+  //   for (const item of dataItems) {
+  //     responseEntries.push(conflictDuplicate(item.TaskID))
+  //     return response(409, responseEntries)
+  //   }
+  // }
+
   if (hasTimedOut(persistResponse)) {
     responseEntries = [timeoutResponse()]
     logger.info("DynamoDB operation timed out.")
