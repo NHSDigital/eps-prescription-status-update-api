@@ -212,7 +212,7 @@ Resources:
 
                 $payload.Payload.body
           - StatusCode: 400
-            SelectionPattern: ^4\d{2}.* 
+            SelectionPattern: ^5\d{2}.* 
             ResponseTemplates:
               application/json: |-
                 #set($payload = $util.parseJson($input.path('$.output')))
@@ -225,7 +225,7 @@ Resources:
 
       MethodResponses:
         - StatusCode: "200"
-        - StatusCode: "400"
+        - StatusCode: "500"
 
   StatusLambdaMethodResource:
     Type: AWS::ApiGateway::Resource
