@@ -212,6 +212,22 @@ Resources:
 
                 $payload.Payload.body
           - StatusCode: 400
+            SelectionPattern: ^4\d{2}.*
+            ResponseTemplates:
+              application/json: |-
+                #set($errorMessageObj = $util.parseJson($input.path('$.errorMessage')))
+                #set($context.responseOverride.header\[Content-Type\] = "application/fhir+json")
+                {
+                  "resourceType": "OperationOutcome",
+                  "issue": [
+                    {
+                      "severity": "error",
+                      "code": "processing",
+                      "diagnostics": "$errorMessageObj.message"
+                    }
+                  ]
+                }      
+          - StatusCode: 500
             SelectionPattern: ^5\d{2}.* 
             ResponseTemplates:
               application/json: |-
@@ -225,6 +241,7 @@ Resources:
 
       MethodResponses:
         - StatusCode: "200"
+        - StatusCode: "400"
         - StatusCode: "500"
 
   StatusLambdaMethodResource:
