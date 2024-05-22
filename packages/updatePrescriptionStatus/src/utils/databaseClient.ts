@@ -1,9 +1,9 @@
 import {Logger} from "@aws-lambda-powertools/logger"
 import {
-  ConditionalCheckFailedException,
   DynamoDBClient,
   TransactWriteItem,
-  TransactWriteItemsCommand
+  TransactWriteItemsCommand,
+  TransactionCanceledException
 } from "@aws-sdk/client-dynamodb"
 import {marshall} from "@aws-sdk/util-dynamodb"
 
@@ -37,12 +37,10 @@ export async function persistDataItems(dataItems: Array<DataItem>): Promise<bool
     logger.info("TransactWriteItemsCommand sent to DynamoDB successfully.", {command: transactionCommand})
     return true
   } catch (e) {
-    if (e instanceof ConditionalCheckFailedException) {
-      logger.error("Duplicate updates were detected during TransactWriteItemsCommand to DynamoDB.", {error: e})
-      return e.name
-    } else {
-      logger.error("Error sending TransactWriteItemsCommand to DynamoDB.", {error: e})
-      return false
+    if (e instanceof TransactionCanceledException) {
+      logger.error("transaction cancelled.", {reasons: e.CancellationReasons})
     }
+    logger.error("Error sending TransactWriteItemsCommand to DynamoDB.", {error: e})
+    return false
   }
 }

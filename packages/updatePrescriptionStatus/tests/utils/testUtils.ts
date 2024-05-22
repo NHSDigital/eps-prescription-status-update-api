@@ -142,14 +142,13 @@ export function mockInternalDependency(modulePath: string, module: object, depen
 export function mockDynamoDBClient() {
   const mockSend = jest.fn()
   const mockTransact = jest.fn()
-  const mockConditionalException = jest.fn()
   jest.unstable_mockModule("@aws-sdk/client-dynamodb", () => {
     return {
       DynamoDBClient: jest.fn().mockImplementation(() => ({
         send: mockSend
       })),
       TransactWriteItemsCommand: mockTransact,
-      ConditionalCheckFailedException: mockConditionalException
+      TransactionCanceledException: jest.fn()
     }
   })
   return {mockSend, mockTransact}
