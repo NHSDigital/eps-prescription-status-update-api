@@ -7,7 +7,6 @@ import inputOutputLogger from "@middy/input-output-logger"
 import errorHandler from "@nhs/fhir-middy-error-handler"
 import httpHeaderNormalizer from "@middy/http-header-normalizer"
 import {Bundle, BundleEntry, Task} from "fhir/r4"
-import {persistDataItems} from "./utils/databaseClient"
 import {jobWithTimeout, hasTimedOut} from "./utils/timeoutUtils"
 import {transactionBundle, validateEntry} from "./validation/content"
 import {
@@ -18,23 +17,12 @@ import {
   serverError,
   timeoutResponse
 } from "./utils/responses"
+import {DynamoInsertClient, DataItem} from "@common/dynamo-insert-client"
 
 const LAMBDA_TIMEOUT_MS = 9500
 const logger = new Logger({serviceName: "updatePrescriptionStatus"})
 
-export interface DataItem {
-  LastModified: string
-  LineItemID: string
-  PatientNHSNumber: string
-  PharmacyODSCode: string
-  PrescriptionID: string
-  RequestID: string
-  Status: string
-  TaskID: string
-  TerminalStatus: string
-}
-
-const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
+const lambdaHandler = async (event: APIGatewayProxyEvent, config: HandlerParams): Promise<APIGatewayProxyResult> => {
   logger.appendKeys({
     "nhsd-correlation-id": event.headers["nhsd-correlation-id"],
     "nhsd-request-id": event.headers["nhsd-request-id"],
@@ -71,8 +59,8 @@ const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPro
   }
 
   const dataItems = buildDataItems(requestEntries, xRequestID)
-  const persistSuccess = persistDataItems(dataItems)
-  const persistResponse = await jobWithTimeout(LAMBDA_TIMEOUT_MS, persistSuccess)
+  const persistSuccess = new DynamoInsertClient().persistDataItems(dataItems)
+  const persistResponse = await jobWithTimeout(config.lambdaTimeoutMs, persistSuccess)
 
   if (hasTimedOut(persistResponse)) {
     responseEntries = [timeoutResponse()]
@@ -154,7 +142,8 @@ export function buildDataItems(requestEntries: Array<BundleEntry>, xRequestID: s
       RequestID: xRequestID,
       Status: task.businessStatus!.coding![0].code!,
       TaskID: task.id!,
-      TerminalStatus: task.status
+      TerminalStatus: task.status,
+      CallingLambda: "PSU"
     }
 
     dataItems.push(dataItem)
@@ -173,14 +162,51 @@ function response(statusCode: number, responseEntries: Array<BundleEntry>) {
   }
 }
 
-export const handler = middy(lambdaHandler)
-  .use(injectLambdaContext(logger, {clearState: true}))
-  .use(httpHeaderNormalizer())
-  .use(
-    inputOutputLogger({
-      logger: (request) => {
+type HandlerConfig<T> = {
+  handlerFunction: (event: T, config: HandlerParams) => Promise<APIGatewayProxyResult>
+  middleware: Array<middy.MiddlewareObj>
+  params: HandlerParams
+}
+
+type HandlerParams = {
+  lambdaTimeoutMs: number
+}
+export const DEFAULT_HANDLER_PARAMS = {
+  lambdaTimeoutMs: LAMBDA_TIMEOUT_MS
+}
+
+export const newHandler = <T>(handlerConfig: HandlerConfig<T>) => {
+  const newHandler = middy((event: T) => handlerConfig.handlerFunction(event, handlerConfig.params))
+  for (const middleware of handlerConfig.middleware) {
+    newHandler.use(middleware)
+  }
+  return newHandler
+}
+
+const MIDDLEWARE = {
+  injectLambdaContext: injectLambdaContext(logger, {clearState: true}),
+  httpHeaderNormalizer: httpHeaderNormalizer() as middy.MiddlewareObj,
+  inputOutputLogger: inputOutputLogger({
+    logger: (request) => {
+      if (request.response) {
+        logger.debug(request)
+      } else {
         logger.info(request)
       }
-    })
-  )
-  .use(errorHandler({logger: logger}))
+    }
+  }),
+  errorHandler: errorHandler({logger: logger})
+}
+
+const UPDATE_PRESCRIPTION_STATUS_MIDDLEWARE = [
+  MIDDLEWARE.injectLambdaContext,
+  MIDDLEWARE.httpHeaderNormalizer,
+  MIDDLEWARE.inputOutputLogger,
+  MIDDLEWARE.errorHandler
+]
+
+export const handler = newHandler({
+  handlerFunction: lambdaHandler,
+  middleware: UPDATE_PRESCRIPTION_STATUS_MIDDLEWARE,
+  params: DEFAULT_HANDLER_PARAMS
+})

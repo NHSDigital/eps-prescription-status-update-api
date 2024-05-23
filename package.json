@@ -19,7 +19,8 @@
     "packages/specification",
     "packages/statusLambda",
     "packages/updatePrescriptionStatus",
-    "packages/capabilityStatement"
+    "packages/capabilityStatement",
+    "packages/dynamoInsertClient"
   ],
   "devDependencies": {
     "@semantic-release/changelog": "^6.0.3",

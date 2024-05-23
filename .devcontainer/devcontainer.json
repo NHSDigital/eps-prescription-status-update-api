@@ -47,6 +47,9 @@
         "python.linting.flake8Enabled": true,
         "python.linting.enabled": true, // required to format on save
         "editor.defaultFormatter": "rvest.vs-code-prettier-eslint",
+        "[json]": {
+          "editor.defaultFormatter": "rvest.vs-code-prettier-eslint"
+        },
         "editor.formatOnPaste": false, // required
         "editor.formatOnType": false, // required
         "editor.formatOnSave": true, // optional

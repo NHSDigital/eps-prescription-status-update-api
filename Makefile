@@ -103,6 +103,7 @@ lint-node: compile-node
 	npm run lint --workspace packages/specification
 	npm run lint --workspace packages/statusLambda
 	npm run lint --workspace packages/capabilityStatement
+	npm run lint --workspace packages/dynamoInsertClient
 
 lint-samtemplates:
 	poetry run cfn-lint -I "SAMtemplates/**/*.yaml" 2>&1 | grep "Run scan"
@@ -124,6 +125,7 @@ test: compile
 	npm run test --workspace packages/sandbox
 	npm run test --workspace packages/statusLambda
 	npm run test --workspace packages/capabilityStatement
+	npm run test --workspace packages/dynamoInsertClient
 
 clean:
 	rm -rf packages/updatePrescriptionStatus/coverage
@@ -136,6 +138,8 @@ clean:
 	rm -rf packages/statusLambda/lib
 	rm -rf packages/capabilityStatement/coverage
 	rm -rf packages/capabilityStatement/lib
+	rm -rf packages/dynamoInsertClient/coverage
+	rm -rf packages/dynamoInsertClient/lib
 	rm -rf .aws-sam
 
 deep-clean: clean
