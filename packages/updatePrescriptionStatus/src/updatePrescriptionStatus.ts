@@ -14,10 +14,12 @@ import {
   accepted,
   badRequest,
   bundleWrap,
+  conflictDuplicate,
   createSuccessResponseEntries,
   serverError,
   timeoutResponse
 } from "./utils/responses"
+import {TransactionCanceledException} from "@aws-sdk/client-dynamodb"
 
 const LAMBDA_TIMEOUT_MS = 9500
 const logger = new Logger({serviceName: "updatePrescriptionStatus"})
@@ -72,30 +74,40 @@ const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPro
 
   const dataItems = buildDataItems(requestEntries, xRequestID)
 
-  const persistSuccess = persistDataItems(dataItems)
-  const persistResponse = await jobWithTimeout(LAMBDA_TIMEOUT_MS, persistSuccess)
+  try {
+    const persistSuccess = persistDataItems(dataItems)
+    const persistResponse = await jobWithTimeout(LAMBDA_TIMEOUT_MS, persistSuccess)
 
-  // if ((await persistSuccess) === "ConditionalCheckFailedException") {
-  //   for (const item of dataItems) {
-  //     responseEntries.push(conflictDuplicate(item.TaskID))
-  //     return response(409, responseEntries)
-  //   }
-  // }
+    if (hasTimedOut(persistResponse)) {
+      responseEntries = [timeoutResponse()]
+      logger.info("DynamoDB operation timed out.")
+      return response(504, responseEntries)
+    }
 
-  if (hasTimedOut(persistResponse)) {
-    responseEntries = [timeoutResponse()]
-    logger.info("DynamoDB operation timed out.")
-    return response(504, responseEntries)
-  }
+    if (!persistResponse) {
+      responseEntries = [serverError()]
+      return response(500, responseEntries)
+    }
 
-  if (!persistResponse) {
+    responseEntries = createSuccessResponseEntries(requestEntries)
+    logger.info("Event processed successfully.")
+    return response(201, responseEntries)
+  } catch (e) {
+    if (e instanceof TransactionCanceledException) {
+      e.CancellationReasons?.forEach((reason) => {
+        if (reason.Item && reason.Item["TaskID"] && reason.Item["TaskID"]["S"]) {
+          const taskId = reason.Item["TaskID"]["S"]
+          responseEntries.push(conflictDuplicate(taskId))
+        }
+      })
+
+      return response(409, responseEntries)
+    }
+
+    logger.error("Error during data persistence operation.", {error: e})
     responseEntries = [serverError()]
     return response(500, responseEntries)
   }
-
-  responseEntries = createSuccessResponseEntries(requestEntries)
-  logger.info("Event processed successfully.")
-  return response(201, responseEntries)
 }
 
 export function getXRequestID(event: APIGatewayProxyEvent, responseEntries: Array<BundleEntry>): string | undefined {

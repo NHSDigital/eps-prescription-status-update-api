@@ -39,6 +39,7 @@ export async function persistDataItems(dataItems: Array<DataItem>): Promise<bool
   } catch (e) {
     if (e instanceof TransactionCanceledException) {
       logger.error("transaction cancelled.", {reasons: e.CancellationReasons})
+      throw e
     }
     logger.error("Error sending TransactWriteItemsCommand to DynamoDB.", {error: e})
     return false
