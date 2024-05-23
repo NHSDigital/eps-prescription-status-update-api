@@ -214,12 +214,11 @@ Resources:
           - StatusCode: 400
             SelectionPattern: ^4\d{2}.*
             ResponseTemplates:
+              ResponseTemplates:
               application/json: |-
-                #set($payload = $util.parseJson($input.path('$.output')))
-                #set($context.responseOverride.status = 400)
-                #set($context.responseOverride.header['Content-Type'] = 'application/fhir+json')
-                $payload.Payload.body
-  
+                #set($context.responseOverride.header[Content-Type] ="application/fhir+json")
+                "{\"resourceType\":\"OperationOutcome\",\"issue\": [{\"severity\":\"error\",\"code\":\"processing\",\"diagnostics\":\"Invalid JSON input\"}]}"
+              
           - StatusCode: 500
             SelectionPattern: ^5\d{2}.* 
             ResponseTemplates:
