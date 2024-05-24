@@ -95,12 +95,11 @@ const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPro
   } catch (e) {
     if (e instanceof TransactionCanceledException) {
       e.CancellationReasons?.forEach((reason) => {
-        if (reason.Item && reason.Item["TaskID"] && reason.Item["TaskID"]["S"]) {
-          const taskId = reason.Item["TaskID"]["S"]
+        if (reason.Item && reason.Item.TaskID && reason.Item.TaskID.S) {
+          const taskId = reason.Item.TaskID.S
           responseEntries.push(conflictDuplicate(taskId))
         }
       })
-
       return response(409, responseEntries)
     }
 

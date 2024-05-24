@@ -18,6 +18,7 @@ import {
 } from "./utils/testUtils"
 
 import requestDispatched from "../../specification/examples/request-dispatched.json"
+import requestDuplicates from "../../specification/examples/request-duplicate-items.json"
 import requestMultipleItems from "../../specification/examples/request-multiple-items.json"
 import requestMissingFields from "../../specification/examples/request-missing-fields.json"
 import requestMultipleMissingFields from "../../specification/examples/request-multiple-missing-fields.json"
@@ -30,6 +31,7 @@ import {
   serverError,
   timeoutResponse
 } from "../src/utils/responses"
+import {TransactionCanceledException} from "@aws-sdk/client-dynamodb"
 
 const {mockSend, mockTransact} = mockDynamoDBClient()
 const {handler} = await import("../src/updatePrescriptionStatus")
@@ -184,8 +186,23 @@ describe("Integration tests for updatePrescriptionStatus handler", () => {
     expect(JSON.parse(response.body)).toEqual(bundleWrap([badRequest("Missing or empty x-request-id header.")]))
   })
 
-  it("when x-request-id header is mixed case, expect it to work", async () => {
+  it("when the conditional check fails, an error is thrown", async () => {
+    const event = generateMockEvent(requestDuplicates)
+    mockSend.mockRejectedValue(
+      new TransactionCanceledException({
+        message: "The transaction was cancelled.",
+        $metadata: {
+          httpStatusCode: 400
+        }
+      }) as never
+    )
 
+    const response: APIGatewayProxyResult = await handler(event, {})
+
+    expect(response.statusCode).toEqual(400) // throws 500 instead - error is never caught in dbClient
+  })
+
+  it("when x-request-id header is mixed case, expect it to work", async () => {
     const body = generateBody()
     const event: APIGatewayProxyEvent = generateMockEvent(body)
     delete event.headers["x-request-id"]
@@ -197,6 +214,5 @@ describe("Integration tests for updatePrescriptionStatus handler", () => {
     const response: APIGatewayProxyResult = await handler(event, {})
 
     expect(response.statusCode).toEqual(201)
-
   })
 })
