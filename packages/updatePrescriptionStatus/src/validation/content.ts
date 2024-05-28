@@ -118,7 +118,17 @@ export function statuses(task: Task): string | undefined {
     if (businessStatus) {
       const coding: Coding = businessStatus.coding![0]
       const code = coding.code
-      if (code && ["with pharmacy", "ready to collect"].includes(code.toLowerCase())) {
+
+      const patientActionRequiredStatuses = [
+        "with pharmacy",
+        "with pharmacy - preparing remainder",
+        "ready to collect",
+        "ready to collect - partial",
+        "ready to dispatch",
+        "ready to dispatch - partial"
+      ]
+
+      if (code && patientActionRequiredStatuses.includes(code.toLowerCase())) {
         return "Completed state indicated for a prescription status requiring patient action."
       }
     }
