@@ -219,6 +219,11 @@ describe("Unit tests for validation of status against business status", () => {
     },
     {
       taskStatus: "completed",
+      businessStatus: "With Pharmacy - preparing remainder",
+      expected: "Completed state indicated for a prescription status requiring patient action."
+    },
+    {
+      taskStatus: "completed",
       businessStatus: "Ready to collect",
       expected: "Completed state indicated for a prescription status requiring patient action."
     },
@@ -228,13 +233,53 @@ describe("Unit tests for validation of status against business status", () => {
       expected: "Completed state indicated for a prescription status requiring patient action."
     },
     {
+      taskStatus: "completed",
+      businessStatus: "Ready to collect - partial",
+      expected: "Completed state indicated for a prescription status requiring patient action."
+    },
+    {
+      taskStatus: "completed",
+      businessStatus: "Ready to dispatch",
+      expected: "Completed state indicated for a prescription status requiring patient action."
+    },
+    {
+      taskStatus: "completed",
+      businessStatus: "Ready to dispatch - partial",
+      expected: "Completed state indicated for a prescription status requiring patient action."
+    },
+    {
+      taskStatus: "completed",
+      businessStatus: "rEaDy To DisPAtCh - pArtIAl",
+      expected: "Completed state indicated for a prescription status requiring patient action."
+    },
+    {
       taskStatus: "in-progress",
       businessStatus: "With Pharmacy",
       expected: undefined
     },
     {
       taskStatus: "in-progress",
+      businessStatus: "With Pharmacy - preparing remainder",
+      expected: undefined
+    },
+    {
+      taskStatus: "in-progress",
       businessStatus: "Ready to collect",
+      expected: undefined
+    },
+    {
+      taskStatus: "in-progress",
+      businessStatus: "Ready to collect - partial",
+      expected: undefined
+    },
+    {
+      taskStatus: "in-progress",
+      businessStatus: "Ready to dispatch",
+      expected: undefined
+    },
+    {
+      taskStatus: "in-progress",
+      businessStatus: "Ready to dispatch - partial",
       expected: undefined
     }
   ])(
@@ -287,7 +332,8 @@ describe("Unit tests for validation of transaction bundle", () => {
       type: "transaction",
       expected: true
     }
-  ])("When resourceType is $resourceType and type is $type, should return $expected.",
+  ])(
+    "When resourceType is $resourceType and type is $type, should return $expected.",
     async ({resourceType, type, expected}) => {
       const body = {resourceType: resourceType, type: type}
 
@@ -299,15 +345,13 @@ describe("Unit tests for validation of transaction bundle", () => {
 })
 
 describe("Unit tests for validation of businessStatus", () => {
-  it.each(BUSINESS_STATUSES)("When businessStatus is valid, should return undefined.",
-    async (status) => {
-      const task = {businessStatus: {coding: [{code: status}]}}
+  it.each(BUSINESS_STATUSES)("When businessStatus is valid, should return undefined.", async (status) => {
+    const task = {businessStatus: {coding: [{code: status}]}}
 
-      const actual = businessStatus(task as Task)
+    const actual = businessStatus(task as Task)
 
-      expect(actual).toEqual(undefined)
-    }
-  )
+    expect(actual).toEqual(undefined)
+  })
 
   it("When businessStatus is invalid, should return expected message.", async () => {
     const task = {businessStatus: {coding: [{code: "Invalid"}]}}
