@@ -211,7 +211,7 @@ describe("Unit tests for validation of NHS number", () => {
 })
 
 describe("Unit tests for validation of status against business status", () => {
-  it.each([
+  const testCases = [
     {
       taskStatus: "completed",
       businessStatus: "With Pharmacy",
@@ -282,8 +282,9 @@ describe("Unit tests for validation of status against business status", () => {
       businessStatus: "Ready to dispatch - partial",
       expected: undefined
     }
-  ])(
-    "When status is '$status' and business status is '$businessStatus', should return expected issue.",
+  ]
+  it.each(testCases)(
+    "When status is '$taskStatus' and business status is '$businessStatus', should return expected issue.",
     async ({taskStatus, businessStatus, expected}) => {
       const task = {status: taskStatus, businessStatus: {coding: [{code: businessStatus}]}}
 
