@@ -211,77 +211,58 @@ describe("Unit tests for validation of NHS number", () => {
 })
 
 describe("Unit tests for validation of status against business status", () => {
+  const generateTestCase = (taskStatus: string, businessStatus: string, expected: string | undefined) => ({
+    taskStatus,
+    businessStatus,
+    expected
+  })
   const testCases = [
-    {
-      taskStatus: "completed",
-      businessStatus: "With Pharmacy",
-      expected: "Completed state indicated for a prescription status requiring patient action."
-    },
-    {
-      taskStatus: "completed",
-      businessStatus: "With Pharmacy - preparing remainder",
-      expected: "Completed state indicated for a prescription status requiring patient action."
-    },
-    {
-      taskStatus: "completed",
-      businessStatus: "Ready to collect",
-      expected: "Completed state indicated for a prescription status requiring patient action."
-    },
-    {
-      taskStatus: "completed",
-      businessStatus: "ReAdY tO cOlLeCt",
-      expected: "Completed state indicated for a prescription status requiring patient action."
-    },
-    {
-      taskStatus: "completed",
-      businessStatus: "Ready to collect - partial",
-      expected: "Completed state indicated for a prescription status requiring patient action."
-    },
-    {
-      taskStatus: "completed",
-      businessStatus: "Ready to dispatch",
-      expected: "Completed state indicated for a prescription status requiring patient action."
-    },
-    {
-      taskStatus: "completed",
-      businessStatus: "Ready to dispatch - partial",
-      expected: "Completed state indicated for a prescription status requiring patient action."
-    },
-    {
-      taskStatus: "completed",
-      businessStatus: "rEaDy To DisPAtCh - pArtIAl",
-      expected: "Completed state indicated for a prescription status requiring patient action."
-    },
-    {
-      taskStatus: "in-progress",
-      businessStatus: "With Pharmacy",
-      expected: undefined
-    },
-    {
-      taskStatus: "in-progress",
-      businessStatus: "With Pharmacy - preparing remainder",
-      expected: undefined
-    },
-    {
-      taskStatus: "in-progress",
-      businessStatus: "Ready to collect",
-      expected: undefined
-    },
-    {
-      taskStatus: "in-progress",
-      businessStatus: "Ready to collect - partial",
-      expected: undefined
-    },
-    {
-      taskStatus: "in-progress",
-      businessStatus: "Ready to dispatch",
-      expected: undefined
-    },
-    {
-      taskStatus: "in-progress",
-      businessStatus: "Ready to dispatch - partial",
-      expected: undefined
-    }
+    generateTestCase(
+      "completed",
+      "With Pharmacy",
+      "Completed state indicated for a prescription status requiring patient action."
+    ),
+    generateTestCase(
+      "completed",
+      "With Pharmacy - preparing remainder",
+      "Completed state indicated for a prescription status requiring patient action."
+    ),
+    generateTestCase(
+      "completed",
+      "Ready to collect",
+      "Completed state indicated for a prescription status requiring patient action."
+    ),
+    generateTestCase(
+      "completed",
+      "ReAdY tO cOlLeCt",
+      "Completed state indicated for a prescription status requiring patient action."
+    ),
+    generateTestCase(
+      "completed",
+      "Ready to collect - partial",
+      "Completed state indicated for a prescription status requiring patient action."
+    ),
+    generateTestCase(
+      "completed",
+      "Ready to dispatch",
+      "Completed state indicated for a prescription status requiring patient action."
+    ),
+    generateTestCase(
+      "completed",
+      "Ready to dispatch - partial",
+      "Completed state indicated for a prescription status requiring patient action."
+    ),
+    generateTestCase(
+      "completed",
+      "rEaDy To DisPAtCh - pArtIAl",
+      "Completed state indicated for a prescription status requiring patient action."
+    ),
+    generateTestCase("in-progress", "With Pharmacy", undefined),
+    generateTestCase("in-progress", "With Pharmacy - preparing remainder", undefined),
+    generateTestCase("in-progress", "Ready to collect", undefined),
+    generateTestCase("in-progress", "Ready to collect - partial", undefined),
+    generateTestCase("in-progress", "Ready to dispatch", undefined),
+    generateTestCase("in-progress", "Ready to dispatch - partial", undefined)
   ]
   it.each(testCases)(
     "When status is '$taskStatus' and business status is '$businessStatus', should return expected issue.",
