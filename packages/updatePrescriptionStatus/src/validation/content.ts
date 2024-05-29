@@ -123,20 +123,21 @@ export function businessStatus(task: Task): string | undefined {
 export function statuses(task: Task): string | undefined {
   const status = task.status
   const businessStatus: CodeableConcept | undefined = task.businessStatus
-
   if (!businessStatus) {
-    return
+    return "Task.businessStatus is required."
   }
 
-  const coding: Coding = businessStatus.coding![0]
-  const code = coding.code
+  const coding: Coding | undefined = businessStatus.coding && businessStatus.coding[0]
+  if (!coding) {
+    return "Task.businessStatus.coding is required."
+  }
 
+  const code: string | undefined = coding.code
   if (!code) {
-    return
+    return "Task.businessStatus.coding.code is required."
   }
 
   const lowercaseCode = code.toLowerCase()
-
   if (status === "completed" && IN_PROGRESS_BUSINESS_STATUSES.includes(lowercaseCode)) {
     return (
       "Task.status field set to 'completed' but Task.businessStatus value of '" + code + "' requires follow up action."

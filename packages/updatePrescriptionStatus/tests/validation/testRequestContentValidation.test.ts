@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
 import {
   expect,
   describe,
@@ -216,83 +214,99 @@ describe("Unit tests for validation of status against business status", () => {
     businessStatus,
     expected
   })
-  const testCases = [
-    generateTestCase(
-      "completed",
-      "With Pharmacy",
-      "Task.status field set to 'completed' but Task.businessStatus value of 'With Pharmacy' " +
-        "requires follow up action."
-    ),
-    generateTestCase(
-      "completed",
-      "With Pharmacy - preparing remainder",
-      "Task.status field set to 'completed' but Task.businessStatus value of 'With Pharmacy - preparing remainder' " +
-        "requires follow up action."
-    ),
-    generateTestCase(
-      "completed",
-      "Ready to collect",
-      "Task.status field set to 'completed' but Task.businessStatus value of 'Ready to collect' " +
-        "requires follow up action."
-    ),
-    generateTestCase(
-      "completed",
-      "ReAdY tO cOlLeCt",
-      "Task.status field set to 'completed' but Task.businessStatus value of 'ReAdY tO cOlLeCt' " +
-        "requires follow up action."
-    ),
-    generateTestCase(
-      "completed",
-      "Ready to collect - partial",
-      "Task.status field set to 'completed' but Task.businessStatus value of 'Ready to collect - partial' " +
-        "requires follow up action."
-    ),
-    generateTestCase(
-      "completed",
-      "rEaDy To ColLEcT - pArtIAl",
-      "Task.status field set to 'completed' but Task.businessStatus value of 'rEaDy To ColLEcT - pArtIAl' " +
-        "requires follow up action."
-    ),
-    generateTestCase("in-progress", "With Pharmacy", undefined),
-    generateTestCase("in-progress", "With Pharmacy - preparing remainder", undefined),
-    generateTestCase("in-progress", "Ready to collect", undefined),
-    generateTestCase("in-progress", "Ready to collect - partial", undefined),
-    generateTestCase(
-      "in-progress",
-      "Collected",
-      "Task.status field set to 'in-progress' but Task.businessStatus value of 'Collected' " +
-        "has no possible follow up action."
-    ),
-    generateTestCase(
-      "in-progress",
-      "Not dispensed",
-      "Task.status field set to 'in-progress' but Task.businessStatus value of 'Not dispensed' " +
-        "has no possible follow up action."
-    ),
-    generateTestCase(
-      "in-progress",
-      "Dispatched",
-      "Task.status field set to 'in-progress' but Task.businessStatus value of 'Dispatched' " +
-        "has no possible follow up action."
-    ),
-    generateTestCase("completed", "Collected", undefined),
-    generateTestCase("completed", "Not dispensed", undefined),
-    generateTestCase("completed", "Dispatched", undefined),
-    generateTestCase("in-progress", "Ready to dispatch", undefined),
-    generateTestCase("in-progress", "Ready to dispatch - partial", undefined),
-    generateTestCase("completed", "Ready to dispatch", undefined),
-    generateTestCase("completed", "Ready to dispatch - partial", undefined)
-  ]
-  it.each(testCases)(
-    "When status is '$taskStatus' and business status is '$businessStatus', should return expected issue.",
-    async ({taskStatus, businessStatus, expected}) => {
-      const task = {status: taskStatus, businessStatus: {coding: [{code: businessStatus}]}}
 
-      const actual = statuses(task as Task)
+  describe("When task status is 'completed'", () => {
+    const completedTestCases = [
+      generateTestCase(
+        "completed",
+        "With Pharmacy",
+        "Task.status field set to 'completed' but Task.businessStatus value of 'With Pharmacy' " +
+          "requires follow up action."
+      ),
+      generateTestCase(
+        "completed",
+        "With Pharmacy - preparing remainder",
+        "Task.status field set to 'completed' but Task.businessStatus value of 'With Pharmacy - preparing remainder' " +
+          "requires follow up action."
+      ),
+      generateTestCase(
+        "completed",
+        "Ready to collect",
+        "Task.status field set to 'completed' but Task.businessStatus value of 'Ready to collect' " +
+          "requires follow up action."
+      ),
+      generateTestCase(
+        "completed",
+        "ReAdY tO cOlLeCt",
+        "Task.status field set to 'completed' but Task.businessStatus value of 'ReAdY tO cOlLeCt' " +
+          "requires follow up action."
+      ),
+      generateTestCase(
+        "completed",
+        "Ready to collect - partial",
+        "Task.status field set to 'completed' but Task.businessStatus value of 'Ready to collect - partial' " +
+          "requires follow up action."
+      ),
+      generateTestCase(
+        "completed",
+        "rEaDy To ColLEcT - pArtIAl",
+        "Task.status field set to 'completed' but Task.businessStatus value of 'rEaDy To ColLEcT - pArtIAl' " +
+          "requires follow up action."
+      ),
+      generateTestCase("completed", "Collected", undefined),
+      generateTestCase("completed", "Not dispensed", undefined),
+      generateTestCase("completed", "Dispatched", undefined),
+      generateTestCase("completed", "Ready to dispatch", undefined),
+      generateTestCase("completed", "Ready to dispatch - partial", undefined)
+    ]
 
-      expect(actual).toEqual(expected)
-    }
-  )
+    it.each(completedTestCases)(
+      "When status is '$taskStatus' and business status is '$businessStatus', should return expected issue.",
+      async ({taskStatus, businessStatus, expected}) => {
+        const task = {status: taskStatus, businessStatus: {coding: [{code: businessStatus}]}}
+        const actual = statuses(task as Task)
+        expect(actual).toEqual(expected)
+      }
+    )
+  })
+
+  describe("When task status is 'in-progress'", () => {
+    const inProgressTestCases = [
+      generateTestCase("in-progress", "With Pharmacy", undefined),
+      generateTestCase("in-progress", "With Pharmacy - preparing remainder", undefined),
+      generateTestCase("in-progress", "Ready to collect", undefined),
+      generateTestCase("in-progress", "Ready to collect - partial", undefined),
+      generateTestCase(
+        "in-progress",
+        "Collected",
+        "Task.status field set to 'in-progress' but Task.businessStatus value of 'Collected' " +
+          "has no possible follow up action."
+      ),
+      generateTestCase(
+        "in-progress",
+        "Not dispensed",
+        "Task.status field set to 'in-progress' but Task.businessStatus value of 'Not dispensed' " +
+          "has no possible follow up action."
+      ),
+      generateTestCase(
+        "in-progress",
+        "Dispatched",
+        "Task.status field set to 'in-progress' but Task.businessStatus value of 'Dispatched' " +
+          "has no possible follow up action."
+      ),
+      generateTestCase("in-progress", "Ready to dispatch", undefined),
+      generateTestCase("in-progress", "Ready to dispatch - partial", undefined)
+    ]
+
+    it.each(inProgressTestCases)(
+      "When status is '$taskStatus' and business status is '$businessStatus', should return expected issue.",
+      async ({taskStatus, businessStatus, expected}) => {
+        const task = {status: taskStatus, businessStatus: {coding: [{code: businessStatus}]}}
+        const actual = statuses(task as Task)
+        expect(actual).toEqual(expected)
+      }
+    )
+  })
 })
 
 describe("Unit tests for validation of resourceType", () => {
