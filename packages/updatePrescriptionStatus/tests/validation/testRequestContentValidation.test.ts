@@ -220,32 +220,38 @@ describe("Unit tests for validation of status against business status", () => {
     generateTestCase(
       "completed",
       "With Pharmacy",
-      "Completed state indicated for a prescription status requiring patient action."
+      "Task.status field set to 'completed' but Task.businessStatus value of 'With Pharmacy' " +
+        "requires follow up action."
     ),
     generateTestCase(
       "completed",
       "With Pharmacy - preparing remainder",
-      "Completed state indicated for a prescription status requiring patient action."
+      "Task.status field set to 'completed' but Task.businessStatus value of 'With Pharmacy - preparing remainder' " +
+        "requires follow up action."
     ),
     generateTestCase(
       "completed",
       "Ready to collect",
-      "Completed state indicated for a prescription status requiring patient action."
+      "Task.status field set to 'completed' but Task.businessStatus value of 'Ready to collect' " +
+        "requires follow up action."
     ),
     generateTestCase(
       "completed",
       "ReAdY tO cOlLeCt",
-      "Completed state indicated for a prescription status requiring patient action."
+      "Task.status field set to 'completed' but Task.businessStatus value of 'ReAdY tO cOlLeCt' " +
+        "requires follow up action."
     ),
     generateTestCase(
       "completed",
       "Ready to collect - partial",
-      "Completed state indicated for a prescription status requiring patient action."
+      "Task.status field set to 'completed' but Task.businessStatus value of 'Ready to collect - partial' " +
+        "requires follow up action."
     ),
     generateTestCase(
       "completed",
       "rEaDy To ColLEcT - pArtIAl",
-      "Completed state indicated for a prescription status requiring patient action."
+      "Task.status field set to 'completed' but Task.businessStatus value of 'rEaDy To ColLEcT - pArtIAl' " +
+        "requires follow up action."
     ),
     generateTestCase("in-progress", "With Pharmacy", undefined),
     generateTestCase("in-progress", "With Pharmacy - preparing remainder", undefined),
@@ -254,17 +260,20 @@ describe("Unit tests for validation of status against business status", () => {
     generateTestCase(
       "in-progress",
       "Collected",
-      "In-progress state indicated for a prescription status that should be completed."
+      "Task.status field set to 'in-progress' but Task.businessStatus value of 'Collected' " +
+        "has no possible follow up action."
     ),
     generateTestCase(
       "in-progress",
       "Not dispensed",
-      "In-progress state indicated for a prescription status that should be completed."
+      "Task.status field set to 'in-progress' but Task.businessStatus value of 'Not dispensed' " +
+        "has no possible follow up action."
     ),
     generateTestCase(
       "in-progress",
       "Dispatched",
-      "In-progress state indicated for a prescription status that should be completed."
+      "Task.status field set to 'in-progress' but Task.businessStatus value of 'Dispatched' " +
+        "has no possible follow up action."
     ),
     generateTestCase("completed", "Collected", undefined),
     generateTestCase("completed", "Not dispensed", undefined),

@@ -138,9 +138,15 @@ export function statuses(task: Task): string | undefined {
   const lowercaseCode = code.toLowerCase()
 
   if (status === "completed" && IN_PROGRESS_BUSINESS_STATUSES.includes(lowercaseCode)) {
-    return "Completed state indicated for a prescription status requiring patient action."
+    return (
+      "Task.status field set to 'completed' but Task.businessStatus value of '" + code + "' requires follow up action."
+    )
   } else if (status === "in-progress" && COMPLETED_BUSINESS_STATUSES.includes(lowercaseCode)) {
-    return "In-progress state indicated for a prescription status that should be completed."
+    return (
+      "Task.status field set to 'in-progress' but Task.businessStatus value of '" +
+      code +
+      "' has no possible follow up action."
+    )
   }
 }
 
