@@ -16,7 +16,7 @@
   "dependencies": {
     "@aws-lambda-powertools/commons": "^2.0.0",
     "@aws-lambda-powertools/logger": "^2.1.1",
-    "@aws-sdk/client-dynamodb": "^3.577.0",
+    "@aws-sdk/client-dynamodb": "^3.585.0",
     "@aws-sdk/lib-dynamodb": "^3.584.0",
     "@aws-sdk/util-dynamodb": "^3.540.0",
     "@middy/core": "^5.3.5",
