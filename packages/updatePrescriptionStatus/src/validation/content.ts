@@ -37,6 +37,15 @@ export const BUSINESS_STATUSES = [
   "not dispensed"
 ]
 
+export const COMPLETED_BUSINESS_STATUSES = ["collected", "not dispensed", "dispatched"]
+
+export const IN_PROGRESS_BUSINESS_STATUSES = [
+  "with pharmacy",
+  "with pharmacy - preparing remainder",
+  "ready to collect",
+  "ready to collect - partial"
+]
+
 export function transactionBundle(body: any): boolean {
   return body.resourceType === "Bundle" && body.type === "transaction"
 }
@@ -113,25 +122,25 @@ export function businessStatus(task: Task): string | undefined {
 
 export function statuses(task: Task): string | undefined {
   const status = task.status
-  if (status === "completed") {
-    const businessStatus: CodeableConcept | undefined = task.businessStatus
-    if (businessStatus) {
-      const coding: Coding = businessStatus.coding![0]
-      const code = coding.code
+  const businessStatus: CodeableConcept | undefined = task.businessStatus
 
-      const patientActionRequiredStatuses = [
-        "with pharmacy",
-        "with pharmacy - preparing remainder",
-        "ready to collect",
-        "ready to collect - partial",
-        "ready to dispatch",
-        "ready to dispatch - partial"
-      ]
+  if (!businessStatus) {
+    return
+  }
 
-      if (code && patientActionRequiredStatuses.includes(code.toLowerCase())) {
-        return "Completed state indicated for a prescription status requiring patient action."
-      }
-    }
+  const coding: Coding = businessStatus.coding![0]
+  const code = coding.code
+
+  if (!code) {
+    return
+  }
+
+  const lowercaseCode = code.toLowerCase()
+
+  if (status === "completed" && IN_PROGRESS_BUSINESS_STATUSES.includes(lowercaseCode)) {
+    return "Completed state indicated for a prescription status requiring patient action."
+  } else if (status === "in-progress" && COMPLETED_BUSINESS_STATUSES.includes(lowercaseCode)) {
+    return "In-progress state indicated for a prescription status that should be completed."
   }
 }
 

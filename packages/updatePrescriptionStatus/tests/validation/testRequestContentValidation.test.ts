@@ -244,25 +244,35 @@ describe("Unit tests for validation of status against business status", () => {
     ),
     generateTestCase(
       "completed",
-      "Ready to dispatch",
-      "Completed state indicated for a prescription status requiring patient action."
-    ),
-    generateTestCase(
-      "completed",
-      "Ready to dispatch - partial",
-      "Completed state indicated for a prescription status requiring patient action."
-    ),
-    generateTestCase(
-      "completed",
-      "rEaDy To DisPAtCh - pArtIAl",
+      "rEaDy To ColLEcT - pArtIAl",
       "Completed state indicated for a prescription status requiring patient action."
     ),
     generateTestCase("in-progress", "With Pharmacy", undefined),
     generateTestCase("in-progress", "With Pharmacy - preparing remainder", undefined),
     generateTestCase("in-progress", "Ready to collect", undefined),
     generateTestCase("in-progress", "Ready to collect - partial", undefined),
+    generateTestCase(
+      "in-progress",
+      "Collected",
+      "In-progress state indicated for a prescription status that should be completed."
+    ),
+    generateTestCase(
+      "in-progress",
+      "Not dispensed",
+      "In-progress state indicated for a prescription status that should be completed."
+    ),
+    generateTestCase(
+      "in-progress",
+      "Dispatched",
+      "In-progress state indicated for a prescription status that should be completed."
+    ),
+    generateTestCase("completed", "Collected", undefined),
+    generateTestCase("completed", "Not dispensed", undefined),
+    generateTestCase("completed", "Dispatched", undefined),
     generateTestCase("in-progress", "Ready to dispatch", undefined),
-    generateTestCase("in-progress", "Ready to dispatch - partial", undefined)
+    generateTestCase("in-progress", "Ready to dispatch - partial", undefined),
+    generateTestCase("completed", "Ready to dispatch", undefined),
+    generateTestCase("completed", "Ready to dispatch - partial", undefined)
   ]
   it.each(testCases)(
     "When status is '$taskStatus' and business status is '$businessStatus', should return expected issue.",
