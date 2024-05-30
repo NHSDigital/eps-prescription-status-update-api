@@ -150,11 +150,14 @@ jobs:
         run: |
           make install-python
   
-      - name: Export specification path
+      - name: Export specification paths
         run: |
           SPEC_PATH="$(pwd)/eps-prescription-status-update-api.resolved.json"
           echo "Specification location: $SPEC_PATH"
           echo "SPEC_PATH=${SPEC_PATH}" >> "$GITHUB_ENV"
+          CPSU_SPEC_PATH="$(pwd)/eps-custom-prescription-status-update-api.resolved.json"
+          echo "CPSU Specification location: $CPSU_SPEC_PATH"
+          echo "CPSU_SPEC_PATH=${CPSU_SPEC_PATH}" >> "$GITHUB_ENV"
 
       - name: Export proxygen path
         run: |
@@ -179,14 +182,29 @@ jobs:
           DYNAMODB_AUTOSCALE: ${{ inputs.DYNAMODB_AUTOSCALE }}
         run: ./release_code.sh
 
-      - name: Deploy API
+      - name: Deploy PSU API
         shell: bash
         working-directory: .github/scripts
         if: ${{ inputs.DEPLOY_APIGEE == true && always() && !failure() && !cancelled() }}
         env:
+          API: standard
           VERSION_NUMBER: ${{ inputs.VERSION_NUMBER }}
           PROXYGEN_PATH: ${{ env.PROXYGEN_PATH }}
           SPEC_PATH: ${{ env.SPEC_PATH }}
+          STACK_NAME: ${{ inputs.STACK_NAME }}
+          AWS_ENVIRONMENT: ${{ inputs.AWS_ENVIRONMENT }}
+          APIGEE_ENVIRONMENT: ${{ inputs.APIGEE_ENVIRONMENT }}
+        run: poetry run ./deploy_api.sh
+      
+      - name: Deploy CPSU API
+        shell: bash
+        working-directory: .github/scripts
+        if: ${{ inputs.DEPLOY_APIGEE == true && always() && !failure() && !cancelled() }}
+        env:
+          API: custom
+          VERSION_NUMBER: ${{ inputs.VERSION_NUMBER }}
+          PROXYGEN_PATH: ${{ env.PROXYGEN_PATH }}
+          SPEC_PATH: ${{ env.CPSU_SPEC_PATH }}
           STACK_NAME: ${{ inputs.STACK_NAME }}
           AWS_ENVIRONMENT: ${{ inputs.AWS_ENVIRONMENT }}
           APIGEE_ENVIRONMENT: ${{ inputs.APIGEE_ENVIRONMENT }}

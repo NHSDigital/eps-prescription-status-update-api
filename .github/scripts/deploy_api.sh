@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 
+echo "API type: $API"
 echo "Proxygen path: $PROXYGEN_PATH"
 echo "Specification path: $SPEC_PATH"
 echo "Specification version: $VERSION_NUMBER"
@@ -11,9 +12,17 @@ echo "Apigee environment: $APIGEE_ENVIRONMENT"
 if [[ $STACK_NAME == psu-pr-* ]]; then
     # Extracting the PR ID from $STACK_NAME
     pr_id=$(echo "$STACK_NAME" | cut -d'-' -f3)
-    instance=prescription-status-update-pr-$pr_id
+    if [[ $API == standard ]]; then
+        instance=prescription-status-update-pr-$pr_id
+    else
+        instance=custom-prescription-status-update-pr-$pr_id
+    fi
 else
-    instance=prescription-status-update
+    if [[ $API == standard ]]; then
+        instance=prescription-status-update
+    else
+        instance=custom-prescription-status-update
+    fi
 fi
 echo "Proxy instance: $instance"
 
@@ -38,9 +47,17 @@ fi
 
 # Find and replace securitySchemes
 if [[ $APIGEE_ENVIRONMENT == prod ]]; then
-    jq '.components.securitySchemes."app-level3" = {"$ref": "https://proxygen.prod.api.platform.nhs.uk/components/securitySchemes/app-level3"}' "$SPEC_PATH" > temp.json && mv temp.json "$SPEC_PATH"
+    if [[ $API == standard ]]; then
+        jq '.components.securitySchemes."app-level3" = {"$ref": "https://proxygen.prod.api.platform.nhs.uk/components/securitySchemes/app-level3"}' "$SPEC_PATH" > temp.json && mv temp.json "$SPEC_PATH"
+    else
+        jq '.components.securitySchemes."app-level0" = {"$ref": "https://proxygen.prod.api.platform.nhs.uk/components/securitySchemes/app-level0"}' "$SPEC_PATH" > temp.json && mv temp.json "$SPEC_PATH"
+    fi
 else
-    jq '.components.securitySchemes."app-level3" = {"$ref": "https://proxygen.ptl.api.platform.nhs.uk/components/securitySchemes/app-level3"}' "$SPEC_PATH" > temp.json && mv temp.json "$SPEC_PATH"
+    if [[ $API == standard ]]; then
+        jq '.components.securitySchemes."app-level3" = {"$ref": "https://proxygen.ptl.api.platform.nhs.uk/components/securitySchemes/app-level3"}' "$SPEC_PATH" > temp.json && mv temp.json "$SPEC_PATH"
+    else
+        jq '.components.securitySchemes."app-level0" = {"$ref": "https://proxygen.ptl.api.platform.nhs.uk/components/securitySchemes/app-level0"}' "$SPEC_PATH" > temp.json && mv temp.json "$SPEC_PATH"
+    fi
 fi
 # Retrieve the proxygen private key and client private key and cert from AWS Secrets Manager
 proxygen_private_key_arn=$(aws cloudformation list-exports --query "Exports[?Name=='account-resources:ProxgenPrivateKey'].Value" --output text)
