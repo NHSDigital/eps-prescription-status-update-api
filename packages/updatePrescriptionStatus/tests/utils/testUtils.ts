@@ -34,7 +34,7 @@ const TASK_VALUES = [
     odsCode: "C9Z1O",
     lineItemID: "6989b7bd-8db6-428c-a593-4022e3044c00",
     id: TASK_ID_0,
-    status: "in-progress",
+    status: "completed",
     businessStatus: "Dispatched",
     lastModified: "2023-09-11T10:11:12Z"
   },
