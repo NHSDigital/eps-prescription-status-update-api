@@ -260,6 +260,20 @@ describe("Unit tests for validation of status against business status", () => {
       }
     )
   })
+  describe("When business status is unsupported", () => {
+    it.each([
+      {status: "completed", businessStatus: "unsupported-status"},
+      {status: "in-progress", businessStatus: "another-unsupported-status"}
+    ])(
+      "When status is '$status' and business status is '$businessStatus', should return unsupported issue.",
+      ({status, businessStatus}) => {
+        const task = {status, businessStatus: {coding: [{code: businessStatus}]}}
+        const actual = statuses(task as Task)
+        const expected = `Unsupported Task.businessStatus '${businessStatus}'.`
+        expect(actual).toEqual(expected)
+      }
+    )
+  })
 })
 
 describe("Unit tests for validation of resourceType", () => {
