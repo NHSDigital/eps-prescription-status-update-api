@@ -260,6 +260,7 @@ describe("Unit tests for validation of status against business status", () => {
       }
     )
   })
+
   describe("When business status is unsupported", () => {
     it.each([
       {status: "completed", businessStatus: "unsupported-status"},
