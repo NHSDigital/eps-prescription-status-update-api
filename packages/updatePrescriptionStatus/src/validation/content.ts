@@ -124,17 +124,17 @@ export function statuses(task: Task): string | undefined {
   const status = task.status
   const businessStatus: CodeableConcept | undefined = task.businessStatus
   if (!businessStatus) {
-    return "Task.businessStatus is required."
+    return
   }
 
   const coding: Coding | undefined = businessStatus.coding && businessStatus.coding[0]
   if (!coding) {
-    return "Task.businessStatus.coding is required."
+    return
   }
 
   const code: string | undefined = coding.code
   if (!code) {
-    return "Task.businessStatus.coding.code is required."
+    return
   }
 
   const lowercaseCode = code.toLowerCase()
