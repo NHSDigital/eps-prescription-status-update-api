@@ -213,89 +213,50 @@ describe("Unit tests for validation of NHS number", () => {
 describe("Unit tests for validation of status against business status", () => {
   describe("When task status is 'completed'", () => {
     it.each([
-      {
-        isValid: false,
-        businessStatus: "With Pharmacy",
-        expected:
-          "Task.status field set to 'completed' but Task.businessStatus value of 'With Pharmacy' requires follow up action."
-      },
-      {
-        isValid: false,
-        businessStatus: "With Pharmacy - preparing remainder",
-        expected:
-          "Task.status field set to 'completed' but Task.businessStatus value of 'With Pharmacy - preparing remainder' requires follow up action."
-      },
-      {
-        isValid: false,
-        businessStatus: "Ready to collect",
-        expected:
-          "Task.status field set to 'completed' but Task.businessStatus value of 'Ready to collect' requires follow up action."
-      },
-      {
-        isValid: false,
-        businessStatus: "ReAdY tO cOlLeCt",
-        expected:
-          "Task.status field set to 'completed' but Task.businessStatus value of 'ReAdY tO cOlLeCt' requires follow up action."
-      },
-      {
-        isValid: false,
-        businessStatus: "Ready to collect - partial",
-        expected:
-          "Task.status field set to 'completed' but Task.businessStatus value of 'Ready to collect - partial' requires follow up action."
-      },
-      {
-        isValid: false,
-        businessStatus: "rEaDy To ColLEcT - pArtIAl",
-        expected:
-          "Task.status field set to 'completed' but Task.businessStatus value of 'rEaDy To ColLEcT - pArtIAl' requires follow up action."
-      },
-      {isValid: true, businessStatus: "Collected", expected: undefined},
-      {isValid: true, businessStatus: "Not dispensed", expected: undefined},
-      {isValid: true, businessStatus: "Dispatched", expected: undefined},
-      {isValid: true, businessStatus: "Ready to dispatch", expected: undefined},
-      {isValid: true, businessStatus: "Ready to dispatch - partial", expected: undefined}
+      {isValid: false, businessStatus: "With Pharmacy"},
+      {isValid: false, businessStatus: "With Pharmacy - preparing remainder"},
+      {isValid: false, businessStatus: "Ready to collect"},
+      {isValid: false, businessStatus: "ReAdY tO cOlLeCt"},
+      {isValid: false, businessStatus: "Ready to collect - partial"},
+      {isValid: false, businessStatus: "rEaDy To ColLEcT - pArtIAl"},
+      {isValid: true, businessStatus: "Collected"},
+      {isValid: true, businessStatus: "Not dispensed"},
+      {isValid: true, businessStatus: "Dispatched"},
+      {isValid: true, businessStatus: "Ready to dispatch"},
+      {isValid: true, businessStatus: "Ready to dispatch - partial"}
     ])(
       "When status is 'completed' and business status is '$businessStatus', should return expected issue.",
-      ({isValid, businessStatus, expected}) => {
+      ({isValid, businessStatus}) => {
         const task = {status: "completed", businessStatus: {coding: [{code: businessStatus}]}}
         const actual = statuses(task as Task)
-        expect(actual).toEqual(isValid ? undefined : expected)
+        const expected = isValid
+          ? undefined
+          : `Task.status field set to 'completed' but Task.businessStatus value of '${businessStatus}' requires follow up action.`
+        expect(actual).toEqual(expected)
       }
     )
   })
 
   describe("When task status is 'in-progress'", () => {
     it.each([
-      {isValid: true, businessStatus: "With Pharmacy", expected: undefined},
-      {isValid: true, businessStatus: "With Pharmacy - preparing remainder", expected: undefined},
-      {isValid: true, businessStatus: "Ready to collect", expected: undefined},
-      {isValid: true, businessStatus: "Ready to collect - partial", expected: undefined},
-      {isValid: true, businessStatus: "Ready to dispatch", expected: undefined},
-      {isValid: true, businessStatus: "Ready to dispatch - partial", expected: undefined},
-      {
-        isValid: false,
-        businessStatus: "Collected",
-        expected:
-          "Task.status field set to 'in-progress' but Task.businessStatus value of 'Collected' has no possible follow up action."
-      },
-      {
-        isValid: false,
-        businessStatus: "Not dispensed",
-        expected:
-          "Task.status field set to 'in-progress' but Task.businessStatus value of 'Not dispensed' has no possible follow up action."
-      },
-      {
-        isValid: false,
-        businessStatus: "Dispatched",
-        expected:
-          "Task.status field set to 'in-progress' but Task.businessStatus value of 'Dispatched' has no possible follow up action."
-      }
+      {isValid: true, businessStatus: "With Pharmacy"},
+      {isValid: true, businessStatus: "With Pharmacy - preparing remainder"},
+      {isValid: true, businessStatus: "Ready to collect"},
+      {isValid: true, businessStatus: "Ready to collect - partial"},
+      {isValid: true, businessStatus: "Ready to dispatch"},
+      {isValid: true, businessStatus: "Ready to dispatch - partial"},
+      {isValid: false, businessStatus: "Collected"},
+      {isValid: false, businessStatus: "Not dispensed"},
+      {isValid: false, businessStatus: "Dispatched"}
     ])(
       "When status is 'in-progress' and business status is '$businessStatus', should return expected issue.",
-      ({isValid, businessStatus, expected}) => {
+      ({isValid, businessStatus}) => {
         const task = {status: "in-progress", businessStatus: {coding: [{code: businessStatus}]}}
         const actual = statuses(task as Task)
-        expect(actual).toEqual(isValid ? undefined : expected)
+        const expected = isValid
+          ? undefined
+          : `Task.status field set to 'in-progress' but Task.businessStatus value of '${businessStatus}' has no possible follow up action.`
+        expect(actual).toEqual(expected)
       }
     )
   })
