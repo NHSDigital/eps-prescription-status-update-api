@@ -216,59 +216,30 @@ describe("Unit tests for validation of status against business status", () => {
   })
 
   describe("When task status is 'completed'", () => {
-    const completedTestCases = [
-      generateTestCase(
-        "completed",
-        "With Pharmacy",
-        "Task.status field set to 'completed' but Task.businessStatus value of 'With Pharmacy' " +
-          "requires follow up action."
-      ),
-      generateTestCase(
-        "completed",
-        "With Pharmacy - preparing remainder",
-        "Task.status field set to 'completed' but Task.businessStatus value of 'With Pharmacy - preparing remainder' " +
-          "requires follow up action."
-      ),
-      generateTestCase(
-        "completed",
-        "Ready to collect",
-        "Task.status field set to 'completed' but Task.businessStatus value of 'Ready to collect' " +
-          "requires follow up action."
-      ),
-      generateTestCase(
-        "completed",
-        "ReAdY tO cOlLeCt",
-        "Task.status field set to 'completed' but Task.businessStatus value of 'ReAdY tO cOlLeCt' " +
-          "requires follow up action."
-      ),
-      generateTestCase(
-        "completed",
-        "Ready to collect - partial",
-        "Task.status field set to 'completed' but Task.businessStatus value of 'Ready to collect - partial' " +
-          "requires follow up action."
-      ),
-      generateTestCase(
-        "completed",
-        "rEaDy To ColLEcT - pArtIAl",
-        "Task.status field set to 'completed' but Task.businessStatus value of 'rEaDy To ColLEcT - pArtIAl' " +
-          "requires follow up action."
-      ),
-      generateTestCase("completed", "Collected", undefined),
-      generateTestCase("completed", "Not dispensed", undefined),
-      generateTestCase("completed", "Dispatched", undefined),
-      generateTestCase("completed", "Ready to dispatch", undefined),
-      generateTestCase("completed", "Ready to dispatch - partial", undefined)
-    ]
-
-    it.each(completedTestCases)(
-      "When status is '$taskStatus' and business status is '$businessStatus', should return expected issue.",
-      async ({taskStatus, businessStatus, expected}) => {
-        const task = {status: taskStatus, businessStatus: {coding: [{code: businessStatus}]}}
+    it.each([
+      {isValid: false, businessStatus: "With Pharmacy"},
+      {isValid: false, businessStatus: "With Pharmacy - preparing remainder"},
+      {isValid: false, businessStatus: "Ready to collect"},
+      {isValid: false, businessStatus: "ReAdY tO cOlLeCt"},
+      {isValid: false, businessStatus: "Ready to collect - partial"},
+      {isValid: false, businessStatus: "rEaDy To ColLEcT - pArtIAl"},
+      {isValid: true, businessStatus: "Collected"},
+      {isValid: true, businessStatus: "Not dispensed"},
+      {isValid: true, businessStatus: "Dispatched"},
+      {isValid: true, businessStatus: "Ready to dispatch"},
+      {isValid: true, businessStatus: "Ready to dispatch - partial"}
+    ])(
+      "When status is 'completed' and business status is '$businessStatus', should return expected issue.",
+      async ({isValid, businessStatus}) => {
+        const task = {status: "completed", businessStatus: {coding: [{code: businessStatus}]}}
         const actual = statuses(task as Task)
+
+        const expected = isValid ? undefined : `Task.status field set to 'completed' but Task.businessStatus value of '${businessStatus}' requires follow up action.`
         expect(actual).toEqual(expected)
       }
     )
   })
+  // So do this on the test case below, remove the generateTestCase function, and add a test for the catch-all validation of businessStatus.
 
   describe("When task status is 'in-progress'", () => {
     const inProgressTestCases = [

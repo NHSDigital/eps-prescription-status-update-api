@@ -46,6 +46,8 @@ export const IN_PROGRESS_BUSINESS_STATUSES = [
   "ready to collect - partial"
 ]
 
+const ALL_BUSINESS_STATUSES = COMPLETED_BUSINESS_STATUSES.concat(IN_PROGRESS_BUSINESS_STATUSES)
+
 export function transactionBundle(body: any): boolean {
   return body.resourceType === "Bundle" && body.type === "transaction"
 }
@@ -122,32 +124,18 @@ export function businessStatus(task: Task): string | undefined {
 
 export function statuses(task: Task): string | undefined {
   const status = task.status
-  const businessStatus: CodeableConcept | undefined = task.businessStatus
-  if (!businessStatus) {
-    return
-  }
-
-  const coding: Coding | undefined = businessStatus.coding && businessStatus.coding[0]
-  if (!coding) {
-    return
-  }
-
-  const code: string | undefined = coding.code
-  if (!code) {
-    return
-  }
-
-  const lowercaseCode = code.toLowerCase()
+  const businessStatus: string = task.businessStatus!.coding![0].code!
+  const lowercaseCode = businessStatus.toLowerCase()
   if (status === "completed" && IN_PROGRESS_BUSINESS_STATUSES.includes(lowercaseCode)) {
     return (
-      "Task.status field set to 'completed' but Task.businessStatus value of '" + code + "' requires follow up action."
+      `Task.status field set to '${status}' but Task.businessStatus value of '${businessStatus}' requires follow up action.`
     )
   } else if (status === "in-progress" && COMPLETED_BUSINESS_STATUSES.includes(lowercaseCode)) {
     return (
-      "Task.status field set to 'in-progress' but Task.businessStatus value of '" +
-      code +
-      "' has no possible follow up action."
+      `Task.status field set to '${status}' but Task.businessStatus value of '${businessStatus}' has no possible follow up action.`
     )
+  } else if (!ALL_BUSINESS_STATUSES.includes(lowercaseCode)) {
+    return `Unsupported Task.businessStatus '${businessStatus}'.`
   }
 }
 
