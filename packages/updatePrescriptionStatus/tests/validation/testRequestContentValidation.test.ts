@@ -1,3 +1,5 @@
+/* eslint-disable  max-len */
+
 import {
   expect,
   describe,
@@ -209,101 +211,91 @@ describe("Unit tests for validation of NHS number", () => {
 })
 
 describe("Unit tests for validation of status against business status", () => {
-  const generateTestCase = (taskStatus: string, businessStatus: string, expected: string | undefined) => ({
-    taskStatus,
-    businessStatus,
-    expected
-  })
-
   describe("When task status is 'completed'", () => {
-    const completedTestCases = [
-      generateTestCase(
-        "completed",
-        "With Pharmacy",
-        "Task.status field set to 'completed' but Task.businessStatus value of 'With Pharmacy' " +
-          "requires follow up action."
-      ),
-      generateTestCase(
-        "completed",
-        "With Pharmacy - preparing remainder",
-        "Task.status field set to 'completed' but Task.businessStatus value of 'With Pharmacy - preparing remainder' " +
-          "requires follow up action."
-      ),
-      generateTestCase(
-        "completed",
-        "Ready to collect",
-        "Task.status field set to 'completed' but Task.businessStatus value of 'Ready to collect' " +
-          "requires follow up action."
-      ),
-      generateTestCase(
-        "completed",
-        "ReAdY tO cOlLeCt",
-        "Task.status field set to 'completed' but Task.businessStatus value of 'ReAdY tO cOlLeCt' " +
-          "requires follow up action."
-      ),
-      generateTestCase(
-        "completed",
-        "Ready to collect - partial",
-        "Task.status field set to 'completed' but Task.businessStatus value of 'Ready to collect - partial' " +
-          "requires follow up action."
-      ),
-      generateTestCase(
-        "completed",
-        "rEaDy To ColLEcT - pArtIAl",
-        "Task.status field set to 'completed' but Task.businessStatus value of 'rEaDy To ColLEcT - pArtIAl' " +
-          "requires follow up action."
-      ),
-      generateTestCase("completed", "Collected", undefined),
-      generateTestCase("completed", "Not dispensed", undefined),
-      generateTestCase("completed", "Dispatched", undefined),
-      generateTestCase("completed", "Ready to dispatch", undefined),
-      generateTestCase("completed", "Ready to dispatch - partial", undefined)
-    ]
-
-    it.each(completedTestCases)(
-      "When status is '$taskStatus' and business status is '$businessStatus', should return expected issue.",
-      async ({taskStatus, businessStatus, expected}) => {
-        const task = {status: taskStatus, businessStatus: {coding: [{code: businessStatus}]}}
+    it.each([
+      {
+        isValid: false,
+        businessStatus: "With Pharmacy",
+        expected:
+          "Task.status field set to 'completed' but Task.businessStatus value of 'With Pharmacy' requires follow up action."
+      },
+      {
+        isValid: false,
+        businessStatus: "With Pharmacy - preparing remainder",
+        expected:
+          "Task.status field set to 'completed' but Task.businessStatus value of 'With Pharmacy - preparing remainder' requires follow up action."
+      },
+      {
+        isValid: false,
+        businessStatus: "Ready to collect",
+        expected:
+          "Task.status field set to 'completed' but Task.businessStatus value of 'Ready to collect' requires follow up action."
+      },
+      {
+        isValid: false,
+        businessStatus: "ReAdY tO cOlLeCt",
+        expected:
+          "Task.status field set to 'completed' but Task.businessStatus value of 'ReAdY tO cOlLeCt' requires follow up action."
+      },
+      {
+        isValid: false,
+        businessStatus: "Ready to collect - partial",
+        expected:
+          "Task.status field set to 'completed' but Task.businessStatus value of 'Ready to collect - partial' requires follow up action."
+      },
+      {
+        isValid: false,
+        businessStatus: "rEaDy To ColLEcT - pArtIAl",
+        expected:
+          "Task.status field set to 'completed' but Task.businessStatus value of 'rEaDy To ColLEcT - pArtIAl' requires follow up action."
+      },
+      {isValid: true, businessStatus: "Collected", expected: undefined},
+      {isValid: true, businessStatus: "Not dispensed", expected: undefined},
+      {isValid: true, businessStatus: "Dispatched", expected: undefined},
+      {isValid: true, businessStatus: "Ready to dispatch", expected: undefined},
+      {isValid: true, businessStatus: "Ready to dispatch - partial", expected: undefined}
+    ])(
+      "When status is 'completed' and business status is '$businessStatus', should return expected issue.",
+      ({isValid, businessStatus, expected}) => {
+        const task = {status: "completed", businessStatus: {coding: [{code: businessStatus}]}}
         const actual = statuses(task as Task)
-        expect(actual).toEqual(expected)
+        expect(actual).toEqual(isValid ? undefined : expected)
       }
     )
   })
 
   describe("When task status is 'in-progress'", () => {
-    const inProgressTestCases = [
-      generateTestCase("in-progress", "With Pharmacy", undefined),
-      generateTestCase("in-progress", "With Pharmacy - preparing remainder", undefined),
-      generateTestCase("in-progress", "Ready to collect", undefined),
-      generateTestCase("in-progress", "Ready to collect - partial", undefined),
-      generateTestCase(
-        "in-progress",
-        "Collected",
-        "Task.status field set to 'in-progress' but Task.businessStatus value of 'Collected' " +
-          "has no possible follow up action."
-      ),
-      generateTestCase(
-        "in-progress",
-        "Not dispensed",
-        "Task.status field set to 'in-progress' but Task.businessStatus value of 'Not dispensed' " +
-          "has no possible follow up action."
-      ),
-      generateTestCase(
-        "in-progress",
-        "Dispatched",
-        "Task.status field set to 'in-progress' but Task.businessStatus value of 'Dispatched' " +
-          "has no possible follow up action."
-      ),
-      generateTestCase("in-progress", "Ready to dispatch", undefined),
-      generateTestCase("in-progress", "Ready to dispatch - partial", undefined)
-    ]
-
-    it.each(inProgressTestCases)(
-      "When status is '$taskStatus' and business status is '$businessStatus', should return expected issue.",
-      async ({taskStatus, businessStatus, expected}) => {
-        const task = {status: taskStatus, businessStatus: {coding: [{code: businessStatus}]}}
+    it.each([
+      {isValid: true, businessStatus: "With Pharmacy", expected: undefined},
+      {isValid: true, businessStatus: "With Pharmacy - preparing remainder", expected: undefined},
+      {isValid: true, businessStatus: "Ready to collect", expected: undefined},
+      {isValid: true, businessStatus: "Ready to collect - partial", expected: undefined},
+      {isValid: true, businessStatus: "Ready to dispatch", expected: undefined},
+      {isValid: true, businessStatus: "Ready to dispatch - partial", expected: undefined},
+      {
+        isValid: false,
+        businessStatus: "Collected",
+        expected:
+          "Task.status field set to 'in-progress' but Task.businessStatus value of 'Collected' has no possible follow up action."
+      },
+      {
+        isValid: false,
+        businessStatus: "Not dispensed",
+        expected:
+          "Task.status field set to 'in-progress' but Task.businessStatus value of 'Not dispensed' has no possible follow up action."
+      },
+      {
+        isValid: false,
+        businessStatus: "Dispatched",
+        expected:
+          "Task.status field set to 'in-progress' but Task.businessStatus value of 'Dispatched' has no possible follow up action."
+      }
+    ])(
+      "When status is 'in-progress' and business status is '$businessStatus', should return expected issue.",
+      ({isValid, businessStatus, expected}) => {
+        const task = {status: "in-progress", businessStatus: {coding: [{code: businessStatus}]}}
         const actual = statuses(task as Task)
-        expect(actual).toEqual(expected)
+        expect(actual).toEqual(isValid ? undefined : expected)
       }
     )
   })
