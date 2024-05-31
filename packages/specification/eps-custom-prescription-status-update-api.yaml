@@ -20,7 +20,7 @@ servers:
 paths:
   /format-1:
     post:
-      operationId: format-1--prescription-status-update
+      operationId: format-1-prescription-status-update
       summary: Format 1 Update prescription status
       description: |
         ## Overview
