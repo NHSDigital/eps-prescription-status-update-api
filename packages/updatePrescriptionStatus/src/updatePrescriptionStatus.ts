@@ -34,6 +34,9 @@ export interface DataItem {
   TerminalStatus: string
 }
 
+// Flag to force timeout response
+const FORCE_TIMEOUT = true
+
 const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
   logger.appendKeys({
     "nhsd-correlation-id": event.headers["nhsd-correlation-id"],
@@ -41,6 +44,14 @@ const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPro
     "x-correlation-id": event.headers["x-correlation-id"],
     "apigw-request-id": event.headers["apigw-request-id"]
   })
+
+  // Check the flag and return 504 response if set
+  if (FORCE_TIMEOUT) {
+    const responseEntries: Array<BundleEntry> = [timeoutResponse()]
+    logger.info("Forcing timeout response for testing purposes.")
+    return response(504, responseEntries)
+  }
+
   let responseEntries: Array<BundleEntry> = []
 
   const xRequestID = getXRequestID(event, responseEntries)
