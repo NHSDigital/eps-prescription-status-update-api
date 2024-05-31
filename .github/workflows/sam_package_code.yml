@@ -66,7 +66,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         name: Upload build artifact
         with:
-          name: packaged_code*
+          name: packaged_code
           path: |
             .aws-sam/build
             SAMtemplates/state_machines/UpdatePrescriptionStatusStateMachine.asl.json
