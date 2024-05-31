@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-set -euxo pipefail
+set -eu pipefail
 
 echo "API type: $API"
 echo "Proxygen path: $PROXYGEN_PATH"
