@@ -18,10 +18,10 @@ servers:
     description: "Production"
 
 paths:
-  /:
+  /format-1:
     post:
-      operationId: custom-prescription-status-update-bundle
-      summary: Custom Update prescription status
+      operationId: format-1--prescription-status-update
+      summary: Format 1 Update prescription status
       description: |
         ## Overview
         Status updates to be provided on prescription items to allow users of the NHS App and third-party app consumers to track the progress of their prescriptions and when ready to collect.
@@ -36,7 +36,7 @@ paths:
                 summary: multiple-items
                 description: A request message contains multiple items.
                 value:
-                  $ref: examples/cpsu-request-multiple-items.json
+                  $ref: "examples/format-1-request-multiple-items.json"
       responses:
         "200":
           description: Successful creation.
