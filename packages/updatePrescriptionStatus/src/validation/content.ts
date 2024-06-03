@@ -1,11 +1,6 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-explicit-any, max-len */
 
-import {
-  BundleEntry,
-  CodeableConcept,
-  Coding,
-  Task
-} from "fhir/r4"
+import {BundleEntry, Task} from "fhir/r4"
 import {validatePrescriptionID} from "../utils/prescriptionID"
 import {validateNhsNumber} from "../utils/nhsNumber"
 import {validateFields} from "./fields"
@@ -25,17 +20,19 @@ export const ODS_CODE_CODESYSTEM = "https://fhir.nhs.uk/Id/ods-organization-code
 export const PRESCRIPTION_ID_CODESYSTEM = "https://fhir.nhs.uk/Id/prescription-order-number"
 export const STATUS_CODESYSTEM = "https://fhir.nhs.uk/CodeSystem/task-businessStatus-nppt"
 
-export const BUSINESS_STATUSES = [
+export const COMPLETED_BUSINESS_STATUSES = ["collected", "not dispensed", "dispatched"]
+
+export const IN_PROGRESS_BUSINESS_STATUSES = [
   "with pharmacy",
   "with pharmacy - preparing remainder",
   "ready to collect",
-  "ready to collect - partial",
-  "collected",
-  "ready to dispatch",
-  "ready to dispatch - partial",
-  "dispatched",
-  "not dispensed"
+  "ready to collect - partial"
 ]
+
+export const BUSINESS_STATUSES = COMPLETED_BUSINESS_STATUSES.concat(IN_PROGRESS_BUSINESS_STATUSES, [
+  "ready to dispatch",
+  "ready to dispatch - partial"
+])
 
 export function transactionBundle(body: any): boolean {
   return body.resourceType === "Bundle" && body.type === "transaction"
@@ -113,15 +110,14 @@ export function businessStatus(task: Task): string | undefined {
 
 export function statuses(task: Task): string | undefined {
   const status = task.status
-  if (status === "completed") {
-    const businessStatus: CodeableConcept | undefined = task.businessStatus
-    if (businessStatus) {
-      const coding: Coding = businessStatus.coding![0]
-      const code = coding.code
-      if (code && ["with pharmacy", "ready to collect"].includes(code.toLowerCase())) {
-        return "Completed state indicated for a prescription status requiring patient action."
-      }
-    }
+  const businessStatus: string = task.businessStatus!.coding![0].code!
+  const lowercaseCode = businessStatus.toLowerCase()
+  if (status === "completed" && IN_PROGRESS_BUSINESS_STATUSES.includes(lowercaseCode)) {
+    return `Task.status field set to '${status}' but Task.businessStatus value of '${businessStatus}' requires follow up action.`
+  } else if (status === "in-progress" && COMPLETED_BUSINESS_STATUSES.includes(lowercaseCode)) {
+    return `Task.status field set to '${status}' but Task.businessStatus value of '${businessStatus}' has no possible follow up action.`
+  } else if (!BUSINESS_STATUSES.includes(lowercaseCode)) {
+    return `Unsupported Task.businessStatus '${businessStatus}'.`
   }
 }
 
