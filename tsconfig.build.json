@@ -8,6 +8,7 @@
     {"path": "packages/updatePrescriptionStatus"},
     {"path": "packages/sandbox"},
     {"path": "packages/statusLambda"},
-    {"path": "packages/capabilityStatement"}
+    {"path": "packages/capabilityStatement"},
+    {"path": "packages/cpsuLambda"}
   ]
 }

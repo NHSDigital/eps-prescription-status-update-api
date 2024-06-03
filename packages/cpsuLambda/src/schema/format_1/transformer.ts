@@ -19,12 +19,10 @@ import {Logger} from "@aws-lambda-powertools/logger"
 import {wrap_with_status} from "../../utils"
 
 export const transformer: Transformer<requestType> = (requestBody, logger) => {
-  const repeatNumber = requestBody.repeatNo ? parseInt(requestBody.repeatNo) : undefined
-
   const bundle_entry_template = generateTemplate(requestBody)
 
   return requestBody.items
-    .map((item) => populateTemplate(bundle_entry_template, item, requestBody, logger, repeatNumber))
+    .map((item) => populateTemplate(bundle_entry_template, item, requestBody, logger))
     .collect()
     .map(bundle_entries)
     .mapErr(wrap_with_status(400))
@@ -88,8 +86,7 @@ function populateTemplate(
   template: string,
   prescriptionItem: itemType,
   prescriptionDetails: requestType,
-  logger: Logger,
-  prescriptionRepeatNumber?: number
+  logger: Logger
 ): Result<BundleEntry<Task>, string> {
   const entry = JSON.parse(template) as BundleEntry<Task>
 
@@ -107,11 +104,11 @@ function populateTemplate(
   entry.resource!.focus!.identifier!.value = prescriptionItem.itemID
   entry.resource!.lastModified = prescriptionDetails.messageDate
 
-  if (prescriptionRepeatNumber) {
+  if (prescriptionDetails.repeatNo) {
     entry.resource!.input = [
       {
         type: {text: "Repeat Number"},
-        valueInteger: prescriptionRepeatNumber
+        valueInteger: prescriptionDetails.repeatNo
       }
     ]
   }
@@ -141,12 +138,12 @@ const BUSINESS_STATUS_MAP: ItemStatusMap = {
   ReadyForCollection: {
     "In-Store Collection": "Ready to Collect",
     "Robot Collection": "Ready to Collect",
-    "Delivery Required": "Ready to Dispatch"
+    "Delivery required": "Ready to Dispatch"
   },
   PartOwed: "With Pharmacy - Preparing Remainder",
   DispensingComplete: {
     "In-Store Collection": "Collected",
     "Robot Collection": "Collected",
-    "Delivery Required": "Dispatched"
+    "Delivery required": "Dispatched"
   }
 }

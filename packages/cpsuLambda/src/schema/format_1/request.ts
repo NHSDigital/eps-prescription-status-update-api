@@ -32,7 +32,7 @@ const prescriptionStatusSchema = {
 
 const deliveryTypeSchema = {
   type: "string",
-  enum: ["Not known", "In-Store Collection", "Robot Collection", "Delivery Required"]
+  enum: ["Not known", "In-Store Collection", "Robot Collection", "Delivery required"]
 } as const satisfies JSONSchema
 
 const requestSchema = {
@@ -49,7 +49,7 @@ const requestSchema = {
       type: "string"
     },
     repeatNo: {
-      type: "string"
+      type: "number"
     },
     oDSCode: {
       type: "string"
