@@ -15,15 +15,16 @@ import {
 } from "pratica"
 import {v4 as uuidv4} from "uuid"
 import {Transformer} from "../../handler"
-import {APIGatewayProxyResult} from "aws-lambda"
+import {Logger} from "@aws-lambda-powertools/logger"
+import {wrap_with_status} from "../../utils"
 
-export const transformer: Transformer<requestType> = (requestBody) => {
+export const transformer: Transformer<requestType> = (requestBody, logger) => {
   const repeatNumber = requestBody.repeatNo ? parseInt(requestBody.repeatNo) : undefined
 
   const bundle_entry_template = generateTemplate(requestBody)
 
   return requestBody.items
-    .map((item) => populateTemplate(bundle_entry_template, item, requestBody, repeatNumber))
+    .map((item) => populateTemplate(bundle_entry_template, item, requestBody, logger, repeatNumber))
     .collect()
     .map(bundle_entries)
     .mapErr(wrap_with_status(400))
@@ -34,15 +35,6 @@ function bundle_entries(entries: Array<BundleEntry<Task>>): Bundle<Task> {
     resourceType: "Bundle",
     type: "transaction",
     entry: entries
-  }
-}
-
-function wrap_with_status(statusCode: number): (body: Bundle<Task> | Array<string>) => APIGatewayProxyResult {
-  return (body) => {
-    return {
-      statusCode: statusCode,
-      body: JSON.stringify(body)
-    }
   }
 }
 
@@ -96,12 +88,17 @@ function populateTemplate(
   template: string,
   prescriptionItem: itemType,
   prescriptionDetails: requestType,
+  logger: Logger,
   prescriptionRepeatNumber?: number
 ): Result<BundleEntry<Task>, string> {
   const entry = JSON.parse(template) as BundleEntry<Task>
 
   const businessStatus = getBusinessStatus(prescriptionDetails.deliveryType, prescriptionItem.status)
   if (businessStatus.isNothing()) {
+    logger.error(
+      `Invalid business status on item ${prescriptionItem.itemID}.` +
+        `Unable to map prescription status ${prescriptionItem.status} and item status ${prescriptionItem.status}`
+    )
     return Err("Invalid business status on item {prescriptionItem.itemID}")
   } else {
     entry.resource!.businessStatus!.coding![0].code = businessStatus.value()

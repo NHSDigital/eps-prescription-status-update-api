@@ -4,9 +4,10 @@ import {MiddlewareGenerator} from "./middleware"
 import {Logger} from "@aws-lambda-powertools/logger"
 import {Result} from "pratica"
 import {Bundle, Task} from "fhir/r4"
+import {wrap_with_status} from "./utils"
 
-export type Validator<Event, Message> = (event: Event) => Result<Message, APIGatewayProxyResult>
-export type Transformer<Message> = (requestBody: Message) => Result<Bundle<Task>, APIGatewayProxyResult>
+export type Validator<Event, Message> = (event: Event, logger: Logger) => Result<Message, APIGatewayProxyResult>
+export type Transformer<Message> = (requestBody: Message, logger: Logger) => Result<Bundle<Task>, APIGatewayProxyResult>
 
 type EventWithHeaders = {
   headers: Record<string, unknown>
@@ -39,16 +40,10 @@ async function generic_handler<Event extends EventWithHeaders, Message>(
     "apigw-request-id": event.headers["apigw-request-id"] as string
   })
 
-  return params
-    .validator(event)
-    .chain(params.transformer)
-    .map((bundle) => {
-      return {
-        statusCode: 200,
-        body: JSON.stringify(bundle)
-      }
-    })
-    .value()
+  const validator = (event: Event) => params.validator(event, logger)
+  const transformer = (requestBody: Message) => params.transformer(requestBody, logger)
+
+  return validator(event).chain(transformer).map(wrap_with_status(200)).value()
 }
 
 /**

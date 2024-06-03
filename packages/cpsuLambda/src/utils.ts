@@ -1,3 +1,4 @@
+import {APIGatewayProxyResult} from "aws-lambda"
 import {Err, Ok, Result} from "pratica"
 
 declare global {
@@ -32,3 +33,12 @@ Array.prototype.collect = function <O, E>(this: Array<Result<O, E>>): Result<Arr
 }
 
 export {}
+
+export function wrap_with_status(statusCode: number): (body: unknown) => APIGatewayProxyResult {
+  return (body) => {
+    return {
+      statusCode: statusCode,
+      body: JSON.stringify(body)
+    }
+  }
+}
