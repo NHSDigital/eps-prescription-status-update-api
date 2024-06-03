@@ -24,7 +24,7 @@ export const FULL_URL_1 = FULL_URL_PREFIX + TASK_ID_1
 export const X_REQUEST_ID = "43313002-debb-49e3-85fa-34812c150242"
 export const DEFAULT_DATE = new Date("2023-09-11T10:11:12Z")
 
-const DEFAULT_HEADERS = {"x-request-id": X_REQUEST_ID}
+const DEFAULT_HEADERS = {"x-request-id": X_REQUEST_ID, "attribute-name": "test-app"}
 const TABLE_NAME = "PrescriptionStatusUpdates"
 
 const TASK_VALUES = [
