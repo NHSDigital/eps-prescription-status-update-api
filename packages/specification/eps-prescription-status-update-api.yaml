@@ -326,13 +326,5 @@ x-nhsd-apim:
       type: mtls
       secret: psu-mtls-1
   target-attributes:
-    - name: customer
-      required: false
-    - name: apigee.developer.app.name
-      required: false
-    - name: developer.app.name
-      required: false
-    - name: app.name
-      required: false
     - name: name
-      required: false
+      required: true
