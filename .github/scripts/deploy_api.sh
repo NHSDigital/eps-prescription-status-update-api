@@ -77,9 +77,7 @@ echo "$proxygen_private_key" > ~/.proxygen/tmp/proxygen_private_key.pem
 echo "$client_private_key" > ~/.proxygen/tmp/client_private_key.pem
 echo "$client_cert" > ~/.proxygen/tmp/client_cert.pem
 
-if [[ $API == standard ]]; then
-    # Create credentials.yaml file
-    cat <<EOF > ~/.proxygen/credentials.yaml
+cat <<EOF > ~/.proxygen/credentials.yaml
 client_id: prescription-status-update-api-client
 key_id: eps-cli-key-1
 private_key_path: tmp/proxygen_private_key.pem
@@ -87,29 +85,47 @@ base_url: https://identity.prod.api.platform.nhs.uk/realms/api-producers
 client_secret: https://nhsdigital.github.io/identity-service-jwks/jwks/paas/prescription-status-update-api.json
 EOF
 
-    # Create settings.yaml file
-    cat <<EOF > ~/.proxygen/settings.yaml
+# Create settings.yaml file
+cat <<EOF > ~/.proxygen/settings.yaml
 api: prescription-status-update-api
 endpoint_url: https://proxygen.prod.api.platform.nhs.uk
 spec_output_format: json
 EOF
-else
-    # Create credentials.yaml file
-    cat <<EOF > ~/.proxygen/credentials.yaml
-client_id: custom-prescription-status-update-api-client
-key_id: eps-cli-key-1
-private_key_path: tmp/proxygen_private_key.pem
-base_url: https://identity.prod.api.platform.nhs.uk/realms/api-producers
-client_secret: https://nhsdigital.github.io/identity-service-jwks/jwks/paas/prescription-status-update-api.json
-EOF
 
-    # Create settings.yaml file
-    cat <<EOF > ~/.proxygen/settings.yaml
-api: custom-prescription-status-update-api
-endpoint_url: https://proxygen.prod.api.platform.nhs.uk
-spec_output_format: json
-EOF
-fi
+
+# if [[ $API == standard ]]; then
+#     # Create credentials.yaml file
+#     cat <<EOF > ~/.proxygen/credentials.yaml
+# client_id: prescription-status-update-api-client
+# key_id: eps-cli-key-1
+# private_key_path: tmp/proxygen_private_key.pem
+# base_url: https://identity.prod.api.platform.nhs.uk/realms/api-producers
+# client_secret: https://nhsdigital.github.io/identity-service-jwks/jwks/paas/prescription-status-update-api.json
+# EOF
+
+#     # Create settings.yaml file
+#     cat <<EOF > ~/.proxygen/settings.yaml
+# api: prescription-status-update-api
+# endpoint_url: https://proxygen.prod.api.platform.nhs.uk
+# spec_output_format: json
+# EOF
+# else
+#     # Create credentials.yaml file
+#     cat <<EOF > ~/.proxygen/credentials.yaml
+# client_id: custom-prescription-status-update-api-client
+# key_id: eps-cli-key-1
+# private_key_path: tmp/proxygen_private_key.pem
+# base_url: https://identity.prod.api.platform.nhs.uk/realms/api-producers
+# client_secret: https://nhsdigital.github.io/identity-service-jwks/jwks/paas/prescription-status-update-api.json
+# EOF
+
+#     # Create settings.yaml file
+#     cat <<EOF > ~/.proxygen/settings.yaml
+# api: custom-prescription-status-update-api
+# endpoint_url: https://proxygen.prod.api.platform.nhs.uk
+# spec_output_format: json
+# EOF
+# fi
 
 # Store the API key secret using Proxygen CLI
 "$PROXYGEN_PATH" secret put --mtls-cert ~/.proxygen/tmp/client_cert.pem --mtls-key ~/.proxygen/tmp/client_private_key.pem "$APIGEE_ENVIRONMENT" psu-mtls-1
