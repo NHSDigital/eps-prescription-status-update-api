@@ -196,19 +196,19 @@ jobs:
           APIGEE_ENVIRONMENT: ${{ inputs.APIGEE_ENVIRONMENT }}
         run: poetry run ./deploy_api.sh
       
-      - name: Deploy CPSU API
-        shell: bash
-        working-directory: .github/scripts
-        if: ${{ inputs.DEPLOY_APIGEE == true && always() && !failure() && !cancelled() }}
-        env:
-          API: custom
-          VERSION_NUMBER: ${{ inputs.VERSION_NUMBER }}
-          PROXYGEN_PATH: ${{ env.PROXYGEN_PATH }}
-          SPEC_PATH: ${{ env.CPSU_SPEC_PATH }}
-          STACK_NAME: ${{ inputs.STACK_NAME }}
-          AWS_ENVIRONMENT: ${{ inputs.AWS_ENVIRONMENT }}
-          APIGEE_ENVIRONMENT: ${{ inputs.APIGEE_ENVIRONMENT }}
-        run: poetry run ./deploy_api.sh
+      # - name: Deploy CPSU API
+      #   shell: bash
+      #   working-directory: .github/scripts
+      #   if: ${{ inputs.DEPLOY_APIGEE == true && always() && !failure() && !cancelled() }}
+      #   env:
+      #     API: custom
+      #     VERSION_NUMBER: ${{ inputs.VERSION_NUMBER }}
+      #     PROXYGEN_PATH: ${{ env.PROXYGEN_PATH }}
+      #     SPEC_PATH: ${{ env.CPSU_SPEC_PATH }}
+      #     STACK_NAME: ${{ inputs.STACK_NAME }}
+      #     AWS_ENVIRONMENT: ${{ inputs.AWS_ENVIRONMENT }}
+      #     APIGEE_ENVIRONMENT: ${{ inputs.APIGEE_ENVIRONMENT }}
+      #   run: poetry run ./deploy_api.sh
 
       - name: create_int_release_notes
         uses: ./.github/actions/update_confluence_jira
