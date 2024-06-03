@@ -25,7 +25,7 @@ export const X_REQUEST_ID = "43313002-debb-49e3-85fa-34812c150242"
 export const APPLICATION_NAME = "test-app"
 export const DEFAULT_DATE = new Date("2023-09-11T10:11:12Z")
 
-const DEFAULT_HEADERS = {"x-request-id": X_REQUEST_ID, "attribute-name": "test-app"}
+const DEFAULT_HEADERS = {"x-request-id": X_REQUEST_ID, "attribute-name": APPLICATION_NAME}
 const TABLE_NAME = "PrescriptionStatusUpdates"
 
 const TASK_VALUES = [
