@@ -22,7 +22,6 @@
     "@middy/http-header-normalizer": "^5.3.5",
     "@middy/input-output-logger": "^5.3.5",
     "@middy/validator": "^5.3.5",
-    "@nhs/fhir-middy-error-handler": "^2.0.6",
     "json-schema-to-ts": "^3.1.0",
     "pratica": "^2.2.0",
     "uuid": "^9.0.1"

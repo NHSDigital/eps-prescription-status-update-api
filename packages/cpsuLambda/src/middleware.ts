@@ -1,6 +1,5 @@
 import inputOutputLogger from "@middy/input-output-logger"
 import httpHeaderNormalizer from "@middy/http-header-normalizer"
-import errorHandler from "@nhs/fhir-middy-error-handler"
 import {injectLambdaContext} from "@aws-lambda-powertools/logger/middleware"
 import middy from "@middy/core"
 import {Logger} from "@aws-lambda-powertools/logger"
@@ -22,7 +21,6 @@ const MIDDLEWARE: Record<string, MiddlewareGenerator> = {
         }
       }
     }),
-  errorHandler: (logger) => errorHandler({logger: logger}),
   validator: (logger, schema) => validator({eventSchema: transpileSchema(schema as object)})
 }
 
