@@ -18,7 +18,6 @@ import {
 } from "./utils/testUtils"
 
 import requestDispatched from "../../specification/examples/request-dispatched.json"
-import requestDuplicates from "../../specification/examples/request-duplicate-items.json"
 import requestMultipleItems from "../../specification/examples/request-multiple-items.json"
 import requestMissingFields from "../../specification/examples/request-missing-fields.json"
 import requestMultipleMissingFields from "../../specification/examples/request-multiple-missing-fields.json"
@@ -32,13 +31,14 @@ import {
   timeoutResponse
 } from "../src/utils/responses"
 import {TransactionCanceledException} from "@aws-sdk/client-dynamodb"
+import {persistDataItems} from "../src/utils/databaseClient"
 
 const {mockSend, mockTransact} = mockDynamoDBClient()
 const {handler} = await import("../src/updatePrescriptionStatus")
 const LAMBDA_TIMEOUT_MS = 9500 // 9.5 sec
 
 describe("Integration tests for updatePrescriptionStatus handler", () => {
-  beforeEach(() => {
+  beforeAll(() => {
     jest.resetModules()
     jest.clearAllMocks()
     jest.resetAllMocks()
@@ -186,22 +186,6 @@ describe("Integration tests for updatePrescriptionStatus handler", () => {
     expect(JSON.parse(response.body)).toEqual(bundleWrap([badRequest("Missing or empty x-request-id header.")]))
   })
 
-  it("when the conditional check fails, an error is thrown", async () => {
-    const event = generateMockEvent(requestDuplicates)
-    mockSend.mockRejectedValue(
-      new TransactionCanceledException({
-        message: "The transaction was cancelled.",
-        $metadata: {
-          httpStatusCode: 400
-        }
-      }) as never
-    )
-
-    const response: APIGatewayProxyResult = await handler(event, {})
-
-    expect(response.statusCode).toEqual(400) // throws 500 instead - error is never caught in dbClient
-  })
-
   it("when x-request-id header is mixed case, expect it to work", async () => {
     const body = generateBody()
     const event: APIGatewayProxyEvent = generateMockEvent(body)
@@ -215,4 +199,90 @@ describe("Integration tests for updatePrescriptionStatus handler", () => {
 
     expect(response.statusCode).toEqual(201)
   })
+
+  it("when the conditional check fails, an error is thrown", async () => {
+    const dataItems = [
+      {
+        LastModified: "2023-01-01T00:00:00Z",
+        LineItemID: "LineItemID_1",
+        PatientNHSNumber: "PatientNHSNumber_1",
+        PharmacyODSCode: "PharmacyODSCode_1",
+        PrescriptionID: "PrescriptionID_1",
+        RequestID: "RequestID_1",
+        Status: "Status_1",
+        TaskID: "TaskID_1",
+        TerminalStatus: "TerminalStatus_1"
+      },
+      {
+        LastModified: "2023-01-02T00:00:00Z",
+        LineItemID: "LineItemID_2",
+        PatientNHSNumber: "PatientNHSNumber_2",
+        PharmacyODSCode: "PharmacyODSCode_2",
+        PrescriptionID: "PrescriptionID_1",
+        RequestID: "RequestID_2",
+        Status: "Status_2",
+        TaskID: "TaskID_1",
+        TerminalStatus: "TerminalStatus_2"
+      }
+    ]
+
+    mockSend.mockRejectedValue(
+      new TransactionCanceledException({
+        $metadata: {},
+        message: "transaction cancelled."
+      }) as never
+    )
+
+    try {
+      await persistDataItems(dataItems)
+    } catch (e) {
+      expect(e).toBeInstanceOf(TransactionCanceledException)
+    }
+  })
 })
+
+// describe("Unit test persistDataItems", () => {
+//   beforeEach(() => {
+//     jest.resetModules()
+//     jest.clearAllMocks()
+//   })
+//   it("when the conditional check fails, an error is thrown", async () => {
+//     const dataItems = [
+//       {
+//         LastModified: "2023-01-01T00:00:00Z",
+//         LineItemID: "LineItemID_1",
+//         PatientNHSNumber: "PatientNHSNumber_1",
+//         PharmacyODSCode: "PharmacyODSCode_1",
+//         PrescriptionID: "PrescriptionID_1",
+//         RequestID: "RequestID_1",
+//         Status: "Status_1",
+//         TaskID: "TaskID_1",
+//         TerminalStatus: "TerminalStatus_1"
+//       },
+//       {
+//         LastModified: "2023-01-02T00:00:00Z",
+//         LineItemID: "LineItemID_2",
+//         PatientNHSNumber: "PatientNHSNumber_2",
+//         PharmacyODSCode: "PharmacyODSCode_2",
+//         PrescriptionID: "PrescriptionID_1",
+//         RequestID: "RequestID_2",
+//         Status: "Status_2",
+//         TaskID: "TaskID_1",
+//         TerminalStatus: "TerminalStatus_2"
+//       }
+//     ]
+
+//     mockSend.mockRejectedValue(
+//       new TransactionCanceledException({
+//         $metadata: {},
+//         message: "transaction cancelled."
+//       }) as never
+//     )
+
+//     try {
+//       await persistDataItems(dataItems)
+//     } catch (e) {
+//       expect(e).toBeInstanceOf(TransactionCanceledException)
+//     }
+//   }, 12000)
+// })

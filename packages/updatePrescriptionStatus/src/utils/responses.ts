@@ -152,29 +152,6 @@ export function conflictDuplicate(taskId: string): BundleEntry {
   }
 }
 
-// export function acceptedDuplicate(): BundleEntry {
-//   return {
-//     response: {
-//       status: "200 OK",
-//       lastModified: new Date().toISOString(), //double check
-//       outcome: {
-//         resourceType: "OperationOutcome",
-//         meta: {
-//           lastUpdated: new Date().toISOString()
-//         },
-//         issue: [
-//           {
-//             code: "informational",
-//             severity: "information",
-//             diagnostics:
-//               "No issues detected during validation. Resource not created as request contains a duplicate task id."
-//           }
-//         ]
-//       }
-//     }
-//   }
-// }
-
 export function createSuccessResponseEntries(entries: Array<BundleEntry>) {
   return entries.map((e) => created(e.fullUrl!))
 }

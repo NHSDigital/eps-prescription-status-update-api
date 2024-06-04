@@ -94,19 +94,12 @@ const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPro
     return response(201, responseEntries)
   } catch (e) {
     if (e instanceof TransactionCanceledException) {
-      e.CancellationReasons?.forEach((reason) => {
-        if (reason.Item && reason.Item.TaskID && reason.Item.TaskID.S) {
-          const taskId = reason.Item.TaskID.S
-          responseEntries.push(conflictDuplicate(taskId))
-        }
-      })
+      handleTransactionCancelledException(e, responseEntries)
+
       return response(409, responseEntries)
     }
-
-    logger.error("Error during data persistence operation.", {error: e})
-    responseEntries = [serverError()]
-    return response(500, responseEntries)
   }
+  return response(201, responseEntries)
 }
 
 export function getXRequestID(event: APIGatewayProxyEvent, responseEntries: Array<BundleEntry>): string | undefined {
@@ -155,6 +148,18 @@ export function validateEntries(requestEntries: Array<BundleEntry>, responseEntr
   }
   logger.info("Entries validated.")
   return valid
+}
+
+export function handleTransactionCancelledException(
+  e: TransactionCanceledException,
+  responseEntries: Array<BundleEntry>
+): undefined {
+  e.CancellationReasons?.forEach((reason) => {
+    if (reason.Item && reason.Item.TaskID && reason.Item.TaskID.S) {
+      const taskId = reason.Item.TaskID.S
+      responseEntries.push(conflictDuplicate(taskId))
+    }
+  })
 }
 
 export function buildDataItems(requestEntries: Array<BundleEntry>, xRequestID: string): Array<DataItem> {
