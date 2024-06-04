@@ -161,4 +161,49 @@ describe("format_1 handler", () => {
         `Unable to map delivery type ${body.deliveryType} and item status ${body.items[0].status}`
     )
   })
+
+  test("Repeat messages are translated with matching UUIDs", async () => {
+    const event = {
+      headers: {},
+      body: format_1_request()
+    }
+
+    const response_1 = await format_1_handler(event as format_1.eventType, dummyContext)
+    const response_2 = await format_1_handler(event as format_1.eventType, dummyContext)
+
+    const response_1_body = JSON.parse(response_1.body)
+    const response_2_body = JSON.parse(response_2.body)
+
+    expect(response_1_body.entry[0].fullUrl).toEqual(response_2_body.entry[0].fullUrl)
+    expect(response_1_body.entry[0].resource.id).toEqual(response_2_body.entry[0].resource.id)
+    expect(response_1_body.entry[1].fullUrl).toEqual(response_2_body.entry[1].fullUrl)
+    expect(response_1_body.entry[1].resource.id).toEqual(response_2_body.entry[1].resource.id)
+  })
+
+  test("UUIDs are unique if item or prescription details are different", async () => {
+    const event_1 = {
+      headers: {},
+      body: format_1_request()
+    }
+
+    const event_2 = {
+      headers: {},
+      body: format_1_request()
+    }
+    event_2.body.items[0].itemID = "different item ID"
+
+    const response_1 = await format_1_handler(event_1 as format_1.eventType, dummyContext)
+    const response_2 = await format_1_handler(event_2 as format_1.eventType, dummyContext)
+
+    const response_1_body = JSON.parse(response_1.body)
+    const response_2_body = JSON.parse(response_2.body)
+
+    // Different uuid since item ID is different
+    expect(response_1_body.entry[0].fullUrl).not.toBe(response_2_body.entry[0].fullUrl)
+    expect(response_1_body.entry[0].resource.id).not.toBe(response_2_body.entry[0].resource.id)
+
+    // Same uuid since item ID is not different
+    expect(response_1_body.entry[1].fullUrl).toBe(response_2_body.entry[1].fullUrl)
+    expect(response_1_body.entry[1].resource.id).toBe(response_2_body.entry[1].resource.id)
+  })
 })

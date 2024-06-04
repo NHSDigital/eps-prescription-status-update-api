@@ -32,6 +32,30 @@ Array.prototype.all_ok = function <O, E>(this: Array<Result<O, E>>): Result<Arra
   }
 }
 
+declare global {
+  interface String {
+    /**
+     * Splits a string into windows of a specified size,
+     * with the last window being shorter if the string length is not divisible by the window size.
+     *
+     * @example
+     * // returns ["abc", "def", "gh"]
+     * "abcdefgh".windows(3)
+     */
+    windows(this: string, size: number): Array<string>
+  }
+}
+
+String.prototype.windows = function (this: string, size: number): Array<string> {
+  const result: Array<string> = []
+
+  for (let i = 0; i < this.length; i += size) {
+    result.push(this.slice(i, i + size))
+  }
+
+  return result
+}
+
 export {}
 
 export function wrap_with_status(statusCode: number): (body: unknown) => APIGatewayProxyResult {

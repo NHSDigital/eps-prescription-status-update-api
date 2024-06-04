@@ -17,6 +17,7 @@ import {v4 as uuidv4} from "uuid"
 import {Transformer} from "../../handler"
 import {Logger} from "@aws-lambda-powertools/logger"
 import {wrap_with_status} from "../../utils"
+import {Md5} from "ts-md5"
 
 export const transformer: Transformer<requestType> = (requestBody, logger) => {
   const bundle_entry_template = generateTemplate(requestBody)
@@ -113,12 +114,42 @@ function populateTemplate(
     ]
   }
 
-  const uuid = uuidv4()
+  const uuid = generate_uuid(prescriptionItem, prescriptionDetails)
   entry.resource!.id = uuid
   const urn = `urn:uuid:${uuid}`
   entry.fullUrl = urn
 
   return Ok(entry)
+}
+
+/**
+ * Generates a UUID seeded from prescription details and item details.
+ */
+function generate_uuid(prescriptionItem: itemType, prescriptionDetails: requestType): string {
+  const prescriptionDetailsToHash = {
+    messageDate: prescriptionDetails.messageDate,
+    prescriptionUUID: prescriptionDetails.prescriptionUUID,
+    repeatNo: prescriptionDetails.repeatNo,
+    oDSCode: prescriptionDetails.oDSCode,
+    deliveryType: prescriptionDetails.deliveryType,
+    nHSCHI: prescriptionDetails.nHSCHI
+  }
+
+  const itemDetailsToHash = {
+    itemID: prescriptionItem.itemID,
+    status: prescriptionItem.status
+  }
+
+  const details = JSON.stringify([prescriptionDetailsToHash, itemDetailsToHash])
+  // 16 byte MD5 hash
+  const hash = new Md5().appendStr(details).end()
+
+  const seed = hash
+    ?.toString()
+    .windows(2)
+    .map((hex) => parseInt(hex, 16))
+
+  return uuidv4({random: seed})
 }
 
 export function getBusinessStatus(deliveryType: deliveryType, itemStatus: itemStatusType): Maybe<string> {
