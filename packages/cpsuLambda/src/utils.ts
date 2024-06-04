@@ -9,11 +9,11 @@ declare global {
      * If all results are Ok, returns an Ok with an array of values.
      * If any result is an Err, returns an Err with an array of errors.
      */
-    collect<O, E>(this: Array<Result<O, E>>): Result<Array<O>, Array<E>>
+    all_ok<O, E>(this: Array<Result<O, E>>): Result<Array<O>, Array<E>>
   }
 }
 
-Array.prototype.collect = function <O, E>(this: Array<Result<O, E>>): Result<Array<O>, Array<E>> {
+Array.prototype.all_ok = function <O, E>(this: Array<Result<O, E>>): Result<Array<O>, Array<E>> {
   const successes: Array<O> = []
   const failures: Array<E> = []
 

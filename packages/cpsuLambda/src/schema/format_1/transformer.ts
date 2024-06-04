@@ -23,7 +23,7 @@ export const transformer: Transformer<requestType> = (requestBody, logger) => {
 
   return requestBody.items
     .map((item) => populateTemplate(bundle_entry_template, item, requestBody, logger))
-    .collect()
+    .all_ok()
     .map(bundle_entries)
     .mapErr(wrap_with_status(400))
 }
