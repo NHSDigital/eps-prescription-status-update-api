@@ -120,7 +120,7 @@ Resources:
         DNSName: !GetAtt RestApiDomain.RegionalDomainName
         HostedZoneId: !GetAtt RestApiDomain.RegionalHostedZoneId
 
-  UpdatePrescriptionStatusMethod: # Only accepts application/json and not application/fhir+json
+  UpdatePrescriptionStatusMethod:
     Type: AWS::ApiGateway::Method
     Properties:
       RestApiId: !Ref RestApiGateway
@@ -134,7 +134,7 @@ Resources:
         Uri: !Sub arn:aws:apigateway:${AWS::Region}:states:action/StartSyncExecution
         PassthroughBehavior: WHEN_NO_MATCH
         RequestTemplates:
-          application/json: !Sub
+          application/fhir+json: !Sub
             - |-
               ## Velocity Template used for API Gateway request mapping template
               ## "@@" is used here as a placeholder for '"' to avoid using escape characters.
@@ -214,9 +214,9 @@ Resources:
             ResponseTemplates:
               application/json: |-
                 #set($context.responseOverride.header["Content-Type"] ="application/fhir+json")
-                {"resourceType":"OperationOutcome","issue": [{"severity":"error","code":"processing","diagnostics":"System error"}]}    
+                {"resourceType":"OperationOutcome","issue": [{"severity":"error","code":"processing","diagnostics":"System error"}]}
           - StatusCode: 500
-            SelectionPattern: ^5\d{2}.* 
+            SelectionPattern: ^5\d{2}.*
             ResponseTemplates:
               application/json: |-
                 #set($context.responseOverride.header["Content-Type"] ="application/fhir+json")
