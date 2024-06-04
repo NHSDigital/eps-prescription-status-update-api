@@ -22,9 +22,10 @@ export const FULL_URL_0 = FULL_URL_PREFIX + TASK_ID_0
 export const FULL_URL_1 = FULL_URL_PREFIX + TASK_ID_1
 
 export const X_REQUEST_ID = "43313002-debb-49e3-85fa-34812c150242"
+export const APPLICATION_NAME = "test-app"
 export const DEFAULT_DATE = new Date("2023-09-11T10:11:12Z")
 
-const DEFAULT_HEADERS = {"x-request-id": X_REQUEST_ID}
+const DEFAULT_HEADERS = {"x-request-id": X_REQUEST_ID, "attribute-name": APPLICATION_NAME}
 const TABLE_NAME = "PrescriptionStatusUpdates"
 
 const TASK_VALUES = [
@@ -120,7 +121,8 @@ export function generateExpectedItems(itemCount: number = 1) {
           Status: {S: values.businessStatus},
           TaskID: {S: values.id},
           TerminalStatus: {S: values.status},
-          RequestID: {S: X_REQUEST_ID}
+          RequestID: {S: X_REQUEST_ID},
+          ApplicationName: {S: APPLICATION_NAME}
         }
       }
     })
