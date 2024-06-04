@@ -18,6 +18,6 @@
     "@aws-lambda-powertools/logger": "^2.1.0",
     "@middy/core": "^5.4.0",
     "@middy/input-output-logger": "^5.4.0",
-    "@nhs/fhir-middy-error-handler": "^2.0.4"
+    "@nhs/fhir-middy-error-handler": "^2.0.7"
   }
 }
