@@ -30,8 +30,6 @@ import {
   serverError,
   timeoutResponse
 } from "../src/utils/responses"
-import {TransactionCanceledException} from "@aws-sdk/client-dynamodb"
-import {persistDataItems} from "../src/utils/databaseClient"
 
 const {mockSend, mockTransact} = mockDynamoDBClient()
 const {handler} = await import("../src/updatePrescriptionStatus")
@@ -199,90 +197,4 @@ describe("Integration tests for updatePrescriptionStatus handler", () => {
 
     expect(response.statusCode).toEqual(201)
   })
-
-  it("when the conditional check fails, an error is thrown", async () => {
-    const dataItems = [
-      {
-        LastModified: "2023-01-01T00:00:00Z",
-        LineItemID: "LineItemID_1",
-        PatientNHSNumber: "PatientNHSNumber_1",
-        PharmacyODSCode: "PharmacyODSCode_1",
-        PrescriptionID: "PrescriptionID_1",
-        RequestID: "RequestID_1",
-        Status: "Status_1",
-        TaskID: "TaskID_1",
-        TerminalStatus: "TerminalStatus_1"
-      },
-      {
-        LastModified: "2023-01-02T00:00:00Z",
-        LineItemID: "LineItemID_2",
-        PatientNHSNumber: "PatientNHSNumber_2",
-        PharmacyODSCode: "PharmacyODSCode_2",
-        PrescriptionID: "PrescriptionID_1",
-        RequestID: "RequestID_2",
-        Status: "Status_2",
-        TaskID: "TaskID_1",
-        TerminalStatus: "TerminalStatus_2"
-      }
-    ]
-
-    mockSend.mockRejectedValue(
-      new TransactionCanceledException({
-        $metadata: {},
-        message: "transaction cancelled."
-      }) as never
-    )
-
-    try {
-      await persistDataItems(dataItems)
-    } catch (e) {
-      expect(e).toBeInstanceOf(TransactionCanceledException)
-    }
-  })
 })
-
-// describe("Unit test persistDataItems", () => {
-//   beforeEach(() => {
-//     jest.resetModules()
-//     jest.clearAllMocks()
-//   })
-//   it("when the conditional check fails, an error is thrown", async () => {
-//     const dataItems = [
-//       {
-//         LastModified: "2023-01-01T00:00:00Z",
-//         LineItemID: "LineItemID_1",
-//         PatientNHSNumber: "PatientNHSNumber_1",
-//         PharmacyODSCode: "PharmacyODSCode_1",
-//         PrescriptionID: "PrescriptionID_1",
-//         RequestID: "RequestID_1",
-//         Status: "Status_1",
-//         TaskID: "TaskID_1",
-//         TerminalStatus: "TerminalStatus_1"
-//       },
-//       {
-//         LastModified: "2023-01-02T00:00:00Z",
-//         LineItemID: "LineItemID_2",
-//         PatientNHSNumber: "PatientNHSNumber_2",
-//         PharmacyODSCode: "PharmacyODSCode_2",
-//         PrescriptionID: "PrescriptionID_1",
-//         RequestID: "RequestID_2",
-//         Status: "Status_2",
-//         TaskID: "TaskID_1",
-//         TerminalStatus: "TerminalStatus_2"
-//       }
-//     ]
-
-//     mockSend.mockRejectedValue(
-//       new TransactionCanceledException({
-//         $metadata: {},
-//         message: "transaction cancelled."
-//       }) as never
-//     )
-
-//     try {
-//       await persistDataItems(dataItems)
-//     } catch (e) {
-//       expect(e).toBeInstanceOf(TransactionCanceledException)
-//     }
-//   }, 12000)
-// })

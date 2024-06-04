@@ -13,6 +13,7 @@ import {
 import {Task} from "fhir/r4"
 
 import valid from "../tasks/valid.json"
+import * as dynamo from "@aws-sdk/client-dynamodb"
 
 export const TASK_ID_0 = "4d70678c-81e4-4ff4-8c67-17596fd0aa46"
 export const TASK_ID_1 = "0ae4daf3-f24b-479d-b8fa-b69e2d873b60"
@@ -144,11 +145,11 @@ export function mockDynamoDBClient() {
   const mockTransact = jest.fn()
   jest.unstable_mockModule("@aws-sdk/client-dynamodb", () => {
     return {
+      ...dynamo,
       DynamoDBClient: jest.fn().mockImplementation(() => ({
         send: mockSend
       })),
-      TransactWriteItemsCommand: mockTransact,
-      TransactionCanceledException: jest.fn()
+      TransactWriteItemsCommand: mockTransact
     }
   })
   return {mockSend, mockTransact}
