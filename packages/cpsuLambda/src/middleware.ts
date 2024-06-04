@@ -9,7 +9,7 @@ import {validationErrorHandler} from "./errorHandler"
 
 export type MiddlewareGenerator = (logger: Logger, schema?: object) => middy.MiddlewareObj
 
-const MIDDLEWARE: Record<string, MiddlewareGenerator> = {
+export const MIDDLEWARE: Record<string, MiddlewareGenerator> = {
   injectLambdaContext: (logger) => injectLambdaContext(logger, {clearState: true}),
   httpHeaderNormalizer: () => httpHeaderNormalizer() as middy.MiddlewareObj,
   inputOutputLogger: (logger) =>

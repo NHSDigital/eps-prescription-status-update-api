@@ -1,7 +1,11 @@
-import {format_1_handler} from "../src/cpsu"
+import {FORMAT_1_PARAMS, format_1_handler} from "../src/cpsu"
 import {format_1} from "../src/schema"
 import mockContext from "./mockContext"
 import format_1_example_json from "./format_1_example.json"
+import {newHandler} from "../src/handler"
+import {MIDDLEWARE} from "../src/middleware"
+import {Logger} from "@aws-lambda-powertools/logger"
+import {jest} from "@jest/globals"
 
 const format_1_example = () => {
   return JSON.parse(JSON.stringify(format_1_example_json))
@@ -155,13 +159,22 @@ describe("format_1 handler", () => {
       body
     }
 
-    const response = await format_1_handler(event as format_1.eventType, dummyContext)
+    const mockLogger = {info: jest.fn()}
+    const handler = newHandler({
+      params: FORMAT_1_PARAMS,
+      middleware: [MIDDLEWARE.validator, MIDDLEWARE.validationErrorHandler],
+      logger: mockLogger as unknown as Logger,
+      schema: format_1.eventSchema
+    })
+
+    const response = await handler(event as format_1.eventType, dummyContext)
     expect(response.statusCode).toEqual(202)
     expect(JSON.parse(response.body)).toEqual("Message Ignored")
+    expect(mockLogger["info"]).toHaveBeenCalledWith("Message Ignored")
   })
 
   test("Message missing field receives 400 and appropriate message", async () => {
-    const body: Partial<format_1.requestType> = format_1_example()
+    const body = format_1_example()
     delete body.oDSCode
 
     const event = {

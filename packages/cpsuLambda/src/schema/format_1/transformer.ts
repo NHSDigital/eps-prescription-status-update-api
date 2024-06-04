@@ -121,7 +121,7 @@ function populateTemplate(
   return Ok(entry)
 }
 
-function getBusinessStatus(deliveryType: deliveryType, itemStatus: itemStatusType): Maybe<string> {
+export function getBusinessStatus(deliveryType: deliveryType, itemStatus: itemStatusType): Maybe<string> {
   return get([itemStatus])(BUSINESS_STATUS_MAP).chain((status) => {
     if (typeof status === "string") {
       return Just(status)

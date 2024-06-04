@@ -3,7 +3,7 @@ import {DEFAULT_HANDLER_MIDDLEWARE} from "./middleware"
 import {HandlerParams, newHandler} from "./handler"
 import {format_1} from "./schema"
 
-const FORMAT_1_PARAMS: HandlerParams<format_1.eventType, format_1.requestType> = {
+export const FORMAT_1_PARAMS: HandlerParams<format_1.eventType, format_1.requestType> = {
   validator: format_1.validator,
   transformer: format_1.transformer
 }
