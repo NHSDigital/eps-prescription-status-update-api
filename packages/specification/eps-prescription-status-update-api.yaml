@@ -325,3 +325,6 @@ x-nhsd-apim:
     security:
       type: mtls
       secret: psu-mtls-1
+  target-attributes:
+    - name: name
+      required: true
