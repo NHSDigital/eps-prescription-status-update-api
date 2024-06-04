@@ -342,4 +342,31 @@ describe("format_1 handler", () => {
 
     expect(responseBody).toEqual(expectedResponse)
   })
+
+  test("Request with invalid business state returns 400", async () => {
+    const body = format_1_example()
+    body.items[0].status = "Expired"
+    body.deliveryType = "Robot Collection"
+
+    const event = {
+      headers: {},
+      body: body
+    }
+
+    const mockLogger = {info: jest.fn()}
+    const handler = newHandler({
+      params: FORMAT_1_PARAMS,
+      middleware: [MIDDLEWARE.validator, MIDDLEWARE.validationErrorHandler],
+      logger: mockLogger as unknown as Logger,
+      schema: format_1.eventSchema
+    })
+
+    const response = await handler(event as format_1.eventType, dummyContext)
+    expect(response.statusCode).toEqual(400)
+    expect(JSON.parse(response.body)).toEqual([`Invalid business status on item ${body.items[0].itemID}`])
+    expect(mockLogger["info"]).toHaveBeenCalledWith(
+      `Invalid business status on item ${body.items[0].itemID}.` +
+        `Unable to map delivery type ${body.deliveryType} and item status ${body.items[0].status}`
+    )
+  })
 })

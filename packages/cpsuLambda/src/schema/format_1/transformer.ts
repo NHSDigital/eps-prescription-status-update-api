@@ -92,11 +92,11 @@ function populateTemplate(
 
   const businessStatus = getBusinessStatus(prescriptionDetails.deliveryType, prescriptionItem.status)
   if (businessStatus.isNothing()) {
-    logger.error(
+    logger.info(
       `Invalid business status on item ${prescriptionItem.itemID}.` +
-        `Unable to map prescription status ${prescriptionItem.status} and item status ${prescriptionItem.status}`
+        `Unable to map delivery type ${prescriptionDetails.deliveryType} and item status ${prescriptionItem.status}`
     )
-    return Err("Invalid business status on item {prescriptionItem.itemID}")
+    return Err(`Invalid business status on item ${prescriptionItem.itemID}`)
   } else {
     entry.resource!.businessStatus!.coding![0].code = businessStatus.value()
   }
