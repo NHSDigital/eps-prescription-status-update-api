@@ -1,5 +1,5 @@
-import {deliveryType, itemStatusType} from "../src/schema/format_1"
-import {getBusinessStatus} from "../src/schema/format_1/transformer"
+import {deliveryType, itemStatusType} from "../../src/schema/format_1"
+import {getBusinessStatus} from "../../src/schema/format_1/transformer"
 
 it("should convert a delivery type business status", () => {
   const itemStatus: itemStatusType = "ReadyForCollection"

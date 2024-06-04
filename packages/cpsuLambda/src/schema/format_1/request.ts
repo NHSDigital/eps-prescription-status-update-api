@@ -37,7 +37,7 @@ const deliveryTypeSchema = {
 
 const requestSchema = {
   type: "object",
-  required: ["MessageType", "messageDate", "prescriptionUUID", "oDSCode", "status", "deliveryType", "nHSCHI", "items"],
+  required: ["MessageType", "messageDate", "prescriptionUUID", "oDSCode", "deliveryType", "nHSCHI", "items"],
   properties: {
     MessageType: {
       type: "string"
@@ -54,7 +54,6 @@ const requestSchema = {
     oDSCode: {
       type: "string"
     },
-    status: prescriptionStatusSchema,
     deliveryType: deliveryTypeSchema,
     nHSCHI: {
       type: "string"
