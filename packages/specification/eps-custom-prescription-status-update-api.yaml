@@ -1,0 +1,78 @@
+# This is an OpenAPI Specification (https://swagger.io/specification/)
+# for the Prescription Status Update API
+# owned by NHS Digital (https://digital.nhs.uk/)
+
+openapi: 3.0.3
+info:
+  title: Custom Prescription Status Update API
+  version: "0.0.1"
+  contact:
+    name: Custom Prescription Status Update API Support
+    url: https://digital.nhs.uk/developer/help-and-support
+    email: api.management@nhs.net
+
+servers:
+  - url: "https://int.api.service.nhs.uk/custom-prescription-status-update"
+    description: "Integration"
+  - url: "https://api.service.nhs.uk/custom-prescription-status-update"
+    description: "Production"
+
+paths:
+  /format-1:
+    post:
+      operationId: format-1-prescription-status-update
+      summary: Format 1 Update prescription status
+      description: |
+        ## Overview
+        Status updates to be provided on prescription items to allow users of the NHS App and third-party app consumers to track the progress of their prescriptions and when ready to collect.
+      parameters:
+        - $ref: "#/components/parameters/ApiKey"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            examples:
+              multiple-items:
+                summary: multiple-items
+                description: A request message contains multiple items.
+                value:
+                  $ref: "examples/format-1-request-multiple-items.json"
+      responses:
+        "200":
+          description: Successful creation.
+        "4XX":
+          description: An error occurred.
+        "5XX":
+          description: An error occurred.
+      security:
+        - app-level0: []
+components:
+  securitySchemes:
+    app-level0:
+      $ref: https://proxygen.prod.api.platform.nhs.uk/components/securitySchemes/app-level0
+  parameters:
+    ApiKey:
+      in: header
+      name: API-KEY
+      required: true
+      description: |
+        API Key used to authenticate with the system
+      schema:
+        type: string
+        example: 11C46F5F-CDEF-4865-94B2-0EE0EDCC26DA
+security:
+  - app-level0: []
+x-nhsd-apim:
+  temporary: false
+  monitoring: true
+  access:
+    - title: Application Restricted
+      grants:
+        app-level0: []
+  target:
+    type: external
+    healthcheck: /_status
+    url: https://psu.dev.eps.national.nhs.uk
+    security:
+      type: mtls
+      secret: psu-mtls-1
