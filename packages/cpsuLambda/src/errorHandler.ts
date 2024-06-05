@@ -15,7 +15,7 @@ function validationErrorHandler({logger = console, level = "error"}: LoggerAndLe
     onError: async (handler) => {
       const error: any = handler.error
 
-      if (!error.cause || !error.cause.data) {
+      if (!error?.cause?.data) {
         logger[level as keyof HandlerLogger]("Validation error", error)
         handler.response = {
           statusCode: 400,
