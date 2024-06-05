@@ -67,9 +67,6 @@ sam-validate-sandbox:
 	sam validate --template-file SAMtemplates/sandbox_template.yaml --region eu-west-2
 
 sam-deploy-package: guard-artifact_bucket guard-artifact_bucket_prefix guard-stack_name guard-template_file guard-cloud_formation_execution_role guard-LATEST_TRUSTSTORE_VERSION guard-enable_mutual_tls guard-DYNAMODB_AUTOSCALE guard-VERSION_NUMBER guard-COMMIT_ID guard-VERSION_NUMBER guard-LOG_RETENTION_DAYS guard-TARGET_ENVIRONMENT
-	aws s3 cp velocity-template.template s3://$$artifact_bucket/$$artifact_bucket_prefix/velocity-template.template
-		--s3-bucket $$artifact_bucket \
-		--s3-prefix $$artifact_bucket_prefix
 	sam deploy \
 		--template-file $$template_file \
 		--stack-name $$stack_name \
