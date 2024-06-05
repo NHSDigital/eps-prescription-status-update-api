@@ -1,0 +1,116 @@
+{
+  "resourceType": "Bundle",
+  "type": "transaction",
+  "entry": [
+    {
+      "fullUrl": "urn:uuid:4d70678c-81e4-4ff4-8c67-17596fd0aa46",
+      "resource": {
+        "resourceType": "Task",
+        "id": "4d70678c-81e4-4ff4-8c67-17596fd0aa46",
+        "input": [
+          {
+            "type": {
+              "text": "Repeat Number"
+            },
+            "valueInteger": 3
+          }
+        ],
+        "basedOn": [
+          {
+            "identifier": {
+              "system": "https://fhir.nhs.uk/Id/prescription-order-number",
+              "value": "490795-B83002-00001S"
+            }
+          }
+        ],
+        "businessStatus": {
+          "coding": [
+            {
+              "system": "https://fhir.nhs.uk/CodeSystem/task-businessStatus-nppt",
+              "code": "With Pharmacy"
+            }
+          ]
+        },
+        "intent": "order",
+        "focus": {
+          "identifier": {
+            "system": "https://fhir.nhs.uk/Id/prescription-order-item-number",
+            "value": "73014c50-1bd1-4359-9c9f-d587d7d03e66"
+          }
+        },
+        "for": {
+          "identifier": {
+            "system": "https://fhir.nhs.uk/Id/nhs-number",
+            "value": "1996344668"
+          }
+        },
+        "lastModified": "2023-09-11T10:11:12Z",
+        "owner": {
+          "identifier": {
+            "system": "https://fhir.nhs.uk/Id/ods-organization-code",
+            "value": "FHA82"
+          }
+        }
+      },
+      "request": {
+        "method": "POST",
+        "url": "Task"
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:4d70678c-81e4-4ff4-8c67-17596fd0aa46",
+      "resource": {
+        "resourceType": "Task",
+        "id": "4d70678c-81e4-4ff4-8c67-17596fd0aa46",
+        "input": [
+          {
+            "type": {
+              "text": "Repeat Number"
+            },
+            "valueInteger": 3
+          }
+        ],
+        "basedOn": [
+          {
+            "identifier": {
+              "system": "https://fhir.nhs.uk/Id/prescription-order-number",
+              "value": "490795-B83002-00001S"
+            }
+          }
+        ],
+        "businessStatus": {
+          "coding": [
+            {
+              "system": "https://fhir.nhs.uk/CodeSystem/task-businessStatus-nppt",
+              "code": "With Pharmacy"
+            }
+          ]
+        },
+        "intent": "order",
+        "focus": {
+          "identifier": {
+            "system": "https://fhir.nhs.uk/Id/prescription-order-item-number",
+            "value": "73014c50-1bd1-4361-9c9f-d587d7d03e66"
+          }
+        },
+        "for": {
+          "identifier": {
+            "system": "https://fhir.nhs.uk/Id/nhs-number",
+            "value": "1996344668"
+          }
+        },
+        "lastModified": "2023-09-11T10:11:12Z",
+        "owner": {
+          "identifier": {
+            "system": "https://fhir.nhs.uk/Id/ods-organization-code",
+            "value": "FHA82"
+          }
+        }
+      },
+      "request": {
+        "method": "POST",
+        "url": "Task"
+      }
+    }
+  ]
+}

@@ -12,4 +12,5 @@ build:
 	mkdir -p dist
 	npm run lint
 	npm run resolve
+	npm run resolve-cpsu
 	ls -la dist
