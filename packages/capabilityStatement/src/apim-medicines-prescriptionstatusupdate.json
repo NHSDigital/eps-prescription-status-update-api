@@ -47,9 +47,11 @@
     "https://simplifier.net/guide/nhsdigital"
   ],
   "fhirVersion": "4.0.1",
-  "format": ["application/fhir+json"],
+  "format": [
+    "application/fhir+json"
+  ],
   "implementation": {
-    "description": "Base URL for the Prescriptions for Patients API",
+    "description": "Base URL for the Prescriptions Status Update API",
     "url": "https://api.service.nhs.uk/prescription-status-update"
   },
   "rest": [
