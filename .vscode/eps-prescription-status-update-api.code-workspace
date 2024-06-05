@@ -23,6 +23,10 @@
     {
       "name": "packages/updatePrescriptionStatus",
       "path": "../packages/updatePrescriptionStatus"
+    },
+    {
+      "name": "packages/capabilityStatement",
+      "path": "../packages/capabilityStatement"
     }
   ],
   "settings": {
