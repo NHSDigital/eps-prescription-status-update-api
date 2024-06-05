@@ -26,7 +26,7 @@ sam-build-sandbox: sam-validate-sandbox compile
 sam-run-local: sam-build
 	sam local start-api
 
-sam-sync: guard-AWS_DEFAULT_PROFILE guard-stack_name compile 
+sam-sync: guard-AWS_DEFAULT_PROFILE guard-stack_name compile
 	sam sync \
 		--stack-name $$stack_name \
 		--watch \
