@@ -28,12 +28,19 @@ sam-run-local: sam-build
 	sam local start-api
 
 sam-sync: guard-AWS_DEFAULT_PROFILE guard-stack_name compile 
+	export artifact_bucket=$$(aws cloudformation list-exports --output json | jq -r '.Exports[] | select(.Name == "account-resources:ArtifactsBucket") | .Value' | grep -o '[^:]*$$'); \
+	aws s3 cp "SAMtemplates/apis/velocity-template.template" "s3://$${artifact_bucket}/$${stack_name}/velocity-template.template"; \
 	sam sync \
 		--stack-name $$stack_name \
 		--watch \
 		--template-file SAMtemplates/main_template.yaml \
+		--s3-bucket $$artifact_bucket \
+		--s3-prefix $$stack_name \
 		--parameter-overrides \
-			  EnableSplunk=false
+			  EnableSplunk=false \
+  			  ArtifactBucket=$$artifact_bucket \
+			  ArtifactPrefix=$$stack_name
+
 
 sam-deploy: guard-AWS_DEFAULT_PROFILE guard-stack_name
 	sam deploy \
@@ -93,7 +100,6 @@ sam-deploy-package: guard-artifact_bucket guard-artifact_bucket_prefix guard-sta
 			  Env=$$TARGET_ENVIRONMENT \
 			  ArtifactBucket=$$artifact_bucket \
 			  ArtifactPrefix=$$artifact_bucket_prefix
-
 
 compile-node:
 	npx tsc --build tsconfig.build.json

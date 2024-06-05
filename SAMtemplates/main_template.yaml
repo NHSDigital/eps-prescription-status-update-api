@@ -100,7 +100,7 @@ Resources:
         LogRetentionInDays: !Ref LogRetentionInDays
         EnableSplunk: !Ref EnableSplunk
         ArtifactBucket: !Ref ArtifactBucket
-        ArtifactPrefix: !Ref ArtifactBucket
+        ArtifactPrefix: !Ref ArtifactPrefix
 
   Functions:
     Type: AWS::Serverless::Application
