@@ -59,6 +59,15 @@ repos:
         types_or: [ts, tsx, javascript, jsx, json]
         pass_filenames: false
 
+      - id: lint-cpsuLambda
+        name: Lint cpsuLambda
+        entry: npm
+        args: ["run", "--prefix=packages/cpsuLambda", "lint"]
+        language: system
+        files: ^packages\/cpsuLambda
+        types_or: [ts, tsx, javascript, jsx, json]
+        pass_filenames: false
+
       - id: lint-samtemplates
         name: Lint sam templates
         entry: make
