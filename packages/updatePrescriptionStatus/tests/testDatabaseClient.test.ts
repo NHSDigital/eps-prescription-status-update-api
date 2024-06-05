@@ -27,7 +27,8 @@ describe("Unit test persistDataItems", () => {
         RequestID: "RequestID_1",
         Status: "Status_1",
         TaskID: "TaskID_1",
-        TerminalStatus: "TerminalStatus_1"
+        TerminalStatus: "TerminalStatus_1",
+        ApplicationName: "name"
       },
       {
         LastModified: "2023-01-02T00:00:00Z",
@@ -38,7 +39,8 @@ describe("Unit test persistDataItems", () => {
         RequestID: "RequestID_2",
         Status: "Status_2",
         TaskID: "TaskID_1",
-        TerminalStatus: "TerminalStatus_2"
+        TerminalStatus: "TerminalStatus_2",
+        ApplicationName: "name"
       }
     ]
 
