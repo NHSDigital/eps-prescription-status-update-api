@@ -14,7 +14,7 @@ LATEST_TRUSTSTORE_VERSION=$(aws s3api list-object-versions --bucket "${TRUSTSTOR
 export LATEST_TRUSTSTORE_VERSION
 
 # shellcheck disable=SC2154
-aws s3 cp "../../SAMtemplates/apis/velocity-template.template" "s3://${artifact_bucket}/${artifact_bucket_prefix}/velocity-template.template"
+aws s3 cp "../../.aws-sam/build/Apis/velocity-template.template" "s3://${artifact_bucket}/${artifact_bucket_prefix}/velocity-template.template"
 
 cd ../../.aws-sam/build || exit
 make sam-deploy-package

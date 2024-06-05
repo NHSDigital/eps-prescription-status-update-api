@@ -19,6 +19,7 @@ install-hooks: install-python
 
 sam-build: sam-validate compile
 	sam build --template-file SAMtemplates/main_template.yaml --region eu-west-2
+	cp SAMtemplates/apis/velocity-template.template .aws-sam/build/Apis
 
 sam-build-sandbox: sam-validate-sandbox compile
 	sam build --template-file SAMtemplates/sandbox_template.yaml --region eu-west-2
