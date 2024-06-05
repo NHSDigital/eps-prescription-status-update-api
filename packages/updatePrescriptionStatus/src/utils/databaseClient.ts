@@ -10,7 +10,7 @@ import {marshall} from "@aws-sdk/util-dynamodb"
 import {DataItem} from "../updatePrescriptionStatus"
 import {Timeout} from "./timeoutUtils"
 
-const logger = new Logger({serviceName: "databaseClient"})
+export const logger = new Logger({serviceName: "databaseClient"})
 const client = new DynamoDBClient()
 const tableName = process.env.TABLE_NAME ?? "PrescriptionStatusUpdates"
 
@@ -29,7 +29,7 @@ function createTransactionCommand(dataItems: Array<DataItem>): TransactWriteItem
   return new TransactWriteItemsCommand({TransactItems: transactItems})
 }
 
-export async function persistDataItems(dataItems: Array<DataItem>): Promise<boolean | Timeout | string> {
+export async function persistDataItems(dataItems: Array<DataItem>): Promise<boolean | Timeout> {
   const transactionCommand = createTransactionCommand(dataItems)
   try {
     logger.info("Sending TransactWriteItemsCommand to DynamoDB.", {command: transactionCommand})

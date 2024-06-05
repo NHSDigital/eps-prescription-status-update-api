@@ -2,6 +2,7 @@
 
 import {APIGatewayProxyEvent} from "aws-lambda"
 import {jest} from "@jest/globals"
+import * as dynamo from "@aws-sdk/client-dynamodb"
 
 import {
   LINE_ITEM_ID_CODESYSTEM,
@@ -144,11 +145,11 @@ export function mockDynamoDBClient() {
   const mockTransact = jest.fn()
   jest.unstable_mockModule("@aws-sdk/client-dynamodb", () => {
     return {
+      ...dynamo,
       DynamoDBClient: jest.fn().mockImplementation(() => ({
         send: mockSend
       })),
-      TransactWriteItemsCommand: mockTransact,
-      TransactionCanceledException: jest.fn()
+      TransactWriteItemsCommand: mockTransact
     }
   })
   return {mockSend, mockTransact}
