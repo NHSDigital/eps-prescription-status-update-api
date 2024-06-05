@@ -3,10 +3,11 @@ import {format_1} from "../src/schema"
 import mockContext from "./mockContext"
 import format_1_request_json from "./format_1/example_request.json"
 import format_1_response_json from "./format_1/example_response.json"
-import {newHandler} from "../src/handler"
+import {HandlerParams, newHandler} from "../src/handler"
 import {MIDDLEWARE} from "../src/middleware"
 import {Logger} from "@aws-lambda-powertools/logger"
 import {jest} from "@jest/globals"
+import {Ok} from "pratica"
 
 const format_1_request = () => {
   return JSON.parse(JSON.stringify(format_1_request_json))
@@ -16,6 +17,45 @@ const format_1_response = () => {
 }
 
 const dummyContext = mockContext
+
+describe("generic handler", () => {
+  test("Headers are appended to logger", async () => {
+    const event = {
+      headers: {
+        "apigw-request-id": "test-apigw-request-id",
+        "nhsd-correlation-id": "test-nhsd-correlation-id",
+        "nhsd-request-id": "test-nhsd-request-id",
+        "x-correlation-id": "test-x-correlation-id"
+      }
+    }
+
+    const params: HandlerParams<typeof event, undefined> = {
+      validator: () => Ok(),
+      transformer: (body, logger) => {
+        logger.info("test message")
+        return Ok()
+      }
+    }
+
+    const logger = new Logger({serviceName: "testService"})
+    const logger_output = jest.spyOn(console, "info")
+
+    const handler = newHandler({
+      params: params,
+      middleware: [MIDDLEWARE.injectLambdaContext],
+      logger: logger
+    })
+
+    await handler(event, mockContext)
+
+    const logger_call = JSON.parse(logger_output.mock.calls[0][0])
+
+    expect(logger_call["apigw-request-id"]).toEqual("test-apigw-request-id")
+    expect(logger_call["nhsd-correlation-id"]).toEqual("test-nhsd-correlation-id")
+    expect(logger_call["nhsd-request-id"]).toEqual("test-nhsd-request-id")
+    expect(logger_call["x-correlation-id"]).toEqual("test-x-correlation-id")
+  })
+})
 
 describe("format_1 handler", () => {
   test("Happy path", async () => {
@@ -50,18 +90,20 @@ describe("format_1 handler", () => {
       body
     }
 
-    const mockLogger = {info: jest.fn()}
+    const logger = new Logger({serviceName: "testService"})
+    const logger_info = jest.spyOn(logger, "info")
+
     const handler = newHandler({
       params: FORMAT_1_PARAMS,
       middleware: [MIDDLEWARE.validator, MIDDLEWARE.validationErrorHandler],
-      logger: mockLogger as unknown as Logger,
+      logger: logger,
       schema: format_1.eventSchema
     })
 
     const response = await handler(event as format_1.eventType, dummyContext)
     expect(response.statusCode).toEqual(202)
     expect(JSON.parse(response.body)).toEqual("Message Ignored")
-    expect(mockLogger["info"]).toHaveBeenCalledWith("Message Ignored")
+    expect(logger_info).toHaveBeenCalledWith("Message Ignored")
   })
 
   test("Message missing field receives 400 and appropriate message", async () => {
@@ -145,18 +187,20 @@ describe("format_1 handler", () => {
       body: body
     }
 
-    const mockLogger = {info: jest.fn()}
+    const logger = new Logger({serviceName: "testService"})
+    const logger_info = jest.spyOn(logger, "info")
+
     const handler = newHandler({
       params: FORMAT_1_PARAMS,
       middleware: [MIDDLEWARE.validator, MIDDLEWARE.validationErrorHandler],
-      logger: mockLogger as unknown as Logger,
+      logger: logger,
       schema: format_1.eventSchema
     })
 
     const response = await handler(event as format_1.eventType, dummyContext)
     expect(response.statusCode).toEqual(400)
     expect(JSON.parse(response.body)).toEqual([`Invalid business status on item ${body.items[0].itemID}`])
-    expect(mockLogger["info"]).toHaveBeenCalledWith(
+    expect(logger_info).toHaveBeenCalledWith(
       `Invalid business status on item ${body.items[0].itemID}.` +
         `Unable to map delivery type ${body.deliveryType} and item status ${body.items[0].status}`
     )
