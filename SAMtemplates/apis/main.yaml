@@ -134,6 +134,16 @@ Resources:
         Uri: !Sub arn:aws:apigateway:${AWS::Region}:states:action/StartSyncExecution
         PassthroughBehavior: WHEN_NO_MATCH
         RequestTemplates:
+          # application/fhir:
+          #   Fn::Transform:
+          #     Name: 'AWS::Include'
+          #     Parameters:
+          #       Location: !Sub s3://ci-resources-artifactsbucket/${StackName}/velocity-template.vm
+          # application/fhir+json:
+          #   Fn::Transform:
+          #     Name: 'AWS::Include'
+          #     Parameters:
+          #       Location: !Sub s3://ci-resources-artifactsbucket/${StackName}/velocity-template.vm
           application/fhir: !Sub
             - |-
               ## Velocity Template used for API Gateway request mapping template
