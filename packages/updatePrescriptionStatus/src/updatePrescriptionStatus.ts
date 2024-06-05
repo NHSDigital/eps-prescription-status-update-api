@@ -34,6 +34,7 @@ export interface DataItem {
   Status: string
   TaskID: string
   TerminalStatus: string
+  ApplicationName: string
 }
 
 const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
@@ -46,6 +47,7 @@ const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPro
   let responseEntries: Array<BundleEntry> = []
 
   const xRequestID = getXRequestID(event, responseEntries)
+  const applicationName = event.headers["attribute-name"] ?? "unknown"
 
   if (!xRequestID) {
     return response(400, responseEntries)
@@ -72,7 +74,7 @@ const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPro
     return response(400, responseEntries)
   }
 
-  const dataItems = buildDataItems(requestEntries, xRequestID)
+  const dataItems = buildDataItems(requestEntries, xRequestID, applicationName)
 
   try {
     const persistSuccess = persistDataItems(dataItems)
@@ -162,7 +164,11 @@ export function handleTransactionCancelledException(
   })
 }
 
-export function buildDataItems(requestEntries: Array<BundleEntry>, xRequestID: string): Array<DataItem> {
+export function buildDataItems(
+  requestEntries: Array<BundleEntry>,
+  xRequestID: string,
+  applicationName: string
+): Array<DataItem> {
   const dataItems: Array<DataItem> = []
 
   for (const requestEntry of requestEntries) {
@@ -178,7 +184,8 @@ export function buildDataItems(requestEntries: Array<BundleEntry>, xRequestID: s
       RequestID: xRequestID,
       Status: task.businessStatus!.coding![0].code!,
       TaskID: task.id!,
-      TerminalStatus: task.status
+      TerminalStatus: task.status,
+      ApplicationName: applicationName
     }
 
     dataItems.push(dataItem)

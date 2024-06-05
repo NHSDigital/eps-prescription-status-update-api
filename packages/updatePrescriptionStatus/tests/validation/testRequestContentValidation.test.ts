@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable  max-len */
 
 import {
   expect,
@@ -211,42 +211,70 @@ describe("Unit tests for validation of NHS number", () => {
 })
 
 describe("Unit tests for validation of status against business status", () => {
-  it.each([
-    {
-      taskStatus: "completed",
-      businessStatus: "With Pharmacy",
-      expected: "Completed state indicated for a prescription status requiring patient action."
-    },
-    {
-      taskStatus: "completed",
-      businessStatus: "Ready to collect",
-      expected: "Completed state indicated for a prescription status requiring patient action."
-    },
-    {
-      taskStatus: "completed",
-      businessStatus: "ReAdY tO cOlLeCt",
-      expected: "Completed state indicated for a prescription status requiring patient action."
-    },
-    {
-      taskStatus: "in-progress",
-      businessStatus: "With Pharmacy",
-      expected: undefined
-    },
-    {
-      taskStatus: "in-progress",
-      businessStatus: "Ready to collect",
-      expected: undefined
-    }
-  ])(
-    "When status is '$status' and business status is '$businessStatus', should return expected issue.",
-    async ({taskStatus, businessStatus, expected}) => {
-      const task = {status: taskStatus, businessStatus: {coding: [{code: businessStatus}]}}
+  describe("When task status is 'completed'", () => {
+    it.each([
+      {isValid: false, businessStatus: "With Pharmacy"},
+      {isValid: false, businessStatus: "With Pharmacy - preparing remainder"},
+      {isValid: false, businessStatus: "Ready to collect"},
+      {isValid: false, businessStatus: "ReAdY tO cOlLeCt"},
+      {isValid: false, businessStatus: "Ready to collect - partial"},
+      {isValid: false, businessStatus: "rEaDy To ColLEcT - pArtIAl"},
+      {isValid: true, businessStatus: "Collected"},
+      {isValid: true, businessStatus: "Not dispensed"},
+      {isValid: true, businessStatus: "Dispatched"},
+      {isValid: true, businessStatus: "Ready to dispatch"},
+      {isValid: true, businessStatus: "Ready to dispatch - partial"}
+    ])(
+      "When status is 'completed' and business status is '$businessStatus', should return expected issue.",
+      ({isValid, businessStatus}) => {
+        const task = {status: "completed", businessStatus: {coding: [{code: businessStatus}]}}
+        const actual = statuses(task as Task)
+        const expected = isValid
+          ? undefined
+          : `Task.status field set to 'completed' but Task.businessStatus value of '${businessStatus}' requires follow up action.`
+        expect(actual).toEqual(expected)
+      }
+    )
+  })
 
-      const actual = statuses(task as Task)
+  describe("When task status is 'in-progress'", () => {
+    it.each([
+      {isValid: true, businessStatus: "With Pharmacy"},
+      {isValid: true, businessStatus: "With Pharmacy - preparing remainder"},
+      {isValid: true, businessStatus: "Ready to collect"},
+      {isValid: true, businessStatus: "Ready to collect - partial"},
+      {isValid: true, businessStatus: "Ready to dispatch"},
+      {isValid: true, businessStatus: "Ready to dispatch - partial"},
+      {isValid: false, businessStatus: "Collected"},
+      {isValid: false, businessStatus: "Not dispensed"},
+      {isValid: false, businessStatus: "Dispatched"}
+    ])(
+      "When status is 'in-progress' and business status is '$businessStatus', should return expected issue.",
+      ({isValid, businessStatus}) => {
+        const task = {status: "in-progress", businessStatus: {coding: [{code: businessStatus}]}}
+        const actual = statuses(task as Task)
+        const expected = isValid
+          ? undefined
+          : `Task.status field set to 'in-progress' but Task.businessStatus value of '${businessStatus}' has no possible follow up action.`
+        expect(actual).toEqual(expected)
+      }
+    )
+  })
 
-      expect(actual).toEqual(expected)
-    }
-  )
+  describe("When business status is unsupported", () => {
+    it.each([
+      {status: "completed", businessStatus: "unsupported-status"},
+      {status: "in-progress", businessStatus: "another-unsupported-status"}
+    ])(
+      "When status is '$status' and business status is '$businessStatus', should return unsupported issue.",
+      ({status, businessStatus}) => {
+        const task = {status, businessStatus: {coding: [{code: businessStatus}]}}
+        const actual = statuses(task as Task)
+        const expected = `Unsupported Task.businessStatus '${businessStatus}'.`
+        expect(actual).toEqual(expected)
+      }
+    )
+  })
 })
 
 describe("Unit tests for validation of resourceType", () => {
@@ -287,7 +315,8 @@ describe("Unit tests for validation of transaction bundle", () => {
       type: "transaction",
       expected: true
     }
-  ])("When resourceType is $resourceType and type is $type, should return $expected.",
+  ])(
+    "When resourceType is $resourceType and type is $type, should return $expected.",
     async ({resourceType, type, expected}) => {
       const body = {resourceType: resourceType, type: type}
 
@@ -299,15 +328,13 @@ describe("Unit tests for validation of transaction bundle", () => {
 })
 
 describe("Unit tests for validation of businessStatus", () => {
-  it.each(BUSINESS_STATUSES)("When businessStatus is valid, should return undefined.",
-    async (status) => {
-      const task = {businessStatus: {coding: [{code: status}]}}
+  it.each(BUSINESS_STATUSES)("When businessStatus is valid, should return undefined.", async (status) => {
+    const task = {businessStatus: {coding: [{code: status}]}}
 
-      const actual = businessStatus(task as Task)
+    const actual = businessStatus(task as Task)
 
-      expect(actual).toEqual(undefined)
-    }
-  )
+    expect(actual).toEqual(undefined)
+  })
 
   it("When businessStatus is invalid, should return expected message.", async () => {
     const task = {businessStatus: {coding: [{code: "Invalid"}]}}

@@ -205,14 +205,27 @@ Resources:
                 #set($payload = $util.parseJson($input.path('$.output')))
                 #set($context.responseOverride.status = $payload.Payload.statusCode)
                 #set($allHeaders = $payload.Payload.headers)
-
                 #foreach($headerName in $allHeaders.keySet())
                     #set($context.responseOverride.header[$headerName] = $allHeaders.get($headerName))
                 #end
-
                 $payload.Payload.body
+          - StatusCode: 400
+            SelectionPattern: ^4\d{2}.*
+            ResponseTemplates:
+              application/json: |-
+                #set($context.responseOverride.header["Content-Type"] ="application/fhir+json")
+                {"resourceType":"OperationOutcome","issue": [{"severity":"error","code":"processing","diagnostics":"System error"}]}    
+          - StatusCode: 500
+            SelectionPattern: ^5\d{2}.* 
+            ResponseTemplates:
+              application/json: |-
+                #set($context.responseOverride.header["Content-Type"] ="application/fhir+json")
+                {"resourceType":"OperationOutcome","issue": [{"severity":"error","code":"processing","diagnostics":"System error"}]}
+
       MethodResponses:
         - StatusCode: "200"
+        - StatusCode: "400"
+        - StatusCode: "500"
 
   StatusLambdaMethodResource:
     Type: AWS::ApiGateway::Resource
