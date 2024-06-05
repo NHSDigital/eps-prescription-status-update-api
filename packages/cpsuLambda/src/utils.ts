@@ -18,11 +18,10 @@ Array.prototype.all_ok = function <O, E>(this: Array<Result<O, E>>): Result<Arra
   const failures: Array<E> = []
 
   for (const result of this) {
-    if (result.isOk()) {
-      successes.push(result.value() as O)
-    } else {
-      failures.push(result.value() as E)
-    }
+    result.cata({
+      Ok: (value) => successes.push(value),
+      Err: (error) => failures.push(error)
+    })
   }
 
   if (failures.length > 0) {
