@@ -90,7 +90,10 @@ sam-deploy-package: guard-artifact_bucket guard-artifact_bucket_prefix guard-sta
 			  CommitId=$$COMMIT_ID \
 			  LogLevel=$$LOG_LEVEL \
 			  LogRetentionInDays=$$LOG_RETENTION_DAYS \
-			  Env=$$TARGET_ENVIRONMENT
+			  Env=$$TARGET_ENVIRONMENT \
+			  ArtifactBucket=$$artifact_bucket \
+			  ArtifactPrefix=$$artifact_bucket_prefix
+
 
 compile-node:
 	npx tsc --build tsconfig.build.json

@@ -44,6 +44,12 @@ Parameters:
   EnableSplunk:
     Type: String
 
+  ArtifactBucket:
+    Type: String
+
+  ArtifactPrefix:
+    Type: String
+
 Conditions:
   ShouldUseMutualTLS: !Equals
     - true
@@ -138,12 +144,12 @@ Resources:
             Fn::Transform:
               Name: "AWS::Include"
               Parameters:
-                Location: !Sub s3://ci-resources-artifactsbucket/${StackName}/velocity-template.template
+                Location: !Sub s3://${artifactsBucket}/${ArtifactPrefix}/${StackName}/velocity-template.template
           application/fhir+json:
             Fn::Transform:
               Name: "AWS::Include"
               Parameters:
-                Location: !Sub s3://ci-resources-artifactsbucket/${StackName}/velocity-template.template
+                Location: !Sub s3://${artifactsBucket}/${ArtifactPrefix}/${StackName}/velocity-template.template
         IntegrationResponses:
           - StatusCode: 200
             ResponseTemplates:

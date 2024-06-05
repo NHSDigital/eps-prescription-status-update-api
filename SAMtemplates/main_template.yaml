@@ -68,6 +68,12 @@ Parameters:
     Type: String
     Default: "xxx"
 
+  ArtifactBucket:
+    Type: String
+
+  ArtifactPrefix:
+    Type: String
+
 Resources:
   Tables:
     Type: AWS::Serverless::Application
@@ -93,6 +99,8 @@ Resources:
         CapabilityStatementFunctionArn: !GetAtt Functions.Outputs.CapabilityStatementFunctionArn
         LogRetentionInDays: !Ref LogRetentionInDays
         EnableSplunk: !Ref EnableSplunk
+        ArtifactBucket: !Ref ArtifactBucket
+        ArtifactPrefix: !Ref ArtifactBucket
 
   Functions:
     Type: AWS::Serverless::Application
