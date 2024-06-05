@@ -105,10 +105,3 @@ jobs:
           path: |
             .aws-sam/build
             README.md
-
-      - name: Upload Velocity Template to S3
-        run: |
-          aws s3 cp "SAMtemplates/apis/velocity-template.template" "s3://$ARTIFACT_BUCKET/$ARTIFACT_BUCKET_PREFIX/velocity-template.template"
-        env:
-          ARTIFACT_BUCKET: ${{ secrets.ARTIFACT_BUCKET }}
-          ARTIFACT_BUCKET_PREFIX: ${{ secrets.ARTIFACT_BUCKET_PREFIX }}
