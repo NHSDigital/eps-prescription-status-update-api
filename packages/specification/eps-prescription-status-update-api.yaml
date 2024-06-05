@@ -328,3 +328,10 @@ x-nhsd-apim:
   target-attributes:
     - name: name
       required: true
+  ratelimiting:
+    proxy:
+      timeunit: "second"
+      limit: 60
+    app_ab-psu-dev-testing:
+      timeunit: "day"
+      limit: 1
