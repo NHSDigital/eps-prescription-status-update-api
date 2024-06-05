@@ -1,0 +1,36 @@
+{
+  "version": "1.0",
+  "status": "PatientMatched",
+  "messageDate": "2024-04-12 11:36:47",
+  "prescriptionUUID": "490795-B83002-00001S",
+  "gPSurgery": "Doctors Office A",
+  "prescriptionType": "repeatDispensing",
+  "repeatNo": 3,
+  "nextRepeatDueDate": "2022-01-01",
+  "expiryDate": "2022-01-01 23:59:59",
+  "patientID": "12345-000005",
+  "nHSCHI": "1996344668",
+  "deliveryType": "Delivery required",
+  "oDSCode": "FHA82",
+  "items": [
+    {
+      "itemID": "73014c50-1bd1-4359-9c9f-d587d7d03e66",
+      "dMDCode": "319781007",
+      "dMDDesc": "Aspirin 75mg gastro-resistant tablets",
+      "uOMDesc": "tablet",
+      "qty": "99",
+      "dosage": "Take one daily",
+      "status": "Pending"
+    },
+    {
+      "itemID": "73014c50-1bd1-4361-9c9f-d587d7d03e66",
+      "dMDCode": "134531009",
+      "dMDDesc": "Almotriptan 12.5mg tablets",
+      "uOMDesc": "tablet",
+      "qty": "12",
+      "dosage": "As Directed",
+      "status": "Pending"
+    }
+  ],
+  "MessageType": "PrescriptionStatusChanged"
+}
