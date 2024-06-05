@@ -45,15 +45,21 @@ describe("Unit test persistDataItems", () => {
     mockSend.mockRejectedValue(
       new TransactionCanceledException({
         $metadata: {},
-        message: "transaction cancelled.",
+        message: "DynamoDB transaction cancelled due to conditional check failure.",
         CancellationReasons: [{Code: "ConditionalCheckFailedException"}]
       }) as never
     )
     const loggerSpy = jest.spyOn(logger, "error")
 
-    await expect(persistDataItems(dataItems)).rejects.toThrow(TransactionCanceledException)
+    await expect(persistDataItems(dataItems)).rejects.toThrow(
+      new TransactionCanceledException({
+        $metadata: {},
+        message: "DynamoDB transaction cancelled due to conditional check failure.",
+        CancellationReasons: [{Code: "ConditionalCheckFailedException"}]
+      }) as never
+    )
 
-    expect(loggerSpy).toHaveBeenCalledWith("transaction cancelled.", {
+    expect(loggerSpy).toHaveBeenCalledWith("DynamoDB transaction cancelled due to conditional check failure.", {
       reasons: [{Code: "ConditionalCheckFailedException"}]
     })
   })

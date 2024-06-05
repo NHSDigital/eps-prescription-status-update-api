@@ -38,7 +38,7 @@ export async function persistDataItems(dataItems: Array<DataItem>): Promise<bool
     return true
   } catch (e) {
     if (e instanceof TransactionCanceledException) {
-      logger.error("transaction cancelled.", {reasons: e.CancellationReasons})
+      logger.error("DynamoDB transaction cancelled due to conditional check failure.", {reasons: e.CancellationReasons})
       throw e
     }
     logger.error("Error sending TransactWriteItemsCommand to DynamoDB.", {error: e})
