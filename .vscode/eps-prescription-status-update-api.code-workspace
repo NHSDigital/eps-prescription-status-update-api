@@ -27,6 +27,10 @@
     {
       "name": "packages/cpsuLambda",
       "path": "../packages/cpsuLambda"
+    },
+    {
+      "name": "packages/capabilityStatement",
+      "path": "../packages/capabilityStatement"
     }
   ],
   "settings": {

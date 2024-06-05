@@ -18,15 +18,15 @@
     "@aws-lambda-powertools/logger": "^2.1.1",
     "@aws-sdk/client-dynamodb": "^3.577.0",
     "@aws-sdk/util-dynamodb": "^3.556.0",
-    "@middy/core": "^5.3.5",
-    "@middy/http-header-normalizer": "^5.3.5",
-    "@middy/input-output-logger": "^5.3.5",
-    "@nhs/fhir-middy-error-handler": "^2.0.6"
+    "@middy/core": "^5.4.0",
+    "@middy/http-header-normalizer": "^5.4.0",
+    "@middy/input-output-logger": "^5.4.0",
+    "@nhs/fhir-middy-error-handler": "^2.0.7"
   },
   "devDependencies": {
     "@faker-js/faker": "^8.4.1",
     "@types/fhir": "^0.0.41",
     "@types/uuid": "^9.0.8",
-    "aws-sdk-client-mock": "^4.0.0"
+    "aws-sdk-client-mock": "^4.0.1"
   }
 }
