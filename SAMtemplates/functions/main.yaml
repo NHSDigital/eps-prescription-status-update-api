@@ -80,6 +80,41 @@ Resources:
         SplunkSubscriptionFilterRole: !ImportValue lambda-resources:SplunkSubscriptionFilterRole
         SplunkDeliveryStreamArn: !ImportValue lambda-resources:SplunkDeliveryStream
 
+  ConvertRequestToFhirFormat:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub ${StackName}-ConvertRequestToFhirFormat
+      CodeUri: ../../packages
+      Handler: cpsu.format_1_handler
+      Role: !GetAtt ConvertRequestToFhirFormatResources.Outputs.LambdaRoleArn
+      Environment:
+        Variables:
+          LOG_LEVEL: !Ref LogLevel
+    Metadata:
+      BuildMethod: esbuild
+      BuildProperties:
+        Minify: true
+        Target: es2020
+        Sourcemap: true
+        tsconfig: cpsuLambda/tsconfig.json
+        EntryPoints:
+          - cpsuLambda/src/cpsu.ts     
+
+  ConvertRequestToFhirFormatResources:
+    Type: AWS::Serverless::Application
+    Properties:
+      Location: lambda_resources.yaml
+      Parameters:
+        StackName: !Ref StackName
+        LambdaName: !Sub ${StackName}-ConvertRequestToFhirFormat
+        LambdaArn: !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:${StackName}-ConvertRequestToFhirFormat
+        IncludeAdditionalPolicies: false
+        LogRetentionInDays: !Ref LogRetentionInDays
+        CloudWatchKMSKeyId: !ImportValue account-resources:CloudwatchLogsKmsKeyArn
+        EnableSplunk: !Ref EnableSplunk
+        SplunkSubscriptionFilterRole: !ImportValue lambda-resources:SplunkSubscriptionFilterRole
+        SplunkDeliveryStreamArn: !ImportValue lambda-resources:SplunkDeliveryStream
+
   GetStatusUpdates:
     Type: AWS::Serverless::Function
     Properties:
