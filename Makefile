@@ -26,7 +26,7 @@ sam-build-sandbox: sam-validate-sandbox compile
 sam-run-local: sam-build
 	sam local start-api
 
-sam-sync: guard-AWS_DEFAULT_PROFILE guard-stack_name compile
+sam-sync: guard-AWS_DEFAULT_PROFILE guard-stack_name compile 
 	sam sync \
 		--stack-name $$stack_name \
 		--watch \
@@ -67,6 +67,9 @@ sam-validate-sandbox:
 	sam validate --template-file SAMtemplates/sandbox_template.yaml --region eu-west-2
 
 sam-deploy-package: guard-artifact_bucket guard-artifact_bucket_prefix guard-stack_name guard-template_file guard-cloud_formation_execution_role guard-LATEST_TRUSTSTORE_VERSION guard-enable_mutual_tls guard-DYNAMODB_AUTOSCALE guard-VERSION_NUMBER guard-COMMIT_ID guard-VERSION_NUMBER guard-LOG_RETENTION_DAYS guard-TARGET_ENVIRONMENT
+	upload-template \
+		--s3-bucket $$artifact_bucket \
+		--s3-prefix $$artifact_bucket_prefix
 	sam deploy \
 		--template-file $$template_file \
 		--stack-name $$stack_name \
@@ -84,12 +87,15 @@ sam-deploy-package: guard-artifact_bucket guard-artifact_bucket_prefix guard-sta
 			  TruststoreVersion=$$LATEST_TRUSTSTORE_VERSION \
 			  EnableMutualTLS=$$enable_mutual_tls \
 			  EnableSplunk=true \
-				EnableDynamoDBAutoScaling=$$DYNAMODB_AUTOSCALE \
+			  EnableDynamoDBAutoScaling=$$DYNAMODB_AUTOSCALE \
 			  VersionNumber=$$VERSION_NUMBER \
 			  CommitId=$$COMMIT_ID \
 			  LogLevel=$$LOG_LEVEL \
 			  LogRetentionInDays=$$LOG_RETENTION_DAYS \
 			  Env=$$TARGET_ENVIRONMENT
+
+upload-template: guard-artifact_bucket guard-artifact_bucket_prefix
+	aws s3 cp velocity-template.template s3://$$artifact_bucket/$$artifact_bucket_prefix/velocity-template.template
 
 compile-node:
 	npx tsc --build tsconfig.build.json
