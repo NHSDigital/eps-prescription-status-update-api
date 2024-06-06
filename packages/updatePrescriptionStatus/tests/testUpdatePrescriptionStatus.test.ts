@@ -8,11 +8,13 @@ import {
 
 import {BundleEntry} from "fhir/r4"
 
-import {badRequest} from "../src/utils/responses"
+import {badRequest, conflictDuplicate} from "../src/utils/responses"
 import {DEFAULT_DATE, X_REQUEST_ID, mockInternalDependency} from "./utils/testUtils"
 import {APIGatewayProxyEvent} from "aws-lambda"
 
 import * as content from "../src/validation/content"
+import {handleTransactionCancelledException} from "../src/updatePrescriptionStatus"
+import {TransactionCanceledException} from "@aws-sdk/client-dynamodb"
 const mockValidateEntry = mockInternalDependency("../src/validation/content", content, "validateEntry")
 const {castEventBody, getXRequestID, validateEntries} = await import("../src/updatePrescriptionStatus")
 
@@ -123,5 +125,50 @@ describe("Unit test validateEntries", () => {
     const inValidResponseEntry = responseEntries[1]
     expect(inValidResponseEntry.fullUrl).toEqual("invalid")
     expect(inValidResponseEntry.response?.status).toEqual("400 Bad Request")
+  })
+})
+
+describe("handleTransactionCancelledException", () => {
+  beforeAll(() => {
+    jest.resetModules()
+    jest.clearAllMocks()
+    jest.resetAllMocks()
+  })
+  it("should add conflictDuplicate entries to responseEntries", () => {
+    const responseEntries: Array<any> = []
+    const mockException: TransactionCanceledException = {
+      name: "TransactionCanceledException",
+      message: "transaction cancelled",
+      $fault: "client",
+      $metadata: {},
+      CancellationReasons: [
+        {
+          Code: "ConditionalCheckFailed",
+          Item: {
+            TaskID: {S: "d70678c-81e4-6665-8c67-17596fd0aa46"}
+          },
+          Message: "The conditional request failed"
+        }
+      ]
+    }
+
+    handleTransactionCancelledException(mockException, responseEntries)
+
+    expect(responseEntries).toHaveLength(1)
+    expect(responseEntries[0]).toEqual(conflictDuplicate("d70678c-81e4-6665-8c67-17596fd0aa46"))
+  })
+
+  it("should handle missing CancellationReasons gracefully", () => {
+    const responseEntries: Array<any> = []
+    const mockException: TransactionCanceledException = {
+      name: "TransactionCanceledException",
+      message: "transaction cancelled",
+      $fault: "client",
+      $metadata: {}
+    }
+
+    handleTransactionCancelledException(mockException, responseEntries)
+
+    expect(responseEntries).toHaveLength(0)
   })
 })

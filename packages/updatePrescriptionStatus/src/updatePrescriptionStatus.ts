@@ -155,9 +155,9 @@ export function validateEntries(requestEntries: Array<BundleEntry>, responseEntr
 export function handleTransactionCancelledException(
   e: TransactionCanceledException,
   responseEntries: Array<BundleEntry>
-): undefined {
+): void {
   e.CancellationReasons?.forEach((reason) => {
-    if (reason.Item && reason.Item.TaskID && reason.Item.TaskID.S) {
+    if (reason.Item?.TaskID?.S) {
       const taskId = reason.Item.TaskID.S
       responseEntries.push(conflictDuplicate(taskId))
     }
