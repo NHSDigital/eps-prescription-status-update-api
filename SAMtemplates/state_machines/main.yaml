@@ -120,3 +120,11 @@ Outputs:
   UpdatePrescriptionStatusStateMachineName:
     Description: UpdatePrescriptionStatus state machine name
     Value: !GetAtt UpdatePrescriptionStatusStateMachine.Name
+
+  Format1UpdatePrescriptionsStatusStateMachineArn:
+    Description: Format1UpdatePrescriptionsStatus state machine arn
+    Value: !Ref Format1UpdatePrescriptionsStatusStateMachine
+
+  Format1UpdatePrescriptionsStatusStateMachineName:
+    Description: Format1UpdatePrescriptionsStatus state machine name
+    Value: !GetAtt Format1UpdatePrescriptionsStatusStateMachine.Name
