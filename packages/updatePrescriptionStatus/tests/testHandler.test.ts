@@ -18,6 +18,7 @@ import {
 } from "./utils/testUtils"
 
 import requestDispatched from "../../specification/examples/request-dispatched.json"
+import requestDuplicates from "../../specification/examples/request-duplicate-items.json"
 import requestMultipleItems from "../../specification/examples/request-multiple-items.json"
 import requestMissingFields from "../../specification/examples/request-missing-fields.json"
 import requestMultipleMissingFields from "../../specification/examples/request-multiple-missing-fields.json"
@@ -27,6 +28,7 @@ import responseMultipleItems from "../../specification/examples/response-multipl
 import {
   badRequest,
   bundleWrap,
+  conflictDuplicate,
   serverError,
   timeoutResponse
 } from "../src/utils/responses"
@@ -36,7 +38,7 @@ const {handler} = await import("../src/updatePrescriptionStatus")
 const LAMBDA_TIMEOUT_MS = 9500 // 9.5 sec
 
 describe("Integration tests for updatePrescriptionStatus handler", () => {
-  beforeAll(() => {
+  beforeEach(() => {
     jest.resetModules()
     jest.clearAllMocks()
     jest.resetAllMocks()
@@ -196,5 +198,21 @@ describe("Integration tests for updatePrescriptionStatus handler", () => {
     const response: APIGatewayProxyResult = await handler(event, {})
 
     expect(response.statusCode).toEqual(201)
+  })
+
+  it("when duplicates are introduced, expect 409 status code and message indicating duplicate fields", async () => {
+    const mockEvent: APIGatewayProxyEvent = generateMockEvent(requestDuplicates)
+
+    const mockResponseEntries = [
+      conflictDuplicate("4d70678c-81e4-4ff4-8c67-17596fd0aa46"),
+      conflictDuplicate("4d70678c-81e4-4ff4-8c67-17596fd0aa46")
+    ]
+
+    mockSend.mockReturnValue(mockResponseEntries)
+
+    const result: APIGatewayProxyResult = await handler(mockEvent, {} as any)
+
+    expect(result.statusCode).toBe(409)
+    expect(result.body).toEqual(JSON.stringify(mockResponseEntries))
   })
 })

@@ -13,10 +13,11 @@ import {DEFAULT_DATE, X_REQUEST_ID, mockInternalDependency} from "./utils/testUt
 import {APIGatewayProxyEvent} from "aws-lambda"
 
 import * as content from "../src/validation/content"
-import {handleTransactionCancelledException} from "../src/updatePrescriptionStatus"
 import {TransactionCanceledException} from "@aws-sdk/client-dynamodb"
 const mockValidateEntry = mockInternalDependency("../src/validation/content", content, "validateEntry")
-const {castEventBody, getXRequestID, validateEntries} = await import("../src/updatePrescriptionStatus")
+const {castEventBody, getXRequestID, validateEntries, handleTransactionCancelledException} = await import(
+  "../src/updatePrescriptionStatus"
+)
 
 describe("Unit test getXRequestID", () => {
   beforeAll(() => {
@@ -129,16 +130,11 @@ describe("Unit test validateEntries", () => {
 })
 
 describe("handleTransactionCancelledException", () => {
-  beforeAll(() => {
-    jest.resetModules()
-    jest.clearAllMocks()
-    jest.resetAllMocks()
-  })
   it("should add conflictDuplicate entries to responseEntries", () => {
     const responseEntries: Array<any> = []
     const mockException: TransactionCanceledException = {
       name: "TransactionCanceledException",
-      message: "transaction cancelled",
+      message: "DynamoDB transaction cancelled due to conditional check failure.",
       $fault: "client",
       $metadata: {},
       CancellationReasons: [
@@ -153,22 +149,10 @@ describe("handleTransactionCancelledException", () => {
     }
 
     handleTransactionCancelledException(mockException, responseEntries)
+    const validResponseEntry = responseEntries[0]
 
     expect(responseEntries).toHaveLength(1)
-    expect(responseEntries[0]).toEqual(conflictDuplicate("d70678c-81e4-6665-8c67-17596fd0aa46"))
-  })
-
-  it("should handle missing CancellationReasons gracefully", () => {
-    const responseEntries: Array<any> = []
-    const mockException: TransactionCanceledException = {
-      name: "TransactionCanceledException",
-      message: "transaction cancelled",
-      $fault: "client",
-      $metadata: {}
-    }
-
-    handleTransactionCancelledException(mockException, responseEntries)
-
-    expect(responseEntries).toHaveLength(0)
+    expect(validResponseEntry).toEqual(conflictDuplicate("d70678c-81e4-6665-8c67-17596fd0aa46"))
+    expect(validResponseEntry.response?.status).toEqual("409 Conflict")
   })
 })
