@@ -67,6 +67,7 @@ do
   echo "Checking if apigee deployment $i has open pull request"
   PULL_REQUEST=${i//prescription-status-update-pr-/}
   PULL_REQUEST=${PULL_REQUEST//-sandbox/}
+  PULL_REQUEST=${PULL_REQUEST//custom-/}
   echo "Checking pull request id ${PULL_REQUEST}"
   URL="https://api.github.com/repos/NHSDigital/eps-prescription-status-update-api/pulls/${PULL_REQUEST}"
   RESPONSE=$(curl "${URL}" 2>/dev/null)
@@ -90,6 +91,7 @@ do
   echo "Checking if apigee deployment $i has open pull request"
   PULL_REQUEST=${i//prescription-status-update-pr-/}
   PULL_REQUEST=${PULL_REQUEST//-sandbox/}
+  PULL_REQUEST=${PULL_REQUEST//custom-/}
   echo "Checking pull request id ${PULL_REQUEST}"
   URL="https://api.github.com/repos/NHSDigital/eps-prescription-status-update-api/pulls/${PULL_REQUEST}"
   RESPONSE=$(curl "${URL}" 2>/dev/null)
