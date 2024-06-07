@@ -80,6 +80,6 @@ x-nhsd-apim:
     proxy:
       timeunit: "second"
       limit: 40
-    app_default:
-      timeunit: "second"
-      limit: 40
+    # app_default:
+    #   timeunit: "second"
+    #   limit: 40
