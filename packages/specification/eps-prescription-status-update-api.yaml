@@ -332,6 +332,6 @@ x-nhsd-apim:
     proxy:
       timeunit: "second"
       limit: 60
-    ab-psu-dev-testing:
-      timeunit: "day"
-      limit: 1
+    app_default:
+      timeunit: "second"
+      limit: 60
