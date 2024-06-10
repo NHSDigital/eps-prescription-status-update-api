@@ -93,7 +93,6 @@ const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPro
 
     responseEntries = createSuccessResponseEntries(requestEntries)
     logger.info("Event processed successfully.")
-    return response(201, responseEntries)
   } catch (e) {
     if (e instanceof TransactionCanceledException) {
       handleTransactionCancelledException(e, responseEntries)
