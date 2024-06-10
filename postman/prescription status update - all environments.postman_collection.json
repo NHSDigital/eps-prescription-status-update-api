@@ -347,7 +347,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n  \"resourceType\": \"Bundle\",\n  \"type\": \"transaction\",\n  \"entry\": [\n    {\n      \"fullUrl\": \"http://example.org/fhir/Task/4d70678c-81e4-4ff4-8c67-17596fd0aa46\",\n      \"resource\": {\n        \"resourceType\": \"Task\",\n        \"id\": \"4d70678c-81e4-4ff4-8c67-17596fd0aa46\",\n        \"basedOn\": [\n          {\n            \"identifier\": {\n              \"system\": \"https://fhir.nhs.uk/Id/prescription-order-number\",\n              \"value\": \"16B2E0-A83008-81C13H\"\n            }\n          }\n        ],\n        \"status\": \"completed\",\n        \"businessStatus\": {\n          \"coding\": [\n            {\n              \"system\": \"https://fhir.nhs.uk/CodeSystem/task-businessStatus-nppt\",\n              \"code\": \"4\",\n              \"display\": \"really the latest update\"\n            }\n          ]\n        },\n        \"intent\": \"order\",\n        \"focus\": {\n          \"identifier\": {\n            \"system\": \"https://fhir.nhs.uk/Id/prescription-order-item-number\",\n            \"value\": \"6989b7bd-8db6-428c-a593-4022e3044c00\"\n          }\n        },\n        \"for\": {\n          \"identifier\": {\n            \"system\": \"https://fhir.nhs.uk/Id/nhs-number\",\n            \"value\": \"9449304130\"\n          }\n        },\n        \"lastModified\": \"2024-03-30T12:01:24Z\",\n        \"owner\": {\n          \"identifier\": {\n            \"system\": \"https://fhir.nhs.uk/Id/ods-organization-code\",\n            \"value\": \"C9Z1O\"\n          }\n        }\n      },\n      \"request\": {\n        \"method\": \"POST\",\n        \"url\": \"Task\"\n      }\n    }\n  ]\n}\n",
+							"raw": "{\n  \"resourceType\": \"Bundle\",\n  \"type\": \"transaction\",\n  \"entry\": [\n    {\n      \"fullUrl\": \"urn:uuid:4d70678c-81e4-4ff4-8c67-17596fd0aa46\",\n      \"resource\": {\n        \"resourceType\": \"Task\",\n        \"id\": \"4d70678c-81e4-4ff4-8c67-17596fd0aa46\",\n        \"basedOn\": [\n          {\n            \"identifier\": {\n              \"system\": \"https://fhir.nhs.uk/Id/prescription-order-number\",\n              \"value\": \"16B2E0-A83008-81C13H\"\n            }\n          }\n        ],\n        \"status\": \"completed\",\n        \"businessStatus\": {\n          \"coding\": [\n            {\n              \"system\": \"https://fhir.nhs.uk/CodeSystem/task-businessStatus-nppt\",\n              \"code\": \"Dispatched\"\n            }\n          ]\n        },\n        \"intent\": \"order\",\n        \"focus\": {\n          \"identifier\": {\n            \"system\": \"https://fhir.nhs.uk/Id/prescription-order-item-number\",\n            \"value\": \"6989b7bd-8db6-428c-a593-4022e3044c00\"\n          }\n        },\n        \"for\": {\n          \"identifier\": {\n            \"system\": \"https://fhir.nhs.uk/Id/nhs-number\",\n            \"value\": \"9449304130\"\n          }\n        },\n        \"lastModified\": \"2024-01-30T12:01:24Z\",\n        \"owner\": {\n          \"identifier\": {\n            \"system\": \"https://fhir.nhs.uk/Id/ods-organization-code\",\n            \"value\": \"C9Z1O\"\n          }\n        }\n      },\n      \"request\": {\n        \"method\": \"POST\",\n        \"url\": \"Task\"\n      }\n    }\n  ]\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -355,10 +355,10 @@
 							}
 						},
 						"url": {
-							"raw": "https://psu-{{custom_stack_name}}.dev.eps.national.nhs.uk/",
+							"raw": "https://{{custom_stack_name}}.dev.eps.national.nhs.uk/",
 							"protocol": "https",
 							"host": [
-								"psu-{{custom_stack_name}}",
+								"{{custom_stack_name}}",
 								"dev",
 								"eps",
 								"national",
@@ -390,10 +390,10 @@
 							}
 						],
 						"url": {
-							"raw": "https://psu-{{custom_stack_name}}.dev.eps.national.nhs.uk/_status",
+							"raw": "https://{{custom_stack_name}}.dev.eps.national.nhs.uk/_status",
 							"protocol": "https",
 							"host": [
-								"psu-{{custom_stack_name}}",
+								"{{custom_stack_name}}",
 								"dev",
 								"eps",
 								"national",
@@ -425,10 +425,10 @@
 							}
 						],
 						"url": {
-							"raw": "https://psu-{{custom_stack_name}}.dev.eps.national.nhs.uk/metadata",
+							"raw": "https://{{custom_stack_name}}.dev.eps.national.nhs.uk/metadata",
 							"protocol": "https",
 							"host": [
-								"psu-{{custom_stack_name}}",
+								"{{custom_stack_name}}",
 								"dev",
 								"eps",
 								"national",
