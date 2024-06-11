@@ -76,3 +76,7 @@ x-nhsd-apim:
     security:
       type: mtls
       secret: psu-mtls-1
+  ratelimiting:
+    proxy:
+      timeunit: "second"
+      limit: 40
