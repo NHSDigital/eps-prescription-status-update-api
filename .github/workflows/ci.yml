@@ -40,7 +40,7 @@ jobs:
         uses: asdf-vm/actions/setup@05e0d2ed97b598bfce82fd30daf324ae0c4570e6
         with:
           asdf_branch: v0.11.3
-  
+
       - name: Cache asdf
         uses: actions/cache@v4
         with:
@@ -55,8 +55,8 @@ jobs:
         with:
           asdf_branch: v0.11.3
         env:
-          PYTHON_CONFIGURE_OPTS: --enable-shared 
-  
+          PYTHON_CONFIGURE_OPTS: --enable-shared
+
       - name: Install node packages
         run: |
           make install-node
@@ -111,6 +111,7 @@ jobs:
       CREATE_PROD_RELEASE_NOTES: true
       DEPLOY_APIGEE: true
       DYNAMODB_AUTOSCALE: false
+      DEPLOY_APIGEE_CPSU: true
     secrets:
       CLOUD_FORMATION_DEPLOY_ROLE: ${{ secrets.DEV_CLOUD_FORMATION_DEPLOY_ROLE }}
       DEV_CLOUD_FORMATION_CHECK_VERSION_ROLE: ${{ secrets.DEV_CLOUD_FORMATION_CHECK_VERSION_ROLE }}
@@ -135,6 +136,7 @@ jobs:
       LOG_RETENTION_DAYS: 30
       DEPLOY_APIGEE: true
       DYNAMODB_AUTOSCALE: false
+      DEPLOY_APIGEE_CPSU: true
     secrets:
       CLOUD_FORMATION_DEPLOY_ROLE: ${{ secrets.DEV_CLOUD_FORMATION_DEPLOY_ROLE }}
 
@@ -155,5 +157,6 @@ jobs:
       LOG_RETENTION_DAYS: 30
       DEPLOY_APIGEE: true
       DYNAMODB_AUTOSCALE: false
+      DEPLOY_APIGEE_CPSU: true
     secrets:
       CLOUD_FORMATION_DEPLOY_ROLE: ${{ secrets.QA_CLOUD_FORMATION_DEPLOY_ROLE }}
