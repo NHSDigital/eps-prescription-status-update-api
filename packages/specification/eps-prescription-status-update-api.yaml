@@ -328,3 +328,7 @@ x-nhsd-apim:
   target-attributes:
     - name: name
       required: true
+  ratelimiting:
+    proxy:
+      timeunit: "second"
+      limit: 60
