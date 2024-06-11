@@ -12,6 +12,20 @@
 			"item": [
 				{
 					"name": "AWS PULL REQUEST psu update",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"const task_identifier=pm.variables.replaceIn(\"{{$guid}}\");",
+									"",
+									"pm.globals.set(\"task_identifier\",task_identifier.toLowerCase());"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
 					"protocolProfileBehavior": {
 						"disabledSystemHeaders": {
 							"content-type": true
@@ -38,7 +52,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n  \"resourceType\": \"Bundle\",\n  \"type\": \"transaction\",\n  \"entry\": [\n    {\n      \"fullUrl\": \"urn:uuid:4d70678c-81e4-4ff4-8c67-17596fd0aa46\",\n      \"resource\": {\n        \"resourceType\": \"Task\",\n        \"id\": \"4d70678c-81e4-4ff4-8c67-17596fd0aa46\",\n        \"basedOn\": [\n          {\n            \"identifier\": {\n              \"system\": \"https://fhir.nhs.uk/Id/prescription-order-number\",\n              \"value\": \"16B2E0-A83008-81C13H\"\n            }\n          }\n        ],\n        \"status\": \"completed\",\n        \"businessStatus\": {\n          \"coding\": [\n            {\n              \"system\": \"https://fhir.nhs.uk/CodeSystem/task-businessStatus-nppt\",\n              \"code\": \"dispatched\"\n            }\n          ]\n        },\n        \"intent\": \"order\",\n        \"focus\": {\n          \"identifier\": {\n            \"system\": \"https://fhir.nhs.uk/Id/prescription-order-item-number\",\n            \"value\": \"6989b7bd-8db6-428c-a593-4022e3044c00\"\n          }\n        },\n        \"for\": {\n          \"identifier\": {\n            \"system\": \"https://fhir.nhs.uk/Id/nhs-number\",\n            \"value\": \"9449304130\"\n          }\n        },\n        \"lastModified\": \"2023-10-11T10:11:12Z\",\n        \"owner\": {\n          \"identifier\": {\n            \"system\": \"https://fhir.nhs.uk/Id/ods-organization-code\",\n            \"value\": \"C9Z1O\"\n          }\n        }\n      },\n      \"request\": {\n        \"method\": \"POST\",\n        \"url\": \"Task\"\n      }\n    }\n  ]\n}\n",
+							"raw": "{\n  \"resourceType\": \"Bundle\",\n  \"type\": \"transaction\",\n  \"entry\": [\n    {\n      \"fullUrl\": \"urn:uuid:{{task_identifier}}\",\n      \"resource\": {\n        \"resourceType\": \"Task\",\n        \"id\": \"{{task_identifier}}\",\n        \"basedOn\": [\n          {\n            \"identifier\": {\n              \"system\": \"https://fhir.nhs.uk/Id/prescription-order-number\",\n              \"value\": \"16B2E0-A83008-81C13H\"\n            }\n          }\n        ],\n        \"status\": \"completed\",\n        \"businessStatus\": {\n          \"coding\": [\n            {\n              \"system\": \"https://fhir.nhs.uk/CodeSystem/task-businessStatus-nppt\",\n              \"code\": \"dispatched\"\n            }\n          ]\n        },\n        \"intent\": \"order\",\n        \"focus\": {\n          \"identifier\": {\n            \"system\": \"https://fhir.nhs.uk/Id/prescription-order-item-number\",\n            \"value\": \"6989b7bd-8db6-428c-a593-4022e3044c00\"\n          }\n        },\n        \"for\": {\n          \"identifier\": {\n            \"system\": \"https://fhir.nhs.uk/Id/nhs-number\",\n            \"value\": \"9449304130\"\n          }\n        },\n        \"lastModified\": \"2023-10-11T10:11:12Z\",\n        \"owner\": {\n          \"identifier\": {\n            \"system\": \"https://fhir.nhs.uk/Id/ods-organization-code\",\n            \"value\": \"C9Z1O\"\n          }\n        }\n      },\n      \"request\": {\n        \"method\": \"POST\",\n        \"url\": \"Task\"\n      }\n    }\n  ]\n}\n",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -135,6 +149,20 @@
 				},
 				{
 					"name": "Apigee PULL REQUEST psu update",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"const task_identifier=pm.variables.replaceIn(\"{{$guid}}\");",
+									"",
+									"pm.globals.set(\"task_identifier\",task_identifier.toLowerCase());"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
 					"protocolProfileBehavior": {
 						"disabledSystemHeaders": {
 							"content-type": true
@@ -168,7 +196,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"resourceType\": \"Bundle\",\n    \"type\": \"transaction\",\n    \"entry\": [\n        {\n            \"fullUrl\": \"urn:uuid:4d70678c-81e4-4ff4-8c67-17596fd0aa46\",\n            \"resource\": {\n                \"resourceType\": \"Task\",\n                \"id\": \"4d70678c-81e4-4ff4-8c67-17596fd0aa46\",\n                \"basedOn\": [\n                    {\n                        \"identifier\": {\n                            \"system\": \"https://fhir.nhs.uk/Id/prescription-order-number\",\n                            \"value\": \"16B2E0-A83008-81C13H\"\n                        }\n                    }\n                ],\n                \"status\": \"completed\",\n                \"businessStatus\": {\n                    \"coding\": [\n                        {\n                            \"system\": \"https://fhir.nhs.uk/CodeSystem/task-businessStatus-nppt\",\n                            \"code\": \"dispatched\"\n                        }\n                    ]\n                },\n                \"intent\": \"order\",\n                \"focus\": {\n                    \"identifier\": {\n                        \"system\": \"https://fhir.nhs.uk/Id/prescription-order-item-number\",\n                        \"value\": \"6989b7bd-8db6-428c-a593-4022e3044c00\"\n                    }\n                },\n                \"for\": {\n                    \"identifier\": {\n                        \"system\": \"https://fhir.nhs.uk/Id/nhs-number\",\n                        \"value\": \"9449304130\"\n                    }\n                },\n                \"lastModified\": \"2023-10-11T10:11:12Z\",\n                \"owner\": {\n                    \"identifier\": {\n                        \"system\": \"https://fhir.nhs.uk/Id/ods-organization-code\",\n                        \"value\": \"C9Z1O\"\n                    }\n                }\n            },\n            \"request\": {\n                \"method\": \"POST\",\n                \"url\": \"Task\"\n            }\n        }\n    ]\n}",
+							"raw": "{\n  \"resourceType\": \"Bundle\",\n  \"type\": \"transaction\",\n  \"entry\": [\n    {\n      \"fullUrl\": \"urn:uuid:{{task_identifier}}\",\n      \"resource\": {\n        \"resourceType\": \"Task\",\n        \"id\": \"{{task_identifier}}\",\n        \"basedOn\": [\n          {\n            \"identifier\": {\n              \"system\": \"https://fhir.nhs.uk/Id/prescription-order-number\",\n              \"value\": \"16B2E0-A83008-81C13H\"\n            }\n          }\n        ],\n        \"status\": \"completed\",\n        \"businessStatus\": {\n          \"coding\": [\n            {\n              \"system\": \"https://fhir.nhs.uk/CodeSystem/task-businessStatus-nppt\",\n              \"code\": \"dispatched\"\n            }\n          ]\n        },\n        \"intent\": \"order\",\n        \"focus\": {\n          \"identifier\": {\n            \"system\": \"https://fhir.nhs.uk/Id/prescription-order-item-number\",\n            \"value\": \"6989b7bd-8db6-428c-a593-4022e3044c00\"\n          }\n        },\n        \"for\": {\n          \"identifier\": {\n            \"system\": \"https://fhir.nhs.uk/Id/nhs-number\",\n            \"value\": \"9449304130\"\n          }\n        },\n        \"lastModified\": \"2023-10-11T10:11:12Z\",\n        \"owner\": {\n          \"identifier\": {\n            \"system\": \"https://fhir.nhs.uk/Id/ods-organization-code\",\n            \"value\": \"C9Z1O\"\n          }\n        }\n      },\n      \"request\": {\n        \"method\": \"POST\",\n        \"url\": \"Task\"\n      }\n    }\n  ]\n}\n",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -330,6 +358,20 @@
 			"item": [
 				{
 					"name": "AWS custom stack psu update",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"const task_identifier=pm.variables.replaceIn(\"{{$guid}}\");",
+									"",
+									"pm.globals.set(\"task_identifier\",task_identifier.toLowerCase());"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
 					"request": {
 						"auth": {
 							"type": "noauth"
@@ -347,7 +389,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n  \"resourceType\": \"Bundle\",\n  \"type\": \"transaction\",\n  \"entry\": [\n    {\n      \"fullUrl\": \"urn:uuid:4d70678c-81e4-4ff4-8c67-17596fd0aa46\",\n      \"resource\": {\n        \"resourceType\": \"Task\",\n        \"id\": \"4d70678c-81e4-4ff4-8c67-17596fd0aa46\",\n        \"basedOn\": [\n          {\n            \"identifier\": {\n              \"system\": \"https://fhir.nhs.uk/Id/prescription-order-number\",\n              \"value\": \"16B2E0-A83008-81C13H\"\n            }\n          }\n        ],\n        \"status\": \"completed\",\n        \"businessStatus\": {\n          \"coding\": [\n            {\n              \"system\": \"https://fhir.nhs.uk/CodeSystem/task-businessStatus-nppt\",\n              \"code\": \"Dispatched\"\n            }\n          ]\n        },\n        \"intent\": \"order\",\n        \"focus\": {\n          \"identifier\": {\n            \"system\": \"https://fhir.nhs.uk/Id/prescription-order-item-number\",\n            \"value\": \"6989b7bd-8db6-428c-a593-4022e3044c00\"\n          }\n        },\n        \"for\": {\n          \"identifier\": {\n            \"system\": \"https://fhir.nhs.uk/Id/nhs-number\",\n            \"value\": \"9449304130\"\n          }\n        },\n        \"lastModified\": \"2024-01-30T12:01:24Z\",\n        \"owner\": {\n          \"identifier\": {\n            \"system\": \"https://fhir.nhs.uk/Id/ods-organization-code\",\n            \"value\": \"C9Z1O\"\n          }\n        }\n      },\n      \"request\": {\n        \"method\": \"POST\",\n        \"url\": \"Task\"\n      }\n    }\n  ]\n}",
+							"raw": "{\n  \"resourceType\": \"Bundle\",\n  \"type\": \"transaction\",\n  \"entry\": [\n    {\n      \"fullUrl\": \"urn:uuid:{{task_identifier}}\",\n      \"resource\": {\n        \"resourceType\": \"Task\",\n        \"id\": \"{{task_identifier}}\",\n        \"basedOn\": [\n          {\n            \"identifier\": {\n              \"system\": \"https://fhir.nhs.uk/Id/prescription-order-number\",\n              \"value\": \"16B2E0-A83008-81C13H\"\n            }\n          }\n        ],\n        \"status\": \"completed\",\n        \"businessStatus\": {\n          \"coding\": [\n            {\n              \"system\": \"https://fhir.nhs.uk/CodeSystem/task-businessStatus-nppt\",\n              \"code\": \"dispatched\"\n            }\n          ]\n        },\n        \"intent\": \"order\",\n        \"focus\": {\n          \"identifier\": {\n            \"system\": \"https://fhir.nhs.uk/Id/prescription-order-item-number\",\n            \"value\": \"6989b7bd-8db6-428c-a593-4022e3044c00\"\n          }\n        },\n        \"for\": {\n          \"identifier\": {\n            \"system\": \"https://fhir.nhs.uk/Id/nhs-number\",\n            \"value\": \"9449304130\"\n          }\n        },\n        \"lastModified\": \"2023-10-11T10:11:12Z\",\n        \"owner\": {\n          \"identifier\": {\n            \"system\": \"https://fhir.nhs.uk/Id/ods-organization-code\",\n            \"value\": \"C9Z1O\"\n          }\n        }\n      },\n      \"request\": {\n        \"method\": \"POST\",\n        \"url\": \"Task\"\n      }\n    }\n  ]\n}\n",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -446,6 +488,20 @@
 		},
 		{
 			"name": "Apigee psu update",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"const task_identifier=pm.variables.replaceIn(\"{{$guid}}\");",
+							"",
+							"pm.globals.set(\"task_identifier\",task_identifier.toLowerCase());"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
 			"protocolProfileBehavior": {
 				"disabledSystemHeaders": {}
 			},
@@ -478,7 +534,7 @@
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n  \"resourceType\": \"Bundle\",\n  \"type\": \"transaction\",\n  \"entry\": [\n    {\n      \"fullUrl\": \"urn:uuid:4d70678c-81e4-4ff4-8c67-17596fd0aa46\",\n      \"resource\": {\n        \"resourceType\": \"Task\",\n        \"id\": \"4d70678c-81e4-4ff4-8c67-17596fd0aa46\",\n        \"basedOn\": [\n          {\n            \"identifier\": {\n              \"system\": \"https://fhir.nhs.uk/Id/prescription-order-number\",\n              \"value\": \"16B2E0-A83008-81C13H\"\n            }\n          }\n        ],\n        \"status\": \"completed\",\n        \"businessStatus\": {\n          \"coding\": [\n            {\n              \"system\": \"https://fhir.nhs.uk/CodeSystem/task-businessStatus-nppt\",\n              \"code\": \"Dispatched\"\n            }\n          ]\n        },\n        \"intent\": \"order\",\n        \"focus\": {\n          \"identifier\": {\n            \"system\": \"https://fhir.nhs.uk/Id/prescription-order-item-number\",\n            \"value\": \"6989b7bd-8db6-428c-a593-4022e3044c00\"\n          }\n        },\n        \"for\": {\n          \"identifier\": {\n            \"system\": \"https://fhir.nhs.uk/Id/nhs-number\",\n            \"value\": \"9449304130\"\n          }\n        },\n        \"lastModified\": \"2024-01-30T12:01:24Z\",\n        \"owner\": {\n          \"identifier\": {\n            \"system\": \"https://fhir.nhs.uk/Id/ods-organization-code\",\n            \"value\": \"C9Z1O\"\n          }\n        }\n      },\n      \"request\": {\n        \"method\": \"POST\",\n        \"url\": \"Task\"\n      }\n    }\n  ]\n}",
+					"raw": "{\n  \"resourceType\": \"Bundle\",\n  \"type\": \"transaction\",\n  \"entry\": [\n    {\n      \"fullUrl\": \"urn:uuid:{{task_identifier}}\",\n      \"resource\": {\n        \"resourceType\": \"Task\",\n        \"id\": \"{{task_identifier}}\",\n        \"basedOn\": [\n          {\n            \"identifier\": {\n              \"system\": \"https://fhir.nhs.uk/Id/prescription-order-number\",\n              \"value\": \"16B2E0-A83008-81C13H\"\n            }\n          }\n        ],\n        \"status\": \"completed\",\n        \"businessStatus\": {\n          \"coding\": [\n            {\n              \"system\": \"https://fhir.nhs.uk/CodeSystem/task-businessStatus-nppt\",\n              \"code\": \"dispatched\"\n            }\n          ]\n        },\n        \"intent\": \"order\",\n        \"focus\": {\n          \"identifier\": {\n            \"system\": \"https://fhir.nhs.uk/Id/prescription-order-item-number\",\n            \"value\": \"6989b7bd-8db6-428c-a593-4022e3044c00\"\n          }\n        },\n        \"for\": {\n          \"identifier\": {\n            \"system\": \"https://fhir.nhs.uk/Id/nhs-number\",\n            \"value\": \"9449304130\"\n          }\n        },\n        \"lastModified\": \"2023-10-11T10:11:12Z\",\n        \"owner\": {\n          \"identifier\": {\n            \"system\": \"https://fhir.nhs.uk/Id/ods-organization-code\",\n            \"value\": \"C9Z1O\"\n          }\n        }\n      },\n      \"request\": {\n        \"method\": \"POST\",\n        \"url\": \"Task\"\n      }\n    }\n  ]\n}\n",
 					"options": {
 						"raw": {
 							"language": "json"
