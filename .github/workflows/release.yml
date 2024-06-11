@@ -39,7 +39,7 @@ jobs:
         uses: asdf-vm/actions/setup@05e0d2ed97b598bfce82fd30daf324ae0c4570e6
         with:
           asdf_branch: v0.11.3
-  
+
       - name: Cache asdf
         uses: actions/cache@v4
         with:
@@ -54,8 +54,8 @@ jobs:
         with:
           asdf_branch: v0.11.3
         env:
-          PYTHON_CONFIGURE_OPTS: --enable-shared 
-  
+          PYTHON_CONFIGURE_OPTS: --enable-shared
+
       - name: Install node packages
         run: |
           make install-node
@@ -77,7 +77,7 @@ jobs:
           echo "VERSION_TAG=${VERSION_TAG}" >> "$GITHUB_ENV"
         env:
           GITHUB_TOKEN: ${{ github.token }}
-  
+
       - name: tag release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -105,7 +105,7 @@ jobs:
             [Release workflow run](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
 
             It was initialized by [${{ github.event.sender.login }}](${{ github.event.sender.html_url }})
-  
+
   package_code:
     needs: tag_release
     uses: ./.github/workflows/sam_package_code.yml
@@ -130,6 +130,7 @@ jobs:
       CREATE_PROD_RELEASE_NOTES: true
       DEPLOY_APIGEE: true
       DYNAMODB_AUTOSCALE: false
+      DEPLOY_APIGEE_CPSU: true
     secrets:
       CLOUD_FORMATION_DEPLOY_ROLE: ${{ secrets.DEV_CLOUD_FORMATION_DEPLOY_ROLE }}
       DEV_CLOUD_FORMATION_CHECK_VERSION_ROLE: ${{ secrets.DEV_CLOUD_FORMATION_CHECK_VERSION_ROLE }}
@@ -154,11 +155,19 @@ jobs:
       LOG_RETENTION_DAYS: 30
       DEPLOY_APIGEE: true
       DYNAMODB_AUTOSCALE: false
+      DEPLOY_APIGEE_CPSU: true
     secrets:
       CLOUD_FORMATION_DEPLOY_ROLE: ${{ secrets.DEV_CLOUD_FORMATION_DEPLOY_ROLE }}
 
   release_ref:
-    needs: [tag_release, release_dev, release_dev_sandbox, package_code, get_commit_id]
+    needs:
+      [
+        tag_release,
+        release_dev,
+        release_dev_sandbox,
+        package_code,
+        get_commit_id,
+      ]
     uses: ./.github/workflows/sam_release_code.yml
     with:
       ARTIFACT_BUCKET_PREFIX: ${{needs.tag_release.outputs.version_tag}}
@@ -175,11 +184,19 @@ jobs:
       LOG_RETENTION_DAYS: 30
       DEPLOY_APIGEE: true
       DYNAMODB_AUTOSCALE: true
+      DEPLOY_APIGEE_CPSU: true
     secrets:
       CLOUD_FORMATION_DEPLOY_ROLE: ${{ secrets.REF_CLOUD_FORMATION_DEPLOY_ROLE }}
 
   release_qa:
-    needs: [tag_release, release_dev, release_dev_sandbox, package_code, get_commit_id]
+    needs:
+      [
+        tag_release,
+        release_dev,
+        release_dev_sandbox,
+        package_code,
+        get_commit_id,
+      ]
     uses: ./.github/workflows/sam_release_code.yml
     with:
       ARTIFACT_BUCKET_PREFIX: ${{needs.tag_release.outputs.version_tag}}
@@ -196,6 +213,7 @@ jobs:
       LOG_RETENTION_DAYS: 30
       DEPLOY_APIGEE: true
       DYNAMODB_AUTOSCALE: false
+      DEPLOY_APIGEE_CPSU: true
     secrets:
       CLOUD_FORMATION_DEPLOY_ROLE: ${{ secrets.QA_CLOUD_FORMATION_DEPLOY_ROLE }}
 
@@ -219,6 +237,7 @@ jobs:
       CREATE_INT_RC_RELEASE_NOTES: true
       DEPLOY_APIGEE: true
       DYNAMODB_AUTOSCALE: false
+      DEPLOY_APIGEE_CPSU: false
     secrets:
       CLOUD_FORMATION_DEPLOY_ROLE: ${{ secrets.INT_CLOUD_FORMATION_DEPLOY_ROLE }}
       DEV_CLOUD_FORMATION_CHECK_VERSION_ROLE: ${{ secrets.DEV_CLOUD_FORMATION_CHECK_VERSION_ROLE }}
@@ -243,11 +262,19 @@ jobs:
       LOG_RETENTION_DAYS: 30
       DEPLOY_APIGEE: true
       DYNAMODB_AUTOSCALE: false
+      DEPLOY_APIGEE_CPSU: false
     secrets:
       CLOUD_FORMATION_DEPLOY_ROLE: ${{ secrets.INT_CLOUD_FORMATION_DEPLOY_ROLE }}
 
   release_prod:
-    needs: [tag_release, release_int, release_int_sandbox, package_code, get_commit_id]
+    needs:
+      [
+        tag_release,
+        release_int,
+        release_int_sandbox,
+        package_code,
+        get_commit_id,
+      ]
     uses: ./.github/workflows/sam_release_code.yml
     with:
       ARTIFACT_BUCKET_PREFIX: ${{needs.tag_release.outputs.version_tag}}
@@ -266,6 +293,7 @@ jobs:
       CREATE_PROD_RELEASE_NOTES: true
       DEPLOY_APIGEE: false
       DYNAMODB_AUTOSCALE: true
+      DEPLOY_APIGEE_CPSU: false
     secrets:
       CLOUD_FORMATION_DEPLOY_ROLE: ${{ secrets.PROD_CLOUD_FORMATION_DEPLOY_ROLE }}
       DEV_CLOUD_FORMATION_CHECK_VERSION_ROLE: ${{ secrets.DEV_CLOUD_FORMATION_CHECK_VERSION_ROLE }}
