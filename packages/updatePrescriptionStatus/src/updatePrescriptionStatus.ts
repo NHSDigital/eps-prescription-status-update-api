@@ -69,14 +69,13 @@ const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPro
     return response(200, responseEntries)
   }
 
-  const entriesValid = validateEntries(requestEntries, responseEntries)
-  if (!entriesValid) {
-    return response(400, responseEntries)
-  }
-
-  const dataItems = buildDataItems(requestEntries, xRequestID, applicationName)
-
   try {
+    const entriesValid = validateEntries(requestEntries, responseEntries)
+    if (!entriesValid) {
+      return response(400, responseEntries)
+    }
+
+    const dataItems = buildDataItems(requestEntries, xRequestID, applicationName)
     const persistSuccess = persistDataItems(dataItems)
     const persistResponse = await jobWithTimeout(LAMBDA_TIMEOUT_MS, persistSuccess)
 
