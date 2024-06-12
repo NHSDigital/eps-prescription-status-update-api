@@ -30,6 +30,7 @@ import {
   serverError,
   timeoutResponse
 } from "../src/utils/responses"
+import {TransactionCanceledException} from "@aws-sdk/client-dynamodb"
 
 const {mockSend, mockTransact} = mockDynamoDBClient()
 const {handler} = await import("../src/updatePrescriptionStatus")
@@ -185,7 +186,6 @@ describe("Integration tests for updatePrescriptionStatus handler", () => {
   })
 
   it("when x-request-id header is mixed case, expect it to work", async () => {
-
     const body = generateBody()
     const event: APIGatewayProxyEvent = generateMockEvent(body)
     delete event.headers["x-request-id"]
@@ -197,6 +197,22 @@ describe("Integration tests for updatePrescriptionStatus handler", () => {
     const response: APIGatewayProxyResult = await handler(event, {})
 
     expect(response.statusCode).toEqual(201)
+  })
 
+  it("when duplicates are introduced, expect 409 status code and message indicating duplicate fields", async () => {
+    const body = generateBody()
+    const mockEvent: APIGatewayProxyEvent = generateMockEvent(body)
+
+    mockSend.mockRejectedValue(
+      new TransactionCanceledException({
+        $metadata: {},
+        message: "DynamoDB transaction cancelled due to conditional check failure.",
+        CancellationReasons: [{Code: "ConditionalCheckFailedException"}]
+      }) as never
+    )
+
+    const result: APIGatewayProxyResult = await handler(mockEvent, {})
+
+    expect(result.statusCode).toBe(409)
   })
 })
