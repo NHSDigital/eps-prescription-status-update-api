@@ -15,18 +15,18 @@ if [[ $STACK_NAME == psu-pr-* ]]; then
     pr_id=$(echo "$STACK_NAME" | cut -d'-' -f3)
     if [[ $API_TYPE == standard ]]; then
         instance=prescription-status-update-pr-$pr_id
-        apigee_api=prescription-status-update
+        apigee_api=prescription-status-update-api
     else
         instance=custom-prescription-status-update-pr-$pr_id
-        apigee_api=custom-prescription-status-update
+        apigee_api=custom-prescription-status-update-api
     fi
 else
     if [[ $API_TYPE == standard ]]; then
         instance=prescription-status-update
-        apigee_api=prescription-status-update
+        apigee_api=prescription-status-update-api
     else
         instance=custom-prescription-status-update
-        apigee_api=custom-prescription-status-update
+        apigee_api=custom-prescription-status-update-api
     fi
 fi
 echo "Proxy instance: $instance"
