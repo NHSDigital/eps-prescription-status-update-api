@@ -87,7 +87,7 @@ EOF
 
 # Create settings.yaml file
 cat <<EOF > ~/.proxygen/settings.yaml
-api: prescription-status-update-api
+api: ${instance}
 endpoint_url: https://proxygen.prod.api.platform.nhs.uk
 spec_output_format: json
 EOF
