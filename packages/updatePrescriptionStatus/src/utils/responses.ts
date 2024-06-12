@@ -119,6 +119,39 @@ export function serverError(): BundleEntry {
   }
 }
 
+export function conflictDuplicate(taskId: string): BundleEntry {
+  return {
+    response: {
+      status: "409 Conflict",
+      location: `Task/${taskId}`,
+      lastModified: new Date().toISOString(),
+      outcome: {
+        resourceType: "OperationOutcome",
+        meta: {
+          lastUpdated: new Date().toISOString()
+        },
+        issue: [
+          {
+            code: "duplicate",
+            severity: "error",
+            details: {
+              coding: [
+                {
+                  system: "https://fhir.nhs.uk/CodeSystem/http-error-codes",
+                  code: "REC_CONFLICT",
+                  display: "409: The Receiver identified a conflict."
+                }
+              ]
+            },
+            diagnostics:
+              "Request contains a task id and prescription id identical to a record already in the data store."
+          }
+        ]
+      }
+    }
+  }
+}
+
 export function createSuccessResponseEntries(entries: Array<BundleEntry>) {
   return entries.map((e) => created(e.fullUrl!))
 }

@@ -14,10 +14,12 @@ import {
   accepted,
   badRequest,
   bundleWrap,
+  conflictDuplicate,
   createSuccessResponseEntries,
   serverError,
   timeoutResponse
 } from "./utils/responses"
+import {TransactionCanceledException} from "@aws-sdk/client-dynamodb"
 
 const LAMBDA_TIMEOUT_MS = 9500
 const logger = new Logger({serviceName: "updatePrescriptionStatus"})
@@ -73,22 +75,31 @@ const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPro
   }
 
   const dataItems = buildDataItems(requestEntries, xRequestID, applicationName)
-  const persistSuccess = persistDataItems(dataItems)
-  const persistResponse = await jobWithTimeout(LAMBDA_TIMEOUT_MS, persistSuccess)
 
-  if (hasTimedOut(persistResponse)) {
-    responseEntries = [timeoutResponse()]
-    logger.info("DynamoDB operation timed out.")
-    return response(504, responseEntries)
+  try {
+    const persistSuccess = persistDataItems(dataItems)
+    const persistResponse = await jobWithTimeout(LAMBDA_TIMEOUT_MS, persistSuccess)
+
+    if (hasTimedOut(persistResponse)) {
+      responseEntries = [timeoutResponse()]
+      logger.info("DynamoDB operation timed out.")
+      return response(504, responseEntries)
+    }
+
+    if (!persistResponse) {
+      responseEntries = [serverError()]
+      return response(500, responseEntries)
+    }
+
+    responseEntries = createSuccessResponseEntries(requestEntries)
+    logger.info("Event processed successfully.")
+  } catch (e) {
+    if (e instanceof TransactionCanceledException) {
+      handleTransactionCancelledException(e, responseEntries)
+
+      return response(409, responseEntries)
+    }
   }
-
-  if (!persistResponse) {
-    responseEntries = [serverError()]
-    return response(500, responseEntries)
-  }
-
-  responseEntries = createSuccessResponseEntries(requestEntries)
-  logger.info("Event processed successfully.")
   return response(201, responseEntries)
 }
 
@@ -138,6 +149,18 @@ export function validateEntries(requestEntries: Array<BundleEntry>, responseEntr
   }
   logger.info("Entries validated.")
   return valid
+}
+
+export function handleTransactionCancelledException(
+  e: TransactionCanceledException,
+  responseEntries: Array<BundleEntry>
+): void {
+  e.CancellationReasons?.forEach((reason) => {
+    if (reason.Item?.TaskID?.S) {
+      const taskId = reason.Item.TaskID.S
+      responseEntries.push(conflictDuplicate(taskId))
+    }
+  })
 }
 
 export function buildDataItems(

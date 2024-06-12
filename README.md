@@ -20,6 +20,7 @@ This is the AWS layer that provides an API for EPS Prescription Status Update.
 - `packages/capabilityStatement/` Returns a static capability statement.
 - `packages/cpsuLambda` Handles updating prescription status using a custom format.
 - `scripts/` Utilities helpful to developers of this specification.
+- `postman/` Postman collection to call the API. Documentation on how to use it are in the collection
 - `SAMtemplates/` Contains the SAM templates used to define the stacks.
 - `.devcontainer` Contains a dockerfile and vscode devcontainer definition.
 - `.github` Contains github workflows that are used for building and deploying from pull requests and releases.
