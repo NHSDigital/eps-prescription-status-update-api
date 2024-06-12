@@ -197,6 +197,7 @@ jobs:
           STACK_NAME: ${{ inputs.STACK_NAME }}
           AWS_ENVIRONMENT: ${{ inputs.AWS_ENVIRONMENT }}
           APIGEE_ENVIRONMENT: ${{ inputs.APIGEE_ENVIRONMENT }}
+          DRY_RUN: false
         run: poetry run ./deploy_api.sh
 
       - name: Deploy CPSU API
@@ -211,6 +212,7 @@ jobs:
           STACK_NAME: ${{ inputs.STACK_NAME }}
           AWS_ENVIRONMENT: ${{ inputs.AWS_ENVIRONMENT }}
           APIGEE_ENVIRONMENT: ${{ inputs.APIGEE_ENVIRONMENT }}
+          DRY_RUN: false
         run: poetry run ./deploy_api.sh
 
       - name: create_int_release_notes
