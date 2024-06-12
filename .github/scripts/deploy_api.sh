@@ -15,17 +15,22 @@ if [[ $STACK_NAME == psu-pr-* ]]; then
     pr_id=$(echo "$STACK_NAME" | cut -d'-' -f3)
     if [[ $API_TYPE == standard ]]; then
         instance=prescription-status-update-pr-$pr_id
+        apigee_api=prescription-status-update
     else
         instance=custom-prescription-status-update-pr-$pr_id
+        apigee_api=custom-prescription-status-update
     fi
 else
     if [[ $API_TYPE == standard ]]; then
         instance=prescription-status-update
+        apigee_api=prescription-status-update
     else
         instance=custom-prescription-status-update
+        apigee_api=custom-prescription-status-update
     fi
 fi
 echo "Proxy instance: $instance"
+echo "Apigee api: $apigee_api"
 
 # Find and replace the title
 title=$(jq -r '.info.title' "$SPEC_PATH")
@@ -87,7 +92,7 @@ EOF
 
 # Create settings.yaml file
 cat <<EOF > ~/.proxygen/settings.yaml
-api: ${instance}
+api: ${apigee_api}
 endpoint_url: https://proxygen.prod.api.platform.nhs.uk
 spec_output_format: json
 EOF
