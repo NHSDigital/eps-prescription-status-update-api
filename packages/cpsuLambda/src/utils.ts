@@ -62,7 +62,6 @@ export function wrap_with_status(
   headers: {[key: string]: string}
 ): (body: unknown) => APIGatewayProxyResult {
   return (body) => {
-    console.log(JSON.stringify(body), "body here^^^^")
     return {
       statusCode: statusCode,
       headers: headers,

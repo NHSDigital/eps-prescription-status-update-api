@@ -11,7 +11,6 @@ export const FORMAT_1_PARAMS: HandlerParams<format_1.eventType, format_1.request
   transformer: format_1.transformer
 }
 
-console.log(format_1, "££££££££££££")
 export const format_1_handler = newHandler({
   params: FORMAT_1_PARAMS,
   middleware: DEFAULT_HANDLER_MIDDLEWARE,

@@ -1,4 +1,3 @@
-import {FORMAT_1_PARAMS, format_1_handler} from "../src/cpsu"
 import {format_1} from "../src/schema"
 import mockContext from "./mockContext"
 import format_1_request_json from "./format_1/example_request.json"
@@ -9,6 +8,10 @@ import {Logger} from "@aws-lambda-powertools/logger"
 import {jest} from "@jest/globals"
 import {Ok} from "pratica"
 import {v4} from "uuid"
+import {mockUuid} from "./utils/testUtils"
+
+const {mockV4} = mockUuid()
+const {FORMAT_1_PARAMS, format_1_handler} = await import("../src/cpsu")
 
 const format_1_request = () => {
   return JSON.parse(JSON.stringify(format_1_request_json))
@@ -59,12 +62,12 @@ describe("generic handler", () => {
 })
 
 describe.only("format_1 handler", () => {
-  jest.mock("uuid")
+  // jest.mock("uuid")
   beforeAll(() => {
-    jest.useFakeTimers().setSystemTime(new Date("2023-09-11T10:11:12Z")),
-    (v4 as jest.Mock).mockImplementation(() => "test-uuid")
+    jest.useFakeTimers().setSystemTime(new Date("2023-09-11T10:11:12Z"))
+    //   (v4 as jest.Mock).mockImplementation(() => "test-uuid")
   })
-  test.only("Happy path", async () => {
+  test("Happy path", async () => {
     const event = {
       headers: {
         "apigw-request-id": "test-apigw-request-id",
@@ -76,10 +79,10 @@ describe.only("format_1 handler", () => {
     }
 
     const expectedResponseBody = format_1_response()
+    mockV4.mockReturnValue("sadfds")
 
     const response = await format_1_handler(event as format_1.eventType, dummyContext)
     const responseBody = JSON.parse(response.body)
-    console.log(response, "VVVVVVVVVVVVVVV")
 
     expect(response.statusCode).toEqual(200)
     // responseBody.entry[0].fullUrl = expectedResponseBody.entry[0].fullUrl

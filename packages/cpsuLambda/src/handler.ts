@@ -46,7 +46,6 @@ async function generic_handler<Event extends EventWithHeaders, Message>(
 
   const validator = (event: Event) => params.validator(event, logger)
   const transformer = (requestBody: Message) => params.transformer(requestBody, logger, event.headers)
-  console.log(wrap_with_status(200, event.headers), "eeeeeee")
   return validator(event).chain(transformer).map(wrap_with_status(200, event.headers)).value()
 }
 
@@ -72,7 +71,6 @@ function append_headers(headers: Record<string, string>, logger: Logger) {
  */
 export const newHandler = <Event extends EventWithHeaders, Message>(handlerConfig: HandlerConfig<Event, Message>) => {
   const newHandler = middy((event: Event) => generic_handler(event, handlerConfig.params, handlerConfig.logger))
-  console.log(newHandler, "SSSSSSSSSSSSSSSSSSS")
 
   for (const middleware_generator of handlerConfig.middleware) {
     newHandler.use(middleware_generator(handlerConfig.logger, handlerConfig.schema))
