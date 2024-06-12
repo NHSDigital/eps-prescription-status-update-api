@@ -13,7 +13,7 @@ export const validator: Validator<eventType, requestType> = (event, logger: Logg
 
   if (requestBody.MessageType !== "PrescriptionStatusChanged") {
     logger.info("Message Ignored")
-    return Err(wrap_with_status(202)("Message Ignored"))
+    return Err(wrap_with_status(202, {})("Message Ignored"))
   }
 
   return Ok(requestBody)

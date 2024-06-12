@@ -7,7 +7,11 @@ import {Bundle, Task} from "fhir/r4"
 import {wrap_with_status} from "./utils"
 
 export type Validator<Event, Message> = (event: Event, logger: Logger) => Result<Message, APIGatewayProxyResult>
-export type Transformer<Message> = (requestBody: Message, logger: Logger) => Result<Bundle<Task>, APIGatewayProxyResult>
+export type Transformer<Message> = (
+  requestBody: Message,
+  logger: Logger,
+  headers: {[key: string]: string}
+) => Result<Bundle<Task>, APIGatewayProxyResult>
 
 type EventWithHeaders = {
   headers: {
@@ -41,9 +45,9 @@ async function generic_handler<Event extends EventWithHeaders, Message>(
   append_headers(event.headers, logger)
 
   const validator = (event: Event) => params.validator(event, logger)
-  const transformer = (requestBody: Message) => params.transformer(requestBody, logger)
-
-  return validator(event).chain(transformer).map(wrap_with_status(200)).value()
+  const transformer = (requestBody: Message) => params.transformer(requestBody, logger, event.headers)
+  console.log(wrap_with_status(200, event.headers), "eeeeeee")
+  return validator(event).chain(transformer).map(wrap_with_status(200, event.headers)).value()
 }
 
 function append_headers(headers: Record<string, string>, logger: Logger) {
@@ -68,6 +72,7 @@ function append_headers(headers: Record<string, string>, logger: Logger) {
  */
 export const newHandler = <Event extends EventWithHeaders, Message>(handlerConfig: HandlerConfig<Event, Message>) => {
   const newHandler = middy((event: Event) => generic_handler(event, handlerConfig.params, handlerConfig.logger))
+  console.log(newHandler, "SSSSSSSSSSSSSSSSSSS")
 
   for (const middleware_generator of handlerConfig.middleware) {
     newHandler.use(middleware_generator(handlerConfig.logger, handlerConfig.schema))
