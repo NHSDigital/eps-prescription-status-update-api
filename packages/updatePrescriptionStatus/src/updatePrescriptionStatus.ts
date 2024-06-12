@@ -68,14 +68,14 @@ const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPro
     logger.info("No entries to process.")
     return response(200, responseEntries)
   }
+  const entriesValid = validateEntries(requestEntries, responseEntries)
+  if (!entriesValid) {
+    return response(400, responseEntries)
+  }
+
+  const dataItems = buildDataItems(requestEntries, xRequestID, applicationName)
 
   try {
-    const entriesValid = validateEntries(requestEntries, responseEntries)
-    if (!entriesValid) {
-      return response(400, responseEntries)
-    }
-
-    const dataItems = buildDataItems(requestEntries, xRequestID, applicationName)
     const persistSuccess = persistDataItems(dataItems)
     const persistResponse = await jobWithTimeout(LAMBDA_TIMEOUT_MS, persistSuccess)
 
@@ -154,6 +154,8 @@ export function handleTransactionCancelledException(
   e: TransactionCanceledException,
   responseEntries: Array<BundleEntry>
 ): void {
+  responseEntries.length = 0
+
   e.CancellationReasons?.forEach((reason) => {
     if (reason.Item?.TaskID?.S) {
       const taskId = reason.Item.TaskID.S
