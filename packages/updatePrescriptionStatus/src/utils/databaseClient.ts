@@ -1,11 +1,16 @@
 import {Logger} from "@aws-lambda-powertools/logger"
-import {DynamoDBClient, TransactWriteItem, TransactWriteItemsCommand} from "@aws-sdk/client-dynamodb"
+import {
+  DynamoDBClient,
+  TransactWriteItem,
+  TransactWriteItemsCommand,
+  TransactionCanceledException
+} from "@aws-sdk/client-dynamodb"
 import {marshall} from "@aws-sdk/util-dynamodb"
 
 import {DataItem} from "../updatePrescriptionStatus"
 import {Timeout} from "./timeoutUtils"
 
-const logger = new Logger({serviceName: "databaseClient"})
+export const logger = new Logger({serviceName: "databaseClient"})
 const client = new DynamoDBClient()
 const tableName = process.env.TABLE_NAME ?? "PrescriptionStatusUpdates"
 
@@ -15,7 +20,9 @@ function createTransactionCommand(dataItems: Array<DataItem>): TransactWriteItem
     return {
       Put: {
         TableName: tableName,
-        Item: marshall(d)
+        Item: marshall(d),
+        ConditionExpression: "attribute_not_exists(TaskID) AND attribute_not_exists(PrescriptionID)",
+        ReturnValuesOnConditionCheckFailure: "ALL_OLD"
       }
     }
   })
@@ -30,6 +37,10 @@ export async function persistDataItems(dataItems: Array<DataItem>): Promise<bool
     logger.info("TransactWriteItemsCommand sent to DynamoDB successfully.", {command: transactionCommand})
     return true
   } catch (e) {
+    if (e instanceof TransactionCanceledException) {
+      logger.error("DynamoDB transaction cancelled due to conditional check failure.", {reasons: e.CancellationReasons})
+      throw e
+    }
     logger.error("Error sending TransactWriteItemsCommand to DynamoDB.", {error: e})
     return false
   }
