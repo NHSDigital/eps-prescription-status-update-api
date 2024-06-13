@@ -109,7 +109,7 @@ spec_output_format: json
 EOF
 
 echo
-echo "Store the API key secret using Proxygen CLI"
+echo "Store the secret used for mutual TLS to AWS using Proxygen CLI"
 if [[ "${DRY_RUN}" == "false" ]]; then
     "${PROXYGEN_PATH}" secret put --mtls-cert ~/.proxygen/tmp/client_cert.pem --mtls-key ~/.proxygen/tmp/client_private_key.pem "${APIGEE_ENVIRONMENT}" psu-mtls-1
 else
