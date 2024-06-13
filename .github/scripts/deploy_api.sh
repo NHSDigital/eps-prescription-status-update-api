@@ -94,7 +94,7 @@ echo "${client_private_key}" > ~/.proxygen/tmp/client_private_key.pem
 echo "${client_cert}" > ~/.proxygen/tmp/client_cert.pem
 
 cat <<EOF > ~/.proxygen/credentials.yaml
-client_id: prescription-status-update-api-client
+client_id: ${apigee_api}-client
 key_id: ${PROXYGEN_KID}
 private_key_path: tmp/proxygen_private_key.pem
 base_url: https://identity.prod.api.platform.nhs.uk/realms/api-producers

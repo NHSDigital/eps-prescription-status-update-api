@@ -198,7 +198,7 @@ jobs:
           AWS_ENVIRONMENT: ${{ inputs.AWS_ENVIRONMENT }}
           APIGEE_ENVIRONMENT: ${{ inputs.APIGEE_ENVIRONMENT }}
           PROXYGEN_PRIVATE_KEY_NAME: PSUProxygenPrivateKey
-          PROXYGEN_KID: eps-cli-key-1
+          PROXYGEN_KID: "eps-cli-key-1"
           DRY_RUN: false
         run: poetry run ./deploy_api.sh
 
