@@ -159,27 +159,21 @@ export function handleTransactionCancelledException(
   e.CancellationReasons?.forEach((reason) => {
     const taskId = reason.Item?.TaskID?.S
     if (taskId) {
-      const conflictEntry = conflictDuplicate(taskId)
+      const conflictedEntry = conflictDuplicate(taskId)
 
-      const index = responseEntries.findIndex((entry) => {
+      responseEntries.findIndex((entry) => {
         const entryTaskId = entry.response?.location?.split("/").pop() || entry.fullUrl?.split(":").pop()
         return entryTaskId === taskId
       })
-
-      if (index !== -1) {
-        responseEntries[index] = conflictEntry
-      } else {
-        responseEntries.push(conflictEntry)
-      }
-
+      responseEntries.push(conflictedEntry)
       taskIdSet.add(taskId)
     }
   })
 
-  responseEntries = responseEntries.filter((entry) => {
-    const taskId = entry.fullUrl?.split(":").pop()
-    return !taskId || !taskIdSet.has(taskId) || entry.response?.status !== "200 OK"
-  })
+  // responseEntries = responseEntries.filter((entry) => {
+  //   const taskId = entry.fullUrl?.split(":").pop()
+  //   return !taskId || !taskIdSet.has(taskId) || entry.response?.status !== "200 OK"
+  // })
 }
 
 export function buildDataItems(
