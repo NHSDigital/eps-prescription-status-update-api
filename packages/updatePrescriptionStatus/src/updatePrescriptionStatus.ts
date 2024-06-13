@@ -161,11 +161,17 @@ export function handleTransactionCancelledException(
     if (taskId) {
       const conflictedEntry = conflictDuplicate(taskId)
 
-      responseEntries.findIndex((entry) => {
+      const index = responseEntries.findIndex((entry) => {
         const entryTaskId = entry.response?.location?.split("/").pop() || entry.fullUrl?.split(":").pop()
         return entryTaskId === taskId
       })
-      responseEntries.push(conflictedEntry)
+
+      if (index !== -1) {
+        responseEntries[index] = conflictedEntry
+      } else {
+        responseEntries.push(conflictedEntry)
+      }
+
       taskIdSet.add(taskId)
     }
   })
