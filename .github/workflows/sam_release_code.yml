@@ -197,6 +197,8 @@ jobs:
           STACK_NAME: ${{ inputs.STACK_NAME }}
           AWS_ENVIRONMENT: ${{ inputs.AWS_ENVIRONMENT }}
           APIGEE_ENVIRONMENT: ${{ inputs.APIGEE_ENVIRONMENT }}
+          PROXYGEN_PRIVATE_KEY_NAME: PSUProxygenPrivateKey
+          PROXYGEN_KID: eps-cli-key-1
           DRY_RUN: false
         run: poetry run ./deploy_api.sh
 
@@ -212,6 +214,8 @@ jobs:
           STACK_NAME: ${{ inputs.STACK_NAME }}
           AWS_ENVIRONMENT: ${{ inputs.AWS_ENVIRONMENT }}
           APIGEE_ENVIRONMENT: ${{ inputs.APIGEE_ENVIRONMENT }}
+          PROXYGEN_PRIVATE_KEY_NAME: CPSUProxygenPrivateKey
+          PROXYGEN_KID: eps-cli-key-cpsu-1
           DRY_RUN: false
         run: poetry run ./deploy_api.sh
 

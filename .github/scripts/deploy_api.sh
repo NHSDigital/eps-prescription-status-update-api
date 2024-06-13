@@ -8,6 +8,8 @@ echo "Specification version: ${VERSION_NUMBER}"
 echo "Stack name: ${STACK_NAME}"
 echo "AWS environment: ${AWS_ENVIRONMENT}"
 echo "Apigee environment: ${APIGEE_ENVIRONMENT}"
+echo "Proxygen private key name: ${PROXYGEN_PRIVATE_KEY_NAME}"
+echo "Proxygen KID: ${PROXYGEN_KID}"
 echo "Dry run: ${DRY_RUN}"
 
 is_pull_request=false
@@ -75,7 +77,7 @@ echo
 echo "Retrieving proxygen credentials"
 
 # Retrieve the proxygen private key and client private key and cert from AWS Secrets Manager
-proxygen_private_key_arn=$(aws cloudformation list-exports --query "Exports[?Name=='account-resources:ProxgenPrivateKey'].Value" --output text)
+proxygen_private_key_arn=$(aws cloudformation list-exports --query "Exports[?Name=='account-resources:${PROXYGEN_PRIVATE_KEY_NAME}'].Value" --output text)
 client_private_key_arn=$(aws cloudformation list-exports --query "Exports[?Name=='account-resources:PsuClientKeySecret'].Value" --output text)
 client_cert_arn=$(aws cloudformation list-exports --query "Exports[?Name=='account-resources:PsuClientCertSecret'].Value" --output text)
 
@@ -93,7 +95,7 @@ echo "${client_cert}" > ~/.proxygen/tmp/client_cert.pem
 
 cat <<EOF > ~/.proxygen/credentials.yaml
 client_id: prescription-status-update-api-client
-key_id: eps-cli-key-1
+key_id: ${PROXYGEN_KID}
 private_key_path: tmp/proxygen_private_key.pem
 base_url: https://identity.prod.api.platform.nhs.uk/realms/api-producers
 client_secret: https://nhsdigital.github.io/identity-service-jwks/jwks/paas/prescription-status-update-api.json
