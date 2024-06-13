@@ -98,7 +98,7 @@ client_id: ${apigee_api}-client
 key_id: ${PROXYGEN_KID}
 private_key_path: tmp/proxygen_private_key.pem
 base_url: https://identity.prod.api.platform.nhs.uk/realms/api-producers
-client_secret: https://nhsdigital.github.io/identity-service-jwks/jwks/paas/prescription-status-update-api.json
+client_secret: https://nhsdigital.github.io/identity-service-jwks/jwks/paas/${apigee_api}.json
 EOF
 
 # Create settings.yaml file
