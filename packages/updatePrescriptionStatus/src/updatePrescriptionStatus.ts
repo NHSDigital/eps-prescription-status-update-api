@@ -154,13 +154,31 @@ export function handleTransactionCancelledException(
   e: TransactionCanceledException,
   responseEntries: Array<BundleEntry>
 ): void {
-  responseEntries.length = 0
+  const taskIdSet = new Set<string>()
 
   e.CancellationReasons?.forEach((reason) => {
-    if (reason.Item?.TaskID?.S) {
-      const taskId = reason.Item.TaskID.S
-      responseEntries.push(conflictDuplicate(taskId))
+    const taskId = reason.Item?.TaskID?.S
+    if (taskId) {
+      const conflictEntry = conflictDuplicate(taskId)
+
+      const index = responseEntries.findIndex((entry) => {
+        const entryTaskId = entry.response?.location?.split("/").pop() || entry.fullUrl?.split(":").pop()
+        return entryTaskId === taskId
+      })
+
+      if (index !== -1) {
+        responseEntries[index] = conflictEntry
+      } else {
+        responseEntries.push(conflictEntry)
+      }
+
+      taskIdSet.add(taskId)
     }
+  })
+
+  responseEntries = responseEntries.filter((entry) => {
+    const taskId = entry.fullUrl?.split(":").pop()
+    return !taskId || !taskIdSet.has(taskId) || entry.response?.status !== "200 OK"
   })
 }
 
