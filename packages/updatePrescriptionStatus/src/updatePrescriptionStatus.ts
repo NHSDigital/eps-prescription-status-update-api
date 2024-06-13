@@ -170,10 +170,10 @@ export function handleTransactionCancelledException(
     }
   })
 
-  // responseEntries = responseEntries.filter((entry) => {
-  //   const taskId = entry.fullUrl?.split(":").pop()
-  //   return !taskId || !taskIdSet.has(taskId) || entry.response?.status !== "200 OK"
-  // })
+  responseEntries = responseEntries.filter((entry) => {
+    const taskId = entry.fullUrl?.split(":").pop()
+    return !taskId || !taskIdSet.has(taskId) || entry.response?.status !== "200 OK"
+  })
 }
 
 export function buildDataItems(
