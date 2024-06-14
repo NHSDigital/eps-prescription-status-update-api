@@ -7,10 +7,7 @@ import {MIDDLEWARE} from "../src/middleware"
 import {Logger} from "@aws-lambda-powertools/logger"
 import {jest} from "@jest/globals"
 import {Ok} from "pratica"
-import {v4} from "uuid"
-import {mockUuid} from "./utils/testUtils"
 
-const {mockV4} = mockUuid()
 const {FORMAT_1_PARAMS, format_1_handler} = await import("../src/cpsu")
 
 const format_1_request = () => {
@@ -61,11 +58,9 @@ describe("generic handler", () => {
   })
 })
 
-describe.only("format_1 handler", () => {
-  // jest.mock("uuid")
+describe("format_1 handler", () => {
   beforeAll(() => {
     jest.useFakeTimers().setSystemTime(new Date("2023-09-11T10:11:12Z"))
-    //   (v4 as jest.Mock).mockImplementation(() => "test-uuid")
   })
   test("Happy path", async () => {
     const event = {
@@ -79,19 +74,18 @@ describe.only("format_1 handler", () => {
     }
 
     const expectedResponseBody = format_1_response()
-    mockV4.mockReturnValue("sadfds")
 
     const response = await format_1_handler(event as format_1.eventType, dummyContext)
     const responseBody = JSON.parse(response.body)
 
     expect(response.statusCode).toEqual(200)
-    // responseBody.entry[0].fullUrl = expectedResponseBody.entry[0].fullUrl
-    // responseBody.entry[0].resource.id = expectedResponseBody.entry[0].resource.id
-    // responseBody.entry[0].resource.lastModified = expectedResponseBody.entry[0].resource.lastModified
+    responseBody.entry[0].fullUrl = expectedResponseBody.entry[0].fullUrl
+    responseBody.entry[0].resource.id = expectedResponseBody.entry[0].resource.id
+    responseBody.entry[0].resource.lastModified = expectedResponseBody.entry[0].resource.lastModified
 
-    // responseBody.entry[1].fullUrl = expectedResponseBody.entry[1].fullUrl
-    // responseBody.entry[1].resource.id = expectedResponseBody.entry[1].resource.id
-    // responseBody.entry[1].resource.lastModified = expectedResponseBody.entry[1].resource.lastModified
+    responseBody.entry[1].fullUrl = expectedResponseBody.entry[1].fullUrl
+    responseBody.entry[1].resource.id = expectedResponseBody.entry[1].resource.id
+    responseBody.entry[1].resource.lastModified = expectedResponseBody.entry[1].resource.lastModified
 
     expect(response.headers).toEqual({
       "apigw-request-id": "test-apigw-request-id",
