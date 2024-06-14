@@ -22,6 +22,7 @@ import requestMultipleItems from "../../specification/examples/request-multiple-
 import requestMissingFields from "../../specification/examples/request-missing-fields.json"
 import requestMultipleMissingFields from "../../specification/examples/request-multiple-missing-fields.json"
 import requestNoItems from "../../specification/examples/request-no-items.json"
+import requestDuplicateItems from "../../specification/examples/request-duplicate-items.json"
 import responseSingleItem from "../../specification/examples/response-single-item.json"
 import responseMultipleItems from "../../specification/examples/response-multiple-items.json"
 import {
@@ -30,6 +31,7 @@ import {
   serverError,
   timeoutResponse
 } from "../src/utils/responses"
+import {TransactionCanceledException} from "@aws-sdk/client-dynamodb"
 
 const {mockSend, mockTransact} = mockDynamoDBClient()
 const {handler} = await import("../src/updatePrescriptionStatus")
@@ -185,7 +187,6 @@ describe("Integration tests for updatePrescriptionStatus handler", () => {
   })
 
   it("when x-request-id header is mixed case, expect it to work", async () => {
-
     const body = generateBody()
     const event: APIGatewayProxyEvent = generateMockEvent(body)
     delete event.headers["x-request-id"]
@@ -197,6 +198,77 @@ describe("Integration tests for updatePrescriptionStatus handler", () => {
     const response: APIGatewayProxyResult = await handler(event, {})
 
     expect(response.statusCode).toEqual(201)
+  })
 
+  it("when duplicates are introduced, expect only 409 status with a message, while the other response gives a 200 with message", async () => {
+    const body = generateBody()
+    const mockEvent: APIGatewayProxyEvent = generateMockEvent(body)
+
+    mockSend.mockRejectedValue(
+      new TransactionCanceledException({
+        message: "DynamoDB transaction cancelled due to conditional check failure.",
+        $metadata: {},
+        CancellationReasons: [
+          {
+            Code: "ConditionalCheckFailed",
+            Item: {
+              TaskID: {S: "d70678c-81e4-6665-8c67-17596fd0aa87"}
+            },
+            Message: "The conditional request failed"
+          }
+        ]
+      }) as never
+    )
+
+    const response: APIGatewayProxyResult = await handler(mockEvent, {})
+    const responseBody = JSON.parse(response.body)
+
+    expect(response.statusCode).toBe(409)
+    expect(responseBody.entry).toHaveLength(2)
+
+    expect(responseBody.entry[0].fullUrl).toEqual("urn:uuid:4d70678c-81e4-4ff4-8c67-17596fd0aa46")
+    expect(responseBody.entry[0].response.status).toEqual("200 OK")
+    expect(responseBody.entry[0].response.outcome.issue[0].diagnostics).toEqual(
+      "Data not committed due to issues in other entries."
+    )
+    expect(responseBody.entry[1].response.location).toEqual("Task/d70678c-81e4-6665-8c67-17596fd0aa87")
+    expect(responseBody.entry[1].response.status).toEqual("409 Conflict")
+    expect(responseBody.entry[1].response.outcome.issue[0].diagnostics).toEqual(
+      "Request contains a task id and prescription id identical to a record already in the data store."
+    )
+    expect(responseBody.entry[1].response.status).not.toEqual("200 OK")
+  })
+
+  it("when duplicates are introduced without any other entry, expect only 409 status with a message", async () => {
+    const mockEvent: APIGatewayProxyEvent = generateMockEvent(requestDuplicateItems)
+
+    mockSend.mockRejectedValue(
+      new TransactionCanceledException({
+        message: "DynamoDB transaction cancelled due to conditional check failure.",
+        $metadata: {},
+        CancellationReasons: [
+          {
+            Code: "ConditionalCheckFailed",
+            Item: {
+              TaskID: {S: "d70678c-81e4-6665-8c67-17596fd0aa87"}
+            },
+            Message: "The conditional request failed"
+          }
+        ]
+      }) as never
+    )
+
+    const response: APIGatewayProxyResult = await handler(mockEvent, {})
+    const responseBody = JSON.parse(response.body)
+
+    expect(response.statusCode).toBe(409)
+    expect(responseBody.entry).toHaveLength(1)
+
+    expect(responseBody.entry[0].response.location).toEqual("Task/d70678c-81e4-6665-8c67-17596fd0aa87")
+    expect(responseBody.entry[0].response.status).toEqual("409 Conflict")
+    expect(responseBody.entry[0].response.outcome.issue[0].diagnostics).toEqual(
+      "Request contains a task id and prescription id identical to a record already in the data store."
+    )
+    expect(responseBody.entry[0].response.status).not.toEqual("200 OK")
   })
 })

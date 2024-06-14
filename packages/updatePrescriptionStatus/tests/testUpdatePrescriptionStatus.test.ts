@@ -8,13 +8,16 @@ import {
 
 import {BundleEntry} from "fhir/r4"
 
-import {badRequest} from "../src/utils/responses"
+import {badRequest, conflictDuplicate} from "../src/utils/responses"
 import {DEFAULT_DATE, X_REQUEST_ID, mockInternalDependency} from "./utils/testUtils"
 import {APIGatewayProxyEvent} from "aws-lambda"
 
 import * as content from "../src/validation/content"
+import {TransactionCanceledException} from "@aws-sdk/client-dynamodb"
 const mockValidateEntry = mockInternalDependency("../src/validation/content", content, "validateEntry")
-const {castEventBody, getXRequestID, validateEntries} = await import("../src/updatePrescriptionStatus")
+const {castEventBody, getXRequestID, validateEntries, handleTransactionCancelledException} = await import(
+  "../src/updatePrescriptionStatus"
+)
 
 describe("Unit test getXRequestID", () => {
   beforeAll(() => {
@@ -64,7 +67,9 @@ describe("Unit test castEventBody", () => {
 
     expect(result).toEqual(undefined)
     expect(responseEntries.length).toEqual(1)
-    expect(responseEntries[0]).toEqual(badRequest("Request body does not have resourceType of 'Bundle' and type of 'transaction'."))
+    expect(responseEntries[0]).toEqual(
+      badRequest("Request body does not have resourceType of 'Bundle' and type of 'transaction'.")
+    )
   })
 
   it("when body has correct resourceType and type, return bundle and no response entries", async () => {
@@ -121,5 +126,78 @@ describe("Unit test validateEntries", () => {
     const inValidResponseEntry = responseEntries[1]
     expect(inValidResponseEntry.fullUrl).toEqual("invalid")
     expect(inValidResponseEntry.response?.status).toEqual("400 Bad Request")
+  })
+})
+
+describe("handleTransactionCancelledException", () => {
+  it("should add a conflictDuplicate entry to responseEntries", () => {
+    const responseEntries: Array<any> = []
+    const mockException: TransactionCanceledException = {
+      name: "TransactionCanceledException",
+      message: "DynamoDB transaction cancelled due to conditional check failure.",
+      $fault: "client",
+      $metadata: {},
+      CancellationReasons: [
+        {
+          Code: "ConditionalCheckFailed",
+          Item: {
+            TaskID: {S: "d70678c-81e4-6665-8c67-17596fd0aa87"}
+          },
+          Message: "The conditional request failed"
+        }
+      ]
+    }
+
+    handleTransactionCancelledException(mockException, responseEntries)
+    const validResponseEntry = responseEntries[0]
+
+    expect(responseEntries).toHaveLength(1)
+    expect(validResponseEntry).toEqual(conflictDuplicate("d70678c-81e4-6665-8c67-17596fd0aa87"))
+    expect(validResponseEntry.response?.status).toEqual("409 Conflict")
+  })
+
+  it("should replaces a 200 for a duplicate item with a conflictDuplicate entry to responseEntries", () => {
+    const responseEntries: Array<any> = [
+      {
+        fullUrl: "urn:uuid:d70678c-81e4-6665-8c67-17596fd0aa87",
+        response: {
+          outcome: {
+            issue: [
+              {
+                code: "informational",
+                diagnostics: "Data not committed due to issues in other entries.",
+                severity: "information"
+              }
+            ],
+            meta: {lastUpdated: "2023-09-11T10:11:12.000Z"},
+            resourceType: "OperationOutcome"
+          },
+          status: "200 OK"
+        }
+      }
+    ]
+    const mockException: TransactionCanceledException = {
+      name: "TransactionCanceledException",
+      message: "DynamoDB transaction cancelled due to conditional check failure.",
+      $fault: "client",
+      $metadata: {},
+      CancellationReasons: [
+        {
+          Code: "ConditionalCheckFailed",
+          Item: {
+            TaskID: {S: "d70678c-81e4-6665-8c67-17596fd0aa87"}
+          },
+          Message: "The conditional request failed"
+        }
+      ]
+    }
+
+    handleTransactionCancelledException(mockException, responseEntries)
+    const validResponseEntry = responseEntries[0]
+
+    expect(responseEntries).toHaveLength(1)
+    expect(validResponseEntry).toEqual(conflictDuplicate("d70678c-81e4-6665-8c67-17596fd0aa87"))
+    expect(validResponseEntry.response?.status).toEqual("409 Conflict")
+    expect(validResponseEntry.response?.status).not.toEqual("200 OK")
   })
 })

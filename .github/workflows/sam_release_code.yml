@@ -58,6 +58,9 @@ on:
       DYNAMODB_AUTOSCALE:
         type: boolean
         default: true
+      DEPLOY_APIGEE_CPSU:
+        type: boolean
+        default: true
     secrets:
       CLOUD_FORMATION_DEPLOY_ROLE:
         required: true
@@ -69,7 +72,7 @@ on:
         required: false
       DEV_CLOUD_FORMATION_EXECUTE_LAMBDA_ROLE:
         required: false
-  
+
 jobs:
   sam_release_code:
     runs-on: ubuntu-latest
@@ -123,13 +126,13 @@ jobs:
         with:
           name: python_dependency_files
           path: .
-  
+
       # using git commit sha for version of action to ensure we have stable version
       - name: Install asdf
         uses: asdf-vm/actions/setup@05e0d2ed97b598bfce82fd30daf324ae0c4570e6
         with:
           asdf_branch: v0.11.3
-  
+
       - name: Cache asdf
         uses: actions/cache@v4
         with:
@@ -149,12 +152,15 @@ jobs:
       - name: Run make install-python
         run: |
           make install-python
-  
-      - name: Export specification path
+
+      - name: Export specification paths
         run: |
           SPEC_PATH="$(pwd)/eps-prescription-status-update-api.resolved.json"
           echo "Specification location: $SPEC_PATH"
           echo "SPEC_PATH=${SPEC_PATH}" >> "$GITHUB_ENV"
+          CPSU_SPEC_PATH="$(pwd)/eps-custom-prescription-status-update-api.resolved.json"
+          echo "CPSU Specification location: $CPSU_SPEC_PATH"
+          echo "CPSU_SPEC_PATH=${CPSU_SPEC_PATH}" >> "$GITHUB_ENV"
 
       - name: Export proxygen path
         run: |
@@ -179,14 +185,29 @@ jobs:
           DYNAMODB_AUTOSCALE: ${{ inputs.DYNAMODB_AUTOSCALE }}
         run: ./release_code.sh
 
-      - name: Deploy API
+      - name: Deploy PSU API
         shell: bash
         working-directory: .github/scripts
         if: ${{ inputs.DEPLOY_APIGEE == true && always() && !failure() && !cancelled() }}
         env:
+          API_TYPE: standard
           VERSION_NUMBER: ${{ inputs.VERSION_NUMBER }}
           PROXYGEN_PATH: ${{ env.PROXYGEN_PATH }}
           SPEC_PATH: ${{ env.SPEC_PATH }}
+          STACK_NAME: ${{ inputs.STACK_NAME }}
+          AWS_ENVIRONMENT: ${{ inputs.AWS_ENVIRONMENT }}
+          APIGEE_ENVIRONMENT: ${{ inputs.APIGEE_ENVIRONMENT }}
+        run: poetry run ./deploy_api.sh
+
+      - name: Deploy CPSU API
+        shell: bash
+        working-directory: .github/scripts
+        if: ${{ inputs.DEPLOY_APIGEE_CPSU == true && always() && !failure() && !cancelled() }}
+        env:
+          API_TYPE: custom
+          VERSION_NUMBER: ${{ inputs.VERSION_NUMBER }}
+          PROXYGEN_PATH: ${{ env.PROXYGEN_PATH }}
+          SPEC_PATH: ${{ env.CPSU_SPEC_PATH }}
           STACK_NAME: ${{ inputs.STACK_NAME }}
           AWS_ENVIRONMENT: ${{ inputs.AWS_ENVIRONMENT }}
           APIGEE_ENVIRONMENT: ${{ inputs.APIGEE_ENVIRONMENT }}
@@ -226,7 +247,7 @@ jobs:
         with:
           ref: gh-pages
           path: gh-pages
-  
+
       - name: Update release tag in github pages
         if: ${{ !startsWith(inputs.STACK_NAME, 'psu-pr-') }}
         run: |
