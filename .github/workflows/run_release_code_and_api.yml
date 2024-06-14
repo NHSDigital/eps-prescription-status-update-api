@@ -71,7 +71,7 @@ on:
         required: false
 
 jobs:
-  sam_release_code:
+  release_code_and_api:
     runs-on: ubuntu-latest
     environment: ${{ inputs.AWS_ENVIRONMENT }}
     permissions:

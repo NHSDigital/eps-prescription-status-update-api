@@ -90,11 +90,11 @@ jobs:
 
   package_code:
     needs: tag_release
-    uses: ./.github/workflows/sam_package_code.yml
+    uses: ./.github/workflows/run_package_code_and_api.yml
 
   release_dev:
     needs: [tag_release, package_code, get_commit_id]
-    uses: ./.github/workflows/sam_release_code.yml
+    uses: ./.github/workflows/run_release_code_and_api.yml
     with:
       ARTIFACT_BUCKET_PREFIX: ${{needs.tag_release.outputs.version_tag}}
       STACK_NAME: psu
@@ -120,7 +120,7 @@ jobs:
 
   release_sandbox_dev:
     needs: [tag_release, package_code, get_commit_id]
-    uses: ./.github/workflows/sam_release_code.yml
+    uses: ./.github/workflows/run_release_code_and_api.yml
     with:
       ARTIFACT_BUCKET_PREFIX: ${{needs.tag_release.outputs.version_tag}}-sandbox
       STACK_NAME: psu-sandbox
@@ -140,7 +140,7 @@ jobs:
 
   release_qa:
     needs: [tag_release, release_dev, package_code, get_commit_id]
-    uses: ./.github/workflows/sam_release_code.yml
+    uses: ./.github/workflows/run_release_code_and_api.yml
     with:
       ARTIFACT_BUCKET_PREFIX: ${{needs.tag_release.outputs.version_tag}}
       STACK_NAME: psu
