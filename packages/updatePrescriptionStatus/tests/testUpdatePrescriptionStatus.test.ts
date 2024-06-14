@@ -130,7 +130,7 @@ describe("Unit test validateEntries", () => {
 })
 
 describe("handleTransactionCancelledException", () => {
-  it("should add conflictDuplicate entries to responseEntries", () => {
+  it("should add a conflictDuplicate entry to responseEntries", () => {
     const responseEntries: Array<any> = []
     const mockException: TransactionCanceledException = {
       name: "TransactionCanceledException",
@@ -141,7 +141,7 @@ describe("handleTransactionCancelledException", () => {
         {
           Code: "ConditionalCheckFailed",
           Item: {
-            TaskID: {S: "d70678c-81e4-6665-8c67-17596fd0aa46"}
+            TaskID: {S: "d70678c-81e4-6665-8c67-17596fd0aa87"}
           },
           Message: "The conditional request failed"
         }
@@ -152,7 +152,52 @@ describe("handleTransactionCancelledException", () => {
     const validResponseEntry = responseEntries[0]
 
     expect(responseEntries).toHaveLength(1)
-    expect(validResponseEntry).toEqual(conflictDuplicate("d70678c-81e4-6665-8c67-17596fd0aa46"))
+    expect(validResponseEntry).toEqual(conflictDuplicate("d70678c-81e4-6665-8c67-17596fd0aa87"))
     expect(validResponseEntry.response?.status).toEqual("409 Conflict")
+  })
+
+  it("should replaces a 200 for a duplicate item with a conflictDuplicate entry to responseEntries", () => {
+    const responseEntries: Array<any> = [
+      {
+        fullUrl: "urn:uuid:d70678c-81e4-6665-8c67-17596fd0aa87",
+        response: {
+          outcome: {
+            issue: [
+              {
+                code: "informational",
+                diagnostics: "Data not committed due to issues in other entries.",
+                severity: "information"
+              }
+            ],
+            meta: {lastUpdated: "2023-09-11T10:11:12.000Z"},
+            resourceType: "OperationOutcome"
+          },
+          status: "200 OK"
+        }
+      }
+    ]
+    const mockException: TransactionCanceledException = {
+      name: "TransactionCanceledException",
+      message: "DynamoDB transaction cancelled due to conditional check failure.",
+      $fault: "client",
+      $metadata: {},
+      CancellationReasons: [
+        {
+          Code: "ConditionalCheckFailed",
+          Item: {
+            TaskID: {S: "d70678c-81e4-6665-8c67-17596fd0aa87"}
+          },
+          Message: "The conditional request failed"
+        }
+      ]
+    }
+
+    handleTransactionCancelledException(mockException, responseEntries)
+    const validResponseEntry = responseEntries[0]
+
+    expect(responseEntries).toHaveLength(1)
+    expect(validResponseEntry).toEqual(conflictDuplicate("d70678c-81e4-6665-8c67-17596fd0aa87"))
+    expect(validResponseEntry.response?.status).toEqual("409 Conflict")
+    expect(validResponseEntry.response?.status).not.toEqual("200 OK")
   })
 })
