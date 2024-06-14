@@ -108,7 +108,7 @@ endpoint_url: https://proxygen.prod.api.platform.nhs.uk
 spec_output_format: json
 EOF
 
-if [[ "${is_pull_request}" == "true" ]]; then
+if [[ "${is_pull_request}" == "false" ]]; then
     echo
     echo "Store the secret used for mutual TLS to AWS using Proxygen CLI"
     if [[ "${DRY_RUN}" == "false" ]]; then
