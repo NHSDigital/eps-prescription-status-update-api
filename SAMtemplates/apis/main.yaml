@@ -304,7 +304,7 @@ Resources:
     Properties:
       RestApiId: !Ref RestApiGateway
       ParentId: !GetAtt RestApiGateway.RootResourceId
-      PathPart: format-1      
+      PathPart: format-1
 
   Format1UpdatePrescriptionStatusMethod:
     Type: AWS::ApiGateway::Method
@@ -384,7 +384,7 @@ Resources:
                   "input": "{$util.escapeJavaScript($inputString.substring(1,$len))}"
               }
             - stateMachineArn: !Ref Format1UpdatePrescriptionsStatusStateMachineArn
-         IntegrationResponses:
+        IntegrationResponses:
           - StatusCode: 200
             ResponseTemplates:
               application/json: |-
