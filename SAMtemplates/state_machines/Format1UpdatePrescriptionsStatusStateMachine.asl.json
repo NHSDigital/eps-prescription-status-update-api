@@ -1,72 +1,75 @@
 {
-    "Comment": "Format 1 Update Prescription Status State Machine",
-    "StartAt": "Call Convert Request To Fhir Format",
-    "States": {
-      "Call Convert Request To Fhir Format": {
-        "Type": "Task",
-        "Resource": "arn:aws:states:::lambda:invoke",
-        "Parameters": {
-          "Payload.$": "$",
-          "FunctionName": "${ConvertRequestToFhirFormatFunctionArn}"
-        },
-        "Next": "Convert Request to FHIR result",
-        "InputPath": "$",
-        "Catch": [
-          {
-            "ErrorEquals": [
-              "States.ALL"
-            ],
-            "Next": "CatchAllError"
-          }
-        ]
+  "Comment": "Format 1 Update Prescription Status State Machine",
+  "StartAt": "Call Convert Request To Fhir Format",
+  "States": {
+    "Call Convert Request To Fhir Format": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {
+        "Payload.$": "$",
+        "FunctionName": "arn:aws:lambda:eu-west-2:591291862413:function:psu-pr-344-ConvertRequestToFhirFormat:$LATEST"
       },
-      "Convert Request to FHIR result": {
-        "Type": "Choice",
-        "Choices": [
-            {
-              "Not": {
-                "Variable": "$.Payload.statusCode",
-                "NumericEquals": 200
-              },
-              "Next": "Failed Convert Request to FHIR"
-            }
+      "Next": "Convert Request to FHIR result",
+      "InputPath": "$",
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
           ],
-        "Default": "Call Update Prescription Status"
-      },
-      "Failed Convert Request to FHIR": {
-        "Type": "Pass",
-        "End": true
-      },
-      "Call Update Prescription Status": {
-        "Type": "Task",
-        "Resource": "arn:aws:states:::lambda:invoke",
-        "Parameters": {
-          "Payload.$": "$",
-          "FunctionName": "${UpdatePrescriptionStatusFunctionArn}"
-        },
-        "End": true,
-        "Catch": [
-          {
-            "ErrorEquals": [
-              "States.ALL"
-            ],
-            "Next": "CatchAllError"
-          }
-        ]
-      },
-      "CatchAllError": {
-        "Type": "Pass",
-        "Result": {
-          "Payload": {
-            "statusCode": 500,
-            "headers": {
-              "Content-Type": "application/fhir+json",
-              "Cache-Control": "no-cache"
-            },
-            "body": "{\"resourceType\":\"OperationOutcome\",\"issue\":[{\"severity\":\"error\",\"code\":\"processing\",\"diagnostics\":\"System error\"}]}"
-          }
-        },
-        "End": true
+          "Next": "CatchAllError"
+        }
+      ],
+      "ResultSelector": {
+        "Payload.$": "$.Payload"
       }
+    },
+    "Convert Request to FHIR result": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Not": {
+            "Variable": "$.Payload.statusCode",
+            "NumericEquals": 200
+          },
+          "Next": "Failed Convert Request to FHIR"
+        }
+      ],
+      "Default": "Call Update Prescription Status"
+    },
+    "Failed Convert Request to FHIR": {
+      "Type": "Pass",
+      "End": true
+    },
+    "Call Update Prescription Status": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {
+        "Payload.$": "$",
+        "FunctionName": "arn:aws:lambda:eu-west-2:591291862413:function:psu-pr-344-UpdatePrescriptionStatus:$LATEST"
+      },
+      "End": true,
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "Next": "CatchAllError"
+        }
+      ]
+    },
+    "CatchAllError": {
+      "Type": "Pass",
+      "Result": {
+        "Payload": {
+          "statusCode": 500,
+          "headers": {
+            "Content-Type": "application/fhir+json",
+            "Cache-Control": "no-cache"
+          },
+          "body": "{\"resourceType\":\"OperationOutcome\",\"issue\":[{\"severity\":\"error\",\"code\":\"processing\",\"diagnostics\":\"System error\"}]}"
+        }
+      },
+      "End": true
     }
+  }
 }
