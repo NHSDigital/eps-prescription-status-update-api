@@ -146,10 +146,10 @@ jobs:
 
       - name: Export specification paths
         run: |
-          SPEC_PATH="$(pwd)/eps-prescription-status-update-api.resolved.json"
+          SPEC_PATH="$(pwd)/.aws-sam/build/specification/eps-prescription-status-update-api.resolved.json"
           echo "Specification location: $SPEC_PATH"
           echo "SPEC_PATH=${SPEC_PATH}" >> "$GITHUB_ENV"
-          CPSU_SPEC_PATH="$(pwd)/eps-custom-prescription-status-update-api.resolved.json"
+          CPSU_SPEC_PATH="$(pwd)/.aws-sam/build/specification/eps-custom-prescription-status-update-api.resolved.json"
           echo "CPSU Specification location: $CPSU_SPEC_PATH"
           echo "CPSU_SPEC_PATH=${CPSU_SPEC_PATH}" >> "$GITHUB_ENV"
 
