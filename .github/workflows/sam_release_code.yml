@@ -1,4 +1,4 @@
-name: sam release code
+name: release code and api
 
 on:
   workflow_call:
@@ -19,9 +19,6 @@ on:
         required: true
         type: boolean
       BUILD_ARTIFACT:
-        required: true
-        type: string
-      SPEC_ARTIFACT:
         required: true
         type: string
       TRUSTSTORE_FILE:
@@ -113,12 +110,6 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: ${{ inputs.BUILD_ARTIFACT }}
-          path: .
-
-      - name: Download specification artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: ${{ inputs.SPEC_ARTIFACT }}
           path: .
 
       - name: Download python dependency artifact

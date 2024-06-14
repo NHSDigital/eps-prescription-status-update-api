@@ -102,7 +102,6 @@ jobs:
       APIGEE_ENVIRONMENT: internal-dev
       ENABLE_MUTUAL_TLS: true
       BUILD_ARTIFACT: packaged_code
-      SPEC_ARTIFACT: specification_code
       TRUSTSTORE_FILE: psu-truststore.pem
       VERSION_NUMBER: ${{needs.tag_release.outputs.version_tag}}
       COMMIT_ID: ${{needs.get_commit_id.outputs.commit_id}}
@@ -129,7 +128,6 @@ jobs:
       APIGEE_ENVIRONMENT: internal-dev-sandbox
       ENABLE_MUTUAL_TLS: true
       BUILD_ARTIFACT: packaged_sandbox_code
-      SPEC_ARTIFACT: specification_code
       TRUSTSTORE_FILE: psu-sandbox-truststore.pem
       VERSION_NUMBER: ${{needs.tag_release.outputs.version_tag}}
       COMMIT_ID: ${{needs.get_commit_id.outputs.commit_id}}
@@ -150,7 +148,6 @@ jobs:
       APIGEE_ENVIRONMENT: internal-qa
       ENABLE_MUTUAL_TLS: true
       BUILD_ARTIFACT: packaged_code
-      SPEC_ARTIFACT: specification_code
       TRUSTSTORE_FILE: psu-truststore.pem
       VERSION_NUMBER: ${{needs.tag_release.outputs.version_tag}}
       COMMIT_ID: ${{needs.get_commit_id.outputs.commit_id}}
