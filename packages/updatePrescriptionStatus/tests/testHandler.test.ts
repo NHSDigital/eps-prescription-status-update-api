@@ -226,11 +226,11 @@ describe("Integration tests for updatePrescriptionStatus handler", () => {
     expect(response.statusCode).toBe(409)
     expect(responseBody.entry).toHaveLength(2)
 
-    expect(responseBody.entry[0].fullUrl).toEqual("urn:uuid:4d70678c-81e4-4ff4-8c67-17596fd0aa46"),
-    expect(responseBody.entry[0].response.status).toEqual("200 OK"),
+    expect(responseBody.entry[0].fullUrl).toEqual("urn:uuid:4d70678c-81e4-4ff4-8c67-17596fd0aa46")
+    expect(responseBody.entry[0].response.status).toEqual("200 OK")
     expect(responseBody.entry[0].response.outcome.issue[0].diagnostics).toEqual(
       "Data not committed due to issues in other entries."
-    ),
+    )
     expect(responseBody.entry[1].response.location).toEqual("Task/d70678c-81e4-6665-8c67-17596fd0aa87")
     expect(responseBody.entry[1].response.status).toEqual("409 Conflict")
     expect(responseBody.entry[1].response.outcome.issue[0].diagnostics).toEqual(
