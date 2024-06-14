@@ -95,6 +95,6 @@ jobs:
       LOG_RETENTION_DAYS: 30
       DEPLOY_APIGEE: true
       DYNAMODB_AUTOSCALE: false
-      DEPLOY_APIGEE_CPSU: false
+      DEPLOY_APIGEE_CPSU: true
     secrets:
       CLOUD_FORMATION_DEPLOY_ROLE: ${{ secrets.DEV_CLOUD_FORMATION_DEPLOY_ROLE }}
