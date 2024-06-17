@@ -20,7 +20,11 @@
         }
       ],
       "ResultSelector": {
-        "Payload.$": "$.Payload"
+        "Payload": {
+          "statusCode.$": "$.Payload.statusCode",
+          "headers.$": "$.Payload.headers",
+          "body.$": "States.StringToJson($.Payload.body)"
+        }
       }
     },
     "Convert Request to FHIR result": {
@@ -55,7 +59,11 @@
           ],
           "Next": "CatchAllError"
         }
-      ]
+      ],
+      "ResultSelector": {
+        "Payload.$": "$.Payload"
+      },
+      "InputPath": "$.Payload "
     },
     "CatchAllError": {
       "Type": "Pass",
