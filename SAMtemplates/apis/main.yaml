@@ -38,6 +38,14 @@ Parameters:
     Type: String
     Default: none
 
+  CheckPrescriptionStatusUpdatesFunctionName:
+    Type: String
+    Default: none
+
+  CheckPrescriptionStatusUpdatesFunctionArn:
+    Type: String
+    Default: none
+
   LogRetentionInDays:
     Type: Number
 
@@ -331,6 +339,26 @@ Resources:
         IntegrationHttpMethod: POST
         Uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${CapabilityStatementFunctionArn}/invocations
 
+  CheckPrescriptionStatusUpdatesResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId: !Ref RestApiGateway
+      ParentId: !GetAtt RestApiGateway.RootResourceId
+      PathPart: checkprescriptionstatusupdates
+
+  CheckPrescriptionStatusUpdatesMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref RestApiGateway
+      ResourceId: !Ref CheckPrescriptionStatusUpdatesResource
+      HttpMethod: GET
+      AuthorizationType: NONE
+      Integration:
+        Type: AWS_PROXY
+        Credentials: !GetAtt RestApiGatewayResources.Outputs.ApiGwRoleArn
+        IntegrationHttpMethod: POST
+        Uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${CheckPrescriptionStatusUpdatesFunctionArn}/invocations
+
   # *********************************************************************
   # if you add a new endpoint, then change the name of this resource
   # also need to change it in RestApiGatewayStage.Properties.DeploymentId
@@ -342,6 +370,7 @@ Resources:
       - UpdatePrescriptionStatusMethod
       - StatusLambdaMethod
       - CapabilityStatementMethod
+      - CheckPrescriptionStatusUpdatesMethod
       # see note above if you add something in here when you add a new endpoint
     Properties:
       RestApiId: !Ref RestApiGateway
@@ -374,6 +403,7 @@ Resources:
           - - Fn::ImportValue: !Sub ${StackName}:state-machines:${UpdatePrescriptionStatusStateMachineName}:ExecuteStateMachinePolicy
             - Fn::ImportValue: !Sub ${StackName}:functions:${StatusFunctionName}:ExecuteLambdaPolicyArn
             - Fn::ImportValue: !Sub ${StackName}:functions:${CapabilityStatementFunctionName}:ExecuteLambdaPolicyArn
+            - Fn::ImportValue: !Sub ${StackName}:functions:${CheckPrescriptionStatusUpdatesFunctionName}:ExecuteLambdaPolicyArn
         ApiName: !Sub ${StackName}-apigw
         LogRetentionInDays: !Ref LogRetentionInDays
         EnableSplunk: !Ref EnableSplunk

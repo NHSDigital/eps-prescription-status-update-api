@@ -104,6 +104,7 @@ lint-node: compile-node
 	npm run lint --workspace packages/statusLambda
 	npm run lint --workspace packages/capabilityStatement
 	npm run lint --workspace packages/cpsuLambda
+	npm run lint --workspace packages/checkPrescriptionStatusUpdates
 
 lint-samtemplates:
 	poetry run cfn-lint -I "SAMtemplates/**/*.yaml" 2>&1 | grep "Run scan"
@@ -126,6 +127,7 @@ test: compile
 	npm run test --workspace packages/statusLambda
 	npm run test --workspace packages/capabilityStatement
 	npm run test --workspace packages/cpsuLambda
+	npm run test --workspace packages/checkPrescriptionStatusUpdates
 
 clean:
 	rm -rf packages/updatePrescriptionStatus/coverage

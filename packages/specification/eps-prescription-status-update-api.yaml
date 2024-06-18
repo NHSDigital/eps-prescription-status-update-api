@@ -227,7 +227,7 @@ paths:
           description: Successful retrieval of metadata.
       security:
         - app-level3: []
-  /getprescriptionstatusupdates:
+  /checkprescriptionstatusupdates:
     get:
       operationId: get-prescription-status-updates
       summary: Prescription status updates

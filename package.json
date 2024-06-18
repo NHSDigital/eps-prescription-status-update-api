@@ -20,7 +20,8 @@
     "packages/statusLambda",
     "packages/updatePrescriptionStatus",
     "packages/capabilityStatement",
-    "packages/cpsuLambda"
+    "packages/cpsuLambda",
+    "packages/checkPrescriptionStatusUpdates"
   ],
   "devDependencies": {
     "@semantic-release/changelog": "^6.0.3",

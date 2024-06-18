@@ -91,6 +91,8 @@ Resources:
         StatusFunctionArn: !GetAtt Functions.Outputs.StatusFunctionArn
         CapabilityStatementFunctionName: !GetAtt Functions.Outputs.CapabilityStatementFunctionName
         CapabilityStatementFunctionArn: !GetAtt Functions.Outputs.CapabilityStatementFunctionArn
+        CheckPrescriptionStatusUpdatesFunctionName: !GetAtt Functions.Outputs.CheckPrescriptionStatusUpdatesFunctionName
+        CheckPrescriptionStatusUpdatesFunctionArn: !GetAtt Functions.Outputs.CheckPrescriptionStatusUpdatesFunctionArn
         LogRetentionInDays: !Ref LogRetentionInDays
         EnableSplunk: !Ref EnableSplunk
 
