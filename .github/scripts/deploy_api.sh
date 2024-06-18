@@ -50,6 +50,7 @@ fi
 if [[ $APIGEE_ENVIRONMENT == prod ]]; then
     if [[ $API_TYPE == standard ]]; then
         jq '.components.securitySchemes."app-level3" = {"$ref": "https://proxygen.prod.api.platform.nhs.uk/components/securitySchemes/app-level3"}' "$SPEC_PATH" > temp.json && mv temp.json "$SPEC_PATH"
+        jq 'del(.paths."/getprescriptionstatusupdates")' "$SPEC_PATH" > temp.json && mv temp.json "$SPEC_PATH"
     else
         jq '.components.securitySchemes."app-level0" = {"$ref": "https://proxygen.prod.api.platform.nhs.uk/components/securitySchemes/app-level0"}' "$SPEC_PATH" > temp.json && mv temp.json "$SPEC_PATH"
     fi

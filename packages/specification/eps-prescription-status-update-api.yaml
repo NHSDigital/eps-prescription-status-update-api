@@ -227,6 +227,40 @@ paths:
           description: Successful retrieval of metadata.
       security:
         - app-level3: []
+  /getprescriptionstatusupdates:
+    get:
+      operationId: get-prescription-status-updates
+      summary: Prescription status updates
+      description: |
+        ## This endpoint is only available in PTL environments
+        ## Overview
+        This returns prescription status updates
+      parameters:
+        - in: query
+          name: odscode
+          schema:
+            type: string
+          description: The ods code to return prescription status updates for
+        - in: query
+          name: nhsnumber
+          schema:
+            type: string
+          description: The nhs number to return prescription status updates for
+        - in: query
+          name: prescriptionid
+          schema:
+            type: string
+          description: The prescription id to return prescription status updates for
+        - in: header
+          name: ExclusiveStartKey
+          schema:
+            type: string
+          description: When paginated results are returned - as indicated by LastEvaluatedKey returned in the header of a result - this value of LastEvaluatedKey should be passed as this paramater to return the next page of results
+      responses:
+        "200":
+          description: Successful retrieval of prescription-status-updates.
+      security:
+        - app-level3: []
 
 components:
   securitySchemes:
