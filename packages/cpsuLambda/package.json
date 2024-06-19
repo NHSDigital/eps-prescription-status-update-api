@@ -20,7 +20,7 @@
     "@aws-sdk/util-dynamodb": "^3.600.0",
     "@middy/core": "^5.4.1",
     "@middy/http-header-normalizer": "^5.4.1",
-    "@middy/input-output-logger": "^5.3.5",
+    "@middy/input-output-logger": "^5.4.1",
     "@middy/validator": "^5.4.1",
     "json-schema-to-ts": "^3.1.0",
     "pratica": "^2.3.0",
