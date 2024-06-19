@@ -7,6 +7,7 @@ import {
   ScanCommandInput
 } from "@aws-sdk/lib-dynamodb"
 import {Logger} from "@aws-lambda-powertools/logger"
+import {InputData} from "./types"
 
 const tableName = process.env.TABLE_NAME
 const client = new DynamoDBClient()
@@ -17,34 +18,25 @@ type buildQueryResult = {
   query: QueryCommandInput | ScanCommandInput
 }
 
-export function buildQuery(
-  prescriptionID: string | undefined,
-  applicationName: string | undefined,
-  odsCode: string | undefined,
-  nhsNumber: string | undefined,
-  showAllSuppliers: string | undefined,
-  overrideApplicationName: string | undefined,
-  exclusiveStartKeyPrescriptionID: string | undefined,
-  exclusiveStartKeyTaskID: string | undefined
-): buildQueryResult {
+export function buildQuery(inputData: InputData): buildQueryResult {
   const expressionAttributeValues = {}
   const filterExpressions: Array<string> = []
 
-  let applicationNameToUse = applicationName
-  if (showAllSuppliers === "true") {
-    applicationNameToUse = overrideApplicationName
+  let applicationNameToUse = inputData.applicationName
+  if (inputData.showAllSuppliers === "true") {
+    applicationNameToUse = inputData.overrideApplicationName
   }
   if (typeof applicationNameToUse !== "undefined" && applicationNameToUse) {
     filterExpressions.push("ApplicationName = :ApplicationName")
     expressionAttributeValues[":ApplicationName"] = applicationNameToUse
   }
-  if (typeof odsCode !== "undefined" && odsCode) {
+  if (typeof inputData.odsCode !== "undefined" && inputData.odsCode) {
     filterExpressions.push("PharmacyODSCode = :PharmacyODSCode")
-    expressionAttributeValues[":PharmacyODSCode"] = odsCode
+    expressionAttributeValues[":PharmacyODSCode"] = inputData.odsCode
   }
-  if (typeof nhsNumber !== "undefined" && nhsNumber) {
+  if (typeof inputData.nhsNumber !== "undefined" && inputData.nhsNumber) {
     filterExpressions.push("PatientNHSNumber = :PatientNHSNumber")
-    expressionAttributeValues[":PatientNHSNumber"] = nhsNumber
+    expressionAttributeValues[":PatientNHSNumber"] = inputData.nhsNumber
   }
 
   const query: QueryCommandInput | ScanCommandInput = {
@@ -52,20 +44,23 @@ export function buildQuery(
     Limit: 10
   }
 
-  if (typeof exclusiveStartKeyPrescriptionID !== "undefined" && typeof exclusiveStartKeyTaskID !== "undefined") {
+  if (
+    typeof inputData.exclusiveStartKeyPrescriptionID !== "undefined" &&
+    typeof inputData.exclusiveStartKeyTaskID !== "undefined"
+  ) {
     query.ExclusiveStartKey = {
-      PrescriptionID: exclusiveStartKeyPrescriptionID,
-      TaskID: exclusiveStartKeyTaskID
+      PrescriptionID: inputData.exclusiveStartKeyPrescriptionID,
+      TaskID: inputData.exclusiveStartKeyTaskID
     }
   }
   if (filterExpressions.length > 0) {
     query.FilterExpression = filterExpressions.join(" AND ")
   }
 
-  if (typeof prescriptionID !== "undefined" && prescriptionID) {
+  if (typeof inputData.prescriptionID !== "undefined" && inputData.prescriptionID) {
     const queryToRun = query as QueryCommandInput
     queryToRun.KeyConditionExpression = "PrescriptionID = :inputPrescriptionID"
-    expressionAttributeValues[":inputPrescriptionID"] = prescriptionID
+    expressionAttributeValues[":inputPrescriptionID"] = inputData.prescriptionID
     queryToRun.ExpressionAttributeValues = expressionAttributeValues
 
     return {
@@ -83,27 +78,8 @@ export function buildQuery(
   }
 }
 
-export async function getItemStatusUpdates(
-  prescriptionID: string | undefined,
-  applicationName: string | undefined,
-  odsCode: string | undefined,
-  nhsNumber: string | undefined,
-  showAllSuppliers: string | undefined,
-  overrideApplicationName: string | undefined,
-  exclusiveStartKeyPrescriptionID: string | undefined,
-  exclusiveStartKeyTaskID: string | undefined,
-  logger: Logger
-) {
-  const result = buildQuery(
-    prescriptionID,
-    applicationName,
-    odsCode,
-    nhsNumber,
-    showAllSuppliers,
-    overrideApplicationName,
-    exclusiveStartKeyPrescriptionID,
-    exclusiveStartKeyTaskID
-  )
+export async function getItemStatusUpdates(inputData: InputData, logger: Logger) {
+  const result = buildQuery(inputData)
 
   if (result.isScanQuery) {
     const command = new ScanCommand(result.query)

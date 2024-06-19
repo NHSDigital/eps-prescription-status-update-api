@@ -109,11 +109,14 @@ describe("test handler", () => {
           LineItemID: "6989b7bd-8db6-428c-a593-4022e3044c00",
           PrescriptionID: "16B2E0-A83008-81C13H"
         }
-      ],
-      LastEvaluatedKey: {
-        PrescriptionID: "16B2E0-A83008-81C13H",
-        TaskID: "02f91630-a9c6-4f72-bf54-a64adfac8b11"
-      }
+      ]
+    })
+
+    expect(response.headers).toMatchObject({
+      "Content-Type": "application/json",
+      "Cache-Control": "no-cache",
+      "LastEvaluatedKey-PrescriptionID": "16B2E0-A83008-81C13H",
+      "LastEvaluatedKey-TaskID": "02f91630-a9c6-4f72-bf54-a64adfac8b11"
     })
   })
 

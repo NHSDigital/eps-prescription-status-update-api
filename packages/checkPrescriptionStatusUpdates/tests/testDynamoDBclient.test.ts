@@ -2,16 +2,10 @@
 /* eslint-disable max-len */
 import {buildQuery} from "../src/dynamoDBclient"
 import {expect, describe} from "@jest/globals"
+import {InputData} from "../src/types"
 
 type buildQueryTestData = {
-  prescriptionID: string | undefined
-  applicationName: string | undefined
-  odsCode: string | undefined
-  nhsNumber: string | undefined
-  showAllSuppliers: string | undefined
-  overrideApplicationName: string | undefined
-  exclusiveStartKeyPrescriptionID: string | undefined
-  exclusiveStartKeyTaskID: string | undefined
+  inputData: InputData
   expectedIsScan: boolean
   expectedQuery: any
   scenarioDescription: string
@@ -20,14 +14,16 @@ type buildQueryTestData = {
 describe("testing buildQuery", () => {
   test.each<buildQueryTestData>([
     {
-      prescriptionID: undefined,
-      applicationName: undefined,
-      odsCode: undefined,
-      nhsNumber: undefined,
-      showAllSuppliers: undefined,
-      overrideApplicationName: undefined,
-      exclusiveStartKeyPrescriptionID: undefined,
-      exclusiveStartKeyTaskID: undefined,
+      inputData: {
+        prescriptionID: undefined,
+        applicationName: undefined,
+        odsCode: undefined,
+        nhsNumber: undefined,
+        showAllSuppliers: undefined,
+        overrideApplicationName: undefined,
+        exclusiveStartKeyPrescriptionID: undefined,
+        exclusiveStartKeyTaskID: undefined
+      },
       expectedIsScan: true,
       expectedQuery: {
         Limit: 10,
@@ -36,14 +32,16 @@ describe("testing buildQuery", () => {
       scenarioDescription: "nothing passed in"
     },
     {
-      prescriptionID: undefined,
-      applicationName: "unknown",
-      odsCode: undefined,
-      nhsNumber: undefined,
-      showAllSuppliers: undefined,
-      overrideApplicationName: undefined,
-      exclusiveStartKeyPrescriptionID: undefined,
-      exclusiveStartKeyTaskID: undefined,
+      inputData: {
+        prescriptionID: undefined,
+        applicationName: "unknown",
+        odsCode: undefined,
+        nhsNumber: undefined,
+        showAllSuppliers: undefined,
+        overrideApplicationName: undefined,
+        exclusiveStartKeyPrescriptionID: undefined,
+        exclusiveStartKeyTaskID: undefined
+      },
       expectedIsScan: true,
       expectedQuery: {
         ExpressionAttributeValues: {
@@ -56,14 +54,16 @@ describe("testing buildQuery", () => {
       scenarioDescription: "only application name passed in"
     },
     {
-      prescriptionID: undefined,
-      applicationName: undefined,
-      odsCode: "C9Z1O",
-      nhsNumber: undefined,
-      showAllSuppliers: undefined,
-      overrideApplicationName: undefined,
-      exclusiveStartKeyPrescriptionID: undefined,
-      exclusiveStartKeyTaskID: undefined,
+      inputData: {
+        prescriptionID: undefined,
+        applicationName: undefined,
+        odsCode: "C9Z1O",
+        nhsNumber: undefined,
+        showAllSuppliers: undefined,
+        overrideApplicationName: undefined,
+        exclusiveStartKeyPrescriptionID: undefined,
+        exclusiveStartKeyTaskID: undefined
+      },
       expectedIsScan: true,
       expectedQuery: {
         ExpressionAttributeValues: {
@@ -76,14 +76,16 @@ describe("testing buildQuery", () => {
       scenarioDescription: "only odsCode name passed in"
     },
     {
-      prescriptionID: undefined,
-      applicationName: undefined,
-      odsCode: undefined,
-      nhsNumber: "9449304130",
-      showAllSuppliers: undefined,
-      overrideApplicationName: undefined,
-      exclusiveStartKeyPrescriptionID: undefined,
-      exclusiveStartKeyTaskID: undefined,
+      inputData: {
+        prescriptionID: undefined,
+        applicationName: undefined,
+        odsCode: undefined,
+        nhsNumber: "9449304130",
+        showAllSuppliers: undefined,
+        overrideApplicationName: undefined,
+        exclusiveStartKeyPrescriptionID: undefined,
+        exclusiveStartKeyTaskID: undefined
+      },
       expectedIsScan: true,
       expectedQuery: {
         ExpressionAttributeValues: {
@@ -96,14 +98,16 @@ describe("testing buildQuery", () => {
       scenarioDescription: "only nhsNumber name passed in"
     },
     {
-      prescriptionID: "16B2E0-A83008-81C13H",
-      applicationName: "unknown",
-      odsCode: "C9Z1O",
-      nhsNumber: "9449304130",
-      showAllSuppliers: undefined,
-      overrideApplicationName: undefined,
-      exclusiveStartKeyPrescriptionID: undefined,
-      exclusiveStartKeyTaskID: undefined,
+      inputData: {
+        prescriptionID: "16B2E0-A83008-81C13H",
+        applicationName: "unknown",
+        odsCode: "C9Z1O",
+        nhsNumber: "9449304130",
+        showAllSuppliers: undefined,
+        overrideApplicationName: undefined,
+        exclusiveStartKeyPrescriptionID: undefined,
+        exclusiveStartKeyTaskID: undefined
+      },
       expectedIsScan: false,
       expectedQuery: {
         ExpressionAttributeValues: {
@@ -121,14 +125,16 @@ describe("testing buildQuery", () => {
       scenarioDescription: "everything apart from exclusiveStartKeys passed in"
     },
     {
-      prescriptionID: "16B2E0-A83008-81C13H",
-      applicationName: "unknown",
-      odsCode: "C9Z1O",
-      nhsNumber: "9449304130",
-      showAllSuppliers: undefined,
-      overrideApplicationName: undefined,
-      exclusiveStartKeyPrescriptionID: "16B2E0-A83008-81C13H",
-      exclusiveStartKeyTaskID: "02f91630-a9c6-4f72-bf54-a64adfac8b11",
+      inputData: {
+        prescriptionID: "16B2E0-A83008-81C13H",
+        applicationName: "unknown",
+        odsCode: "C9Z1O",
+        nhsNumber: "9449304130",
+        showAllSuppliers: undefined,
+        overrideApplicationName: undefined,
+        exclusiveStartKeyPrescriptionID: "16B2E0-A83008-81C13H",
+        exclusiveStartKeyTaskID: "02f91630-a9c6-4f72-bf54-a64adfac8b11"
+      },
       expectedIsScan: false,
       expectedQuery: {
         ExpressionAttributeValues: {
@@ -150,14 +156,16 @@ describe("testing buildQuery", () => {
       scenarioDescription: "everything apart including exclusiveStartKeys passed in"
     },
     {
-      prescriptionID: undefined,
-      applicationName: undefined,
-      odsCode: undefined,
-      nhsNumber: undefined,
-      showAllSuppliers: undefined,
-      overrideApplicationName: undefined,
-      exclusiveStartKeyPrescriptionID: "16B2E0-A83008-81C13H",
-      exclusiveStartKeyTaskID: undefined,
+      inputData: {
+        prescriptionID: undefined,
+        applicationName: undefined,
+        odsCode: undefined,
+        nhsNumber: undefined,
+        showAllSuppliers: undefined,
+        overrideApplicationName: undefined,
+        exclusiveStartKeyPrescriptionID: "16B2E0-A83008-81C13H",
+        exclusiveStartKeyTaskID: undefined
+      },
       expectedIsScan: true,
       expectedQuery: {
         Limit: 10,
@@ -166,14 +174,16 @@ describe("testing buildQuery", () => {
       scenarioDescription: "only exclusiveStartKeyPrescriptionID passed in"
     },
     {
-      prescriptionID: undefined,
-      applicationName: undefined,
-      odsCode: undefined,
-      nhsNumber: undefined,
-      showAllSuppliers: undefined,
-      overrideApplicationName: undefined,
-      exclusiveStartKeyPrescriptionID: undefined,
-      exclusiveStartKeyTaskID: "02f91630-a9c6-4f72-bf54-a64adfac8b11",
+      inputData: {
+        prescriptionID: undefined,
+        applicationName: undefined,
+        odsCode: undefined,
+        nhsNumber: undefined,
+        showAllSuppliers: undefined,
+        overrideApplicationName: undefined,
+        exclusiveStartKeyPrescriptionID: undefined,
+        exclusiveStartKeyTaskID: "02f91630-a9c6-4f72-bf54-a64adfac8b11"
+      },
       expectedIsScan: true,
       expectedQuery: {
         Limit: 10,
@@ -182,14 +192,16 @@ describe("testing buildQuery", () => {
       scenarioDescription: "only exclusiveStartKeyTaskID passed in"
     },
     {
-      prescriptionID: undefined,
-      applicationName: "unknown",
-      odsCode: undefined,
-      nhsNumber: undefined,
-      showAllSuppliers: "true",
-      overrideApplicationName: undefined,
-      exclusiveStartKeyPrescriptionID: undefined,
-      exclusiveStartKeyTaskID: undefined,
+      inputData: {
+        prescriptionID: undefined,
+        applicationName: "unknown",
+        odsCode: undefined,
+        nhsNumber: undefined,
+        showAllSuppliers: "true",
+        overrideApplicationName: undefined,
+        exclusiveStartKeyPrescriptionID: undefined,
+        exclusiveStartKeyTaskID: undefined
+      },
       expectedIsScan: true,
       expectedQuery: {
         Limit: 10,
@@ -198,14 +210,16 @@ describe("testing buildQuery", () => {
       scenarioDescription: "showAllSuppliers is set to true and overrideApplicationName is not set"
     },
     {
-      prescriptionID: undefined,
-      applicationName: "unknown",
-      odsCode: undefined,
-      nhsNumber: undefined,
-      showAllSuppliers: "true",
-      overrideApplicationName: "another app",
-      exclusiveStartKeyPrescriptionID: undefined,
-      exclusiveStartKeyTaskID: undefined,
+      inputData: {
+        prescriptionID: undefined,
+        applicationName: "unknown",
+        odsCode: undefined,
+        nhsNumber: undefined,
+        showAllSuppliers: "true",
+        overrideApplicationName: "another app",
+        exclusiveStartKeyPrescriptionID: undefined,
+        exclusiveStartKeyTaskID: undefined
+      },
       expectedIsScan: true,
       expectedQuery: {
         ExpressionAttributeValues: {
@@ -218,32 +232,9 @@ describe("testing buildQuery", () => {
       },
       scenarioDescription: "showAllSuppliers is set to true and overrideApplicationName is set"
     }
-  ])(
-    "build correct query when $scenarioDescription",
-    ({
-      prescriptionID,
-      applicationName,
-      odsCode,
-      nhsNumber,
-      showAllSuppliers,
-      overrideApplicationName,
-      exclusiveStartKeyPrescriptionID,
-      exclusiveStartKeyTaskID,
-      expectedIsScan,
-      expectedQuery
-    }) => {
-      const result = buildQuery(
-        prescriptionID,
-        applicationName,
-        odsCode,
-        nhsNumber,
-        showAllSuppliers,
-        overrideApplicationName,
-        exclusiveStartKeyPrescriptionID,
-        exclusiveStartKeyTaskID
-      )
-      expect(result.isScanQuery).toStrictEqual(expectedIsScan)
-      expect(result.query).toStrictEqual(expectedQuery)
-    }
-  )
+  ])("build correct query when $scenarioDescription", ({inputData, expectedIsScan, expectedQuery}) => {
+    const result = buildQuery(inputData)
+    expect(result.isScanQuery).toStrictEqual(expectedIsScan)
+    expect(result.query).toStrictEqual(expectedQuery)
+  })
 })

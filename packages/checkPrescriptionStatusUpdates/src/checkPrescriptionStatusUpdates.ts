@@ -6,6 +6,7 @@ import inputOutputLogger from "@middy/input-output-logger"
 import httpHeaderNormalizer from "@middy/http-header-normalizer"
 import {getItemStatusUpdates} from "./dynamoDBclient"
 import {MiddyErrorHandler} from "@PrescriptionStatusUpdate_common/middyErrorHandler"
+import {InputData} from "./types"
 
 const logger = new Logger({serviceName: "status"})
 
@@ -47,26 +48,17 @@ const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPro
     "apigw-request-id": event.requestContext.requestId
   })
 
-  const applicationName = event.headers["attribute-name"]
-  const showAllSuppliers = event.headers["show-all-suppliers"]
-  const overrideApplicationName = event.headers["x-override-application-name"]
-  const exclusiveStartKeyPrescriptionID = event.headers["exclusivestartkey-prescriptionid"]
-  const exclusiveStartKeyTaskID = event.headers["exclusivestartkey-taskid"]
-  const odsCode = event.queryStringParameters?.odscode
-  const nhsNumber = event.queryStringParameters?.nhsnumber
-  const prescriptionID = event.queryStringParameters?.prescriptionid
-
-  const queryResult = await getItemStatusUpdates(
-    prescriptionID,
-    applicationName,
-    odsCode,
-    nhsNumber,
-    showAllSuppliers,
-    overrideApplicationName,
-    exclusiveStartKeyPrescriptionID,
-    exclusiveStartKeyTaskID,
-    logger
-  )
+  const inputData: InputData = {
+    prescriptionID: event.queryStringParameters?.prescriptionid,
+    applicationName: event.headers["attribute-name"],
+    odsCode: event.queryStringParameters?.odscode,
+    nhsNumber: event.queryStringParameters?.nhsnumber,
+    showAllSuppliers: event.headers["show-all-suppliers"],
+    overrideApplicationName: event.headers["x-override-application-name"],
+    exclusiveStartKeyPrescriptionID: event.headers["exclusivestartkey-prescriptionid"],
+    exclusiveStartKeyTaskID: event.headers["exclusivestartkey-taskid"]
+  }
+  const queryResult = await getItemStatusUpdates(inputData, logger)
 
   let statusCode = 200
   const result = {
@@ -78,17 +70,21 @@ const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPro
     result.items = queryResult.Items
   }
 
+  const headers = {
+    "Content-Type": "application/json",
+    "Cache-Control": "no-cache"
+  }
+
   if (queryResult.LastEvaluatedKey) {
-    result["LastEvaluatedKey"] = queryResult.LastEvaluatedKey
+    for (const key in queryResult.LastEvaluatedKey) {
+      headers[`LastEvaluatedKey-${key}`] = queryResult.LastEvaluatedKey[key]
+    }
   }
 
   return {
     statusCode: statusCode,
     body: JSON.stringify(result),
-    headers: {
-      "Content-Type": "application/json",
-      "Cache-Control": "no-cache"
-    }
+    headers
   }
 }
 
