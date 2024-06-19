@@ -2,24 +2,10 @@
 import {errorHandler} from "../src/errorHandler"
 import middy from "@middy/core"
 import {expect, jest} from "@jest/globals"
+import {mockContext} from "@PrescriptionStatusUpdate_common/testing"
 
 const mockEvent = {
   foo: "bar"
-}
-
-const dummyContext = {
-  callbackWaitsForEmptyEventLoop: true,
-  functionVersion: "$LATEST",
-  functionName: "foo-bar-function",
-  memoryLimitInMB: "128",
-  logGroupName: "/aws/lambda/foo-bar-function-123456abcdef",
-  logStreamName: "2021/03/09/[$LATEST]abcdef123456abcdef123456abcdef123456",
-  invokedFunctionArn: "arn:aws:lambda:eu-west-1:123456789012:function:foo-bar-function",
-  awsRequestId: "c6af9ac6-7b61-11e6-9a41-93e812345678",
-  getRemainingTimeInMillis: () => 1234,
-  done: () => console.log("Done!"),
-  fail: () => console.log("Failed!"),
-  succeed: () => console.log("Succeeded!")
 }
 
 test("Middleware logs all error details", async () => {
@@ -35,7 +21,7 @@ test("Middleware logs all error details", async () => {
 
   handler.use(errorHandler({logger: mockLogger}))
 
-  await handler({}, dummyContext)
+  await handler({}, mockContext)
 
   expect(mockErrorLogger).toHaveBeenCalledTimes(1)
 
@@ -57,7 +43,7 @@ test("Middleware returns generic error message on failure", async () => {
 
   handler.use(errorHandler({logger: mockLogger}))
 
-  const response: any = await handler(mockEvent, dummyContext)
+  const response: any = await handler(mockEvent, mockContext)
   expect(response.statusCode).toBe(500)
   expect(JSON.parse(response.body)).toMatchObject({
     message: "A system error has occured"

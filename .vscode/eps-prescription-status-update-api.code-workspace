@@ -35,10 +35,18 @@
     {
       "name": "packages/checkPrescriptionStatusUpdates",
       "path": "../packages/checkPrescriptionStatusUpdates"
+    },
+    {
+      "name": "packages/common",
+      "path": "../packages/common"
     }
   ],
   "settings": {
-    "jest.disabledWorkspaceFolders": ["eps-prescription-status-update-monorepo"],
+    "jest.disabledWorkspaceFolders": [
+      "eps-prescription-status-update-monorepo",
+      "packages/common",
+      "packages/specification"
+    ],
     "files.exclude": {
       "packages/": true
     },

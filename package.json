@@ -21,7 +21,8 @@
     "packages/updatePrescriptionStatus",
     "packages/capabilityStatement",
     "packages/cpsuLambda",
-    "packages/checkPrescriptionStatusUpdates"
+    "packages/checkPrescriptionStatusUpdates",
+    "packages/common/testing"
   ],
   "devDependencies": {
     "@semantic-release/changelog": "^6.0.3",

@@ -7,8 +7,7 @@ import {
 
 import {DynamoDBDocumentClient} from "@aws-sdk/lib-dynamodb"
 import {handler} from "../src/checkPrescriptionStatusUpdates"
-import mockAPIGatewayProxyEvent from "./mockAPIGatewayProxyEvent"
-import mockConteext from "./mockContext"
+import {mockAPIGatewayProxyEvent, mockContext} from "@PrescriptionStatusUpdate_common/testing"
 
 describe("test handler", () => {
   beforeEach(() => {
@@ -23,7 +22,7 @@ describe("test handler", () => {
     }
     jest.spyOn(DynamoDBDocumentClient.prototype, "send").mockResolvedValue(mockReply as never)
 
-    const response = await handler(mockAPIGatewayProxyEvent, mockConteext)
+    const response = await handler(mockAPIGatewayProxyEvent, mockContext)
     expect(response.statusCode).toBe(404)
     expect(JSON.parse(response.body)).toMatchObject({
       items: []
@@ -50,7 +49,7 @@ describe("test handler", () => {
     }
     jest.spyOn(DynamoDBDocumentClient.prototype, "send").mockResolvedValue(mockReply as never)
 
-    const response = await handler(mockAPIGatewayProxyEvent, mockConteext)
+    const response = await handler(mockAPIGatewayProxyEvent, mockContext)
     expect(response.statusCode).toBe(200)
     expect(JSON.parse(response.body)).toMatchObject({
       items: [
@@ -94,7 +93,7 @@ describe("test handler", () => {
     }
     jest.spyOn(DynamoDBDocumentClient.prototype, "send").mockResolvedValue(mockReply as never)
 
-    const response = await handler(mockAPIGatewayProxyEvent, mockConteext)
+    const response = await handler(mockAPIGatewayProxyEvent, mockContext)
     expect(response.statusCode).toBe(200)
     expect(JSON.parse(response.body)).toMatchObject({
       items: [
@@ -122,7 +121,7 @@ describe("test handler", () => {
     const mockReply = {}
     jest.spyOn(DynamoDBDocumentClient.prototype, "send").mockRejectedValue(mockReply as never)
 
-    const response = await handler(mockAPIGatewayProxyEvent, mockConteext)
+    const response = await handler(mockAPIGatewayProxyEvent, mockContext)
     expect(response.statusCode).toBe(500)
     expect(JSON.parse(response.body)).toMatchObject({
       message: "A system error has occured"

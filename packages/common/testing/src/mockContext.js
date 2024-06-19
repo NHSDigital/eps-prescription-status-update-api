@@ -13,4 +13,4 @@ const mockContext = {
   succeed: () => console.log("Succeeded!")
 }
 
-module.exports = mockContext
+export {mockContext}

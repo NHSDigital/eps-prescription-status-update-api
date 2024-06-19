@@ -105,6 +105,7 @@ lint-node: compile-node
 	npm run lint --workspace packages/capabilityStatement
 	npm run lint --workspace packages/cpsuLambda
 	npm run lint --workspace packages/checkPrescriptionStatusUpdates
+	npm run lint --workspace packages/common/testing
 
 lint-samtemplates:
 	poetry run cfn-lint -I "SAMtemplates/**/*.yaml" 2>&1 | grep "Run scan"
