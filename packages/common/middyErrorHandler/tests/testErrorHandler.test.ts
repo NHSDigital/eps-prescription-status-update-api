@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import {errorHandler} from "../src/errorHandler"
+import {MiddyErrorHandler} from "../src/errorHandler"
 import middy from "@middy/core"
 import {expect, jest} from "@jest/globals"
 import {mockContext} from "@PrescriptionStatusUpdate_common/testing"
@@ -14,12 +14,15 @@ test("Middleware logs all error details", async () => {
   const mockLogger = {
     error: mockErrorLogger
   }
+  const errorResponse = {foo: "bar"}
+
+  const middyErrorHandler = new MiddyErrorHandler(errorResponse)
 
   const handler = middy(() => {
     throw new Error("error running lambda")
   })
 
-  handler.use(errorHandler({logger: mockLogger}))
+  handler.use(middyErrorHandler.errorHandler({logger: mockLogger}))
 
   await handler({}, mockContext)
 
@@ -32,16 +35,26 @@ test("Middleware logs all error details", async () => {
   expect(errorObject.error.stack).not.toBeNull()
 })
 
-test("Middleware returns generic error message on failure", async () => {
+test("Middleware returns specific error message on failure", async () => {
   const mockLogger = {
     error: jest.fn(() => {})
   }
+  const errorResponse = {
+    statusCode: 500,
+    body: JSON.stringify({message: "A system error has occured"}),
+    headers: {
+      "Content-Type": "application/json",
+      "Cache-Control": "no-cache"
+    }
+  }
+
+  const middyErrorHandler = new MiddyErrorHandler(errorResponse)
 
   const handler = middy(() => {
     throw new Error("error running lambda")
   })
 
-  handler.use(errorHandler({logger: mockLogger}))
+  handler.use(middyErrorHandler.errorHandler({logger: mockLogger}))
 
   const response: any = await handler(mockEvent, mockContext)
   expect(response.statusCode).toBe(500)

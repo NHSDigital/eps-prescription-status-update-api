@@ -3,11 +3,26 @@ import {Logger} from "@aws-lambda-powertools/logger"
 import {injectLambdaContext} from "@aws-lambda-powertools/logger/middleware"
 import middy from "@middy/core"
 import inputOutputLogger from "@middy/input-output-logger"
-import {errorHandler} from "./errorHandler"
 import httpHeaderNormalizer from "@middy/http-header-normalizer"
 import {getItemStatusUpdates} from "./dynamoDBclient"
+import {MiddyErrorHandler} from "@PrescriptionStatusUpdate_common/middyErrorHandler"
 
 const logger = new Logger({serviceName: "status"})
+
+const errorResponseBody = {
+  message: "A system error has occured"
+}
+
+const errorResponse = {
+  statusCode: 500,
+  body: JSON.stringify(errorResponseBody),
+  headers: {
+    "Content-Type": "application/json",
+    "Cache-Control": "no-cache"
+  }
+}
+
+const middyErrorHandler = new MiddyErrorHandler(errorResponse)
 
 /* eslint-disable  max-len */
 
@@ -87,4 +102,4 @@ export const handler = middy(lambdaHandler)
     })
   )
   .use(httpHeaderNormalizer())
-  .use(errorHandler({logger: logger}))
+  .use(middyErrorHandler.errorHandler({logger: logger}))

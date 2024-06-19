@@ -106,6 +106,7 @@ lint-node: compile-node
 	npm run lint --workspace packages/cpsuLambda
 	npm run lint --workspace packages/checkPrescriptionStatusUpdates
 	npm run lint --workspace packages/common/testing
+	npm run lint --workspace packages/common/middyErrorHandler
 
 lint-samtemplates:
 	poetry run cfn-lint -I "SAMtemplates/**/*.yaml" 2>&1 | grep "Run scan"
@@ -129,6 +130,7 @@ test: compile
 	npm run test --workspace packages/capabilityStatement
 	npm run test --workspace packages/cpsuLambda
 	npm run test --workspace packages/checkPrescriptionStatusUpdates
+	npm run test --workspace packages/common/middyErrorHandler
 
 clean:
 	rm -rf packages/updatePrescriptionStatus/coverage
@@ -145,6 +147,7 @@ clean:
 	rm -rf packages/cpsuLambda/lib
 	rm -rf packages/checkPrescriptionStatusUpdates/lib
 	rm -rf packages/common/testing/lib
+	rm -rf packages/common/middyErrorHandler/lib
 	rm -rf .aws-sam
 
 deep-clean: clean

@@ -22,7 +22,8 @@
     "packages/capabilityStatement",
     "packages/cpsuLambda",
     "packages/checkPrescriptionStatusUpdates",
-    "packages/common/testing"
+    "packages/common/testing",
+    "packages/common/middyErrorHandler"
   ],
   "devDependencies": {
     "@semantic-release/changelog": "^6.0.3",
@@ -48,7 +49,10 @@
     "typescript": "^5.4.5"
   },
   "dependencies": {
+    "@PrescriptionStatusUpdate_common/middyErrorHandler": "^1.0.0",
+    "checkPrescriptionStatusUpdates": "^1.0.0",
     "conventional-changelog-eslint": "^6.0.0",
-    "esbuild": "^0.21.5"
+    "esbuild": "^0.21.5",
+    "gsul": "^1.0.0"
   }
 }
