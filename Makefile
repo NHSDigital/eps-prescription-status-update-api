@@ -143,6 +143,8 @@ clean:
 	rm -rf packages/capabilityStatement/lib
 	rm -rf packages/cpsuLambda/coverage
 	rm -rf packages/cpsuLambda/lib
+	rm -rf packages/checkPrescriptionStatusUpdates/lib
+	rm -rf packages/common/testing/lib
 	rm -rf .aws-sam
 
 deep-clean: clean

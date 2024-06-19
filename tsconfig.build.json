@@ -4,13 +4,13 @@
   "files": [],
   // Building this project will build all of the following:
   "references": [
+    {"path": "packages/common/testing"},
     {"path": "packages/gsul"},
     {"path": "packages/updatePrescriptionStatus"},
     {"path": "packages/sandbox"},
     {"path": "packages/statusLambda"},
     {"path": "packages/capabilityStatement"},
     {"path": "packages/cpsuLambda"},
-    {"path": "packages/checkPrescriptionStatusUpdates"},
-    {"path": "packages/common/testing"}
+    {"path": "packages/checkPrescriptionStatusUpdates"}
   ]
 }
