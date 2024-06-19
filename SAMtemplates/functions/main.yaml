@@ -196,6 +196,10 @@ Resources:
       CodeUri: ../../packages
       Handler: checkPrescriptionStatusUpdates.handler
       Role: !GetAtt CheckPrescriptionStatusUpdatesResources.Outputs.LambdaRoleArn
+      Environment:
+        Variables:
+          TABLE_NAME: !Ref PrescriptionStatusUpdatesTableName
+          LOG_LEVEL: !Ref LogLevel
     Metadata:
       BuildMethod: esbuild
       BuildProperties:

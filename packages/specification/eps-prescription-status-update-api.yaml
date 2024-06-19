@@ -362,6 +362,9 @@ x-nhsd-apim:
   target-attributes:
     - name: name
       required: true
+    - name: show-all-suppliers
+      required: false
+      header: show-all-suppliers
   ratelimiting:
     proxy:
       timeunit: "second"
