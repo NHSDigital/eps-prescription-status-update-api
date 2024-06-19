@@ -106,12 +106,12 @@ export async function getItemStatusUpdates(
   )
 
   if (result.isScanQuery) {
-    const command = new QueryCommand(result.query)
-    logger.info("running query", {query: result.query})
-    return await docClient.send(command)
-  } else {
     const command = new ScanCommand(result.query)
     logger.info("running scan query", {query: result.query})
+    return await docClient.send(command)
+  } else {
+    const command = new QueryCommand(result.query)
+    logger.info("running query", {query: result.query})
     return await docClient.send(command)
   }
 }
