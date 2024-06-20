@@ -215,10 +215,10 @@ describe("Unit tests for validation of status against business status", () => {
     it.each([
       {isValid: false, businessStatus: "With Pharmacy"},
       {isValid: false, businessStatus: "With Pharmacy - preparing remainder"},
-      {isValid: false, businessStatus: "Ready to collect"},
-      {isValid: false, businessStatus: "ReAdY tO cOlLeCt"},
       {isValid: false, businessStatus: "Ready to collect - partial"},
       {isValid: false, businessStatus: "rEaDy To ColLEcT - pArtIAl"},
+      {isValid: true, businessStatus: "Ready to collect"},
+      {isValid: true, businessStatus: "ReAdY tO cOlLeCt"},
       {isValid: true, businessStatus: "Collected"},
       {isValid: true, businessStatus: "Not dispensed"},
       {isValid: true, businessStatus: "Dispatched"},
