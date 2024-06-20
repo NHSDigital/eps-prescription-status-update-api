@@ -1,67 +1,83 @@
 #!/usr/bin/env bash
 set -eu pipefail
 
-echo "API type: $API_TYPE"
-echo "Proxygen path: $PROXYGEN_PATH"
-echo "Specification path: $SPEC_PATH"
-echo "Specification version: $VERSION_NUMBER"
-echo "Stack name: $STACK_NAME"
-echo "AWS environment: $AWS_ENVIRONMENT"
-echo "Apigee environment: $APIGEE_ENVIRONMENT"
+echo "API type: ${API_TYPE}"
+echo "Proxygen path: ${PROXYGEN_PATH}"
+echo "Specification path: ${SPEC_PATH}"
+echo "Specification version: ${VERSION_NUMBER}"
+echo "Stack name: ${STACK_NAME}"
+echo "AWS environment: ${AWS_ENVIRONMENT}"
+echo "Apigee environment: ${APIGEE_ENVIRONMENT}"
+echo "Proxygen private key name: ${PROXYGEN_PRIVATE_KEY_NAME}"
+echo "Proxygen KID: ${PROXYGEN_KID}"
+echo "Dry run: ${DRY_RUN}"
+
+is_pull_request=false
+instance_suffix=""
+if [[ ${STACK_NAME} == psu-pr-* ]]; then
+    is_pull_request=true
+    # Extracting the PR ID from $STACK_NAME
+    pr_id=$(echo "${STACK_NAME}" | cut -d'-' -f3)
+    instance_suffix=-"pr-${pr_id}"
+fi
 
 # Determine the proxy instance based on the provided $STACK_NAME
-if [[ $STACK_NAME == psu-pr-* ]]; then
-    # Extracting the PR ID from $STACK_NAME
-    pr_id=$(echo "$STACK_NAME" | cut -d'-' -f3)
-    if [[ $API_TYPE == standard ]]; then
-        instance=prescription-status-update-pr-$pr_id
-    else
-        instance=custom-prescription-status-update-pr-$pr_id
-    fi
+if [[ "${API_TYPE}" == "standard" ]]; then
+    instance="prescription-status-update${instance_suffix}"
+    apigee_api=prescription-status-update-api
 else
-    if [[ $API_TYPE == standard ]]; then
-        instance=prescription-status-update
-    else
-        instance=custom-prescription-status-update
-    fi
+    instance="custom-prescription-status-update${instance_suffix}"
+    apigee_api=custom-prescription-status-update-api
 fi
-echo "Proxy instance: $instance"
 
+echo "Is pull request: ${is_pull_request}"
+echo "Proxy instance: ${instance}"
+echo "Apigee api: ${apigee_api}"
+
+echo
+
+
+echo "Fixing the spec"
 # Find and replace the title
-title=$(jq -r '.info.title' "$SPEC_PATH")
-if [[ $STACK_NAME == psu-pr-* ]]; then
-    jq --arg title "[PR-$pr_id] $title" '.info.title = $title' "$SPEC_PATH" > temp.json && mv temp.json "$SPEC_PATH"
+title=$(jq -r '.info.title' "${SPEC_PATH}")
+if [[ "${is_pull_request}" == "true" ]]; then
+    jq --arg title "[PR-${pr_id}] $title" '.info.title = $title' "${SPEC_PATH}" > temp.json && mv temp.json "${SPEC_PATH}"
 fi
 
 # Find and replace the specification version number 
-jq --arg version "$VERSION_NUMBER" '.info.version = $version' "$SPEC_PATH" > temp.json && mv temp.json "$SPEC_PATH"
+jq --arg version "${VERSION_NUMBER}" '.info.version = $version' "${SPEC_PATH}" > temp.json && mv temp.json "${SPEC_PATH}"
 
 # Find and replace the x-nhsd-apim.target.url value
-jq --arg stack_name "$STACK_NAME" --arg aws_env "$AWS_ENVIRONMENT" '.["x-nhsd-apim"].target.url = "https://\($stack_name).\($aws_env).eps.national.nhs.uk"' "$SPEC_PATH" > temp.json && mv temp.json "$SPEC_PATH"
+jq --arg stack_name "${STACK_NAME}" --arg aws_env "${AWS_ENVIRONMENT}" '.["x-nhsd-apim"].target.url = "https://\($stack_name).\($aws_env).eps.national.nhs.uk"' "${SPEC_PATH}" > temp.json && mv temp.json "${SPEC_PATH}"
 
 # Find and replace the servers object
-if [[ $APIGEE_ENVIRONMENT == prod ]]; then
-    jq --arg inst "$instance" '.servers = [ { "url": "https://api.service.nhs.uk/\($inst)" } ]' "$SPEC_PATH" > temp.json && mv temp.json "$SPEC_PATH"
+if [[ "${APIGEE_ENVIRONMENT}" == "prod" ]]; then
+    jq --arg inst "${instance}" '.servers = [ { "url": "https://api.service.nhs.uk/\($inst)" } ]' "${SPEC_PATH}" > temp.json && mv temp.json "${SPEC_PATH}"
 else
-    jq --arg env "$APIGEE_ENVIRONMENT" --arg inst "$instance" '.servers = [ { "url": "https://\($env).api.service.nhs.uk/\($inst)" } ]' "$SPEC_PATH" > temp.json && mv temp.json "$SPEC_PATH"
+    jq --arg env "${APIGEE_ENVIRONMENT}" --arg inst "${instance}" '.servers = [ { "url": "https://\($env).api.service.nhs.uk/\($inst)" } ]' "${SPEC_PATH}" > temp.json && mv temp.json "${SPEC_PATH}"
 fi
 
 # Find and replace securitySchemes
-if [[ $APIGEE_ENVIRONMENT == prod ]]; then
-    if [[ $API_TYPE == standard ]]; then
-        jq '.components.securitySchemes."app-level3" = {"$ref": "https://proxygen.prod.api.platform.nhs.uk/components/securitySchemes/app-level3"}' "$SPEC_PATH" > temp.json && mv temp.json "$SPEC_PATH"
+if [[ "${APIGEE_ENVIRONMENT}" == "prod" ]]; then
+    if [[ "${API_TYPE}" == "standard" ]]; then
+        jq '.components.securitySchemes."app-level3" = {"$ref": "https://proxygen.prod.api.platform.nhs.uk/components/securitySchemes/app-level3"}' "${SPEC_PATH}" > temp.json && mv temp.json "${SPEC_PATH}"
     else
-        jq '.components.securitySchemes."app-level0" = {"$ref": "https://proxygen.prod.api.platform.nhs.uk/components/securitySchemes/app-level0"}' "$SPEC_PATH" > temp.json && mv temp.json "$SPEC_PATH"
+        jq '.components.securitySchemes."app-level0" = {"$ref": "https://proxygen.prod.api.platform.nhs.uk/components/securitySchemes/app-level0"}' "${SPEC_PATH}" > temp.json && mv temp.json "${SPEC_PATH}"
     fi
 else
-    if [[ $API_TYPE == standard ]]; then
-        jq '.components.securitySchemes."app-level3" = {"$ref": "https://proxygen.ptl.api.platform.nhs.uk/components/securitySchemes/app-level3"}' "$SPEC_PATH" > temp.json && mv temp.json "$SPEC_PATH"
+    if [[ "${API_TYPE}" == "standard" ]]; then
+        jq '.components.securitySchemes."app-level3" = {"$ref": "https://proxygen.ptl.api.platform.nhs.uk/components/securitySchemes/app-level3"}' "${SPEC_PATH}" > temp.json && mv temp.json "${SPEC_PATH}"
     else
-        jq '.components.securitySchemes."app-level0" = {"$ref": "https://proxygen.ptl.api.platform.nhs.uk/components/securitySchemes/app-level0"}' "$SPEC_PATH" > temp.json && mv temp.json "$SPEC_PATH"
+        jq '.components.securitySchemes."app-level0" = {"$ref": "https://proxygen.ptl.api.platform.nhs.uk/components/securitySchemes/app-level0"}' "${SPEC_PATH}" > temp.json && mv temp.json "${SPEC_PATH}"
     fi
 fi
+
+echo
+
+echo "Retrieving proxygen credentials"
+
 # Retrieve the proxygen private key and client private key and cert from AWS Secrets Manager
-proxygen_private_key_arn=$(aws cloudformation list-exports --query "Exports[?Name=='account-resources:ProxgenPrivateKey'].Value" --output text)
+proxygen_private_key_arn=$(aws cloudformation list-exports --query "Exports[?Name=='account-resources:${PROXYGEN_PRIVATE_KEY_NAME}'].Value" --output text)
 client_private_key_arn=$(aws cloudformation list-exports --query "Exports[?Name=='account-resources:PsuClientKeySecret'].Value" --output text)
 client_cert_arn=$(aws cloudformation list-exports --query "Exports[?Name=='account-resources:PsuClientCertSecret'].Value" --output text)
 
@@ -73,32 +89,63 @@ client_cert=$(aws secretsmanager get-secret-value --secret-id "${client_cert_arn
 mkdir -p ~/.proxygen/tmp
 
 # Save the proxygen private key, client private key, and client cert to temporary files
-echo "$proxygen_private_key" > ~/.proxygen/tmp/proxygen_private_key.pem
-echo "$client_private_key" > ~/.proxygen/tmp/client_private_key.pem
-echo "$client_cert" > ~/.proxygen/tmp/client_cert.pem
+echo "${proxygen_private_key}" > ~/.proxygen/tmp/proxygen_private_key.pem
+echo "${client_private_key}" > ~/.proxygen/tmp/client_private_key.pem
+echo "${client_cert}" > ~/.proxygen/tmp/client_cert.pem
 
 cat <<EOF > ~/.proxygen/credentials.yaml
-client_id: prescription-status-update-api-client
-key_id: eps-cli-key-1
+client_id: ${apigee_api}-client
+key_id: ${PROXYGEN_KID}
 private_key_path: tmp/proxygen_private_key.pem
 base_url: https://identity.prod.api.platform.nhs.uk/realms/api-producers
-client_secret: https://nhsdigital.github.io/identity-service-jwks/jwks/paas/prescription-status-update-api.json
+client_secret: https://nhsdigital.github.io/identity-service-jwks/jwks/paas/${apigee_api}.json
 EOF
 
 # Create settings.yaml file
 cat <<EOF > ~/.proxygen/settings.yaml
-api: prescription-status-update-api
+api: ${apigee_api}
 endpoint_url: https://proxygen.prod.api.platform.nhs.uk
 spec_output_format: json
 EOF
 
-# Store the API key secret using Proxygen CLI
-"$PROXYGEN_PATH" secret put --mtls-cert ~/.proxygen/tmp/client_cert.pem --mtls-key ~/.proxygen/tmp/client_private_key.pem "$APIGEE_ENVIRONMENT" psu-mtls-1
+if [[ "${is_pull_request}" == "false" ]]; then
+    echo
+    echo "Store the secret used for mutual TLS to AWS using Proxygen CLI"
+    if [[ "${DRY_RUN}" == "false" ]]; then
+        "${PROXYGEN_PATH}" secret put --mtls-cert ~/.proxygen/tmp/client_cert.pem --mtls-key ~/.proxygen/tmp/client_private_key.pem "${APIGEE_ENVIRONMENT}" psu-mtls-1
+    else
+        echo "Would run this command"
+        echo "${PROXYGEN_PATH} secret put --mtls-cert ~/.proxygen/tmp/client_cert.pem --mtls-key ~/.proxygen/tmp/client_private_key.pem ${APIGEE_ENVIRONMENT} psu-mtls-1"
+    fi
+fi
 
-# Deploy the API instance using Proxygen CLI
-"$PROXYGEN_PATH" instance deploy --no-confirm "$APIGEE_ENVIRONMENT" "$instance" "$SPEC_PATH"
+echo
+echo "Deploy the API instance using Proxygen CLI"
+if [[ "${DRY_RUN}" == "false" ]]; then
+    "${PROXYGEN_PATH}" instance deploy --no-confirm "${APIGEE_ENVIRONMENT}" "${instance}" "${SPEC_PATH}"
+else
+    echo "Would run this command"
+    echo "${PROXYGEN_PATH} instance deploy --no-confirm ${APIGEE_ENVIRONMENT} ${instance} ${SPEC_PATH}"
+fi
 
-# Deploy the API spec if in the int environment
-if [[ $APIGEE_ENVIRONMENT == int ]]; then
-    "$PROXYGEN_PATH" spec publish --no-confirm "$SPEC_PATH"
+if [[ "${APIGEE_ENVIRONMENT}" == "int" ]]; then
+    echo
+    echo "Deploy the API spec if in the int environment"
+    if [[ "${DRY_RUN}" == "false" ]]; then
+        "${PROXYGEN_PATH}" spec publish --no-confirm "${SPEC_PATH}"
+    else
+        echo "Would run this command"
+        echo "${PROXYGEN_PATH} spec publish --no-confirm ${SPEC_PATH}"
+    fi
+fi
+
+if [[ "${APIGEE_ENVIRONMENT}" == "internal-dev" && "${is_pull_request}" == "false" ]]; then
+    echo
+    echo "Deploy the API spec to uat if in the internal-dev environment"
+    if [[ "${DRY_RUN}" == "false" ]]; then
+        "${PROXYGEN_PATH}" spec publish --uat --no-confirm "${SPEC_PATH}"
+    else
+        echo "Would run this command"
+        echo "${PROXYGEN_PATH} spec publish --uat --no-confirm ${SPEC_PATH}"
+    fi
 fi
