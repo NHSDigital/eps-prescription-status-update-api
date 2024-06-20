@@ -102,6 +102,7 @@ function populateTemplate(
     entry.resource!.businessStatus!.coding![0].code = businessStatus.value()
   }
 
+  entry.resource!.status = TASK_STATUS_MAP[prescriptionItem.status]
   entry.resource!.focus!.identifier!.value = prescriptionItem.itemID
   entry.resource!.lastModified = prescriptionDetails.messageDate
 
@@ -177,4 +178,15 @@ const BUSINESS_STATUS_MAP: ItemStatusMap = {
     "Robot Collection": "Collected",
     "Delivery required": "Dispatched"
   }
+}
+
+const TASK_STATUS_MAP: Record<itemStatusType, Task["status"]> = {
+  Pending: "in-progress",
+  ReadyForCollection: "in-progress",
+  Owed: "in-progress",
+  PartOwed: "in-progress",
+  Cancelled: "completed",
+  Expired: "completed",
+  NotDispensed: "completed",
+  DispensingComplete: "completed"
 }
