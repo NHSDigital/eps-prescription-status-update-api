@@ -55,11 +55,11 @@ jobs:
 
   package_code:
     needs: get_issue_number
-    uses: ./.github/workflows/sam_package_code.yml
+    uses: ./.github/workflows/run_package_code_and_api.yml
 
   release_code:
     needs: [get_issue_number, package_code, get_commit_id]
-    uses: ./.github/workflows/sam_release_code.yml
+    uses: ./.github/workflows/run_release_code_and_api.yml
     with:
       STACK_NAME: psu-pr-${{needs.get_issue_number.outputs.issue_number}}
       ARTIFACT_BUCKET_PREFIX: PR-${{needs.get_issue_number.outputs.issue_number}}
@@ -67,7 +67,6 @@ jobs:
       APIGEE_ENVIRONMENT: internal-dev
       ENABLE_MUTUAL_TLS: false
       BUILD_ARTIFACT: packaged_code
-      SPEC_ARTIFACT: specification_code
       TRUSTSTORE_FILE: psu-truststore.pem
       VERSION_NUMBER: PR-${{ needs.get_issue_number.outputs.issue_number }}
       COMMIT_ID: ${{ needs.get_commit_id.outputs.commit_id }}
@@ -80,7 +79,7 @@ jobs:
 
   release_sandbox_code:
     needs: [get_issue_number, package_code, get_commit_id]
-    uses: ./.github/workflows/sam_release_code.yml
+    uses: ./.github/workflows/run_release_code_and_api.yml
     with:
       STACK_NAME: psu-pr-${{needs.get_issue_number.outputs.issue_number}}-sandbox
       ARTIFACT_BUCKET_PREFIX: PR-${{needs.get_issue_number.outputs.issue_number}}-sandbox
@@ -88,13 +87,12 @@ jobs:
       APIGEE_ENVIRONMENT: internal-dev-sandbox
       ENABLE_MUTUAL_TLS: false
       BUILD_ARTIFACT: packaged_sandbox_code
-      SPEC_ARTIFACT: specification_code
       TRUSTSTORE_FILE: psu-sandbox-truststore.pem
       VERSION_NUMBER: PR-${{ needs.get_issue_number.outputs.issue_number }}
       COMMIT_ID: ${{ needs.get_commit_id.outputs.commit_id }}
       LOG_RETENTION_DAYS: 30
       DEPLOY_APIGEE: true
       DYNAMODB_AUTOSCALE: false
-      DEPLOY_APIGEE_CPSU: false
+      DEPLOY_APIGEE_CPSU: true
     secrets:
       CLOUD_FORMATION_DEPLOY_ROLE: ${{ secrets.DEV_CLOUD_FORMATION_DEPLOY_ROLE }}
