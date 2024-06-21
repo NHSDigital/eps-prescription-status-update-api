@@ -7,17 +7,22 @@ import {
 } from "@jest/globals"
 
 import {BundleEntry} from "fhir/r4"
+import {v4} from "uuid"
 
 import {badRequest, conflictDuplicate} from "../src/utils/responses"
-import {DEFAULT_DATE, X_REQUEST_ID, mockInternalDependency} from "./utils/testUtils"
+import {
+  DEFAULT_DATE,
+  X_REQUEST_ID,
+  mockInternalDependency,
+  validTask
+} from "./utils/testUtils"
 import {APIGatewayProxyEvent} from "aws-lambda"
 
 import * as content from "../src/validation/content"
 import {TransactionCanceledException} from "@aws-sdk/client-dynamodb"
 const mockValidateEntry = mockInternalDependency("../src/validation/content", content, "validateEntry")
-const {castEventBody, getXRequestID, validateEntries, handleTransactionCancelledException} = await import(
-  "../src/updatePrescriptionStatus"
-)
+const {castEventBody, getXRequestID, validateEntries, handleTransactionCancelledException, buildDataItems} =
+  await import("../src/updatePrescriptionStatus")
 
 describe("Unit test getXRequestID", () => {
   beforeAll(() => {
@@ -199,5 +204,25 @@ describe("handleTransactionCancelledException", () => {
     expect(validResponseEntry).toEqual(conflictDuplicate("d70678c-81e4-6665-8c67-17596fd0aa87"))
     expect(validResponseEntry.response?.status).toEqual("409 Conflict")
     expect(validResponseEntry.response?.status).not.toEqual("200 OK")
+  })
+})
+
+describe("buildDataItems", () => {
+  it("should uppercase LineItemId and PrescriptionID", () => {
+    const task = validTask()
+    const lineItemID = v4().toUpperCase()
+    const prescriptionID = "4F00A8-A83008-2EB4D"
+
+    task.focus!.identifier!.value! = lineItemID.toLowerCase()
+    task.basedOn![0].identifier!.value! = prescriptionID.toLowerCase()
+    const requestEntry: BundleEntry = {
+      resource: task,
+      fullUrl: ""
+    }
+
+    const dataItems = buildDataItems([requestEntry], "", "")
+
+    expect(dataItems[0].LineItemID).toEqual(lineItemID)
+    expect(dataItems[0].PrescriptionID).toEqual(prescriptionID)
   })
 })
