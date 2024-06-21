@@ -208,12 +208,14 @@ describe("handleTransactionCancelledException", () => {
 })
 
 describe("buildDataItems", () => {
-  it("should uppercase LineItemId and PrescriptionID", () => {
+  it("should uppercase LineItemId, PharmacyODSCode and PrescriptionID", () => {
     const task = validTask()
     const lineItemID = v4().toUpperCase()
+    const pharmacyODSCode = "X26"
     const prescriptionID = "4F00A8-A83008-2EB4D"
 
     task.focus!.identifier!.value! = lineItemID.toLowerCase()
+    task.owner!.identifier!.value! = pharmacyODSCode.toLowerCase()
     task.basedOn![0].identifier!.value! = prescriptionID.toLowerCase()
     const requestEntry: BundleEntry = {
       resource: task,
@@ -224,5 +226,6 @@ describe("buildDataItems", () => {
 
     expect(dataItems[0].LineItemID).toEqual(lineItemID)
     expect(dataItems[0].PrescriptionID).toEqual(prescriptionID)
+    expect(dataItems[0].PharmacyODSCode).toEqual(pharmacyODSCode)
   })
 })
