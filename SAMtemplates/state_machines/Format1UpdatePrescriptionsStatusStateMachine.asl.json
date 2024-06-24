@@ -7,7 +7,7 @@
       "Resource": "arn:aws:states:::lambda:invoke",
       "Parameters": {
         "Payload.$": "$",
-        "FunctionName": "arn:aws:lambda:eu-west-2:591291862413:function:psu-pr-344-ConvertRequestToFhirFormat:$LATEST"
+        "FunctionName": "${ConvertRequestToFhirFormatFunctionArn}"
       },
       "Next": "Convert Request to FHIR result",
       "InputPath": "$",
@@ -49,7 +49,7 @@
       "Resource": "arn:aws:states:::lambda:invoke",
       "Parameters": {
         "Payload.$": "$",
-        "FunctionName": "arn:aws:lambda:eu-west-2:591291862413:function:psu-pr-344-UpdatePrescriptionStatus:$LATEST"
+        "FunctionName": "${UpdatePrescriptionStatusFunctionArn}"
       },
       "End": true,
       "Catch": [
