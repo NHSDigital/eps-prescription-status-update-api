@@ -11,6 +11,7 @@
   "patientID": "12345-000005",
   "nHSCHI": "1996344668",
   "deliveryType": "Delivery required",
+  "oDSCode": "FHA82",
   "items": [
     {
       "itemID": "73014c50-1bd1-4359-9c9f-d587d7d03e66",
