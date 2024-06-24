@@ -1,20 +1,17 @@
 import {deliveryType, itemStatusType} from "../../src/schema/format_1"
 import {getBusinessStatus} from "../../src/schema/format_1/transformer"
 
-it("should convert a delivery type business status", () => {
-  const itemStatus: itemStatusType = "ReadyForCollection"
-  const deliveryType: deliveryType = "Robot Collection"
-
+function testBusinessStatusConversion(itemStatus: itemStatusType, deliveryType: deliveryType, expectedStatus: string) {
   const businessStatus = getBusinessStatus(deliveryType, itemStatus)
-  expect(businessStatus.value()).toEqual("Ready to Dispatch")
+  expect(businessStatus.value()).toEqual(expectedStatus)
+}
+
+it("should convert a delivery type business status", () => {
+  testBusinessStatusConversion("ReadyForCollection", "Robot Collection", "Ready to Dispatch")
 })
 
 it("should convert an item status business status", () => {
-  const itemStatus: itemStatusType = "NotDispensed"
-  const deliveryType: deliveryType = "Robot Collection"
-
-  const businessStatus = getBusinessStatus(deliveryType, itemStatus)
-  expect(businessStatus.value()).toEqual("Not Dispensed")
+  testBusinessStatusConversion("NotDispensed", "Robot Collection", "Not Dispensed")
 })
 
 it("should return Nothing if the item status is not in the map", () => {
@@ -26,33 +23,17 @@ it("should return Nothing if the item status is not in the map", () => {
 })
 
 it("should convert a DispensingComplete status with Robot Collection", () => {
-  const itemStatus: itemStatusType = "DispensingComplete"
-  const deliveryType: deliveryType = "Robot Collection"
-
-  const businessStatus = getBusinessStatus(deliveryType, itemStatus)
-  expect(businessStatus.value()).toEqual("Dispatched")
+  testBusinessStatusConversion("DispensingComplete", "Robot Collection", "Dispatched")
 })
 
 it("should handle ReadyForCollection status with Robot Collection correctly", () => {
-  const itemStatus: itemStatusType = "ReadyForCollection"
-  const deliveryType: deliveryType = "Robot Collection"
-
-  const businessStatus = getBusinessStatus(deliveryType, itemStatus)
-  expect(businessStatus.value()).toEqual("Ready to Dispatch")
+  testBusinessStatusConversion("ReadyForCollection", "Robot Collection", "Ready to Dispatch")
 })
 
 it("should convert a delivery type business status for Delivery required", () => {
-  const itemStatus: itemStatusType = "ReadyForCollection"
-  const deliveryType: deliveryType = "Delivery required"
-
-  const businessStatus = getBusinessStatus(deliveryType, itemStatus)
-  expect(businessStatus.value()).toEqual("Ready to Dispatch")
+  testBusinessStatusConversion("ReadyForCollection", "Delivery required", "Ready to Dispatch")
 })
 
 it("should convert an item status business status for Delivery required", () => {
-  const itemStatus: itemStatusType = "DispensingComplete"
-  const deliveryType: deliveryType = "Delivery required"
-
-  const businessStatus = getBusinessStatus(deliveryType, itemStatus)
-  expect(businessStatus.value()).toEqual("Dispatched")
+  testBusinessStatusConversion("DispensingComplete", "Delivery required", "Dispatched")
 })
