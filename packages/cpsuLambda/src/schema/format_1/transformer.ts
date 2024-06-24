@@ -99,7 +99,16 @@ function populateTemplate(
     )
     return Err(`Invalid business status on item ${prescriptionItem.itemID}`)
   } else {
-    entry.resource!.businessStatus!.coding![0].code = businessStatus.value()
+    const statusValue = businessStatus.value()
+    entry.resource!.businessStatus!.coding![0].code = statusValue
+
+    if (prescriptionDetails.deliveryType === "Robot Collection") {
+      if (prescriptionItem.status === "ReadyForCollection") {
+        entry.resource!.status = "in-progress"
+      } else if (prescriptionItem.status === "DispensingComplete") {
+        entry.resource!.status = "completed"
+      }
+    }
   }
 
   entry.resource!.focus!.identifier!.value = prescriptionItem.itemID
@@ -168,13 +177,13 @@ const BUSINESS_STATUS_MAP: ItemStatusMap = {
   NotDispensed: "Not Dispensed",
   ReadyForCollection: {
     "In-Store Collection": "Ready to Collect",
-    "Robot Collection": "Ready to Collect",
+    "Robot Collection": "Ready to Dispatch",
     "Delivery required": "Ready to Dispatch"
   },
   PartOwed: "With Pharmacy - Preparing Remainder",
   DispensingComplete: {
     "In-Store Collection": "Collected",
-    "Robot Collection": "Collected",
+    "Robot Collection": "Dispatched",
     "Delivery required": "Dispatched"
   }
 }
