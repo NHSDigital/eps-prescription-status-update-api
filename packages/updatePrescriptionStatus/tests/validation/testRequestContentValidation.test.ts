@@ -227,6 +227,7 @@ describe("Unit tests for validation of status against business status", () => {
     ])(
       "When status is 'completed' and business status is '$businessStatus', should return expected issue.",
       ({isValid, businessStatus}) => {
+        console.log(businessStatus, "hello")
         const task = {status: "completed", businessStatus: {coding: [{code: businessStatus}]}}
         const actual = statuses(task as Task)
         const expected = isValid
