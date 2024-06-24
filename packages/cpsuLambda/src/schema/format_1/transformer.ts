@@ -83,7 +83,7 @@ function generateTemplate(requestBody: requestType): string {
   })
 }
 
-function populateTemplate(
+export function populateTemplate(
   template: string,
   prescriptionItem: itemType,
   prescriptionDetails: requestType,
