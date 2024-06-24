@@ -19,14 +19,14 @@ import {Logger} from "@aws-lambda-powertools/logger"
 import {wrap_with_status} from "../../utils"
 import {Md5} from "ts-md5"
 
-export const transformer: Transformer<requestType> = (requestBody, logger) => {
+export const transformer: Transformer<requestType> = (requestBody, logger, headers) => {
   const bundle_entry_template = generateTemplate(requestBody)
 
   return requestBody.items
     .map((item) => populateTemplate(bundle_entry_template, item, requestBody, logger))
     .all_ok()
     .map(bundle_entries)
-    .mapErr(wrap_with_status(400))
+    .mapErr(wrap_with_status(400, headers))
 }
 
 function bundle_entries(entries: Array<BundleEntry<Task>>): Bundle<Task> {
@@ -102,6 +102,7 @@ function populateTemplate(
     entry.resource!.businessStatus!.coding![0].code = businessStatus.value()
   }
 
+  entry.resource!.status = TASK_STATUS_MAP[prescriptionItem.status]
   entry.resource!.focus!.identifier!.value = prescriptionItem.itemID
   entry.resource!.lastModified = prescriptionDetails.messageDate
 
@@ -177,4 +178,15 @@ const BUSINESS_STATUS_MAP: ItemStatusMap = {
     "Robot Collection": "Collected",
     "Delivery required": "Dispatched"
   }
+}
+
+const TASK_STATUS_MAP: Record<itemStatusType, Task["status"]> = {
+  Pending: "in-progress",
+  ReadyForCollection: "in-progress",
+  Owed: "in-progress",
+  PartOwed: "in-progress",
+  Cancelled: "completed",
+  Expired: "completed",
+  NotDispensed: "completed",
+  DispensingComplete: "completed"
 }

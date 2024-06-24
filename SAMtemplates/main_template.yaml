@@ -87,6 +87,8 @@ Resources:
         TruststoreVersion: !Ref TruststoreVersion
         UpdatePrescriptionStatusStateMachineName: !GetAtt StateMachines.Outputs.UpdatePrescriptionStatusStateMachineName
         UpdatePrescriptionStatusStateMachineArn: !GetAtt StateMachines.Outputs.UpdatePrescriptionStatusStateMachineArn
+        Format1UpdatePrescriptionsStatusStateMachineName: !GetAtt StateMachines.Outputs.Format1UpdatePrescriptionsStatusStateMachineName
+        Format1UpdatePrescriptionsStatusStateMachineArn: !GetAtt StateMachines.Outputs.Format1UpdatePrescriptionsStatusStateMachineArn
         StatusFunctionName: !GetAtt Functions.Outputs.StatusFunctionName
         StatusFunctionArn: !GetAtt Functions.Outputs.StatusFunctionArn
         CapabilityStatementFunctionName: !GetAtt Functions.Outputs.CapabilityStatementFunctionName
@@ -117,5 +119,7 @@ Resources:
         StackName: !Ref AWS::StackName
         UpdatePrescriptionStatusFunctionName: !GetAtt Functions.Outputs.UpdatePrescriptionStatusFunctionName
         UpdatePrescriptionStatusFunctionArn: !GetAtt Functions.Outputs.UpdatePrescriptionStatusFunctionArn
+        ConvertRequestToFhirFormatFunctionName: !GetAtt Functions.Outputs.ConvertRequestToFhirFormatFunctionName
+        ConvertRequestToFhirFormatFunctionArn: !GetAtt Functions.Outputs.ConvertRequestToFhirFormatFunctionArn
         LogRetentionInDays: !Ref LogRetentionInDays
         EnableSplunk: !Ref EnableSplunk
