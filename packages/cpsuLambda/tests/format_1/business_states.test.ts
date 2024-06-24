@@ -1,6 +1,6 @@
 import {BundleEntry, Task} from "fhir/r4"
 import {Logger} from "@aws-lambda-powertools/logger"
-import {getBusinessStatus, populateTemplate} from "../../src/schema/format_1/transformer"
+import {generateTemplate, getBusinessStatus, populateTemplate} from "../../src/schema/format_1/transformer"
 import {
   itemType,
   requestType,
@@ -61,6 +61,7 @@ describe("populateTemplate function", () => {
     expectedTaskStatus: string
   ) {
     const template: string = generateTemplate({
+      MessageType: "ExampleMessageType",
       items: [{itemID: "item1", status: itemStatus}],
       prescriptionUUID: "123456789",
       nHSCHI: "123456",
@@ -76,6 +77,7 @@ describe("populateTemplate function", () => {
     }
 
     const prescriptionDetails: requestType = {
+      MessageType: "ExampleMessageType",
       items: [{itemID: "item1", status: itemStatus}],
       prescriptionUUID: "123456789",
       nHSCHI: "123456",
@@ -88,7 +90,7 @@ describe("populateTemplate function", () => {
     const result = populateTemplate(template, prescriptionItem, prescriptionDetails, mockLogger)
 
     if (result.isOk()) {
-      const entry: BundleEntry<Task> = result.value()
+      const entry: BundleEntry<Task> = result.value() as BundleEntry<Task>
       expect(entry.resource!.businessStatus!.coding![0].code).toEqual(expectedBusinessStatus)
       expect(entry.resource!.status).toEqual(expectedTaskStatus)
     }

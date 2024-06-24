@@ -37,7 +37,7 @@ function bundle_entries(entries: Array<BundleEntry<Task>>): Bundle<Task> {
   }
 }
 
-function generateTemplate(requestBody: requestType): string {
+export function generateTemplate(requestBody: requestType): string {
   return JSON.stringify({
     resource: {
       resourceType: "Task",
