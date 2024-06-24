@@ -70,7 +70,8 @@ jobs:
           path: |
             .aws-sam/build
             SAMtemplates/state_machines/UpdatePrescriptionStatusStateMachine.asl.json
-
+            SAMtemplates/state_machines/Format1UpdatePrescriptionsStatusStateMachine.asl.json
+            
       - uses: actions/upload-artifact@v4
         name: Upload python dependency files
         with:

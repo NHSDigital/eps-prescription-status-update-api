@@ -19,14 +19,14 @@ import {Logger} from "@aws-lambda-powertools/logger"
 import {wrap_with_status} from "../../utils"
 import {Md5} from "ts-md5"
 
-export const transformer: Transformer<requestType> = (requestBody, logger) => {
+export const transformer: Transformer<requestType> = (requestBody, logger, headers) => {
   const bundle_entry_template = generateTemplate(requestBody)
 
   return requestBody.items
     .map((item) => populateTemplate(bundle_entry_template, item, requestBody, logger))
     .all_ok()
     .map(bundle_entries)
-    .mapErr(wrap_with_status(400))
+    .mapErr(wrap_with_status(400, headers))
 }
 
 function bundle_entries(entries: Array<BundleEntry<Task>>): Bundle<Task> {
