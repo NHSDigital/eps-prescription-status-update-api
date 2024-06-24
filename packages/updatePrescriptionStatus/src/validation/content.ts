@@ -26,12 +26,12 @@ export const IN_PROGRESS_BUSINESS_STATUSES = [
   "with pharmacy",
   "with pharmacy - preparing remainder",
   "ready to collect",
-  "ready to collect - partial"
+  "ready to collect - partial",
+  "ready to dispatch - partial"
 ]
 
 export const BUSINESS_STATUSES = COMPLETED_BUSINESS_STATUSES.concat(IN_PROGRESS_BUSINESS_STATUSES, [
-  "ready to dispatch",
-  "ready to dispatch - partial"
+  "ready to dispatch"
 ])
 
 export function transactionBundle(body: any): boolean {

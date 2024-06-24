@@ -223,11 +223,10 @@ describe("Unit tests for validation of status against business status", () => {
       {isValid: true, businessStatus: "Not dispensed"},
       {isValid: true, businessStatus: "Dispatched"},
       {isValid: true, businessStatus: "Ready to dispatch"},
-      {isValid: true, businessStatus: "Ready to dispatch - partial"}
+      {isValid: false, businessStatus: "Ready to Dispatch - Partial"}
     ])(
       "When status is 'completed' and business status is '$businessStatus', should return expected issue.",
       ({isValid, businessStatus}) => {
-        console.log(businessStatus, "hello")
         const task = {status: "completed", businessStatus: {coding: [{code: businessStatus}]}}
         const actual = statuses(task as Task)
         const expected = isValid
@@ -245,7 +244,7 @@ describe("Unit tests for validation of status against business status", () => {
       {isValid: true, businessStatus: "Ready to collect"},
       {isValid: true, businessStatus: "Ready to collect - partial"},
       {isValid: true, businessStatus: "Ready to dispatch"},
-      {isValid: true, businessStatus: "Ready to dispatch - partial"},
+      {isValid: true, businessStatus: "Ready to Dispatch - Partial"},
       {isValid: false, businessStatus: "Collected"},
       {isValid: false, businessStatus: "Not dispensed"},
       {isValid: false, businessStatus: "Dispatched"}
