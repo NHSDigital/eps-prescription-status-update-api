@@ -1,4 +1,3 @@
-import {FORMAT_1_PARAMS, format_1_handler} from "../src/cpsu"
 import {format_1} from "../src/schema"
 import mockContext from "./mockContext"
 import format_1_request_json from "./format_1/example_request.json"
@@ -8,6 +7,8 @@ import {MIDDLEWARE} from "../src/middleware"
 import {Logger} from "@aws-lambda-powertools/logger"
 import {jest} from "@jest/globals"
 import {Ok} from "pratica"
+
+const {FORMAT_1_PARAMS, format_1_handler} = await import("../src/cpsu")
 
 const format_1_request = () => {
   return JSON.parse(JSON.stringify(format_1_request_json))
@@ -58,27 +59,42 @@ describe("generic handler", () => {
 })
 
 describe("format_1 handler", () => {
+  beforeAll(() => {
+    jest.useFakeTimers().setSystemTime(new Date("2023-09-11T10:11:12Z"))
+  })
   test("Happy path", async () => {
     const event = {
-      headers: {},
+      headers: {
+        "apigw-request-id": "test-apigw-request-id",
+        "nhsd-correlation-id": "test-nhsd-correlation-id",
+        "nhsd-request-id": "test-nhsd-request-id",
+        "x-correlation-id": "test-x-correlation-id"
+      },
       body: format_1_request()
     }
 
-    const expectedResponse = format_1_response()
+    const expectedResponseBody = format_1_response()
 
     const response = await format_1_handler(event as format_1.eventType, dummyContext)
     const responseBody = JSON.parse(response.body)
 
     expect(response.statusCode).toEqual(200)
-    responseBody.entry[0].fullUrl = expectedResponse.entry[0].fullUrl
-    responseBody.entry[0].resource.id = expectedResponse.entry[0].resource.id
-    responseBody.entry[0].resource.lastModified = expectedResponse.entry[0].resource.lastModified
+    responseBody.entry[0].fullUrl = expectedResponseBody.entry[0].fullUrl
+    responseBody.entry[0].resource.id = expectedResponseBody.entry[0].resource.id
+    responseBody.entry[0].resource.lastModified = expectedResponseBody.entry[0].resource.lastModified
 
-    responseBody.entry[1].fullUrl = expectedResponse.entry[1].fullUrl
-    responseBody.entry[1].resource.id = expectedResponse.entry[1].resource.id
-    responseBody.entry[1].resource.lastModified = expectedResponse.entry[1].resource.lastModified
+    responseBody.entry[1].fullUrl = expectedResponseBody.entry[1].fullUrl
+    responseBody.entry[1].resource.id = expectedResponseBody.entry[1].resource.id
+    responseBody.entry[1].resource.lastModified = expectedResponseBody.entry[1].resource.lastModified
 
-    expect(responseBody).toEqual(expectedResponse)
+    expect(response.headers).toEqual({
+      "apigw-request-id": "test-apigw-request-id",
+      "nhsd-correlation-id": "test-nhsd-correlation-id",
+      "nhsd-request-id": "test-nhsd-request-id",
+      "x-correlation-id": "test-x-correlation-id"
+    })
+
+    expect(responseBody).toEqual(expectedResponseBody)
   })
 
   test("Messages that are not of type 'PrescriptionStatusChanged' are ignored", async () => {
