@@ -195,10 +195,10 @@ export function buildDataItems(
 
     const dataItem: DataItem = {
       LastModified: task.lastModified!,
-      LineItemID: task.focus!.identifier!.value!,
+      LineItemID: task.focus!.identifier!.value!.toUpperCase(),
       PatientNHSNumber: task.for!.identifier!.value!,
-      PharmacyODSCode: task.owner!.identifier!.value!,
-      PrescriptionID: task.basedOn![0].identifier!.value!,
+      PharmacyODSCode: task.owner!.identifier!.value!.toUpperCase(),
+      PrescriptionID: task.basedOn![0].identifier!.value!.toUpperCase(),
       RequestID: xRequestID,
       Status: task.businessStatus!.coding![0].code!,
       TaskID: task.id!,
