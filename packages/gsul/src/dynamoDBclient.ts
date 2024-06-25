@@ -33,15 +33,8 @@ export async function getItemsUpdatesForPrescription(
     return rows
   }
 
-  const items = await getAllData({
-    TableName: tableName,
-    IndexName: "PharmacyODSCodePrescriptionIDIndex",
-    KeyConditionExpression: "PrescriptionID = :inputPrescriptionID AND PharmacyODSCode = :inputPharmacyODSCode",
-    ExpressionAttributeValues: {
-      ":inputPharmacyODSCode": odsCode,
-      ":inputPrescriptionID": prescriptionID
-    }
-  })
+  const queryCommandInput = createQueryCommandInput(odsCode, prescriptionID)
+  const items = await getAllData(queryCommandInput)
 
   return items.map((singleUpdate) => ({
     itemId: String(singleUpdate.LineItemID),
@@ -49,4 +42,16 @@ export async function getItemsUpdatesForPrescription(
     isTerminalState: String(singleUpdate.TerminalStatus),
     lastUpdateDateTime: String(singleUpdate.LastModified)
   }))
+}
+
+export function createQueryCommandInput(odsCode: string, prescriptionID: string): QueryCommandInput {
+  return {
+    TableName: tableName,
+    IndexName: "PharmacyODSCodePrescriptionIDIndex",
+    KeyConditionExpression: "PrescriptionID = :inputPrescriptionID AND PharmacyODSCode = :inputPharmacyODSCode",
+    ExpressionAttributeValues: {
+      ":inputPharmacyODSCode": odsCode.toUpperCase(),
+      ":inputPrescriptionID": prescriptionID.toUpperCase()
+    }
+  }
 }
