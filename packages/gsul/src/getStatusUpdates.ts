@@ -6,28 +6,17 @@ import inputOutputLogger from "@middy/input-output-logger"
 import validator from "@middy/validator"
 import {transpileSchema} from "@middy/validator/transpile"
 import {errorHandler} from "./errorHandler.ts"
-import {getItemsUpdatesForPrescription} from "./dynamoDBclient.ts"
-import {requestSchema, requestType, inputPrescriptionType} from "./schema/request.ts"
+import {requestSchema, inputPrescriptionType} from "./schema/request.ts"
 import {responseType, outputPrescriptionType, itemType} from "./schema/response.ts"
 
 const logger = new Logger({serviceName: "GSUL"})
 
-const lambdaHandler = async (event: requestType): Promise<responseType> => {
-  // there are deliberately no try..catch blocks in this as any errors are caught by custom middy error handler
-  // and an error response is sent
-
-  // this is an async map so it returns an array of promises
-  const itemResults = event.prescriptions.map(async (prescription) => {
-    const queryResult = await getItemsUpdatesForPrescription(prescription.prescriptionID, prescription.odsCode, logger)
-    return buildResult(prescription, queryResult)
-  })
-
-  // wait for all the promises to complete
-  const finalResults = await Promise.all(itemResults)
+const lambdaHandler = async (): Promise<responseType> => {
+  await new Promise((f) => setTimeout(f, 10000))
   const response = {
     schemaVersion: 1,
     isSuccess: true,
-    prescriptions: finalResults
+    prescriptions: []
   }
   return response
 }
