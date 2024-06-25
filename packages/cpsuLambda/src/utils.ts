@@ -57,10 +57,14 @@ String.prototype.windows = function (this: string, size: number): Array<string> 
 
 export {}
 
-export function wrap_with_status(statusCode: number): (body: unknown) => APIGatewayProxyResult {
+export function wrap_with_status(
+  statusCode: number,
+  headers: {[key: string]: string}
+): (body: unknown) => APIGatewayProxyResult {
   return (body) => {
     return {
       statusCode: statusCode,
+      headers: headers,
       body: JSON.stringify(body)
     }
   }

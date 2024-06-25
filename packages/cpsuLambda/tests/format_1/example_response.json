@@ -23,6 +23,7 @@
             }
           }
         ],
+        "status": "in-progress",
         "businessStatus": {
           "coding": [
             {
@@ -78,6 +79,7 @@
             }
           }
         ],
+        "status": "in-progress",
         "businessStatus": {
           "coding": [
             {
