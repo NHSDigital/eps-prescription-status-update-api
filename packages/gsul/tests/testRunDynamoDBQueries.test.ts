@@ -1,5 +1,5 @@
 import {DynamoDBDocumentClient} from "@aws-sdk/lib-dynamodb"
-import {getItemsUpdatesForPrescription} from "../src/dynamoDBclient"
+import {createQueryCommandInput, getItemsUpdatesForPrescription} from "../src/dynamoDBclient"
 import {Logger} from "@aws-lambda-powertools/logger"
 import {
   expect,
@@ -41,6 +41,22 @@ describe("testing dynamoDBClient", () => {
         lastUpdateDateTime: "1970-01-01T00:00:00Z"
       }
     ])
+  })
+
+  it("should create query command input with keys in upper case", async () => {
+    const queryCommandInput = createQueryCommandInput("odsCode", "prescriptionID")
+
+    const expected = {
+      TableName: undefined,
+      IndexName: "PharmacyODSCodePrescriptionIDIndex",
+      KeyConditionExpression: "PrescriptionID = :inputPrescriptionID AND PharmacyODSCode = :inputPharmacyODSCode",
+      ExpressionAttributeValues: {
+        ":inputPharmacyODSCode": "ODSCODE",
+        ":inputPrescriptionID": "PRESCRIPTIONID"
+      }
+    }
+
+    expect(queryCommandInput).toEqual(expected)
   })
 })
 
