@@ -75,6 +75,7 @@ fi
 # Find and replace securitySchemes
 if [[ "${DEPLOY_CHECK_PRESCRIPTION_STATUS_UPDATE}" == "false" ]]; then
     if [[ "${API_TYPE}" == "standard" ]]; then
+        echo "Removing checkprescriptionstatusupdates endpoint"
         jq 'del(.paths."/checkprescriptionstatusupdates")' "$SPEC_PATH" > temp.json && mv temp.json "$SPEC_PATH"
     fi
 fi
