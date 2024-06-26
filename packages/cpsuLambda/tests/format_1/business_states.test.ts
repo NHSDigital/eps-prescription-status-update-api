@@ -11,7 +11,7 @@ import {
 interface BusinessStatusTestCase {
   itemStatus: itemStatusType
   deliveryType: deliveryType
-  expectedStatus: string | null
+  expectedStatus: string
 }
 
 interface PopulateTemplateTestCase {
@@ -25,7 +25,7 @@ describe("getBusinessStatus function", () => {
   const testCases: Array<BusinessStatusTestCase> = [
     {itemStatus: "ReadyForCollection", deliveryType: "Robot Collection", expectedStatus: "Ready to Dispatch"},
     {itemStatus: "NotDispensed", deliveryType: "Robot Collection", expectedStatus: "Not Dispensed"},
-    {itemStatus: "Expired", deliveryType: "Robot Collection", expectedStatus: null},
+    {itemStatus: "Expired", deliveryType: "Robot Collection", expectedStatus: "Not Dispensed"},
     {itemStatus: "DispensingComplete", deliveryType: "Robot Collection", expectedStatus: "Dispatched"},
     {itemStatus: "ReadyForCollection", deliveryType: "Delivery required", expectedStatus: "Ready to Dispatch"},
     {itemStatus: "DispensingComplete", deliveryType: "Delivery required", expectedStatus: "Dispatched"}
@@ -34,22 +34,12 @@ describe("getBusinessStatus function", () => {
   testCases.forEach(({itemStatus, deliveryType, expectedStatus}) => {
     it(`should convert itemStatus: ${itemStatus} and deliveryType: ${deliveryType} to ${expectedStatus}`, () => {
       const businessStatus = getBusinessStatus(deliveryType, itemStatus)
-      if (expectedStatus) {
-        expect(businessStatus.value()).toEqual(expectedStatus)
-      } else {
-        expect(businessStatus.isNothing()).toBeTruthy()
-      }
+      expect(businessStatus).toEqual(expectedStatus)
     })
   })
 })
 
 describe("populateTemplate function", () => {
-  let mockLogger: Logger
-
-  beforeEach(() => {
-    mockLogger = new Logger()
-  })
-
   const testCases: Array<PopulateTemplateTestCase> = [
     {
       itemStatus: "ReadyForCollection",
@@ -94,7 +84,7 @@ describe("populateTemplate function", () => {
         repeatNo: 1
       }
 
-      const result = populateTemplate(template, prescriptionItem, prescriptionDetails, mockLogger)
+      const result = populateTemplate(template, prescriptionItem, prescriptionDetails)
 
       if (result.isOk()) {
         const entry: BundleEntry<Task> = result.value() as BundleEntry<Task>
