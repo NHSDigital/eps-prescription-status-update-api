@@ -101,14 +101,6 @@ export function populateTemplate(
   } else {
     const statusValue = businessStatus.value()
     entry.resource!.businessStatus!.coding![0].code = statusValue
-
-    if (prescriptionDetails.deliveryType === "Robot Collection") {
-      if (prescriptionItem.status === "ReadyForCollection") {
-        entry.resource!.status = "in-progress"
-      } else if (prescriptionItem.status === "DispensingComplete") {
-        entry.resource!.status = "completed"
-      }
-    }
   }
 
   entry.resource!.status = TASK_STATUS_MAP[prescriptionItem.status]
