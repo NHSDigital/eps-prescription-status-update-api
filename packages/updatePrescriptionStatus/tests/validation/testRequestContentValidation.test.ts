@@ -213,23 +213,22 @@ describe("Unit tests for validation of NHS number", () => {
 describe("Unit tests for validation of status against business status", () => {
   describe("When task status is 'completed'", () => {
     it.each([
-      // {isValid: false, businessStatus: "With Pharmacy"},
-      // {isValid: false, businessStatus: "With Pharmacy - preparing remainder"},
-      // {isValid: false, businessStatus: "Ready to collect - partial"},
-      // {isValid: false, businessStatus: "rEaDy To ColLEcT - pArtIAl"},
-      // {isValid: true, businessStatus: "Ready to collect"},
-      // {isValid: true, businessStatus: "ReAdY tO cOlLeCt"},
-      // {isValid: true, businessStatus: "Collected"},
-      // {isValid: true, businessStatus: "Not dispensed"},
-      // {isValid: true, businessStatus: "Dispatched"},
-      // {isValid: true, businessStatus: "Ready to dispatch"},
+      {isValid: false, businessStatus: "With Pharmacy"},
+      {isValid: false, businessStatus: "With Pharmacy - preparing remainder"},
+      {isValid: false, businessStatus: "Ready to collect - partial"},
+      {isValid: false, businessStatus: "rEaDy To ColLEcT - pArtIAl"},
+      {isValid: true, businessStatus: "Ready to collect"},
+      {isValid: true, businessStatus: "ReAdY tO cOlLeCt"},
+      {isValid: true, businessStatus: "Collected"},
+      {isValid: true, businessStatus: "Not dispensed"},
+      {isValid: true, businessStatus: "Dispatched"},
+      {isValid: true, businessStatus: "Ready to dispatch"},
       {isValid: false, businessStatus: "Ready to Dispatch - Partial"}
     ])(
       "When status is 'completed' and business status is '$businessStatus', should return expected issue.",
       ({isValid, businessStatus}) => {
         const task = {status: "completed", businessStatus: {coding: [{code: businessStatus}]}}
         const actual = validateTaskStatusAgainstBusinessStatus(task as Task)
-        console.log(actual, "**************")
         const expected = isValid
           ? undefined
           : `Task.status field set to 'completed' but Task.businessStatus value of '${businessStatus}' requires follow up action.`
