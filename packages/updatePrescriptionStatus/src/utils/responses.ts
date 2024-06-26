@@ -77,7 +77,6 @@ export function accepted(fullUrl: string): BundleEntry {
 }
 
 function created(fullUrl: string): BundleEntry {
-  console.log(fullUrl)
   return {
     fullUrl: fullUrl,
     response: {
