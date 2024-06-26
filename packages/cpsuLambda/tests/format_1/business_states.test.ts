@@ -1,5 +1,4 @@
 import {BundleEntry, Task} from "fhir/r4"
-import {Logger} from "@aws-lambda-powertools/logger"
 import {generateTemplate, getBusinessStatus, populateTemplate} from "../../src/schema/format_1/transformer"
 import {
   itemType,
