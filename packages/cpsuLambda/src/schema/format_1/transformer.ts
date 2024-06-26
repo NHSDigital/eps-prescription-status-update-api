@@ -29,7 +29,7 @@ function bundle_entries(entries: Array<BundleEntry<Task>>): Bundle<Task> {
   }
 }
 
-function generateTemplate(requestBody: requestType): string {
+export function generateTemplate(requestBody: requestType): string {
   return JSON.stringify({
     resource: {
       resourceType: "Task",
@@ -75,7 +75,7 @@ function generateTemplate(requestBody: requestType): string {
   })
 }
 
-function populateTemplate(
+export function populateTemplate(
   template: string,
   prescriptionItem: itemType,
   prescriptionDetails: requestType
@@ -155,14 +155,14 @@ const BUSINESS_STATUS_MAP: ItemStatusMap = {
   ReadyForCollection: {
     "Not known": "Ready to Collect",
     "In-Store Collection": "Ready to Collect",
-    "Robot Collection": "Ready to Collect",
+    "Robot Collection": "Ready to Dispatch",
     "Delivery required": "Ready to Dispatch"
   },
   PartOwed: "With Pharmacy - Preparing Remainder",
   DispensingComplete: {
     "Not known": "Collected",
     "In-Store Collection": "Collected",
-    "Robot Collection": "Collected",
+    "Robot Collection": "Dispatched",
     "Delivery required": "Dispatched"
   }
 }

@@ -1,26 +1,95 @@
-import {deliveryType, itemStatusType} from "../../src/schema/format_1"
-import {getBusinessStatus} from "../../src/schema/format_1/transformer"
+import {BundleEntry, Task} from "fhir/r4"
+import {generateTemplate, getBusinessStatus, populateTemplate} from "../../src/schema/format_1/transformer"
+import {
+  itemType,
+  requestType,
+  deliveryType,
+  itemStatusType
+} from "../../src/schema/format_1"
 
-it("should convert a delivery type business status", () => {
-  const itemStatus: itemStatusType = "ReadyForCollection"
-  const deliveryType: deliveryType = "Robot Collection"
+interface BusinessStatusTestCase {
+  itemStatus: itemStatusType
+  deliveryType: deliveryType
+  expectedStatus: string
+}
 
-  const businessStatus = getBusinessStatus(deliveryType, itemStatus)
-  expect(businessStatus).toEqual("Ready to Collect")
+interface PopulateTemplateTestCase {
+  itemStatus: itemStatusType
+  deliveryType: deliveryType
+  expectedBusinessStatus: string
+  expectedTaskStatus: string
+}
+
+describe("getBusinessStatus function", () => {
+  const testCases: Array<BusinessStatusTestCase> = [
+    {itemStatus: "ReadyForCollection", deliveryType: "Robot Collection", expectedStatus: "Ready to Dispatch"},
+    {itemStatus: "NotDispensed", deliveryType: "Robot Collection", expectedStatus: "Not Dispensed"},
+    {itemStatus: "Expired", deliveryType: "Robot Collection", expectedStatus: "Not Dispensed"},
+    {itemStatus: "DispensingComplete", deliveryType: "Robot Collection", expectedStatus: "Dispatched"},
+    {itemStatus: "ReadyForCollection", deliveryType: "Delivery required", expectedStatus: "Ready to Dispatch"},
+    {itemStatus: "DispensingComplete", deliveryType: "Delivery required", expectedStatus: "Dispatched"}
+  ]
+
+  testCases.forEach(({itemStatus, deliveryType, expectedStatus}) => {
+    it(`should convert itemStatus: ${itemStatus} and deliveryType: ${deliveryType} to ${expectedStatus}`, () => {
+      const businessStatus = getBusinessStatus(deliveryType, itemStatus)
+      expect(businessStatus).toEqual(expectedStatus)
+    })
+  })
 })
 
-it("should convert an item status business status", () => {
-  const itemStatus: itemStatusType = "NotDispensed"
-  const deliveryType: deliveryType = "Robot Collection"
+describe("populateTemplate function", () => {
+  const testCases: Array<PopulateTemplateTestCase> = [
+    {
+      itemStatus: "ReadyForCollection",
+      deliveryType: "Robot Collection",
+      expectedBusinessStatus: "Ready to Dispatch",
+      expectedTaskStatus: "in-progress"
+    },
+    {
+      itemStatus: "DispensingComplete",
+      deliveryType: "Robot Collection",
+      expectedBusinessStatus: "Dispatched",
+      expectedTaskStatus: "completed"
+    }
+  ]
 
-  const businessStatus = getBusinessStatus(deliveryType, itemStatus)
-  expect(businessStatus).toEqual("Not Dispensed")
-})
+  testCases.forEach(({itemStatus, deliveryType, expectedBusinessStatus, expectedTaskStatus}) => {
+    it(`should populate template correctly for itemStatus: ${itemStatus} and deliveryType: ${deliveryType}`, () => {
+      const template: string = generateTemplate({
+        MessageType: "ExampleMessageType",
+        items: [{itemID: "item1", status: itemStatus}],
+        prescriptionUUID: "123456789",
+        nHSCHI: "123456",
+        messageDate: new Date().toISOString(),
+        oDSCode: "XYZ",
+        deliveryType: deliveryType,
+        repeatNo: 1
+      })
 
-it("should map the Expired status", () => {
-  const itemStatus: itemStatusType = "Expired"
-  const deliveryType: deliveryType = "Robot Collection"
+      const prescriptionItem: itemType = {
+        itemID: "item1",
+        status: itemStatus
+      }
 
-  const businessStatus = getBusinessStatus(deliveryType, itemStatus)
-  expect(businessStatus).toEqual("Not Dispensed")
+      const prescriptionDetails: requestType = {
+        MessageType: "ExampleMessageType",
+        items: [{itemID: "item1", status: itemStatus}],
+        prescriptionUUID: "123456789",
+        nHSCHI: "123456",
+        messageDate: new Date().toISOString(),
+        oDSCode: "XYZ",
+        deliveryType: deliveryType,
+        repeatNo: 1
+      }
+
+      const result = populateTemplate(template, prescriptionItem, prescriptionDetails)
+
+      if (result.isOk()) {
+        const entry: BundleEntry<Task> = result.value() as BundleEntry<Task>
+        expect(entry.resource!.businessStatus!.coding![0].code).toEqual(expectedBusinessStatus)
+        expect(entry.resource!.status).toEqual(expectedTaskStatus)
+      }
+    })
+  })
 })
