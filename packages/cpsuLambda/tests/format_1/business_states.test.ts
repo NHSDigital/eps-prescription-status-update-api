@@ -6,7 +6,7 @@ it("should convert a delivery type business status", () => {
   const deliveryType: deliveryType = "Robot Collection"
 
   const businessStatus = getBusinessStatus(deliveryType, itemStatus)
-  expect(businessStatus.value()).toEqual("Ready to Collect")
+  expect(businessStatus).toEqual("Ready to Collect")
 })
 
 it("should convert an item status business status", () => {
@@ -14,13 +14,13 @@ it("should convert an item status business status", () => {
   const deliveryType: deliveryType = "Robot Collection"
 
   const businessStatus = getBusinessStatus(deliveryType, itemStatus)
-  expect(businessStatus.value()).toEqual("Not Dispensed")
+  expect(businessStatus).toEqual("Not Dispensed")
 })
 
-it("should return Nothing if the item status is not in the map", () => {
+it("should map the Expired status", () => {
   const itemStatus: itemStatusType = "Expired"
   const deliveryType: deliveryType = "Robot Collection"
 
   const businessStatus = getBusinessStatus(deliveryType, itemStatus)
-  expect(businessStatus.isNothing()).toBeTruthy()
+  expect(businessStatus).toEqual("Not Dispensed")
 })

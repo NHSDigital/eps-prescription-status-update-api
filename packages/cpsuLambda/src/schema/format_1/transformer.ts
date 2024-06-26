@@ -5,25 +5,17 @@ import {
   requestType,
   deliveryType
 } from "./request"
-import {
-  Err,
-  Just,
-  Maybe,
-  Ok,
-  Result,
-  get
-} from "pratica"
+import {Ok, Result} from "pratica"
 import {v4 as uuidv4} from "uuid"
 import {Transformer} from "../../handler"
-import {Logger} from "@aws-lambda-powertools/logger"
 import {wrap_with_status} from "../../utils"
 import {Md5} from "ts-md5"
 
-export const transformer: Transformer<requestType> = (requestBody, logger, headers) => {
+export const transformer: Transformer<requestType> = (requestBody, _logger, headers) => {
   const bundle_entry_template = generateTemplate(requestBody)
 
   return requestBody.items
-    .map((item) => populateTemplate(bundle_entry_template, item, requestBody, logger))
+    .map((item) => populateTemplate(bundle_entry_template, item, requestBody))
     .all_ok()
     .map(bundle_entries)
     .mapErr(wrap_with_status(400, headers))
@@ -86,22 +78,13 @@ function generateTemplate(requestBody: requestType): string {
 function populateTemplate(
   template: string,
   prescriptionItem: itemType,
-  prescriptionDetails: requestType,
-  logger: Logger
+  prescriptionDetails: requestType
 ): Result<BundleEntry<Task>, string> {
   const entry = JSON.parse(template) as BundleEntry<Task>
 
   const businessStatus = getBusinessStatus(prescriptionDetails.deliveryType, prescriptionItem.status)
-  if (businessStatus.isNothing()) {
-    logger.info(
-      `Invalid business status on item ${prescriptionItem.itemID}.` +
-        `Unable to map delivery type ${prescriptionDetails.deliveryType} and item status ${prescriptionItem.status}`
-    )
-    return Err(`Invalid business status on item ${prescriptionItem.itemID}`)
-  } else {
-    entry.resource!.businessStatus!.coding![0].code = businessStatus.value()
-  }
 
+  entry.resource!.businessStatus!.coding![0].code = businessStatus
   entry.resource!.status = TASK_STATUS_MAP[prescriptionItem.status]
   entry.resource!.focus!.identifier!.value = prescriptionItem.itemID
   entry.resource!.lastModified = prescriptionDetails.messageDate
@@ -153,27 +136,31 @@ function generate_uuid(prescriptionItem: itemType, prescriptionDetails: requestT
   return uuidv4({random: seed})
 }
 
-export function getBusinessStatus(deliveryType: deliveryType, itemStatus: itemStatusType): Maybe<string> {
-  return get([itemStatus])(BUSINESS_STATUS_MAP).chain((status) => {
-    if (typeof status === "string") {
-      return Just(status)
-    }
-    return get([deliveryType])(status) as Maybe<string>
-  })
+export function getBusinessStatus(deliveryType: deliveryType, itemStatus: itemStatusType): string {
+  let status = BUSINESS_STATUS_MAP[itemStatus]
+  if (typeof status === "string") {
+    return status
+  }
+  return status[deliveryType]
 }
 
-type DeliveryTypeMap = Partial<Record<deliveryType, string>>
-type ItemStatusMap = Partial<Record<itemStatusType, string | DeliveryTypeMap>>
+type DeliveryTypeMap = Record<deliveryType, string>
+type ItemStatusMap = Record<itemStatusType, string | DeliveryTypeMap>
 const BUSINESS_STATUS_MAP: ItemStatusMap = {
   Pending: "With Pharmacy",
+  Owed: "With Pharmacy",
   NotDispensed: "Not Dispensed",
+  Cancelled: "Not Dispensed",
+  Expired: "Not Dispensed",
   ReadyForCollection: {
+    "Not known": "Ready to Collect",
     "In-Store Collection": "Ready to Collect",
     "Robot Collection": "Ready to Collect",
     "Delivery required": "Ready to Dispatch"
   },
   PartOwed: "With Pharmacy - Preparing Remainder",
   DispensingComplete: {
+    "Not known": "Collected",
     "In-Store Collection": "Collected",
     "Robot Collection": "Collected",
     "Delivery required": "Dispatched"
