@@ -24,9 +24,10 @@ const COMPLETED_ONLY_BUSINESS_STATUSES = ["collected", "not dispensed", "dispatc
 const IN_PROGRESS_ONLY_BUSINESS_STATUSES = [
   "with pharmacy",
   "with pharmacy - preparing remainder",
-  "ready to collect - partial"
+  "ready to collect - partial",
+  "ready to dispatch - partial"
 ]
-const AGNOSTIC_BUSINESS_STATUSES = ["ready to dispatch", "ready to dispatch - partial", "ready to collect"]
+const AGNOSTIC_BUSINESS_STATUSES = ["ready to dispatch", "ready to collect"]
 
 export const BUSINESS_STATUSES = COMPLETED_ONLY_BUSINESS_STATUSES.concat(IN_PROGRESS_ONLY_BUSINESS_STATUSES).concat(
   AGNOSTIC_BUSINESS_STATUSES
@@ -108,7 +109,7 @@ export function businessStatus(task: Task): string | undefined {
   }
 }
 
-export function statuses(task: Task): string | undefined {
+export function taskStatusAgainstBusinessStatus(task: Task): string | undefined {
   const status = task.status
   const businessStatus: string = task.businessStatus!.coding![0].code!
   const lowercaseCode = businessStatus.toLowerCase()
@@ -138,7 +139,7 @@ export function taskContent(task: Task): Array<string> {
     nhsNumber,
     prescriptionID,
     resourceType,
-    statuses,
+    taskStatusAgainstBusinessStatus,
     codeSystems
   ]
 
