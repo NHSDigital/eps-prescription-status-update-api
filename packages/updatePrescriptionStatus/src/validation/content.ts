@@ -24,7 +24,6 @@ const COMPLETED_ONLY_BUSINESS_STATUSES = ["collected", "not dispensed", "dispatc
 const IN_PROGRESS_ONLY_BUSINESS_STATUSES = [
   "with pharmacy",
   "with pharmacy - preparing remainder",
-  "ready to collect",
   "ready to collect - partial",
   "ready to dispatch - partial"
 ]
