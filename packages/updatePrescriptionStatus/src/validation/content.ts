@@ -110,7 +110,7 @@ export function businessStatus(task: Task): string | undefined {
   }
 }
 
-export function validateTaskStatusAgainstBusinessStatus(task: Task): string | undefined {
+export function taskStatusAgainstBusinessStatus(task: Task): string | undefined {
   const status = task.status
   const businessStatus: string = task.businessStatus!.coding![0].code!
   const lowercaseCode = businessStatus.toLowerCase()
@@ -140,7 +140,7 @@ export function taskContent(task: Task): Array<string> {
     nhsNumber,
     prescriptionID,
     resourceType,
-    validateTaskStatusAgainstBusinessStatus,
+    taskStatusAgainstBusinessStatus,
     codeSystems
   ]
 

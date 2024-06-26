@@ -137,7 +137,7 @@ function generate_uuid(prescriptionItem: itemType, prescriptionDetails: requestT
 }
 
 export function getBusinessStatus(deliveryType: deliveryType, itemStatus: itemStatusType): string {
-  let status = BUSINESS_STATUS_MAP[itemStatus]
+  const status = BUSINESS_STATUS_MAP[itemStatus]
   if (typeof status === "string") {
     return status
   }

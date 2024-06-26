@@ -17,7 +17,7 @@ import {
   ONE_DAY_IN_MS,
   prescriptionID,
   resourceType,
-  validateTaskStatusAgainstBusinessStatus,
+  taskStatusAgainstBusinessStatus,
   transactionBundle,
   taskContent,
   validateEntry,
@@ -228,7 +228,7 @@ describe("Unit tests for validation of status against business status", () => {
       "When status is 'completed' and business status is '$businessStatus', should return expected issue.",
       ({isValid, businessStatus}) => {
         const task = {status: "completed", businessStatus: {coding: [{code: businessStatus}]}}
-        const actual = validateTaskStatusAgainstBusinessStatus(task as Task)
+        const actual = taskStatusAgainstBusinessStatus(task as Task)
         const expected = isValid
           ? undefined
           : `Task.status field set to 'completed' but Task.businessStatus value of '${businessStatus}' requires follow up action.`
@@ -252,7 +252,7 @@ describe("Unit tests for validation of status against business status", () => {
       "When status is 'in-progress' and business status is '$businessStatus', should return expected issue.",
       ({isValid, businessStatus}) => {
         const task = {status: "in-progress", businessStatus: {coding: [{code: businessStatus}]}}
-        const actual = validateTaskStatusAgainstBusinessStatus(task as Task)
+        const actual = taskStatusAgainstBusinessStatus(task as Task)
         const expected = isValid
           ? undefined
           : `Task.status field set to 'in-progress' but Task.businessStatus value of '${businessStatus}' has no possible follow up action.`
@@ -269,7 +269,7 @@ describe("Unit tests for validation of status against business status", () => {
       "When status is '$status' and business status is '$businessStatus', should return unsupported issue.",
       ({status, businessStatus}) => {
         const task = {status, businessStatus: {coding: [{code: businessStatus}]}}
-        const actual = validateTaskStatusAgainstBusinessStatus(task as Task)
+        const actual = taskStatusAgainstBusinessStatus(task as Task)
         const expected = `Unsupported Task.businessStatus '${businessStatus}'.`
         expect(actual).toEqual(expected)
       }
