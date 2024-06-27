@@ -107,7 +107,7 @@ describe("format_1 handler", () => {
     }
 
     const logger = new Logger({serviceName: "testService"})
-    const logger_info = jest.spyOn(logger, "info")
+    const logger_warn = jest.spyOn(logger, "warn")
 
     const handler = newHandler({
       params: FORMAT_1_PARAMS,
@@ -119,7 +119,55 @@ describe("format_1 handler", () => {
     const response = await handler(event as format_1.eventType, dummyContext)
     expect(response.statusCode).toEqual(202)
     expect(JSON.parse(response.body)).toEqual("Message Ignored")
-    expect(logger_info).toHaveBeenCalledWith("Message Ignored")
+    expect(logger_warn).toHaveBeenCalledWith("Message of type 'NOTPrescriptionStatusChanged' Ignored")
+  })
+
+  test("Messages with non NHSEngland number are ignored", async () => {
+    const body = format_1_request()
+    body.nHSCHI = "1996344668"
+
+    const event = {
+      headers: {},
+      body
+    }
+
+    const logger = new Logger({serviceName: "testService"})
+    const logger_warn = jest.spyOn(logger, "warn")
+
+    const handler = newHandler({
+      params: FORMAT_1_PARAMS,
+      middleware: [MIDDLEWARE.validator, MIDDLEWARE.validationErrorHandler],
+      logger: logger,
+      schema: format_1.eventSchema
+    })
+
+    const response = await handler(event as format_1.eventType, dummyContext)
+    expect(response.statusCode).toEqual(202)
+    expect(JSON.parse(response.body)).toEqual("Message Ignored")
+    expect(logger_warn).toHaveBeenCalledWith("Message with nHSCHI number '1996344668' Ignored")
+  })
+
+  // PSU will validate the NHS number so pass it through and let the PSU provide the error message
+  test("Messages with invalid NHS number are passed through", async () => {
+    const body = format_1_request()
+    body.nHSCHI = "notanumber"
+
+    const event = {
+      headers: {},
+      body
+    }
+
+    const logger = new Logger({serviceName: "testService"})
+
+    const handler = newHandler({
+      params: FORMAT_1_PARAMS,
+      middleware: [MIDDLEWARE.validator, MIDDLEWARE.validationErrorHandler],
+      logger: logger,
+      schema: format_1.eventSchema
+    })
+
+    const response = await handler(event as format_1.eventType, dummyContext)
+    expect(response.statusCode).toEqual(200)
   })
 
   test("Message missing field receives 400 and appropriate message", async () => {

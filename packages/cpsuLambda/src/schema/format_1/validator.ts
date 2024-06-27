@@ -12,7 +12,13 @@ export const validator: Validator<eventType, requestType> = (event, logger: Logg
   const requestBody = event.body
 
   if (requestBody.MessageType !== "PrescriptionStatusChanged") {
-    logger.info("Message Ignored")
+    logger.warn(`Message of type '${requestBody.MessageType}' Ignored`)
+    return Err(wrap_with_status(202, {})("Message Ignored"))
+  }
+
+  const nhsNumber = parseInt(requestBody.nHSCHI)
+  if (nhsNumber >= 101000000 && nhsNumber < 3113000000) {
+    logger.warn(`Message with nHSCHI number '${nhsNumber}' Ignored`)
     return Err(wrap_with_status(202, {})("Message Ignored"))
   }
 
