@@ -97,15 +97,7 @@ describe("format_1 handler", () => {
     expect(responseBody).toEqual(expectedResponseBody)
   })
 
-  test("Messages that are not of type 'PrescriptionStatusChanged' are ignored", async () => {
-    const body = format_1_request()
-    body.MessageType = "NOTPrescriptionStatusChanged"
-
-    const event = {
-      headers: {},
-      body
-    }
-
+  function mockedWarnHandler() {
     const logger = new Logger({serviceName: "testService"})
     const logger_warn = jest.spyOn(logger, "warn")
 
@@ -115,6 +107,19 @@ describe("format_1 handler", () => {
       logger: logger,
       schema: format_1.eventSchema
     })
+
+    return {handler, logger_warn}
+  }
+
+  test("Messages that are not of type 'PrescriptionStatusChanged' are ignored", async () => {
+    const body = format_1_request()
+    body.MessageType = "NOTPrescriptionStatusChanged"
+
+    const {handler, logger_warn} = mockedWarnHandler()
+    const event = {
+      headers: {},
+      body
+    }
 
     const response = await handler(event as format_1.eventType, dummyContext)
     expect(response.statusCode).toEqual(202)
@@ -126,20 +131,11 @@ describe("format_1 handler", () => {
     const body = format_1_request()
     body.nHSCHI = "1996344668"
 
+    const {handler, logger_warn} = mockedWarnHandler()
     const event = {
       headers: {},
       body
     }
-
-    const logger = new Logger({serviceName: "testService"})
-    const logger_warn = jest.spyOn(logger, "warn")
-
-    const handler = newHandler({
-      params: FORMAT_1_PARAMS,
-      middleware: [MIDDLEWARE.validator, MIDDLEWARE.validationErrorHandler],
-      logger: logger,
-      schema: format_1.eventSchema
-    })
 
     const response = await handler(event as format_1.eventType, dummyContext)
     expect(response.statusCode).toEqual(202)
@@ -157,16 +153,7 @@ describe("format_1 handler", () => {
       body
     }
 
-    const logger = new Logger({serviceName: "testService"})
-
-    const handler = newHandler({
-      params: FORMAT_1_PARAMS,
-      middleware: [MIDDLEWARE.validator, MIDDLEWARE.validationErrorHandler],
-      logger: logger,
-      schema: format_1.eventSchema
-    })
-
-    const response = await handler(event as format_1.eventType, dummyContext)
+    const response = await format_1_handler(event as format_1.eventType, dummyContext)
     expect(response.statusCode).toEqual(200)
   })
 
