@@ -9,15 +9,15 @@ const mockAPIGatewayProxyEvent = {
     "x-correlation-id": "test-correlation-id"
   },
   isBase64Encoded: false,
-  multiValueHeaders: { },
-  multiValueQueryStringParameters: { },
+  multiValueHeaders: {},
+  multiValueQueryStringParameters: {},
   path: "/hello",
-  pathParameters: { },
-  queryStringParameters: { },
+  pathParameters: {},
+  queryStringParameters: {},
   requestContext: {
     accountId: "123456789012",
     apiId: "1234",
-    authorizer: { },
+    authorizer: {},
     httpMethod: "POST",
     identity: {
       accessKey: "",
@@ -54,7 +54,7 @@ const mockAPIGatewayProxyEvent = {
     stage: "dev"
   },
   resource: "",
-  stageVariables: { }
+  stageVariables: {}
 }
 
-module.exports = mockAPIGatewayProxyEvent
+export {mockAPIGatewayProxyEvent}

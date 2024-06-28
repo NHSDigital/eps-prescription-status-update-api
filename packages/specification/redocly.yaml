@@ -1,0 +1,5 @@
+apis:
+  psu:
+    root: ./eps-prescription-status-update-api.yaml
+  cpsu:
+    root: ./eps-custom-prescription-status-update-api.yaml

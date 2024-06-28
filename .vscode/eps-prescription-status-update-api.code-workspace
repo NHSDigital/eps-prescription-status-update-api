@@ -31,10 +31,26 @@
     {
       "name": "packages/capabilityStatement",
       "path": "../packages/capabilityStatement"
+    },
+    {
+      "name": "packages/checkPrescriptionStatusUpdates",
+      "path": "../packages/checkPrescriptionStatusUpdates"
+    },
+    {
+      "name": "packages/common/testing",
+      "path": "../packages/common/testing"
+    },
+    {
+      "name": "packages/common/middyErrorHandler",
+      "path": "../packages/common/middyErrorHandler"
     }
   ],
   "settings": {
-    "jest.disabledWorkspaceFolders": ["eps-prescription-status-update-monorepo"],
+    "jest.disabledWorkspaceFolders": [
+      "eps-prescription-status-update-monorepo",
+      "packages/common/testing",
+      "packages/specification"
+    ],
     "files.exclude": {
       "packages/": true
     },

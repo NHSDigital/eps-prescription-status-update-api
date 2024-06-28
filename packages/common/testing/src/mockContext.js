@@ -1,4 +1,4 @@
-const helloworldContext = {
+const mockContext = {
   callbackWaitsForEmptyEventLoop: true,
   functionVersion: "$LATEST",
   functionName: "foo-bar-function",
@@ -13,4 +13,4 @@ const helloworldContext = {
   succeed: () => console.log("Succeeded!")
 }
 
-export {helloworldContext}
+export {mockContext}
