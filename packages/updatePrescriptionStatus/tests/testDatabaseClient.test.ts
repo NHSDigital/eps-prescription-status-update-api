@@ -7,9 +7,12 @@ import {
 
 import {TransactionCanceledException} from "@aws-sdk/client-dynamodb"
 import {mockDynamoDBClient} from "./utils/testUtils"
+import {Logger} from "@aws-lambda-powertools/logger"
 
 const {mockSend} = mockDynamoDBClient()
-const {persistDataItems, logger} = await import("../src/utils/databaseClient")
+const {persistDataItems} = await import("../src/utils/databaseClient")
+
+const logger = new Logger({serviceName: "updatePrescriptionStatus_TEST"})
 
 describe("Unit test persistDataItems", () => {
   beforeEach(() => {
@@ -53,7 +56,7 @@ describe("Unit test persistDataItems", () => {
     )
     const loggerSpy = jest.spyOn(logger, "error")
 
-    await expect(persistDataItems(dataItems)).rejects.toThrow(
+    await expect(persistDataItems(dataItems, logger)).rejects.toThrow(
       new TransactionCanceledException({
         $metadata: {},
         message: "DynamoDB transaction cancelled due to conditional check failure.",
