@@ -129,7 +129,7 @@ Resources:
     Condition: EnableDynamoDBAutoScalingCondition
     Properties:
       MaxCapacity: 200
-      MinCapacity: 1
+      MinCapacity: 100
       ResourceId: !Sub table/${PrescriptionStatusUpdatesTable}
       RoleARN: !GetAtt DynamoDbScalingRole.Arn
       ScalableDimension: "dynamodb:table:WriteCapacityUnits"
@@ -181,7 +181,7 @@ Resources:
     Condition: EnableDynamoDBAutoScalingCondition
     Properties:
       MaxCapacity: 200
-      MinCapacity: 1
+      MinCapacity: 100
       ResourceId: !Sub table/${PrescriptionStatusUpdatesTable}/index/PharmacyODSCodePrescriptionIDIndex
       RoleARN: !GetAtt DynamoDbScalingRole.Arn
       ScalableDimension: "dynamodb:index:WriteCapacityUnits"
@@ -232,8 +232,8 @@ Resources:
     DependsOn: PrescriptionStatusUpdatesTable
     Condition: EnableDynamoDBAutoScalingCondition
     Properties:
-      MaxCapacity: 100
-      MinCapacity: 1
+      MaxCapacity: 200
+      MinCapacity: 100
       ResourceId: !Sub table/${PrescriptionStatusUpdatesTable}/index/PatientNHSNumberIndex
       RoleARN: !GetAtt DynamoDbScalingRole.Arn
       ScalableDimension: "dynamodb:index:WriteCapacityUnits"
@@ -247,9 +247,9 @@ Resources:
       PolicyType: TargetTrackingScaling
       ScalingTargetId: !Ref NHSNumberIndexScalingWriteTarget
       TargetTrackingScalingPolicyConfiguration:
-        TargetValue: 70
-        ScaleInCooldown: 60
-        ScaleOutCooldown: 60
+        TargetValue: 50
+        ScaleInCooldown: 600
+        ScaleOutCooldown: 10
         PredefinedMetricSpecification:
           PredefinedMetricType: DynamoDBWriteCapacityUtilization
 
