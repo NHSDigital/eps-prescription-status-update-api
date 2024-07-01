@@ -143,7 +143,7 @@ Resources:
       PolicyType: TargetTrackingScaling
       ScalingTargetId: !Ref PrescriptionStatusUpdatesTableWriteScalingTarget
       TargetTrackingScalingPolicyConfiguration:
-        TargetValue: 100
+        TargetValue: 50
         ScaleInCooldown: 600
         ScaleOutCooldown: 10
         PredefinedMetricSpecification:
@@ -195,7 +195,7 @@ Resources:
       PolicyType: TargetTrackingScaling
       ScalingTargetId: !Ref PharmacyIndexScalingWriteTarget
       TargetTrackingScalingPolicyConfiguration:
-        TargetValue: 100
+        TargetValue: 50
         ScaleInCooldown: 600
         ScaleOutCooldown: 10
         PredefinedMetricSpecification:
