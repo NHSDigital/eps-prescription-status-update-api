@@ -8,7 +8,7 @@ stack_name = "sam-app"
 
 [default.build.parameters]
 cached = true
-parallel = false
+parallel = true
 
 [default.validate.parameters]
 lint = true
