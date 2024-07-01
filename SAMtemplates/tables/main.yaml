@@ -42,7 +42,7 @@ Resources:
       ProvisionedThroughput: !If
         - EnableDynamoDBAutoScalingCondition
         - ReadCapacityUnits: 1
-          WriteCapacityUnits: 1
+          WriteCapacityUnits: 100
         - !Ref "AWS::NoValue"
       GlobalSecondaryIndexes:
         - IndexName: PharmacyODSCodePrescriptionIDIndex
@@ -62,7 +62,7 @@ Resources:
           ProvisionedThroughput: !If
             - EnableDynamoDBAutoScalingCondition
             - ReadCapacityUnits: 1
-              WriteCapacityUnits: 1
+              WriteCapacityUnits: 100
             - !Ref "AWS::NoValue"
         - IndexName: PatientNHSNumberIndex
           KeySchema:
@@ -73,7 +73,7 @@ Resources:
           ProvisionedThroughput: !If
             - EnableDynamoDBAutoScalingCondition
             - ReadCapacityUnits: 1
-              WriteCapacityUnits: 1
+              WriteCapacityUnits: 100
             - !Ref "AWS::NoValue"
 
   PrescriptionStatusUpdatesResources:
@@ -93,7 +93,8 @@ Resources:
         Version: "2012-10-17"
         Statement:
           - Effect: Allow
-            Principal: {"Service": ["dynamodb.application-autoscaling.amazonaws.com"]}
+            Principal:
+              { "Service": ["dynamodb.application-autoscaling.amazonaws.com"] }
             Action: ["sts:AssumeRole"]
       Path: "/"
       Policies:
@@ -127,7 +128,7 @@ Resources:
     DependsOn: PrescriptionStatusUpdatesTable
     Condition: EnableDynamoDBAutoScalingCondition
     Properties:
-      MaxCapacity: 100
+      MaxCapacity: 200
       MinCapacity: 1
       ResourceId: !Sub table/${PrescriptionStatusUpdatesTable}
       RoleARN: !GetAtt DynamoDbScalingRole.Arn
@@ -142,9 +143,9 @@ Resources:
       PolicyType: TargetTrackingScaling
       ScalingTargetId: !Ref PrescriptionStatusUpdatesTableWriteScalingTarget
       TargetTrackingScalingPolicyConfiguration:
-        TargetValue: 70
-        ScaleInCooldown: 60
-        ScaleOutCooldown: 60
+        TargetValue: 100
+        ScaleInCooldown: 600
+        ScaleOutCooldown: 10
         PredefinedMetricSpecification:
           PredefinedMetricType: DynamoDBWriteCapacityUtilization
 
@@ -179,7 +180,7 @@ Resources:
     DependsOn: PrescriptionStatusUpdatesTable
     Condition: EnableDynamoDBAutoScalingCondition
     Properties:
-      MaxCapacity: 100
+      MaxCapacity: 200
       MinCapacity: 1
       ResourceId: !Sub table/${PrescriptionStatusUpdatesTable}/index/PharmacyODSCodePrescriptionIDIndex
       RoleARN: !GetAtt DynamoDbScalingRole.Arn
@@ -194,11 +195,37 @@ Resources:
       PolicyType: TargetTrackingScaling
       ScalingTargetId: !Ref PharmacyIndexScalingWriteTarget
       TargetTrackingScalingPolicyConfiguration:
+        TargetValue: 100
+        ScaleInCooldown: 600
+        ScaleOutCooldown: 10
+        PredefinedMetricSpecification:
+          PredefinedMetricType: DynamoDBWriteCapacityUtilization
+
+  PharmacyIndexScalingReadTarget:
+    Type: AWS::ApplicationAutoScaling::ScalableTarget
+    DependsOn: PrescriptionStatusUpdatesTable
+    Condition: EnableDynamoDBAutoScalingCondition
+    Properties:
+      MaxCapacity: 100
+      MinCapacity: 1
+      ResourceId: !Sub table/${PrescriptionStatusUpdatesTable}/index/PharmacyODSCodePrescriptionIDIndex
+      RoleARN: !GetAtt DynamoDbScalingRole.Arn
+      ScalableDimension: "dynamodb:index:ReadCapacityUnits"
+      ServiceNamespace: dynamodb
+
+  PharmacyIndexScalingReadPolicy:
+    Type: AWS::ApplicationAutoScaling::ScalingPolicy
+    Condition: EnableDynamoDBAutoScalingCondition
+    Properties:
+      PolicyName: NHSNumberIndexWriteScalingPolicy
+      PolicyType: TargetTrackingScaling
+      ScalingTargetId: !Ref NHSNumberIndexScalingReadTarget
+      TargetTrackingScalingPolicyConfiguration:
         TargetValue: 70
         ScaleInCooldown: 60
         ScaleOutCooldown: 60
         PredefinedMetricSpecification:
-          PredefinedMetricType: DynamoDBWriteCapacityUtilization
+          PredefinedMetricType: DynamoDBReadCapacityUtilization
 
   NHSNumberIndexScalingWriteTarget:
     Type: AWS::ApplicationAutoScaling::ScalableTarget
