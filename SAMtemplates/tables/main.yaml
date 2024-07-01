@@ -217,13 +217,13 @@ Resources:
     Type: AWS::ApplicationAutoScaling::ScalingPolicy
     Condition: EnableDynamoDBAutoScalingCondition
     Properties:
-      PolicyName: NHSNumberIndexWriteScalingPolicy
+      PolicyName: NHSNumberIndexReadScalingPolicy
       PolicyType: TargetTrackingScaling
-      ScalingTargetId: !Ref NHSNumberIndexScalingReadTarget
+      ScalingTargetId: !Ref PharmacyIndexScalingReadTarget
       TargetTrackingScalingPolicyConfiguration:
         TargetValue: 70
-        ScaleInCooldown: 60
-        ScaleOutCooldown: 60
+        ScaleInCooldown: 600
+        ScaleOutCooldown: 10
         PredefinedMetricSpecification:
           PredefinedMetricType: DynamoDBReadCapacityUtilization
 
