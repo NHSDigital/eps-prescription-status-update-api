@@ -18,10 +18,10 @@ install-hooks: install-python
 	poetry run pre-commit install --install-hooks --overwrite
 
 sam-build: sam-validate compile
-	sam build --template-file SAMtemplates/main_template.yaml --region eu-west-2
+	sam build --template-file SAMtemplates/main_template.yaml --region eu-west-2 --no-cached
 
 sam-build-sandbox: sam-validate-sandbox compile
-	sam build --template-file SAMtemplates/sandbox_template.yaml --region eu-west-2
+	sam build --template-file SAMtemplates/sandbox_template.yaml --region eu-west-2 --no-cached
 
 sam-run-local: sam-build
 	sam local start-api
