@@ -9,12 +9,9 @@ import {
   it
 } from "@jest/globals"
 import {handler} from "../src/statusLambda"
-import mockContext from "./mockContext"
-import mockAPIGatewayProxyEvent from "./mockAPIGatewayProxyEvent"
+import {mockAPIGatewayProxyEvent, mockContext} from "@PrescriptionStatusUpdate_common/testing"
 
 const mock = new MockAdapter(axios)
-
-const dummyContext = mockContext
 
 describe("Unit test for status check", function () {
   let originalEnv: {[key: string]: string | undefined}
@@ -29,7 +26,7 @@ describe("Unit test for status check", function () {
 
     const result: APIGatewayProxyResult = (await handler(
       mockAPIGatewayProxyEvent,
-      dummyContext
+      mockContext
     )) as APIGatewayProxyResult
 
     expect(result.statusCode).toEqual(200)
@@ -44,7 +41,7 @@ describe("Unit test for status check", function () {
 
     const result: APIGatewayProxyResult = (await handler(
       mockAPIGatewayProxyEvent,
-      dummyContext
+      mockContext
     )) as APIGatewayProxyResult
 
     expect(result.statusCode).toEqual(200)
@@ -56,7 +53,7 @@ describe("Unit test for status check", function () {
   it("appends trace id's to the logger", async () => {
     const mockAppendKeys = jest.spyOn(Logger.prototype, "appendKeys")
 
-    await handler(mockAPIGatewayProxyEvent, dummyContext)
+    await handler(mockAPIGatewayProxyEvent, mockContext)
 
     expect(mockAppendKeys).toHaveBeenCalledWith({
       "x-request-id": "test-request-id",
@@ -71,7 +68,7 @@ describe("Unit test for status check", function () {
 
     const result: APIGatewayProxyResult = (await handler(
       mockAPIGatewayProxyEvent,
-      dummyContext
+      mockContext
     )) as APIGatewayProxyResult
 
     const headers = result.headers
