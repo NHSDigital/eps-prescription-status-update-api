@@ -98,7 +98,7 @@ compile-specification:
 	npm run resolve --workspace packages/specification/
 	npm run resolve-cpsu --workspace packages/specification/
 
-compile: compile-node compile-spec
+compile: compile-node compile-specification
 
 lint-node: compile-node
 	npm run lint --workspace packages/updatePrescriptionStatus
