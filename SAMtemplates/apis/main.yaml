@@ -489,6 +489,29 @@ Resources:
         IntegrationHttpMethod: POST
         Uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${CheckPrescriptionStatusUpdatesFunctionArn}/invocations
 
+  # we can not use a conditional in depends on in ApiGateway::Deployment
+  # so instead we use a wait condition that has the conditional in it and use that as a dependency
+  # taken from https://garbe.io/blog/2017/07/17/cloudformation-hacks/
+  CheckPrescriptionStatusUpdatesHandle:
+    Condition: ShouldDeployCheckPrescriptionStatusUpdate
+    DependsOn: CheckPrescriptionStatusUpdatesMethod
+    Type: "AWS::CloudFormation::WaitConditionHandle"
+
+  CheckPrescriptionStatusUpdatesWaitHandle:
+    Type: "AWS::CloudFormation::WaitConditionHandle"
+
+  CheckPrescriptionStatusUpdatesWaitCondition:
+    Type: "AWS::CloudFormation::WaitCondition"
+    Properties:
+      Handle:
+        !If [
+          ShouldDeployCheckPrescriptionStatusUpdate,
+          !Ref CheckPrescriptionStatusUpdatesHandle,
+          !Ref CheckPrescriptionStatusUpdatesWaitHandle,
+        ]
+      Timeout: "1"
+      Count: 0
+
   # *********************************************************************
   # if you add a new endpoint, then change the name of this resource
   # also need to change it in RestApiGatewayStage.Properties.DeploymentId
@@ -501,6 +524,7 @@ Resources:
       - StatusLambdaMethod
       - CapabilityStatementMethod
       - Format1UpdatePrescriptionStatusMethod
+      - CheckPrescriptionStatusUpdatesWaitCondition
       # see note above if you add something in here when you add a new endpoint
     Properties:
       RestApiId: !Ref RestApiGateway
