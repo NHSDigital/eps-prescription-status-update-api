@@ -2,7 +2,7 @@
 	"info": {
 		"_postman_id": "3dd1f517-d6dd-4e65-904d-12e6be996acd",
 		"name": "prescription status update - all environments",
-		"description": "This contains a collection for interacting with the prescriptions status update API\n\nTo use it you should define the following variables at a global level\n\n- status_api_key\n    \n- host\n    \n\nTo use the requests in the pull request folder, you should create a variable called aws_pull_request_id that is the number of the pull request\n\nTo use the requests in the custom stack folder, you should create a variable called custom_stack_name that is the name of the stack you have defined\n\nThere is a pre request script at the top level that automates the authentication process. You must set the following variables for this to work. These should be set at an environment level as they differe between each environment. Note - sandbox environments should be named so that they end with sandbox\n\n- host\n    \n- api_key\n    \n- private_key\n    \n- kid\n    \n\nhost should be set to the base apigee url - one of\n\n- internal-dev.api.service.nhs.uk\n    \n- internal-dev-sandbox.api.service.nhs.uk\n    \n- int.api.service.nhs.uk\n    \n- sandbox.api.service.nhs.uk\n    \n- internal-qa.api.service.nhs.uk\n    \n\nYou also need to follow the instructions at [https://digital.nhs.uk/developer/guides-and-documentation/security-and-authorisation/application-restricted-restful-apis-signed-jwt-authentication#step-1-register-your-application-on-the-api-platform](https://digital.nhs.uk/developer/guides-and-documentation/security-and-authorisation/application-restricted-restful-apis-signed-jwt-authentication#step-1-register-your-application-on-the-api-platform) to get an API key and create a public/private key pair and upload to the jwks server\n\napi_key should be set to the apigee api key for your application\n\nprivate_key should be your private key that you have created for the environment\n\nkid should be the KID that you used when creating the JWKS",
+		"description": "This contains a collection for interacting with the prescriptions status update API\n\nTo use it you should define the following variables at a global level\n\n- status_api_key\n    \n- host\n    \n\nTo use the requests in the pull request folder, you should create a variable called aws_pull_request_id that is the number of the pull request\n\nTo use the requests in the custom stack folder, you should create a variable called custom_stack_name that is the name of the stack you have defined\n\nThere is a pre request script at the top level that automates the authentication process. You must set the following variables for this to work. These should be set at an environment level as they different between each environment. Note - sandbox environments should be named so that they end with sandbox\n\n- host\n    \n- api_key\n    \n- cpsu_api_key (used for custom prescription status update)\n    \n- private_key\n    \n- kid\n    \n\nhost should be set to the base apigee url - one of\n\n- internal-dev.api.service.nhs.uk\n    \n- internal-dev-sandbox.api.service.nhs.uk\n    \n- int.api.service.nhs.uk\n    \n- sandbox.api.service.nhs.uk\n    \n- internal-qa.api.service.nhs.uk\n    \n\nYou also need to follow the instructions at [https://digital.nhs.uk/developer/guides-and-documentation/security-and-authorisation/application-restricted-restful-apis-signed-jwt-authentication#step-1-register-your-application-on-the-api-platform](https://digital.nhs.uk/developer/guides-and-documentation/security-and-authorisation/application-restricted-restful-apis-signed-jwt-authentication#step-1-register-your-application-on-the-api-platform) to get an API key and create a public/private key pair and upload to the jwks server\n\napi_key should be set to the apigee api key for your application\n\nprivate_key should be your private key that you have created for the environment\n\nkid should be the KID that you used when creating the JWKS",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
 		"_exporter_id": "69771"
 	},
@@ -119,7 +119,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n  \"version\": \"1.0\",\n  \"status\": \"PatientMatched\",\n  \"messageDate\": \"2024-04-12 11:36:47\",\n  \"prescriptionUUID\": \"490795-B83002-00001S\",\n  \"gPSurgery\": \"Doctors Office A\",\n  \"prescriptionType\": \"repeatDispensing\",\n  \"repeatNo\": 3,\n  \"nextRepeatDueDate\": \"2022-01-01\",\n  \"expiryDate\": \"2022-01-01 23:59:59\",\n  \"patientID\": \"12345-000005\",\n  \"nHSCHI\": \"1996344668\",\n  \"deliveryType\": \"Delivery required\",\n  \"items\": [\n    {\n      \"itemID\": \"73014c50-1bd1-4359-9c9f-d587d7d03e66\",\n      \"dMDCode\": \"319781007\",\n      \"dMDDesc\": \"Aspirin 75mg gastro-resistant tablets\",\n      \"uOMDesc\": \"tablet\",\n      \"qty\": \"99\",\n      \"dosage\": \"Take one daily\",\n      \"status\": \"Pending\"\n    },\n    {\n      \"itemID\": \"73014c50-1bd1-4361-9c9f-d587d7d03e66\",\n      \"dMDCode\": \"134531009\",\n      \"dMDDesc\": \"Almotriptan 12.5mg tablets\",\n      \"uOMDesc\": \"tablet\",\n      \"qty\": \"12\",\n      \"dosage\": \"As Directed\",\n      \"status\": \"Pending\"\n    }\n  ],\n  \"MessageType\": \"PrescriptionStatusChanged\"\n}",
+							"raw": "{\n  \"version\": \"1.0\",\n  \"status\": \"PatientMatched\",\n  \"messageDate\": \"2024-04-12 11:36:47\",\n  \"prescriptionUUID\": \"490795-B83002-00001S\",\n  \"gPSurgery\": \"Doctors Office A\",\n  \"prescriptionType\": \"repeatDispensing\",\n  \"repeatNo\": 3,\n  \"nextRepeatDueDate\": \"2022-01-01\",\n  \"expiryDate\": \"2022-01-01 23:59:59\",\n  \"patientID\": \"12345-000005\",\n  \"nHSCHI\": \"1996344668\",\n  \"deliveryType\": \"Delivery required\",\n  \"oDSCode\": \"FHA82\",\n  \"items\": [\n    {\n      \"itemID\": \"73014c50-1bd1-4359-9c9f-d587d7d03e66\",\n      \"dMDCode\": \"319781007\",\n      \"dMDDesc\": \"Aspirin 75mg gastro-resistant tablets\",\n      \"uOMDesc\": \"tablet\",\n      \"qty\": \"99\",\n      \"dosage\": \"Take one daily\",\n      \"status\": \"Pending\"\n    },\n    {\n      \"itemID\": \"73014c50-1bd1-4361-9c9f-d587d7d03e66\",\n      \"dMDCode\": \"134531009\",\n      \"dMDDesc\": \"Almotriptan 12.5mg tablets\",\n      \"uOMDesc\": \"tablet\",\n      \"qty\": \"12\",\n      \"dosage\": \"As Directed\",\n      \"status\": \"Pending\"\n    }\n  ],\n  \"MessageType\": \"PrescriptionStatusChanged\"\n}\n",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -127,7 +127,7 @@
 							}
 						},
 						"url": {
-							"raw": "https://psu-pr-{{aws_pull_request_id}}.dev.eps.national.nhs.uk/",
+							"raw": "https://psu-pr-{{aws_pull_request_id}}.dev.eps.national.nhs.uk/format-1",
 							"protocol": "https",
 							"host": [
 								"psu-pr-{{aws_pull_request_id}}",
@@ -138,7 +138,7 @@
 								"uk"
 							],
 							"path": [
-								""
+								"format-1"
 							]
 						}
 					},
@@ -174,6 +174,83 @@
 							],
 							"path": [
 								"_status"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "AWS PULL REQUEST psu checkprescriptionstatusupdates",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "x-request-id",
+								"value": "{{$guid}}"
+							},
+							{
+								"key": "x-correlation-id",
+								"value": "{{$guid}}"
+							},
+							{
+								"key": "attribute-name",
+								"value": "unknown",
+								"disabled": true
+							},
+							{
+								"key": "show-all-suppliers",
+								"value": "true",
+								"disabled": true
+							},
+							{
+								"key": "x-override-application-name",
+								"value": "ab-1",
+								"disabled": true
+							},
+							{
+								"key": "ExclusiveStartKey-PrescriptionID",
+								"value": "16B2E0-A83008-81C13H",
+								"disabled": true
+							},
+							{
+								"key": "ExclusiveStartKey-TaskID",
+								"value": "01a01744-4c66-47f7-be6d-a8f48439c014",
+								"disabled": true
+							}
+						],
+						"url": {
+							"raw": "https://psu-pr-{{aws_pull_request_id}}.dev.eps.national.nhs.uk/checkprescriptionstatusupdates",
+							"protocol": "https",
+							"host": [
+								"psu-pr-{{aws_pull_request_id}}",
+								"dev",
+								"eps",
+								"national",
+								"nhs",
+								"uk"
+							],
+							"path": [
+								"checkprescriptionstatusupdates"
+							],
+							"query": [
+								{
+									"key": "odscode",
+									"value": "C9Z1O",
+									"disabled": true
+								},
+								{
+									"key": "nhsnumber",
+									"value": "9449304130",
+									"disabled": true
+								},
+								{
+									"key": "prescriptionid",
+									"value": "16B2E0-A83008-81C13H",
+									"disabled": true
+								}
 							]
 						}
 					},
@@ -330,15 +407,11 @@
 							{
 								"key": "x-correlation-id",
 								"value": "{{$guid}}"
-							},
-							{
-								"key": "Content-Type",
-								"value": "application/son"
 							}
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n  \"version\": \"1.0\",\n  \"status\": \"PatientMatched\",\n  \"messageDate\": \"2024-04-12 11:36:47\",\n  \"prescriptionUUID\": \"490795-B83002-00001S\",\n  \"gPSurgery\": \"Doctors Office A\",\n  \"prescriptionType\": \"repeatDispensing\",\n  \"repeatNo\": 3,\n  \"nextRepeatDueDate\": \"2022-01-01\",\n  \"expiryDate\": \"2022-01-01 23:59:59\",\n  \"patientID\": \"12345-000005\",\n  \"nHSCHI\": \"1996344668\",\n  \"deliveryType\": \"Delivery required\",\n  \"items\": [\n    {\n      \"itemID\": \"73014c50-1bd1-4359-9c9f-d587d7d03e66\",\n      \"dMDCode\": \"319781007\",\n      \"dMDDesc\": \"Aspirin 75mg gastro-resistant tablets\",\n      \"uOMDesc\": \"tablet\",\n      \"qty\": \"99\",\n      \"dosage\": \"Take one daily\",\n      \"status\": \"Pending\"\n    },\n    {\n      \"itemID\": \"73014c50-1bd1-4361-9c9f-d587d7d03e66\",\n      \"dMDCode\": \"134531009\",\n      \"dMDDesc\": \"Almotriptan 12.5mg tablets\",\n      \"uOMDesc\": \"tablet\",\n      \"qty\": \"12\",\n      \"dosage\": \"As Directed\",\n      \"status\": \"Pending\"\n    }\n  ],\n  \"MessageType\": \"PrescriptionStatusChanged\"\n}",
+							"raw": "{\n  \"version\": \"1.0\",\n  \"status\": \"PatientMatched\",\n  \"messageDate\": \"2024-04-12 11:36:47\",\n  \"prescriptionUUID\": \"490795-B83002-00001S\",\n  \"gPSurgery\": \"Doctors Office A\",\n  \"prescriptionType\": \"repeatDispensing\",\n  \"repeatNo\": 3,\n  \"nextRepeatDueDate\": \"2022-01-01\",\n  \"expiryDate\": \"2022-01-01 23:59:59\",\n  \"patientID\": \"12345-000005\",\n  \"nHSCHI\": \"1996344668\",\n  \"deliveryType\": \"Delivery required\",\n  \"oDSCode\": \"FHA82\",\n  \"items\": [\n    {\n      \"itemID\": \"73014c50-1bd1-4359-9c9f-d587d7d03e66\",\n      \"dMDCode\": \"319781007\",\n      \"dMDDesc\": \"Aspirin 75mg gastro-resistant tablets\",\n      \"uOMDesc\": \"tablet\",\n      \"qty\": \"99\",\n      \"dosage\": \"Take one daily\",\n      \"status\": \"Pending\"\n    },\n    {\n      \"itemID\": \"73014c50-1bd1-4361-9c9f-d587d7d03e66\",\n      \"dMDCode\": \"134531009\",\n      \"dMDDesc\": \"Almotriptan 12.5mg tablets\",\n      \"uOMDesc\": \"tablet\",\n      \"qty\": \"12\",\n      \"dosage\": \"As Directed\",\n      \"status\": \"Pending\"\n    }\n  ],\n  \"MessageType\": \"PrescriptionStatusChanged\"\n}\n",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -346,14 +419,14 @@
 							}
 						},
 						"url": {
-							"raw": "https://{{host}}/prescription-status-update-pr-{{aws_pull_request_id}}/",
+							"raw": "https://{{host}}/custom-prescription-status-update-pr-{{aws_pull_request_id}}/format-1",
 							"protocol": "https",
 							"host": [
 								"{{host}}"
 							],
 							"path": [
-								"prescription-status-update-pr-{{aws_pull_request_id}}",
-								""
+								"custom-prescription-status-update-pr-{{aws_pull_request_id}}",
+								"format-1"
 							]
 						}
 					},
@@ -397,6 +470,76 @@
 							"path": [
 								"custom-prescription-status-update-pr-{{aws_pull_request_id}}",
 								"_status"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Apigee PULL REQUEST psu checkprescriptionstatusupdates",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{authorization_header_value}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "x-request-id",
+								"value": "{{$guid}}"
+							},
+							{
+								"key": "x-correlation-id",
+								"value": "{{$guid}}"
+							},
+							{
+								"key": "x-override-application-name",
+								"value": "ab-1",
+								"disabled": true
+							},
+							{
+								"key": "ExclusiveStartKey-PrescriptionID",
+								"value": "16B2E0-A83008-81C13H",
+								"disabled": true
+							},
+							{
+								"key": "ExclusiveStartKey-TaskID",
+								"value": "01a01744-4c66-47f7-be6d-a8f48439c014",
+								"disabled": true
+							}
+						],
+						"url": {
+							"raw": "https://{{host}}/prescription-status-update-pr-{{aws_pull_request_id}}/checkprescriptionstatusupdates",
+							"protocol": "https",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"prescription-status-update-pr-{{aws_pull_request_id}}",
+								"checkprescriptionstatusupdates"
+							],
+							"query": [
+								{
+									"key": "odscode",
+									"value": "C9Z1O",
+									"disabled": true
+								},
+								{
+									"key": "nhsnumber",
+									"value": "9449304130",
+									"disabled": true
+								},
+								{
+									"key": "prescriptionid",
+									"value": "16B2E0-A83008-81C13H",
+									"disabled": true
+								}
 							]
 						}
 					},
@@ -589,7 +732,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n  \"version\": \"1.0\",\n  \"status\": \"PatientMatched\",\n  \"messageDate\": \"2024-04-12 11:36:47\",\n  \"prescriptionUUID\": \"490795-B83002-00001S\",\n  \"gPSurgery\": \"Doctors Office A\",\n  \"prescriptionType\": \"repeatDispensing\",\n  \"repeatNo\": 3,\n  \"nextRepeatDueDate\": \"2022-01-01\",\n  \"expiryDate\": \"2022-01-01 23:59:59\",\n  \"patientID\": \"12345-000005\",\n  \"nHSCHI\": \"1996344668\",\n  \"deliveryType\": \"Delivery required\",\n  \"items\": [\n    {\n      \"itemID\": \"73014c50-1bd1-4359-9c9f-d587d7d03e66\",\n      \"dMDCode\": \"319781007\",\n      \"dMDDesc\": \"Aspirin 75mg gastro-resistant tablets\",\n      \"uOMDesc\": \"tablet\",\n      \"qty\": \"99\",\n      \"dosage\": \"Take one daily\",\n      \"status\": \"Pending\"\n    },\n    {\n      \"itemID\": \"73014c50-1bd1-4361-9c9f-d587d7d03e66\",\n      \"dMDCode\": \"134531009\",\n      \"dMDDesc\": \"Almotriptan 12.5mg tablets\",\n      \"uOMDesc\": \"tablet\",\n      \"qty\": \"12\",\n      \"dosage\": \"As Directed\",\n      \"status\": \"Pending\"\n    }\n  ],\n  \"MessageType\": \"PrescriptionStatusChanged\"\n}",
+							"raw": "{\n  \"version\": \"1.0\",\n  \"status\": \"PatientMatched\",\n  \"messageDate\": \"2024-04-12 11:36:47\",\n  \"prescriptionUUID\": \"490795-B83002-00001S\",\n  \"gPSurgery\": \"Doctors Office A\",\n  \"prescriptionType\": \"repeatDispensing\",\n  \"repeatNo\": 3,\n  \"nextRepeatDueDate\": \"2022-01-01\",\n  \"expiryDate\": \"2022-01-01 23:59:59\",\n  \"patientID\": \"12345-000005\",\n  \"nHSCHI\": \"1996344668\",\n  \"deliveryType\": \"Delivery required\",\n  \"oDSCode\": \"FHA82\",\n  \"items\": [\n    {\n      \"itemID\": \"73014c50-1bd1-4359-9c9f-d587d7d03e66\",\n      \"dMDCode\": \"319781007\",\n      \"dMDDesc\": \"Aspirin 75mg gastro-resistant tablets\",\n      \"uOMDesc\": \"tablet\",\n      \"qty\": \"99\",\n      \"dosage\": \"Take one daily\",\n      \"status\": \"Pending\"\n    },\n    {\n      \"itemID\": \"73014c50-1bd1-4361-9c9f-d587d7d03e66\",\n      \"dMDCode\": \"134531009\",\n      \"dMDDesc\": \"Almotriptan 12.5mg tablets\",\n      \"uOMDesc\": \"tablet\",\n      \"qty\": \"12\",\n      \"dosage\": \"As Directed\",\n      \"status\": \"Pending\"\n    }\n  ],\n  \"MessageType\": \"PrescriptionStatusChanged\"\n}\n",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -597,7 +740,7 @@
 							}
 						},
 						"url": {
-							"raw": "https://{{custom_stack_name}}.dev.eps.national.nhs.uk/",
+							"raw": "https://{{custom_stack_name}}.dev.eps.national.nhs.uk/format-1",
 							"protocol": "https",
 							"host": [
 								"{{custom_stack_name}}",
@@ -608,7 +751,7 @@
 								"uk"
 							],
 							"path": [
-								""
+								"format-1"
 							]
 						}
 					},
@@ -644,6 +787,83 @@
 							],
 							"path": [
 								"_status"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "custom stack psu checkprescriptionstatusupdates",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "x-request-id",
+								"value": "{{$guid}}"
+							},
+							{
+								"key": "x-correlation-id",
+								"value": "{{$guid}}"
+							},
+							{
+								"key": "attribute-name",
+								"value": "unknown",
+								"disabled": true
+							},
+							{
+								"key": "show-all-suppliers",
+								"value": "true",
+								"disabled": true
+							},
+							{
+								"key": "x-override-application-name",
+								"value": "ab-1",
+								"disabled": true
+							},
+							{
+								"key": "ExclusiveStartKey-PrescriptionID",
+								"value": "16B2E0-A83008-81C13H",
+								"disabled": true
+							},
+							{
+								"key": "ExclusiveStartKey-TaskID",
+								"value": "01a01744-4c66-47f7-be6d-a8f48439c014",
+								"disabled": true
+							}
+						],
+						"url": {
+							"raw": "https://{{custom_stack_name}}.dev.eps.national.nhs.uk/checkprescriptionstatusupdates",
+							"protocol": "https",
+							"host": [
+								"{{custom_stack_name}}",
+								"dev",
+								"eps",
+								"national",
+								"nhs",
+								"uk"
+							],
+							"path": [
+								"checkprescriptionstatusupdates"
+							],
+							"query": [
+								{
+									"key": "odscode",
+									"value": "C9Z1O",
+									"disabled": true
+								},
+								{
+									"key": "nhsnumber",
+									"value": "9449304130",
+									"disabled": true
+								},
+								{
+									"key": "prescriptionid",
+									"value": "16B2E0-A83008-81C13H",
+									"disabled": true
+								}
 							]
 						}
 					},
@@ -811,14 +1031,84 @@
 					}
 				},
 				"url": {
-					"raw": "https://{{host}}/prescription-status-update/",
+					"raw": "https://{{host}}/custom-prescription-status-update/format-1",
+					"protocol": "https",
+					"host": [
+						"{{host}}"
+					],
+					"path": [
+						"custom-prescription-status-update",
+						"format-1"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Apigee psu checkprescriptionstatusupdates",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{authorization_header_value}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "x-request-id",
+						"value": "{{$guid}}"
+					},
+					{
+						"key": "x-correlation-id",
+						"value": "{{$guid}}"
+					},
+					{
+						"key": "x-override-application-name",
+						"value": "ab-1",
+						"disabled": true
+					},
+					{
+						"key": "ExclusiveStartKey-PrescriptionID",
+						"value": "16B2E0-A83008-81C13H",
+						"disabled": true
+					},
+					{
+						"key": "ExclusiveStartKey-TaskID",
+						"value": "01a01744-4c66-47f7-be6d-a8f48439c014",
+						"disabled": true
+					}
+				],
+				"url": {
+					"raw": "https://{{host}}/prescription-status-update/checkprescriptionstatusupdates",
 					"protocol": "https",
 					"host": [
 						"{{host}}"
 					],
 					"path": [
 						"prescription-status-update",
-						""
+						"checkprescriptionstatusupdates"
+					],
+					"query": [
+						{
+							"key": "odscode",
+							"value": "C9Z1O",
+							"disabled": true
+						},
+						{
+							"key": "nhsnumber",
+							"value": "9449304130",
+							"disabled": true
+						},
+						{
+							"key": "prescriptionid",
+							"value": "16B2E0-A83008-81C13H",
+							"disabled": true
+						}
 					]
 				}
 			},

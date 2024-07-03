@@ -21,6 +21,7 @@
     "packages/updatePrescriptionStatus",
     "packages/capabilityStatement",
     "packages/cpsuLambda",
+    "packages/checkPrescriptionStatusUpdates",
     "packages/common/testing",
     "packages/common/middyErrorHandler"
   ],

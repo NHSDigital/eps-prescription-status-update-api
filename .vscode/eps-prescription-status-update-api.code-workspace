@@ -33,6 +33,10 @@
       "path": "../packages/capabilityStatement"
     },
     {
+      "name": "packages/checkPrescriptionStatusUpdates",
+      "path": "../packages/checkPrescriptionStatusUpdates"
+    },
+    {
       "name": "packages/common/testing",
       "path": "../packages/common/testing"
     },
