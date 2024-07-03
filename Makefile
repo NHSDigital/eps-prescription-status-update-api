@@ -94,19 +94,25 @@ sam-deploy-package: guard-artifact_bucket guard-artifact_bucket_prefix guard-sta
 compile-node:
 	npx tsc --build tsconfig.build.json
 
-compile: compile-node
+compile-specification:
+	npm run resolve --workspace packages/specification/
+	npm run resolve-cpsu --workspace packages/specification/
+
+compile: compile-node compile-spec
 
 lint-node: compile-node
 	npm run lint --workspace packages/updatePrescriptionStatus
 	npm run lint --workspace packages/gsul
 	npm run lint --workspace packages/sandbox
-	npm run lint --workspace packages/specification
 	npm run lint --workspace packages/statusLambda
 	npm run lint --workspace packages/capabilityStatement
 	npm run lint --workspace packages/cpsuLambda
 	npm run lint --workspace packages/checkPrescriptionStatusUpdates
 	npm run lint --workspace packages/common/testing
 	npm run lint --workspace packages/common/middyErrorHandler
+
+lint-specification: compile-specification
+	npm run lint --workspace packages/specification
 
 lint-samtemplates:
 	poetry run cfn-lint -I "SAMtemplates/**/*.yaml" 2>&1 | grep "Run scan"
@@ -120,7 +126,7 @@ lint-githubactions:
 lint-githubaction-scripts:
 	shellcheck .github/scripts/*.sh
 
-lint: lint-node lint-samtemplates lint-python lint-githubactions lint-githubaction-scripts
+lint: lint-node lint-samtemplates lint-python lint-githubactions lint-githubaction-scripts lint-specification
 
 test: compile
 	npm run test --workspace packages/updatePrescriptionStatus
@@ -154,9 +160,6 @@ deep-clean: clean
 	rm -rf venv
 	find . -name 'node_modules' -type d -prune -exec rm -rf '{}' +
 	poetry env remove --all
-
-build-specification:
-	$(MAKE) --directory=packages/specification build
 
 check-licenses: check-licenses-node check-licenses-python
 
