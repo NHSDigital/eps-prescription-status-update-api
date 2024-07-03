@@ -50,7 +50,6 @@
   },
   "dependencies": {
     "@PrescriptionStatusUpdate_common/middyErrorHandler": "^1.0.0",
-    "checkPrescriptionStatusUpdates": "^1.0.0",
     "conventional-changelog-eslint": "^6.0.0",
     "esbuild": "^0.23.0"
   }
