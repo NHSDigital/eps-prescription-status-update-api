@@ -68,6 +68,33 @@ repos:
         types_or: [ts, tsx, javascript, jsx, json]
         pass_filenames: false
 
+      - id: lint-capabilityStatement
+        name: Lint capabilityStatement
+        entry: npm
+        args: ["run", "--prefix=packages/capabilityStatement", "lint"]
+        language: system
+        files: ^packages\/capabilityStatement
+        types_or: [ts, tsx, javascript, jsx, json]
+        pass_filenames: false
+
+      - id: lint-commonTesting
+        name: Lint common/testing
+        entry: npm
+        args: ["run", "--prefix=packages/common/testing", "lint"]
+        language: system
+        files: ^packages\/common/testing
+        types_or: [ts, tsx, javascript, jsx, json]
+        pass_filenames: false
+
+      - id: lint-commonMiddyErrorHandler
+        name: Lint common/middyErrorHandler
+        entry: npm
+        args: ["run", "--prefix=packages/common/middyErrorHandler", "lint"]
+        language: system
+        files: ^packages\/common/middyErrorHandler
+        types_or: [ts, tsx, javascript, jsx, json]
+        pass_filenames: false
+
       - id: lint-samtemplates
         name: Lint sam templates
         entry: make

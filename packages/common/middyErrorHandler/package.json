@@ -1,10 +1,11 @@
 {
-    "name": "sandbox",
+    "name": "@PrescriptionStatusUpdate_common/middyErrorHandler",
     "version": "1.0.0",
-    "description": "Sandbox",
-    "main": "sandbox.js",
+    "description": "Common module for a partial middyErrorHandler",
     "author": "NHS Digital",
     "license": "MIT",
+    "main": "lib/src/index.js",
+    "type": "module",
     "scripts": {
         "unit": "POWERTOOLS_DEV=true NODE_OPTIONS=--experimental-vm-modules jest --no-cache --coverage",
         "lint": "eslint . --ext .ts --max-warnings 0 --fix",
@@ -13,9 +14,10 @@
         "check-licenses": "license-checker --failOn GPL --failOn LGPL --start ../.."
     },
     "dependencies": {
-        "@aws-lambda-powertools/logger": "^2.3.0",
-        "@middy/core": "^5.4.3",
-        "@middy/input-output-logger": "^5.4.3",
-        "@nhs/fhir-middy-error-handler": "^2.0.9"
+        "@aws-lambda-powertools/logger": "^2.2.0"
+    },
+    "devDependencies": {
+        "@middy/core": "^5.4.1",
+        "@PrescriptionStatusUpdate_common/testing": "^1.0.0"
     }
 }

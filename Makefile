@@ -94,16 +94,24 @@ sam-deploy-package: guard-artifact_bucket guard-artifact_bucket_prefix guard-sta
 compile-node:
 	npx tsc --build tsconfig.build.json
 
-compile: compile-node
+compile-specification:
+	npm run resolve --workspace packages/specification/
+	npm run resolve-cpsu --workspace packages/specification/
+
+compile: compile-node compile-specification
 
 lint-node: compile-node
 	npm run lint --workspace packages/updatePrescriptionStatus
 	npm run lint --workspace packages/gsul
 	npm run lint --workspace packages/sandbox
-	npm run lint --workspace packages/specification
 	npm run lint --workspace packages/statusLambda
 	npm run lint --workspace packages/capabilityStatement
 	npm run lint --workspace packages/cpsuLambda
+	npm run lint --workspace packages/common/testing
+	npm run lint --workspace packages/common/middyErrorHandler
+
+lint-specification: compile-specification
+	npm run lint --workspace packages/specification
 
 lint-samtemplates:
 	poetry run cfn-lint -I "SAMtemplates/**/*.yaml" 2>&1 | grep "Run scan"
@@ -117,7 +125,7 @@ lint-githubactions:
 lint-githubaction-scripts:
 	shellcheck .github/scripts/*.sh
 
-lint: lint-node lint-samtemplates lint-python lint-githubactions lint-githubaction-scripts
+lint: lint-node lint-samtemplates lint-python lint-githubactions lint-githubaction-scripts lint-specification
 
 test: compile
 	npm run test --workspace packages/updatePrescriptionStatus
@@ -126,6 +134,7 @@ test: compile
 	npm run test --workspace packages/statusLambda
 	npm run test --workspace packages/capabilityStatement
 	npm run test --workspace packages/cpsuLambda
+	npm run test --workspace packages/common/middyErrorHandler
 
 clean:
 	rm -rf packages/updatePrescriptionStatus/coverage
@@ -140,15 +149,14 @@ clean:
 	rm -rf packages/capabilityStatement/lib
 	rm -rf packages/cpsuLambda/coverage
 	rm -rf packages/cpsuLambda/lib
+	rm -rf packages/common/testing/lib
+	rm -rf packages/common/middyErrorHandler/lib
 	rm -rf .aws-sam
 
 deep-clean: clean
 	rm -rf venv
 	find . -name 'node_modules' -type d -prune -exec rm -rf '{}' +
 	poetry env remove --all
-
-build-specification:
-	$(MAKE) --directory=packages/specification build
 
 check-licenses: check-licenses-node check-licenses-python
 
