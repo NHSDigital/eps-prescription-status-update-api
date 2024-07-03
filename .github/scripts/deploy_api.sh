@@ -72,7 +72,7 @@ else
         jq '.components.securitySchemes."app-level0" = {"$ref": "https://proxygen.ptl.api.platform.nhs.uk/components/securitySchemes/app-level0"}' "${SPEC_PATH}" > temp.json && mv temp.json "${SPEC_PATH}"
     fi
 fi
-# Find and replace securitySchemes
+# remove checkprescriptionstatusupdates if its not needed
 if [[ "${DEPLOY_CHECK_PRESCRIPTION_STATUS_UPDATE}" == "false" ]]; then
     if [[ "${API_TYPE}" == "standard" ]]; then
         echo "Removing checkprescriptionstatusupdates endpoint"
