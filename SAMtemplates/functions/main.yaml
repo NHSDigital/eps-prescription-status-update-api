@@ -328,11 +328,11 @@ Outputs:
     Value: !If
       - ShouldDeployCheckPrescriptionStatusUpdate
       - !Ref CheckPrescriptionStatusUpdates
-      - !Ref AWS::NoValue
+      - ""
 
   CheckPrescriptionStatusUpdatesFunctionArn:
     Description: The function ARN of the CheckPrescriptionStatusUpdates lambda
     Value: !If
       - ShouldDeployCheckPrescriptionStatusUpdate
       - !GetAtt CheckPrescriptionStatusUpdates.Arn
-      - !Ref AWS::NoValue
+      - ""
