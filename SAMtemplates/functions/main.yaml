@@ -40,6 +40,14 @@ Parameters:
   CommitId:
     Type: String
 
+  DeployCheckPrescriptionStatusUpdate:
+    Type: String
+
+Conditions:
+  ShouldDeployCheckPrescriptionStatusUpdate: !Equals
+    - true
+    - !Ref DeployCheckPrescriptionStatusUpdate
+
 Resources:
   UpdatePrescriptionStatus:
     Type: AWS::Serverless::Function
@@ -59,6 +67,7 @@ Resources:
         Target: es2020
         Sourcemap: true
         tsconfig: updatePrescriptionStatus/tsconfig.json
+        packages: bundle
         EntryPoints:
           - updatePrescriptionStatus/src/updatePrescriptionStatus.ts
 
@@ -97,6 +106,7 @@ Resources:
         Target: es2020
         Sourcemap: true
         tsconfig: cpsuLambda/tsconfig.json
+        packages: bundle
         EntryPoints:
           - cpsuLambda/src/cpsu.ts
 
@@ -133,6 +143,7 @@ Resources:
         Target: es2020
         Sourcemap: true
         tsconfig: gsul/tsconfig.json
+        packages: bundle
         EntryPoints:
           - gsul/src/getStatusUpdates.ts
 
@@ -172,6 +183,7 @@ Resources:
         Target: es2020
         Sourcemap: true
         tsconfig: statusLambda/tsconfig.json
+        packages: bundle
         EntryPoints:
           - statusLambda/src/statusLambda.ts
 
@@ -207,6 +219,7 @@ Resources:
         Target: es2020
         Sourcemap: true
         tsconfig: capabilityStatement/tsconfig.json
+        packages: bundle
         EntryPoints:
           - capabilityStatement/src/capabilityStatement.ts
 
@@ -218,6 +231,47 @@ Resources:
         StackName: !Ref StackName
         LambdaName: !Sub ${StackName}-CapabilityStatement
         LambdaArn: !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:${StackName}-CapabilityStatement
+        LogRetentionInDays: !Ref LogRetentionInDays
+        CloudWatchKMSKeyId: !ImportValue account-resources:CloudwatchLogsKmsKeyArn
+        EnableSplunk: !Ref EnableSplunk
+        SplunkSubscriptionFilterRole: !ImportValue lambda-resources:SplunkSubscriptionFilterRole
+        SplunkDeliveryStreamArn: !ImportValue lambda-resources:SplunkDeliveryStream
+
+  CheckPrescriptionStatusUpdates:
+    Condition: ShouldDeployCheckPrescriptionStatusUpdate
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub ${StackName}-CheckPrescriptionStatusUpdates
+      CodeUri: ../../packages
+      Handler: checkPrescriptionStatusUpdates.handler
+      Role: !GetAtt CheckPrescriptionStatusUpdatesResources.Outputs.LambdaRoleArn
+      Environment:
+        Variables:
+          TABLE_NAME: !Ref PrescriptionStatusUpdatesTableName
+          LOG_LEVEL: !Ref LogLevel
+    Metadata:
+      BuildMethod: esbuild
+      BuildProperties:
+        Minify: true
+        Target: es2020
+        Sourcemap: true
+        tsconfig: checkPrescriptionStatusUpdates/tsconfig.json
+        EntryPoints:
+          - checkPrescriptionStatusUpdates/src/checkPrescriptionStatusUpdates.ts
+
+  CheckPrescriptionStatusUpdatesResources:
+    Condition: ShouldDeployCheckPrescriptionStatusUpdate
+    Type: AWS::Serverless::Application
+    Properties:
+      Location: lambda_resources.yaml
+      Parameters:
+        StackName: !Ref StackName
+        LambdaName: !Sub ${StackName}-CheckPrescriptionStatusUpdates
+        LambdaArn: !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:${StackName}-CheckPrescriptionStatusUpdates
+        IncludeAdditionalPolicies: true
+        AdditionalPolicies: !Join
+          - ","
+          - - Fn::ImportValue: !Sub ${StackName}:tables:${PrescriptionStatusUpdatesTableName}:TableReadPolicyArn
         LogRetentionInDays: !Ref LogRetentionInDays
         CloudWatchKMSKeyId: !ImportValue account-resources:CloudwatchLogsKmsKeyArn
         EnableSplunk: !Ref EnableSplunk
@@ -268,3 +322,17 @@ Outputs:
   CapabilityStatementFunctionArn:
     Description: The function ARN of the CapabilityStatement lambda
     Value: !GetAtt CapabilityStatement.Arn
+
+  CheckPrescriptionStatusUpdatesFunctionName:
+    Description: The function name of the CheckPrescriptionStatusUpdates lambda
+    Value: !If
+      - ShouldDeployCheckPrescriptionStatusUpdate
+      - !Ref CheckPrescriptionStatusUpdates
+      - ""
+
+  CheckPrescriptionStatusUpdatesFunctionArn:
+    Description: The function ARN of the CheckPrescriptionStatusUpdates lambda
+    Value: !If
+      - ShouldDeployCheckPrescriptionStatusUpdate
+      - !GetAtt CheckPrescriptionStatusUpdates.Arn
+      - ""
