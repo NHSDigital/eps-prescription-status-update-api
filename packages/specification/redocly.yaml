@@ -1,5 +1,5 @@
 apis:
   psu:
-    root: ./eps-prescription-status-update-api.yaml
+    root: ./dist/eps-custom-prescription-status-update-api.resolved.json
   cpsu:
-    root: ./eps-custom-prescription-status-update-api.yaml
+    root: ./dist/eps-prescription-status-update-api.resolved.json
