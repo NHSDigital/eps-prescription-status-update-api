@@ -501,10 +501,6 @@ Resources:
       - StatusLambdaMethod
       - CapabilityStatementMethod
       - Format1UpdatePrescriptionStatusMethod
-      - !If
-        - ShouldDeployCheckPrescriptionStatusUpdate
-        - CheckPrescriptionStatusUpdatesMethod
-        - !Ref AWS::NoValue
       # see note above if you add something in here when you add a new endpoint
     Properties:
       RestApiId: !Ref RestApiGateway
