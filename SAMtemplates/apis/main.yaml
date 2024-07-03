@@ -60,10 +60,16 @@ Parameters:
   EnableSplunk:
     Type: String
 
+  DeployCheckPrescriptionStatusUpdate:
+    Type: String
+
 Conditions:
   ShouldUseMutualTLS: !Equals
     - true
     - !Ref EnableMutualTLS
+  ShouldDeployCheckPrescriptionStatusUpdate: !Equals
+    - true
+    - !Ref DeployCheckPrescriptionStatusUpdate
 
 Resources:
   GenerateCertificate:
@@ -462,6 +468,7 @@ Resources:
         Uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${CapabilityStatementFunctionArn}/invocations
 
   CheckPrescriptionStatusUpdatesResource:
+    Condition: ShouldDeployCheckPrescriptionStatusUpdate
     Type: AWS::ApiGateway::Resource
     Properties:
       RestApiId: !Ref RestApiGateway
@@ -469,6 +476,7 @@ Resources:
       PathPart: checkprescriptionstatusupdates
 
   CheckPrescriptionStatusUpdatesMethod:
+    Condition: ShouldDeployCheckPrescriptionStatusUpdate
     Type: AWS::ApiGateway::Method
     Properties:
       RestApiId: !Ref RestApiGateway
@@ -493,7 +501,10 @@ Resources:
       - StatusLambdaMethod
       - CapabilityStatementMethod
       - Format1UpdatePrescriptionStatusMethod
-      - CheckPrescriptionStatusUpdatesMethod
+      - !If
+        - ShouldDeployCheckPrescriptionStatusUpdate
+        - CheckPrescriptionStatusUpdatesMethod
+        - !Ref AWS::NoValue
       # see note above if you add something in here when you add a new endpoint
     Properties:
       RestApiId: !Ref RestApiGateway
@@ -527,7 +538,11 @@ Resources:
             - Fn::ImportValue: !Sub ${StackName}:functions:${StatusFunctionName}:ExecuteLambdaPolicyArn
             - Fn::ImportValue: !Sub ${StackName}:functions:${CapabilityStatementFunctionName}:ExecuteLambdaPolicyArn
             - Fn::ImportValue: !Sub ${StackName}:state-machines:${Format1UpdatePrescriptionsStatusStateMachineName}:ExecuteStateMachinePolicy
-            - Fn::ImportValue: !Sub ${StackName}:functions:${CheckPrescriptionStatusUpdatesFunctionName}:ExecuteLambdaPolicyArn
+            - !If
+              - ShouldDeployCheckPrescriptionStatusUpdate
+              - Fn::ImportValue: !Sub ${StackName}:functions:${CheckPrescriptionStatusUpdatesFunctionName}:ExecuteLambdaPolicyArn
+              - !Ref AWS::NoValue
+
         ApiName: !Sub ${StackName}-apigw
         LogRetentionInDays: !Ref LogRetentionInDays
         EnableSplunk: !Ref EnableSplunk

@@ -40,6 +40,14 @@ Parameters:
   CommitId:
     Type: String
 
+  DeployCheckPrescriptionStatusUpdate:
+    Type: String
+
+Conditions:
+  ShouldDeployCheckPrescriptionStatusUpdate: !Equals
+    - true
+    - !Ref DeployCheckPrescriptionStatusUpdate
+
 Resources:
   UpdatePrescriptionStatus:
     Type: AWS::Serverless::Function
@@ -230,6 +238,7 @@ Resources:
         SplunkDeliveryStreamArn: !ImportValue lambda-resources:SplunkDeliveryStream
 
   CheckPrescriptionStatusUpdates:
+    Condition: ShouldDeployCheckPrescriptionStatusUpdate
     Type: AWS::Serverless::Function
     Properties:
       FunctionName: !Sub ${StackName}-CheckPrescriptionStatusUpdates
@@ -251,6 +260,7 @@ Resources:
           - checkPrescriptionStatusUpdates/src/checkPrescriptionStatusUpdates.ts
 
   CheckPrescriptionStatusUpdatesResources:
+    Condition: ShouldDeployCheckPrescriptionStatusUpdate
     Type: AWS::Serverless::Application
     Properties:
       Location: lambda_resources.yaml
@@ -315,8 +325,14 @@ Outputs:
 
   CheckPrescriptionStatusUpdatesFunctionName:
     Description: The function name of the CheckPrescriptionStatusUpdates lambda
-    Value: !Ref CheckPrescriptionStatusUpdates
+    Value: !If
+      - ShouldDeployCheckPrescriptionStatusUpdate
+      - !Ref CheckPrescriptionStatusUpdates
+      - !Ref AWS::NoValue
 
   CheckPrescriptionStatusUpdatesFunctionArn:
     Description: The function ARN of the CheckPrescriptionStatusUpdates lambda
-    Value: !GetAtt CheckPrescriptionStatusUpdates.Arn
+    Value: !If
+      - ShouldDeployCheckPrescriptionStatusUpdate
+      - !GetAtt CheckPrescriptionStatusUpdates.Arn
+      - !Ref AWS::NoValue

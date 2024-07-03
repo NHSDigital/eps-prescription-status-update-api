@@ -68,6 +68,9 @@ Parameters:
     Type: String
     Default: "xxx"
 
+  DeployCheckPrescriptionStatusUpdate:
+    Type: String
+
 Resources:
   Tables:
     Type: AWS::Serverless::Application
@@ -97,6 +100,7 @@ Resources:
         CheckPrescriptionStatusUpdatesFunctionArn: !GetAtt Functions.Outputs.CheckPrescriptionStatusUpdatesFunctionArn
         LogRetentionInDays: !Ref LogRetentionInDays
         EnableSplunk: !Ref EnableSplunk
+        DeployCheckPrescriptionStatusUpdate: !Ref DeployCheckPrescriptionStatusUpdate
 
   Functions:
     Type: AWS::Serverless::Application
@@ -110,6 +114,7 @@ Resources:
         EnableSplunk: !Ref EnableSplunk
         VersionNumber: !Ref VersionNumber
         CommitId: !Ref CommitId
+        DeployCheckPrescriptionStatusUpdate: !Ref DeployCheckPrescriptionStatusUpdate
 
   StateMachines:
     Type: AWS::Serverless::Application

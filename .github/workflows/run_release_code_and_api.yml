@@ -177,6 +177,7 @@ jobs:
           TRUSTSTORE_FILE: ${{ inputs.TRUSTSTORE_FILE }}
           VERSION_NUMBER: ${{ inputs.VERSION_NUMBER }}
           DYNAMODB_AUTOSCALE: ${{ inputs.DYNAMODB_AUTOSCALE }}
+          DEPLOY_CHECK_PRESCRIPTION_STATUS_UPDATE: ${{ inputs.DEPLOY_CHECK_PRESCRIPTION_STATUS_UPDATE }}
         run: ./release_code.sh
 
       - name: Deploy PSU API
