@@ -11,7 +11,7 @@ import {InputData} from "./types"
 const logger = new Logger({serviceName: "status"})
 
 const errorResponseBody = {
-  message: "A system error has occured"
+  message: "A system error has occurred"
 }
 
 const errorResponse = {
