@@ -1,5 +1,6 @@
 import {FromSchema} from "json-schema-to-ts"
 
+// Set the isTerminalState field to bool
 const itemSchema = {
   type: "object",
   required: ["itemId", "latestStatus", "isTerminalState", "lastUpdateDateTime"],
