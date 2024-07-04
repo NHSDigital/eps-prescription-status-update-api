@@ -29,6 +29,7 @@ function bundle_entries(entries: Array<BundleEntry<Task>>): Bundle<Task> {
   }
 }
 
+// extract the value stored in the repeatNo data item
 export function generateTemplate(requestBody: requestType): string {
   return JSON.stringify({
     resource: {
