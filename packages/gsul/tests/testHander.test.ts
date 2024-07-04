@@ -30,13 +30,18 @@ describe("test handler", () => {
   })
 
   it("respond with error when schema version is 2", async () => {
-    const response = await handler({
-      "schemaVersion": 2,
-      "prescriptions": [{
-        prescriptionID: "abc",
-        odsCode: "123"
-      }]
-    }, dummyContext)
+    const response = await handler(
+      {
+        schemaVersion: 2,
+        prescriptions: [
+          {
+            prescriptionID: "abc",
+            odsCode: "123"
+          }
+        ]
+      },
+      dummyContext
+    )
     expect(response).toMatchObject({
       schemaVersion: 1,
       isSuccess: false,
@@ -53,9 +58,11 @@ describe("test handler", () => {
 
     const response = await handler(
       {
-        "schemaVersion": 1,
-        "prescriptions": []
-      }, dummyContext)
+        schemaVersion: 1,
+        prescriptions: []
+      },
+      dummyContext
+    )
     expect(response).toMatchObject({
       schemaVersion: 1,
       isSuccess: true,
@@ -66,37 +73,47 @@ describe("test handler", () => {
   it("respond with success when data passed in", async () => {
     const mockReply = {
       Count: 1,
-      Items: [{
-        PrescriptionID: "abc",
-        LineItemID: "item_1",
-        Status: "latest_status",
-        TerminalStatus: "terminal",
-        LastModified: "1970-01-01T00:00:00Z"
-      }]
+      Items: [
+        {
+          PrescriptionID: "abc",
+          LineItemID: "item_1",
+          Status: "latest_status",
+          TerminalStatus: true,
+          LastModified: "1970-01-01T00:00:00Z"
+        }
+      ]
     }
     jest.spyOn(DynamoDBDocumentClient.prototype, "send").mockResolvedValue(mockReply as never)
 
     const response = await handler(
       {
-        "schemaVersion": 1,
-        "prescriptions": [{
-          prescriptionID: "abc",
-          odsCode: "123"
-        }]
-      }, dummyContext)
+        schemaVersion: 1,
+        prescriptions: [
+          {
+            prescriptionID: "abc",
+            odsCode: "123"
+          }
+        ]
+      },
+      dummyContext
+    )
     expect(response).toMatchObject({
       schemaVersion: 1,
       isSuccess: true,
-      prescriptions: [{
-        prescriptionID: "abc",
-        onboarded: true,
-        items: [{
-          itemId: "item_1",
-          latestStatus: "latest_status",
-          isTerminalState: "terminal",
-          lastUpdateDateTime: "1970-01-01T00:00:00Z"
-        }]
-      }]
+      prescriptions: [
+        {
+          prescriptionID: "abc",
+          onboarded: true,
+          items: [
+            {
+              itemId: "item_1",
+              latestStatus: "latest_status",
+              isTerminalState: true,
+              lastUpdateDateTime: "1970-01-01T00:00:00Z"
+            }
+          ]
+        }
+      ]
     })
   })
 })
