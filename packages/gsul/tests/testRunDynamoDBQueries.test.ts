@@ -21,7 +21,7 @@ describe("testing dynamoDBClient", () => {
           PrescriptionID: "abc",
           LineItemID: "item_1",
           Status: "latest_status",
-          TerminalStatus: true,
+          TerminalStatus: "completed",
           LastModified: "1970-01-01T00:00:00Z"
         }
       ]
@@ -71,7 +71,7 @@ describe("testing pagination in dynamoDBClient", () => {
           PrescriptionID: "abc",
           LineItemID: "item_1",
           Status: "first_status",
-          TerminalStatus: true,
+          TerminalStatus: "completed",
           LastModified: "1970-01-01T00:00:00Z"
         }
       ],
@@ -88,7 +88,7 @@ describe("testing pagination in dynamoDBClient", () => {
           PrescriptionID: "abc",
           LineItemID: "item_1",
           Status: "second_status",
-          TerminalStatus: true,
+          TerminalStatus: "completed",
           LastModified: "1970-01-01T00:00:00Z"
         }
       ]

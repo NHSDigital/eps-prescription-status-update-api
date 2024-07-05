@@ -70,7 +70,7 @@ describe("test handler", () => {
     })
   })
 
-  it("respond with success when data passed in", async () => {
+  it("respond with success when data passed in with a terminal status 'completed'", async () => {
     const mockReply = {
       Count: 1,
       Items: [
@@ -78,7 +78,7 @@ describe("test handler", () => {
           PrescriptionID: "abc",
           LineItemID: "item_1",
           Status: "latest_status",
-          TerminalStatus: true,
+          TerminalStatus: "completed",
           LastModified: "1970-01-01T00:00:00Z"
         }
       ]
@@ -109,6 +109,53 @@ describe("test handler", () => {
               itemId: "item_1",
               latestStatus: "latest_status",
               isTerminalState: true,
+              lastUpdateDateTime: "1970-01-01T00:00:00Z"
+            }
+          ]
+        }
+      ]
+    })
+  })
+
+  it("respond with success when data passed in with a terminal status 'in-progress'", async () => {
+    const mockReply = {
+      Count: 1,
+      Items: [
+        {
+          PrescriptionID: "abc",
+          LineItemID: "item_1",
+          Status: "latest_status",
+          TerminalStatus: "in-progress",
+          LastModified: "1970-01-01T00:00:00Z"
+        }
+      ]
+    }
+    jest.spyOn(DynamoDBDocumentClient.prototype, "send").mockResolvedValue(mockReply as never)
+
+    const response = await handler(
+      {
+        schemaVersion: 1,
+        prescriptions: [
+          {
+            prescriptionID: "abc",
+            odsCode: "123"
+          }
+        ]
+      },
+      dummyContext
+    )
+    expect(response).toMatchObject({
+      schemaVersion: 1,
+      isSuccess: true,
+      prescriptions: [
+        {
+          prescriptionID: "abc",
+          onboarded: true,
+          items: [
+            {
+              itemId: "item_1",
+              latestStatus: "latest_status",
+              isTerminalState: false,
               lastUpdateDateTime: "1970-01-01T00:00:00Z"
             }
           ]

@@ -39,7 +39,7 @@ export async function getItemsUpdatesForPrescription(
   return items.map((singleUpdate) => ({
     itemId: String(singleUpdate.LineItemID),
     latestStatus: String(singleUpdate.Status),
-    isTerminalState: Boolean(singleUpdate.TerminalStatus),
+    isTerminalState: String(singleUpdate.TerminalStatus) === "completed",
     lastUpdateDateTime: String(singleUpdate.LastModified)
   }))
 }
