@@ -4,7 +4,7 @@
       "ApplicationName": "ab-1",
       "RequestID": "02852777-88a0-4c04-be8f-c45a82bd8991",
       "LastModified": "2023-10-11T10:11:12Z",
-      "TerminalStatus": "completed",
+      "TerminalStatus": "true",
       "PharmacyODSCode": "C9Z1O",
       "Status": "dispatched",
       "TaskID": "032d055a-1d19-4e48-80b6-dcc52d44264c",
