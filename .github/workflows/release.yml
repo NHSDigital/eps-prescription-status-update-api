@@ -64,7 +64,7 @@ jobs:
         id: output_version_tag
         run: |
           NEXT_VERSION=$(npx semantic-release --dry-run | grep -i 'The next release version is' | sed -E 's/.* ([[:digit:].]+)$/\1/')
-          tagFormat=$(jq -r .tagFormat .releaserc)
+          tagFormat=$(node -e "const config=require('./release.config.js'); console.log(config.tagFormat)")
           if [ "${tagFormat}" = "null" ]
           then
             tagFormat="v\${version}"
@@ -130,6 +130,7 @@ jobs:
       DEPLOY_APIGEE: true
       DYNAMODB_AUTOSCALE: false
       DEPLOY_APIGEE_CPSU: true
+      DEPLOY_CHECK_PRESCRIPTION_STATUS_UPDATE: true
     secrets:
       CLOUD_FORMATION_DEPLOY_ROLE: ${{ secrets.DEV_CLOUD_FORMATION_DEPLOY_ROLE }}
       DEV_CLOUD_FORMATION_CHECK_VERSION_ROLE: ${{ secrets.DEV_CLOUD_FORMATION_CHECK_VERSION_ROLE }}
@@ -154,6 +155,7 @@ jobs:
       DEPLOY_APIGEE: true
       DYNAMODB_AUTOSCALE: false
       DEPLOY_APIGEE_CPSU: true
+      DEPLOY_CHECK_PRESCRIPTION_STATUS_UPDATE: true
     secrets:
       CLOUD_FORMATION_DEPLOY_ROLE: ${{ secrets.DEV_CLOUD_FORMATION_DEPLOY_ROLE }}
 
@@ -182,6 +184,7 @@ jobs:
       DEPLOY_APIGEE: true
       DYNAMODB_AUTOSCALE: true
       DEPLOY_APIGEE_CPSU: true
+      DEPLOY_CHECK_PRESCRIPTION_STATUS_UPDATE: true
     secrets:
       CLOUD_FORMATION_DEPLOY_ROLE: ${{ secrets.REF_CLOUD_FORMATION_DEPLOY_ROLE }}
 
@@ -210,6 +213,7 @@ jobs:
       DEPLOY_APIGEE: true
       DYNAMODB_AUTOSCALE: false
       DEPLOY_APIGEE_CPSU: true
+      DEPLOY_CHECK_PRESCRIPTION_STATUS_UPDATE: true
     secrets:
       CLOUD_FORMATION_DEPLOY_ROLE: ${{ secrets.QA_CLOUD_FORMATION_DEPLOY_ROLE }}
 
@@ -233,6 +237,7 @@ jobs:
       DEPLOY_APIGEE: true
       DYNAMODB_AUTOSCALE: false
       DEPLOY_APIGEE_CPSU: true
+      DEPLOY_CHECK_PRESCRIPTION_STATUS_UPDATE: true
     secrets:
       CLOUD_FORMATION_DEPLOY_ROLE: ${{ secrets.INT_CLOUD_FORMATION_DEPLOY_ROLE }}
       DEV_CLOUD_FORMATION_CHECK_VERSION_ROLE: ${{ secrets.DEV_CLOUD_FORMATION_CHECK_VERSION_ROLE }}
@@ -257,6 +262,7 @@ jobs:
       DEPLOY_APIGEE: true
       DYNAMODB_AUTOSCALE: false
       DEPLOY_APIGEE_CPSU: true
+      DEPLOY_CHECK_PRESCRIPTION_STATUS_UPDATE: true
     secrets:
       CLOUD_FORMATION_DEPLOY_ROLE: ${{ secrets.INT_CLOUD_FORMATION_DEPLOY_ROLE }}
 
@@ -287,6 +293,7 @@ jobs:
       DEPLOY_APIGEE: false
       DYNAMODB_AUTOSCALE: true
       DEPLOY_APIGEE_CPSU: false
+      DEPLOY_CHECK_PRESCRIPTION_STATUS_UPDATE: false
     secrets:
       CLOUD_FORMATION_DEPLOY_ROLE: ${{ secrets.PROD_CLOUD_FORMATION_DEPLOY_ROLE }}
       DEV_CLOUD_FORMATION_CHECK_VERSION_ROLE: ${{ secrets.DEV_CLOUD_FORMATION_CHECK_VERSION_ROLE }}

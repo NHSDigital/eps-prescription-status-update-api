@@ -11,7 +11,7 @@ const itemSchema = {
       type: "string"
     },
     isTerminalState: {
-      type: "string"
+      type: "boolean"
     },
     lastUpdateDateTime: {
       type: "string"

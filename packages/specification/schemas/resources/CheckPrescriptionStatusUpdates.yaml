@@ -1,0 +1,55 @@
+type: object
+required: [items]
+description: |
+  Prescription Status Update details that have been sent to the Prescription Status Update endpoint
+properties:
+  items:
+    type: array
+    description: List of prescription status updates that have been sent.
+    minItems: 0
+    items:
+      type: object
+      required:
+        [
+          ApplicationName,
+          RequestID,
+          LastModified,
+          TerminalStatus,
+          PharmacyODSCode,
+          Status,
+          TaskID,
+          PatientNHSNumber,
+          LineItemID,
+          PrescriptionID,
+        ]
+      properties:
+        ApplicationName:
+          type: string
+          description: The application name that sent the update.
+        RequestID:
+          type: string
+          description: The requestID sent in the update.
+        LastModified:
+          type: string
+          description: The LastModified date sent in the update.
+        TerminalStatus:
+          type: string
+          description: The TerminalStatus sent in the update.
+        PharmacyODSCode:
+          type: string
+          description: The ODS code sent in the update.
+        Status:
+          type: string
+          description: The status sent in the update.
+        TaskID:
+          type: string
+          description: The TaskID sent in the update.
+        PatientNHSNumber:
+          type: string
+          description: The patient NHS number sent in the update.
+        LineItemID:
+          type: string
+          description: The LineItemId sent in the update.
+        PrescriptionID:
+          type: string
+          description: The prescriptionID sent in the update.

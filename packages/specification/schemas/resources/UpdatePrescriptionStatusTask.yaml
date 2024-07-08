@@ -45,16 +45,16 @@ properties:
               enum: [https://fhir.nhs.uk/CodeSystem/task-businessStatus-nppt]
             code:
               type: string
-              enum: 
-              - With Pharmacy
-              - With Pharmacy - Preparing Remainder
-              - Ready to Collect
-              - Ready to Collect - Partial
-              - Collected
-              - Dispatched
-              - Not Dispensed
-              - Ready to Dispatch
-              - Ready to Dispatch - Partial
+              enum:
+                - With Pharmacy
+                - With Pharmacy - Preparing Remainder
+                - Ready to Collect
+                - Ready to Collect - Partial
+                - Collected
+                - Dispatched
+                - Not Dispensed
+                - Ready to Dispatch
+                - Ready to Dispatch - Partial
   intent:
     type: string
     description: Order is the allowed value to indicate the update informs an actionable task.
@@ -116,7 +116,7 @@ properties:
       type: object
       required: [_type, valueInteger]
       properties:
-        _type: 
+        _type:
           type: object
           required: [text]
           properties:
@@ -126,4 +126,4 @@ properties:
         valueInteger:
           type: integer
           minimum: 1
-          maximum: 6          
+          maximum: 6

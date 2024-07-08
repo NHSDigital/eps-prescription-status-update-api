@@ -97,17 +97,9 @@ describe("format_1 handler", () => {
     expect(responseBody).toEqual(expectedResponseBody)
   })
 
-  test("Messages that are not of type 'PrescriptionStatusChanged' are ignored", async () => {
-    const body = format_1_request()
-    body.MessageType = "NOTPrescriptionStatusChanged"
-
-    const event = {
-      headers: {},
-      body
-    }
-
+  function mockedWarnHandler() {
     const logger = new Logger({serviceName: "testService"})
-    const logger_info = jest.spyOn(logger, "info")
+    const logger_warn = jest.spyOn(logger, "warn")
 
     const handler = newHandler({
       params: FORMAT_1_PARAMS,
@@ -116,10 +108,53 @@ describe("format_1 handler", () => {
       schema: format_1.eventSchema
     })
 
+    return {handler, logger_warn}
+  }
+
+  test("Messages that are not of type 'PrescriptionStatusChanged' are ignored", async () => {
+    const body = format_1_request()
+    body.MessageType = "NOTPrescriptionStatusChanged"
+
+    const {handler, logger_warn} = mockedWarnHandler()
+    const event = {
+      headers: {},
+      body
+    }
+
     const response = await handler(event as format_1.eventType, dummyContext)
     expect(response.statusCode).toEqual(202)
     expect(JSON.parse(response.body)).toEqual("Message Ignored")
-    expect(logger_info).toHaveBeenCalledWith("Message Ignored")
+    expect(logger_warn).toHaveBeenCalledWith("Message of type 'NOTPrescriptionStatusChanged' Ignored")
+  })
+
+  test("Messages with non NHSEngland number are ignored", async () => {
+    const body = format_1_request()
+    body.nHSCHI = "1996344668"
+
+    const {handler, logger_warn} = mockedWarnHandler()
+    const event = {
+      headers: {},
+      body
+    }
+
+    const response = await handler(event as format_1.eventType, dummyContext)
+    expect(response.statusCode).toEqual(202)
+    expect(JSON.parse(response.body)).toEqual("Message Ignored")
+    expect(logger_warn).toHaveBeenCalledWith("Message with nHSCHI number '1996344668' Ignored")
+  })
+
+  // PSU will validate the NHS number so pass it through and let the PSU provide the error message
+  test("Messages with invalid NHS number are passed through", async () => {
+    const body = format_1_request()
+    body.nHSCHI = "notanumber"
+
+    const event = {
+      headers: {},
+      body
+    }
+
+    const response = await format_1_handler(event as format_1.eventType, dummyContext)
+    expect(response.statusCode).toEqual(200)
   })
 
   test("Message missing field receives 400 and appropriate message", async () => {
@@ -191,35 +226,6 @@ describe("format_1 handler", () => {
     responseBody.entry[1].resource.lastModified = expectedResponse.entry[1].resource.lastModified
 
     expect(responseBody).toEqual(expectedResponse)
-  })
-
-  test("Request with invalid business state returns 400", async () => {
-    const body = format_1_request()
-    body.items[0].status = "Expired"
-    body.deliveryType = "Robot Collection"
-
-    const event = {
-      headers: {},
-      body: body
-    }
-
-    const logger = new Logger({serviceName: "testService"})
-    const logger_info = jest.spyOn(logger, "info")
-
-    const handler = newHandler({
-      params: FORMAT_1_PARAMS,
-      middleware: [MIDDLEWARE.validator, MIDDLEWARE.validationErrorHandler],
-      logger: logger,
-      schema: format_1.eventSchema
-    })
-
-    const response = await handler(event as format_1.eventType, dummyContext)
-    expect(response.statusCode).toEqual(400)
-    expect(JSON.parse(response.body)).toEqual([`Invalid business status on item ${body.items[0].itemID}`])
-    expect(logger_info).toHaveBeenCalledWith(
-      `Invalid business status on item ${body.items[0].itemID}.` +
-        `Unable to map delivery type ${body.deliveryType} and item status ${body.items[0].status}`
-    )
   })
 
   test("Repeat messages are translated with matching UUIDs", async () => {

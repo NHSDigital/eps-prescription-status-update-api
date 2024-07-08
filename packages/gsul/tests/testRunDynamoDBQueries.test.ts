@@ -21,7 +21,7 @@ describe("testing dynamoDBClient", () => {
           PrescriptionID: "abc",
           LineItemID: "item_1",
           Status: "latest_status",
-          TerminalStatus: "is_terminal_status",
+          TerminalStatus: "completed",
           LastModified: "1970-01-01T00:00:00Z"
         }
       ]
@@ -37,7 +37,7 @@ describe("testing dynamoDBClient", () => {
       {
         itemId: "item_1",
         latestStatus: "latest_status",
-        isTerminalState: "is_terminal_status",
+        isTerminalState: true,
         lastUpdateDateTime: "1970-01-01T00:00:00Z"
       }
     ])
@@ -71,7 +71,7 @@ describe("testing pagination in dynamoDBClient", () => {
           PrescriptionID: "abc",
           LineItemID: "item_1",
           Status: "first_status",
-          TerminalStatus: "is_terminal_status",
+          TerminalStatus: "completed",
           LastModified: "1970-01-01T00:00:00Z"
         }
       ],
@@ -88,7 +88,7 @@ describe("testing pagination in dynamoDBClient", () => {
           PrescriptionID: "abc",
           LineItemID: "item_1",
           Status: "second_status",
-          TerminalStatus: "is_terminal_status",
+          TerminalStatus: "completed",
           LastModified: "1970-01-01T00:00:00Z"
         }
       ]
@@ -106,13 +106,13 @@ describe("testing pagination in dynamoDBClient", () => {
       {
         itemId: "item_1",
         latestStatus: "first_status",
-        isTerminalState: "is_terminal_status",
+        isTerminalState: true,
         lastUpdateDateTime: "1970-01-01T00:00:00Z"
       },
       {
         itemId: "item_1",
         latestStatus: "second_status",
-        isTerminalState: "is_terminal_status",
+        isTerminalState: true,
         lastUpdateDateTime: "1970-01-01T00:00:00Z"
       }
     ])

@@ -5,12 +5,20 @@ import middy from "@middy/core"
 import inputOutputLogger from "@middy/input-output-logger"
 import validator from "@middy/validator"
 import {transpileSchema} from "@middy/validator/transpile"
-import {errorHandler} from "./errorHandler.ts"
+import {MiddyErrorHandler} from "@PrescriptionStatusUpdate_common/middyErrorHandler"
 import {getItemsUpdatesForPrescription} from "./dynamoDBclient.ts"
 import {requestSchema, requestType, inputPrescriptionType} from "./schema/request.ts"
 import {responseType, outputPrescriptionType, itemType} from "./schema/response.ts"
 
 const logger = new Logger({serviceName: "GSUL"})
+
+const errorResponseBody: responseType = {
+  schemaVersion: 1,
+  isSuccess: false,
+  prescriptions: []
+}
+
+const middyErrorHandler = new MiddyErrorHandler(errorResponseBody)
 
 const lambdaHandler = async (event: requestType): Promise<responseType> => {
   // there are deliberately no try..catch blocks in this as any errors are caught by custom middy error handler
@@ -66,7 +74,7 @@ export const handler = middy(lambdaHandler)
       }
     })
   )
-  .use(errorHandler({logger: logger}))
+  .use(middyErrorHandler.errorHandler({logger: logger}))
   .use(
     validator({
       eventSchema: transpileSchema(requestSchema)
