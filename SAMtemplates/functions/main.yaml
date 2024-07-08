@@ -126,6 +126,7 @@ Resources:
         Variables:
           TABLE_NAME: !Ref PrescriptionStatusUpdatesTableName
           LOG_LEVEL: !Ref LogLevel
+      Timeout: 3
     Metadata:
       BuildMethod: esbuild
       BuildProperties:

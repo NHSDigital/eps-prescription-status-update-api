@@ -15,7 +15,7 @@ const logger = new Logger({serviceName: "GSUL"})
 const lambdaHandler = async (event: requestType): Promise<responseType> => {
   // there are deliberately no try..catch blocks in this as any errors are caught by custom middy error handler
   // and an error response is sent
-  throw new Error("BANG!")
+  await new Promise((f) => setTimeout(f, 5000))
 
   // this is an async map so it returns an array of promises
   const itemResults = event.prescriptions.map(async (prescription) => {
