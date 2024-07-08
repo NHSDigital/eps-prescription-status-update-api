@@ -76,6 +76,10 @@ x-nhsd-apim:
     security:
       type: mtls
       secret: psu-mtls-1
+  target-attributes:
+    - name: DisplayName
+      required: true
+      header: attribute-name
   ratelimiting:
     proxy:
       timeunit: "second"
