@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any, max-len, @typescript-eslint/no-unused-vars */
+/* eslint-disable @typescript-eslint/no-explicit-any, max-len */
 import {APIGatewayProxyEvent, APIGatewayProxyResult} from "aws-lambda"
 import {
   expect,
