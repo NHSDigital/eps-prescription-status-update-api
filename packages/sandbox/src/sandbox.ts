@@ -17,6 +17,7 @@ const logger = new Logger({serviceName: "sandbox"})
  *
  */
 
+// issues with psu sandbox
 const lambdaHandler = async (): Promise<APIGatewayProxyResult> => {
   return {
     statusCode: 201,
