@@ -38,7 +38,7 @@ const TASK_VALUES = [
     id: TASK_ID_0,
     status: "completed",
     businessStatus: "Dispatched",
-    repeatNo: "1",
+    repeatNo: 1,
     lastModified: "2023-09-11T10:11:12Z"
   },
   {
@@ -49,7 +49,7 @@ const TASK_VALUES = [
     id: TASK_ID_1,
     status: "in-progress",
     businessStatus: "Ready to collect",
-    repeatNo: "1",
+    repeatNo: 1,
     lastModified: "2023-09-11T10:11:12Z"
   }
 ]
