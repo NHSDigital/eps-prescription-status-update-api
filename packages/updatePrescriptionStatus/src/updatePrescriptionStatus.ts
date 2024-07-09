@@ -203,6 +203,7 @@ export function buildDataItems(
       PharmacyODSCode: task.owner!.identifier!.value!.toUpperCase(),
       PrescriptionID: task.basedOn![0].identifier!.value!.toUpperCase(),
       ...(repeatNo !== undefined && {RepeatNo: repeatNo}),
+      RequestID: xRequestID,
       Status: task.businessStatus!.coding![0].code!,
       TaskID: task.id!,
       TerminalStatus: task.status,
