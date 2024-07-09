@@ -30,6 +30,7 @@ export interface DataItem {
   PatientNHSNumber: string
   PharmacyODSCode: string
   PrescriptionID: string
+  RepeatNo?: number
   RequestID: string
   Status: string
   TaskID: string
@@ -199,6 +200,10 @@ export function buildDataItems(
       PatientNHSNumber: task.for!.identifier!.value!,
       PharmacyODSCode: task.owner!.identifier!.value!.toUpperCase(),
       PrescriptionID: task.basedOn![0].identifier!.value!.toUpperCase(),
+      RepeatNo:
+        task.input && task.input[0] && task.input[0].valueInteger !== undefined
+          ? task.input[0].valueInteger
+          : undefined,
       RequestID: xRequestID,
       Status: task.businessStatus!.coding![0].code!,
       TaskID: task.id!,

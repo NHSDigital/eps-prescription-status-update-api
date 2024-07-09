@@ -38,6 +38,7 @@ const TASK_VALUES = [
     id: TASK_ID_0,
     status: "completed",
     businessStatus: "Dispatched",
+    repeatNo: "1",
     lastModified: "2023-09-11T10:11:12Z"
   },
   {
@@ -48,6 +49,7 @@ const TASK_VALUES = [
     id: TASK_ID_1,
     status: "in-progress",
     businessStatus: "Ready to collect",
+    repeatNo: "1",
     lastModified: "2023-09-11T10:11:12Z"
   }
 ]
@@ -87,6 +89,7 @@ export function generateEntry(index: number) {
       for: {identifier: {value: values.nhsNumber, system: NHS_NUMBER_CODESYSTEM}},
       owner: {identifier: {value: values.odsCode, system: ODS_CODE_CODESYSTEM}},
       basedOn: [{identifier: {value: values.prescriptionID, system: PRESCRIPTION_ID_CODESYSTEM}}],
+      input: [{_type: {text: "Repeat Number"}, valueInteger: values.repeatNo}],
       businessStatus: {coding: [{code: values.businessStatus, system: STATUS_CODESYSTEM}]},
       id: values.id,
       status: values.status
@@ -119,6 +122,7 @@ export function generateExpectedItems(itemCount: number = 1) {
           PatientNHSNumber: {S: values.nhsNumber},
           PharmacyODSCode: {S: values.odsCode},
           PrescriptionID: {S: values.prescriptionID},
+          RepeatNo: {S: values.repeatNo},
           Status: {S: values.businessStatus},
           TaskID: {S: values.id},
           TerminalStatus: {S: values.status},
