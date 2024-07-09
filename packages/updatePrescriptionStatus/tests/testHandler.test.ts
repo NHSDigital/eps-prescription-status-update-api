@@ -73,6 +73,31 @@ describe("Integration tests for updatePrescriptionStatus handler", () => {
     expect(mockSend).toHaveBeenCalledWith(expect.objectContaining(expectedItems))
   })
 
+  it("when input field is absent in a single item request, expect DynamoDB item without RepeatNo field", async () => {
+    const body = generateBody()
+    const entryResource: any = body.entry?.[0]?.resource
+    if (entryResource?.input) {
+      delete entryResource.input
+    }
+
+    const event: APIGatewayProxyEvent = generateMockEvent(body)
+    const expectedItems = generateExpectedItems()
+    const transactItem: any = expectedItems.input?.TransactItems?.[0]?.Put?.Item
+    if (transactItem?.RepeatNo) {
+      delete transactItem.RepeatNo
+    }
+
+    mockTransact.mockReturnValue(expectedItems)
+
+    const response: APIGatewayProxyResult = await handler(event, {})
+
+    expect(response.statusCode).toEqual(201)
+    expect(JSON.parse(response.body)).toEqual(responseSingleItem)
+
+    expect(mockSend).toHaveBeenCalledTimes(1)
+    expect(mockSend).toHaveBeenCalledWith(expect.objectContaining(expectedItems))
+  })
+
   it("when multiple items in request, expect multiple items sent to DynamoDB in a single call", async () => {
     const body = generateBody(2)
     const event: APIGatewayProxyEvent = generateMockEvent(body)
@@ -126,28 +151,28 @@ describe("Integration tests for updatePrescriptionStatus handler", () => {
     )
   })
 
-  // it("when dynamo call fails, expect 500 status code and internal server error message", async () => {
-  //   const event = generateMockEvent(requestDispatched)
-  //   mockSend.mockRejectedValue(new Error() as never)
+  it("when dynamo call fails, expect 500 status code and internal server error message", async () => {
+    const event = generateMockEvent(requestDispatched)
+    mockSend.mockRejectedValue(new Error() as never)
 
-  //   const response: APIGatewayProxyResult = await handler(event, {})
+    const response: APIGatewayProxyResult = await handler(event, {})
 
-  //   expect(response.statusCode).toEqual(500)
-  //   expect(JSON.parse(response.body)).toEqual(bundleWrap([serverError()]))
-  // })
+    expect(response.statusCode).toEqual(500)
+    expect(JSON.parse(response.body)).toEqual(bundleWrap([serverError()]))
+  })
 
-  // it("when data store update times out, expect 504 status code and relevant error message", async () => {
-  //   mockSend.mockImplementation(() => new Promise(() => {}))
+  it("when data store update times out, expect 504 status code and relevant error message", async () => {
+    mockSend.mockImplementation(() => new Promise(() => {}))
 
-  //   const event: APIGatewayProxyEvent = generateMockEvent(requestDispatched)
-  //   const eventHandler: Promise<APIGatewayProxyResult> = handler(event, {})
+    const event: APIGatewayProxyEvent = generateMockEvent(requestDispatched)
+    const eventHandler: Promise<APIGatewayProxyResult> = handler(event, {})
 
-  //   await jest.advanceTimersByTimeAsync(LAMBDA_TIMEOUT_MS)
+    await jest.advanceTimersByTimeAsync(LAMBDA_TIMEOUT_MS)
 
-  //   const response = await eventHandler
-  //   expect(response.statusCode).toBe(504)
-  //   expect(JSON.parse(response.body)).toEqual(bundleWrap([timeoutResponse()]))
-  // })
+    const response = await eventHandler
+    expect(response.statusCode).toBe(504)
+    expect(JSON.parse(response.body)).toEqual(bundleWrap([timeoutResponse()]))
+  })
 
   it("when multiple tasks have missing fields, expect 400 status code and messages indicating missing fields", async () => {
     const body: any = {...requestMultipleMissingFields}
@@ -239,36 +264,36 @@ describe("Integration tests for updatePrescriptionStatus handler", () => {
     expect(responseBody.entry[1].response.status).not.toEqual("200 OK")
   })
 
-  // it("when duplicates are introduced without any other entry, expect only 409 status with a message", async () => {
-  //   const mockEvent: APIGatewayProxyEvent = generateMockEvent(requestDuplicateItems)
+  it("when duplicates are introduced without any other entry, expect only 409 status with a message", async () => {
+    const mockEvent: APIGatewayProxyEvent = generateMockEvent(requestDuplicateItems)
 
-  //   mockSend.mockRejectedValue(
-  //     new TransactionCanceledException({
-  //       message: "DynamoDB transaction cancelled due to conditional check failure.",
-  //       $metadata: {},
-  //       CancellationReasons: [
-  //         {
-  //           Code: "ConditionalCheckFailed",
-  //           Item: {
-  //             TaskID: {S: "d70678c-81e4-6665-8c67-17596fd0aa87"}
-  //           },
-  //           Message: "The conditional request failed"
-  //         }
-  //       ]
-  //     }) as never
-  //   )
+    mockSend.mockRejectedValue(
+      new TransactionCanceledException({
+        message: "DynamoDB transaction cancelled due to conditional check failure.",
+        $metadata: {},
+        CancellationReasons: [
+          {
+            Code: "ConditionalCheckFailed",
+            Item: {
+              TaskID: {S: "d70678c-81e4-6665-8c67-17596fd0aa87"}
+            },
+            Message: "The conditional request failed"
+          }
+        ]
+      }) as never
+    )
 
-  //   const response: APIGatewayProxyResult = await handler(mockEvent, {})
-  //   const responseBody = JSON.parse(response.body)
+    const response: APIGatewayProxyResult = await handler(mockEvent, {})
+    const responseBody = JSON.parse(response.body)
 
-  //   expect(response.statusCode).toBe(409)
-  //   expect(responseBody.entry).toHaveLength(1)
+    expect(response.statusCode).toBe(409)
+    expect(responseBody.entry).toHaveLength(1)
 
-  //   expect(responseBody.entry[0].response.location).toEqual("Task/d70678c-81e4-6665-8c67-17596fd0aa87")
-  //   expect(responseBody.entry[0].response.status).toEqual("409 Conflict")
-  //   expect(responseBody.entry[0].response.outcome.issue[0].diagnostics).toEqual(
-  //     "Request contains a task id and prescription id identical to a record already in the data store."
-  //   )
-  //   expect(responseBody.entry[0].response.status).not.toEqual("200 OK")
-  // })
+    expect(responseBody.entry[0].response.location).toEqual("Task/d70678c-81e4-6665-8c67-17596fd0aa87")
+    expect(responseBody.entry[0].response.status).toEqual("409 Conflict")
+    expect(responseBody.entry[0].response.outcome.issue[0].diagnostics).toEqual(
+      "Request contains a task id and prescription id identical to a record already in the data store."
+    )
+    expect(responseBody.entry[0].response.status).not.toEqual("200 OK")
+  })
 })
