@@ -5,7 +5,7 @@ import {
   requestType,
   deliveryType
 } from "./request"
-import {Ok, Result} from "pratica"
+import {Ok, Result, collectResult} from "pratica"
 import {v4 as uuidv4} from "uuid"
 import {Transformer} from "../../handler"
 import {wrap_with_status} from "../../utils"
@@ -14,11 +14,11 @@ import {Md5} from "ts-md5"
 export const transformer: Transformer<requestType> = (requestBody, _logger, headers) => {
   const bundle_entry_template = generateTemplate(requestBody)
 
-  return requestBody.items
-    .map((item) => populateTemplate(bundle_entry_template, item, requestBody))
-    .all_ok()
-    .map(bundle_entries)
-    .mapErr(wrap_with_status(400, headers))
+  const populated_templates = requestBody.items.map((item) =>
+    populateTemplate(bundle_entry_template, item, requestBody)
+  )
+
+  return collectResult(populated_templates).map(bundle_entries).mapErr(wrap_with_status(400, headers))
 }
 
 function bundle_entries(entries: Array<BundleEntry<Task>>): Bundle<Task> {
