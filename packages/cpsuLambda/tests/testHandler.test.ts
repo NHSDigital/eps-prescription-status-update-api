@@ -68,7 +68,8 @@ describe("format_1 handler", () => {
         "apigw-request-id": "test-apigw-request-id",
         "nhsd-correlation-id": "test-nhsd-correlation-id",
         "nhsd-request-id": "test-nhsd-request-id",
-        "x-correlation-id": "test-x-correlation-id"
+        "x-correlation-id": "test-x-correlation-id",
+        "attribute-name": "test-attribute-value"
       },
       body: format_1_request()
     }
@@ -91,7 +92,8 @@ describe("format_1 handler", () => {
       "apigw-request-id": "test-apigw-request-id",
       "nhsd-correlation-id": "test-nhsd-correlation-id",
       "nhsd-request-id": "test-nhsd-request-id",
-      "x-correlation-id": "test-x-correlation-id"
+      "x-correlation-id": "test-x-correlation-id",
+      "attribute-name": "test-attribute-value"
     })
 
     expect(responseBody).toEqual(expectedResponseBody)
