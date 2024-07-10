@@ -74,7 +74,7 @@ else
 fi
 
 # Remove the target attribute if the environment is sandbox
-if [[ "${AWS_ENVIRONMENT}" == "sandbox" ]]; then
+if [[ "${AWS_ENVIRONMENT}" == *"sandbox"* ]]; then
     echo "Removing target attribute for sandbox environment"
     jq 'del(.["x-nhsd-apim"].target)' "${SPEC_PATH}" > temp.json && mv temp.json "${SPEC_PATH}"
 fi
