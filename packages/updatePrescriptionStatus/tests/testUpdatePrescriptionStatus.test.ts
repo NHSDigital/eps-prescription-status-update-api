@@ -230,6 +230,7 @@ describe("buildDataItems", () => {
   })
 
   it("should include RepeatNo in data item when defined", () => {
+    const task = validTask()
     const repeatNo = 1
 
     task.input = [

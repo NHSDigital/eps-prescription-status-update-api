@@ -73,20 +73,13 @@ else
     fi
 fi
 
-# Remove the target attribute if the environment is sandbox
-if [[ "${AWS_ENVIRONMENT}" == "sandbox" ]]; then
-    echo "Removing target attribute for sandbox environment"
-    jq 'del(.["x-nhsd-apim"].target)' "${SPEC_PATH}" > temp.json && mv temp.json "${SPEC_PATH}"
-fi
-
-# Remove checkprescriptionstatusupdates if its not needed
+# remove checkprescriptionstatusupdates if its not needed
 if [[ "${DEPLOY_CHECK_PRESCRIPTION_STATUS_UPDATE}" == "false" ]]; then
     if [[ "${API_TYPE}" == "standard" ]]; then
         echo "Removing checkprescriptionstatusupdates endpoint"
         jq 'del(.paths."/checkprescriptionstatusupdates")' "$SPEC_PATH" > temp.json && mv temp.json "$SPEC_PATH"
     fi
 fi
-
 
 echo
 
