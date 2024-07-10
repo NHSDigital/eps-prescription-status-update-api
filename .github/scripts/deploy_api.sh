@@ -72,7 +72,14 @@ else
         jq '.components.securitySchemes."app-level0" = {"$ref": "https://proxygen.ptl.api.platform.nhs.uk/components/securitySchemes/app-level0"}' "${SPEC_PATH}" > temp.json && mv temp.json "${SPEC_PATH}"
     fi
 fi
-# remove checkprescriptionstatusupdates if its not needed
+
+# Remove the target attribute if the environment is sandbox
+if [[ "${AWS_ENVIRONMENT}" == "sandbox" ]]; then
+    echo "Removing target attribute for sandbox environment"
+    jq 'del(.["x-nhsd-apim"].target)' "${SPEC_PATH}" > temp.json && mv temp.json "${SPEC_PATH}"
+fi
+
+# Remove checkprescriptionstatusupdates if its not needed
 if [[ "${DEPLOY_CHECK_PRESCRIPTION_STATUS_UPDATE}" == "false" ]]; then
     if [[ "${API_TYPE}" == "standard" ]]; then
         echo "Removing checkprescriptionstatusupdates endpoint"
