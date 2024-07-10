@@ -23,7 +23,8 @@ import {
   validateEntry,
   ValidationOutcome,
   validateContent,
-  entryContent
+  entryContent,
+  nhsNumberRange
 } from "../../src/validation/content"
 
 import {generateInvalidNhsNumbers, generateValidNhsNumbers} from "../utils/nhsNumber"
@@ -207,6 +208,29 @@ describe("Unit tests for validation of NHS number", () => {
     const actual = nhsNumber(task as Task)
 
     expect(actual).toEqual(expected)
+  })
+})
+
+describe("Unit tests for validation of NHS number range", () => {
+  it.each([
+    {
+      nhsNumbers: [101_000_000, 311_299_9999],
+      expected: "NHS number is in the Scottish range.",
+      scenarioDescription: "When NHS number is in the Scottish range, should return expected issue."
+    },
+    {
+      nhsNumbers: [320_000_001, 399_999_999],
+      expected: "NHS number is in the Northern Irish range.",
+      scenarioDescription: "When NHS number is in the Northern Irish range, should return expected issue."
+    }
+  ])("$scenarioDescription", async ({nhsNumbers, expected}) => {
+    for (const _nhsNumber of nhsNumbers) {
+      const task = {for: {identifier: {value: String(_nhsNumber)}}}
+
+      const actual = nhsNumberRange(task as Task)
+
+      expect(actual).toEqual(expected)
+    }
   })
 })
 

@@ -74,6 +74,36 @@ export function nhsNumber(task: Task): string | undefined {
   return validateNhsNumber(nhsNumber) ? undefined : message
 }
 
+export function nhsNumberRange(task: Task): string | undefined {
+  type Range = {low: number; high: number; description?: string}
+
+  const validRanges: Array<Range> = [
+    {low: 3_113_000_000, high: 4_999_999_999},
+    {low: 6_000_000_000, high: 7_999_999_999}
+  ]
+
+  const nhsNumber = Number(task.for?.identifier?.value)
+  for (const range of validRanges) {
+    if (range.low <= nhsNumber && nhsNumber <= range.high) {
+      return undefined
+    }
+  }
+
+  const invalidRanges: Array<Range> = [
+    {low: 101_000_000, high: 320_000_000, description: "Scottish"},
+    {low: 320_000_001, high: 399_999_999, description: "Northern Irish"},
+    {low: 400_000_000, high: 3_112_999_999, description: "Scottish"}
+  ]
+
+  for (const range of invalidRanges) {
+    if (range.low <= nhsNumber && nhsNumber <= range.high) {
+      return `NHS number is in the ${range.description} range.`
+    }
+  }
+
+  return "NHS number is not in a known, valid range."
+}
+
 export function resourceType(task: Task): string | undefined {
   const message = "Resource's resourceType is not 'Task'."
   const isTask = task.resourceType === "Task"

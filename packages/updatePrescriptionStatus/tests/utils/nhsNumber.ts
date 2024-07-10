@@ -3,10 +3,10 @@
 import {faker} from "@faker-js/faker"
 import {calculateCheckDigit} from "../../src/utils/nhsNumber"
 
-export function generateValidNhsNumbers(num: number) {
+export function generateValidNhsNumbers(num: number, min: number = 100_000_000, max: number = 999_999_999) {
   const numbers: Array<string> = []
   while (numbers.length < num) {
-    const numString = faker.number.int({min: 100000000, max: 999999999}).toString()
+    const numString = faker.number.int({min: min, max: max}).toString()
     let checkDigit = calculateCheckDigit(numString)
 
     if (checkDigit === 11) {
@@ -23,7 +23,7 @@ export function generateValidNhsNumbers(num: number) {
 export function generateInvalidNhsNumbers(num: number) {
   const numbers: Array<string> = []
   while (numbers.length < num) {
-    const numString = faker.number.int({min: 100000000, max: 999999999}).toString()
+    const numString = faker.number.int({min: 100_000_000, max: 999_999_999}).toString()
     const checkDigit = calculateCheckDigit(numString)
 
     const invalidCheckDigit = (checkDigit + 1) % 10
