@@ -230,15 +230,8 @@ describe("buildDataItems", () => {
   })
 
   it("should include RepeatNo in data item when defined", () => {
-    const task = validTask()
-    const lineItemID = v4().toUpperCase()
-    const pharmacyODSCode = "X26"
-    const prescriptionID = "4F00A8-A83008-2EB4D"
     const repeatNo = 1
 
-    task.focus!.identifier!.value! = lineItemID.toLowerCase()
-    task.owner!.identifier!.value! = pharmacyODSCode.toLowerCase()
-    task.basedOn![0].identifier!.value! = prescriptionID.toLowerCase()
     task.input = [
       {
         valueInteger: repeatNo,
