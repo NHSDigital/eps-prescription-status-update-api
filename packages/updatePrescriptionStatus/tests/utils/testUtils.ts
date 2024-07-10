@@ -89,7 +89,6 @@ export function generateEntry(index: number) {
       for: {identifier: {value: values.nhsNumber, system: NHS_NUMBER_CODESYSTEM}},
       owner: {identifier: {value: values.odsCode, system: ODS_CODE_CODESYSTEM}},
       basedOn: [{identifier: {value: values.prescriptionID, system: PRESCRIPTION_ID_CODESYSTEM}}],
-      input: [{_type: {text: "Repeat Number"}, valueInteger: values.repeatNo}],
       businessStatus: {coding: [{code: values.businessStatus, system: STATUS_CODESYSTEM}]},
       id: values.id,
       status: values.status
