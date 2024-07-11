@@ -30,6 +30,7 @@ export interface DataItem {
   PatientNHSNumber: string
   PharmacyODSCode: string
   PrescriptionID: string
+  RepeatNo?: number
   RequestID: string
   Status: string
   TaskID: string
@@ -193,12 +194,15 @@ export function buildDataItems(
     const task = requestEntry.resource as Task
     logger.info("Building data item for task.", {task: task, id: task.id})
 
+    const repeatNo = task.input?.[0]?.valueInteger
+
     const dataItem: DataItem = {
       LastModified: task.lastModified!,
       LineItemID: task.focus!.identifier!.value!.toUpperCase(),
       PatientNHSNumber: task.for!.identifier!.value!,
       PharmacyODSCode: task.owner!.identifier!.value!.toUpperCase(),
       PrescriptionID: task.basedOn![0].identifier!.value!.toUpperCase(),
+      ...(repeatNo !== undefined && {RepeatNo: repeatNo}),
       RequestID: xRequestID,
       Status: task.businessStatus!.coding![0].code!,
       TaskID: task.id!,
