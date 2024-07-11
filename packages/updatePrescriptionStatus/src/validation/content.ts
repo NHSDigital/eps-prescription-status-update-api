@@ -78,7 +78,8 @@ export function nhsNumberRange(task: Task): string | undefined {
   type Range = {low: number; high: number; description?: string}
 
   const validRanges: Array<Range> = [
-    {low: 3_113_000_000, high: 4_999_999_999},
+    {low: 3_113_000_000, high: 3_200_000_000},
+    {low: 4_000_000_000, high: 4_999_999_999},
     {low: 6_000_000_000, high: 7_999_999_999}
   ]
 
@@ -90,9 +91,8 @@ export function nhsNumberRange(task: Task): string | undefined {
   }
 
   const invalidRanges: Array<Range> = [
-    {low: 101_000_000, high: 320_000_000, description: "Scottish"},
-    {low: 320_000_001, high: 399_999_999, description: "Northern Irish"},
-    {low: 400_000_000, high: 3_112_999_999, description: "Scottish"}
+    {low: 101_000_000, high: 3_112_999_999, description: "Scottish"},
+    {low: 3_200_000_001, high: 3_999_999_999, description: "Northern Irish"}
   ]
 
   for (const range of invalidRanges) {

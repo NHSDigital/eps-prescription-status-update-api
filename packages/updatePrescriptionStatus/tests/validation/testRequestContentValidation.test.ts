@@ -214,18 +214,23 @@ describe("Unit tests for validation of NHS number", () => {
 describe("Unit tests for validation of NHS number range", () => {
   it.each([
     {
-      nhsNumbers: [101_000_000, 311_299_9999],
+      nhsNumbers: ["0101000000", "3112999999"],
       expected: "NHS number is in the Scottish range.",
       scenarioDescription: "When NHS number is in the Scottish range, should return expected issue."
     },
     {
-      nhsNumbers: [320_000_001, 399_999_999],
+      nhsNumbers: ["3200000001", "3999999999"],
       expected: "NHS number is in the Northern Irish range.",
       scenarioDescription: "When NHS number is in the Northern Irish range, should return expected issue."
+    },
+    {
+      nhsNumbers: ["3113000000", "3200000000", "4000000000", "4999999999", "6000000000", "7999999999"],
+      expected: undefined,
+      scenarioDescription: "When NHS number is in the NHSE range."
     }
   ])("$scenarioDescription", async ({nhsNumbers, expected}) => {
     for (const _nhsNumber of nhsNumbers) {
-      const task = {for: {identifier: {value: String(_nhsNumber)}}}
+      const task = {for: {identifier: {value: _nhsNumber}}}
 
       const actual = nhsNumberRange(task as Task)
 
