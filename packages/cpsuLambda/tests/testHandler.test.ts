@@ -22,7 +22,8 @@ const TEST_HEADERS = {
   "apigw-request-id": "test-apigw-request-id",
   "nhsd-correlation-id": "test-nhsd-correlation-id",
   "nhsd-request-id": "test-nhsd-request-id",
-  "x-correlation-id": "test-x-correlation-id"
+  "x-correlation-id": "test-x-correlation-id",
+  "attribute-name": "test-attribute-value"
 }
 
 describe("generic handler", () => {
@@ -89,7 +90,6 @@ describe("format_1 handler", () => {
     responseBody.entry[1].resource.lastModified = expectedResponseBody.entry[1].resource.lastModified
 
     expect(response.headers).toEqual(TEST_HEADERS)
-
     expect(responseBody).toEqual(expectedResponseBody)
   })
 
