@@ -83,7 +83,7 @@ export function nhsNumberRange(task: Task): string | undefined {
     {low: 6_000_000_000, high: 7_999_999_999}
   ]
 
-  const nhsNumber = Number(task.for?.identifier?.value)
+  const nhsNumber = Number(task.for!.identifier!.value)
   for (const range of validRanges) {
     if (range.low <= nhsNumber && nhsNumber <= range.high) {
       return undefined
