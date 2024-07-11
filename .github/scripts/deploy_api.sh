@@ -73,10 +73,10 @@ else
     fi
 fi
 
-# Remove target attributes if the environment is sandbox
+# Remove the target attribute if the environment is sandbox
 if [[ "${APIGEE_ENVIRONMENT}" == *"sandbox"* ]]; then
-    echo "Removing target attributes for sandbox environment"
-    jq 'del(."x-nhsd-apim"."target-attributes")' "$SPEC_PATH" > temp.json && mv temp.json "$SPEC_PATH"
+    echo "Removing target attribute for sandbox environment"
+    jq 'del(.["x-nhsd-apim"]["target", "target-attributes"])' "$SPEC_PATH" > temp.json && mv temp.json "$SPEC_PATH"
 fi
 
 # Remove checkprescriptionstatusupdates if its not needed
