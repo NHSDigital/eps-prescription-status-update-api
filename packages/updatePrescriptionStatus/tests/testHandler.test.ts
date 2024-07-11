@@ -94,7 +94,32 @@ describe("Integration tests for updatePrescriptionStatus handler", () => {
     expect(response.statusCode).toEqual(201)
     expect(JSON.parse(response.body)).toEqual(responseSingleItem)
 
-    expect(expectedItems.input.TransactItems[0].Put.Item.RepeatNo).toEqual(undefined)
+    expect((expectedItems.input.TransactItems[0].Put.Item as any).RepeatNo).toEqual(undefined)
+    expect(mockSend).toHaveBeenCalledTimes(1)
+    expect(mockSend).toHaveBeenCalledWith(expect.objectContaining(expectedItems))
+  })
+
+  it("when input field is present in a single item request, expect DynamoDB item with RepeatNo field", async () => {
+    const body = generateBody()
+    const entryResource: any = body.entry?.[0]?.resource
+    if (!entryResource.input) {
+      entryResource.input = [{valueInteger: 1}]
+    }
+
+    const event: APIGatewayProxyEvent = generateMockEvent(body)
+    const expectedItems = generateExpectedItems()
+
+    const transactItem: any = expectedItems.input?.TransactItems?.[0]?.Put?.Item
+    transactItem.RepeatNo = 1
+
+    mockTransact.mockReturnValue(expectedItems)
+
+    const response: APIGatewayProxyResult = await handler(event, {})
+
+    expect(response.statusCode).toEqual(201)
+    expect(JSON.parse(response.body)).toEqual(responseSingleItem)
+
+    expect((expectedItems.input.TransactItems[0].Put.Item as any).RepeatNo).toEqual(1)
     expect(mockSend).toHaveBeenCalledTimes(1)
     expect(mockSend).toHaveBeenCalledWith(expect.objectContaining(expectedItems))
   })

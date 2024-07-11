@@ -38,7 +38,6 @@ const TASK_VALUES = [
     id: TASK_ID_0,
     status: "completed",
     businessStatus: "Dispatched",
-    repeatNo: 1,
     lastModified: "2023-09-11T10:11:12Z"
   },
   {
@@ -49,7 +48,6 @@ const TASK_VALUES = [
     id: TASK_ID_1,
     status: "in-progress",
     businessStatus: "Ready to collect",
-    repeatNo: 1,
     lastModified: "2023-09-11T10:11:12Z"
   }
 ]
@@ -121,7 +119,6 @@ export function generateExpectedItems(itemCount: number = 1) {
           PatientNHSNumber: {S: values.nhsNumber},
           PharmacyODSCode: {S: values.odsCode},
           PrescriptionID: {S: values.prescriptionID},
-          RepeatNo: {S: values.repeatNo},
           Status: {S: values.businessStatus},
           TaskID: {S: values.id},
           TerminalStatus: {S: values.status},
