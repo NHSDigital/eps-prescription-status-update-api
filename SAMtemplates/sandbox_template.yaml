@@ -88,7 +88,7 @@ Resources:
   Status:
     Type: AWS::Serverless::Function
     Properties:
-      FunctionName: !Sub ${StackName}-status
+      FunctionName: !Sub ${AWS::StackName}-status
       CodeUri: ../packages
       Handler: statusLambda.handler
       Role: !GetAtt StatusResources.Outputs.LambdaRoleArn
