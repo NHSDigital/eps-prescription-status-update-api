@@ -8,8 +8,7 @@ type LoggerAndLevel = {
   level?: string
 }
 
-// custom middy error handler to handle valiation errors
-
+// custom middy error handler to handle validation errors
 function validationErrorHandler({logger = console, level = "error"}: LoggerAndLevel) {
   return {
     onError: async (handler) => {
@@ -19,7 +18,8 @@ function validationErrorHandler({logger = console, level = "error"}: LoggerAndLe
         logger[level as keyof HandlerLogger]("Validation error", error)
         handler.response = {
           statusCode: 400,
-          body: JSON.stringify([{error: error.message}])
+          body: JSON.stringify([{error: error.message}]),
+          headers: handler.event.headers
         }
         return
       }
@@ -30,7 +30,8 @@ function validationErrorHandler({logger = console, level = "error"}: LoggerAndLe
 
       const responseBody = {
         statusCode: 400,
-        body: JSON.stringify(errors)
+        body: JSON.stringify(errors),
+        headers: handler.event.headers
       }
 
       handler.response = responseBody

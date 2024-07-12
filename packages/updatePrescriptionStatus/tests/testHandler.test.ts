@@ -73,6 +73,57 @@ describe("Integration tests for updatePrescriptionStatus handler", () => {
     expect(mockSend).toHaveBeenCalledWith(expect.objectContaining(expectedItems))
   })
 
+  it("when input field is absent in a single item request, expect DynamoDB item without RepeatNo field", async () => {
+    const body = generateBody()
+    const entryResource: any = body.entry?.[0]?.resource
+    if (entryResource?.input) {
+      delete entryResource.input
+    }
+
+    const event: APIGatewayProxyEvent = generateMockEvent(body)
+    const expectedItems = generateExpectedItems()
+    const transactItem: any = expectedItems.input?.TransactItems?.[0]?.Put?.Item
+    if (transactItem?.RepeatNo) {
+      delete transactItem.RepeatNo
+    }
+
+    mockTransact.mockReturnValue(expectedItems)
+
+    const response: APIGatewayProxyResult = await handler(event, {})
+
+    expect(response.statusCode).toEqual(201)
+    expect(JSON.parse(response.body)).toEqual(responseSingleItem)
+
+    expect((expectedItems.input.TransactItems[0].Put.Item as any).RepeatNo).toEqual(undefined)
+    expect(mockSend).toHaveBeenCalledTimes(1)
+    expect(mockSend).toHaveBeenCalledWith(expect.objectContaining(expectedItems))
+  })
+
+  it("when input field is present in a single item request, expect DynamoDB item with RepeatNo field", async () => {
+    const body = generateBody()
+    const entryResource: any = body.entry?.[0]?.resource
+    if (!entryResource.input) {
+      entryResource.input = [{valueInteger: 1}]
+    }
+
+    const event: APIGatewayProxyEvent = generateMockEvent(body)
+    const expectedItems = generateExpectedItems()
+
+    const transactItem: any = expectedItems.input?.TransactItems?.[0]?.Put?.Item
+    transactItem.RepeatNo = 1
+
+    mockTransact.mockReturnValue(expectedItems)
+
+    const response: APIGatewayProxyResult = await handler(event, {})
+
+    expect(response.statusCode).toEqual(201)
+    expect(JSON.parse(response.body)).toEqual(responseSingleItem)
+
+    expect((expectedItems.input.TransactItems[0].Put.Item as any).RepeatNo).toEqual(1)
+    expect(mockSend).toHaveBeenCalledTimes(1)
+    expect(mockSend).toHaveBeenCalledWith(expect.objectContaining(expectedItems))
+  })
+
   it("when multiple items in request, expect multiple items sent to DynamoDB in a single call", async () => {
     const body = generateBody(2)
     const event: APIGatewayProxyEvent = generateMockEvent(body)

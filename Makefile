@@ -38,7 +38,8 @@ sam-deploy: guard-AWS_DEFAULT_PROFILE guard-stack_name
 	sam deploy \
 		--stack-name $$stack_name \
 		--parameter-overrides \
-			  EnableSplunk=false
+			  EnableSplunk=false \
+			  DeployCheckPrescriptionStatusUpdate=true 
 
 sam-delete: guard-AWS_DEFAULT_PROFILE guard-stack_name
 	sam delete --stack-name $$stack_name
