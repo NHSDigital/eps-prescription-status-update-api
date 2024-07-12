@@ -89,7 +89,7 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       FunctionName: !Sub ${StackName}-status
-      CodeUri: ../../packages
+      CodeUri: ../packages
       Handler: statusLambda.handler
       Role: !GetAtt StatusResources.Outputs.LambdaRoleArn
       Environment:
@@ -110,7 +110,7 @@ Resources:
   StatusResources:
     Type: AWS::Serverless::Application
     Properties:
-      Location: lambda_resources.yaml
+      Location: functions/lambda_resources.yaml
       Parameters:
         StackName: !Ref StackName
         LambdaName: !Sub ${StackName}-status
