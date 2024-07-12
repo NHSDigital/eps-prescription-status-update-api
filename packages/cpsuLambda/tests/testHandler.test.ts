@@ -163,7 +163,7 @@ describe("format_1 handler", () => {
     }
     const response = await format_1_handler(event as format_1.eventType, dummyContext)
     expect(response.statusCode).toEqual(400)
-    expect(response.body).toEqual(`[{\\"path\\":\\"/body\\",\\"error\\":\\"must have required property 'oDSCode'\\"}]`)
+    expect(response.body).toEqual(String.raw`[{"path":"/body","error":"must have required property 'oDSCode'"}]`)
     expect(response.headers).toEqual(TEST_HEADERS)
   })
 
@@ -179,8 +179,8 @@ describe("format_1 handler", () => {
     const response = await format_1_handler(event as format_1.eventType, dummyContext)
     expect(response.statusCode).toEqual(400)
     expect(response.body).toEqual(
-      `[{\\"path\\":\\"/body\\",\\"error\\":\\"must have required property 'oDSCode'\\"},` +
-        `{\\"path\\":\\"/body/items/0\\",\\"error\\":\\"must have required property 'itemID'\\"}]`
+      String.raw`[{"path":"/body","error":"must have required property 'oDSCode'"},` +
+        `{"path":"/body/items/0","error":"must have required property 'itemID'"}]`
     )
     expect(response.headers).toEqual(TEST_HEADERS)
   })
@@ -195,7 +195,7 @@ describe("format_1 handler", () => {
     }
     const response = await format_1_handler(event as format_1.eventType, dummyContext)
     expect(response.statusCode).toEqual(400)
-    expect(response.body).toEqual(`[{\\"path\\":\\"/body/repeatNo\\",\\"error\\":\\"must be number\\"}]`)
+    expect(response.body).toEqual(String.raw`[{"path":"/body/repeatNo","error":"must be number"}]`)
     expect(response.headers).toEqual(TEST_HEADERS)
   })
 
