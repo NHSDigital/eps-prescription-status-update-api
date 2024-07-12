@@ -15,7 +15,7 @@ function validationErrorHandler({logger = console, level = "error"}: LoggerAndLe
       const setErrorResponse = (body: any) => {
         handler.response = {
           statusCode: 400,
-          body: JSON.stringify(body).replaceAll('"', String.raw`"`),
+          body: JSON.stringify(JSON.stringify(body)),
           headers: handler.event.headers
         }
       }
