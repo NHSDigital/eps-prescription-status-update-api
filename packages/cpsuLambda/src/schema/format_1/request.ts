@@ -14,6 +14,11 @@ const itemStatusSchema = {
   ]
 } as const satisfies JSONSchema
 
+const completedStatusSchema = {
+  type: "string",
+  enum: ["Cancelled", "Expired", "NotDispensed", "Collected"]
+} as const satisfies JSONSchema
+
 const itemSchema = {
   type: "object",
   required: ["itemID", "status"],
@@ -21,7 +26,8 @@ const itemSchema = {
     itemID: {
       type: "string"
     },
-    status: itemStatusSchema
+    status: itemStatusSchema,
+    completedStatus: completedStatusSchema
   }
 } as const satisfies JSONSchema
 
