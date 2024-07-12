@@ -32,7 +32,8 @@ sam-sync: guard-AWS_DEFAULT_PROFILE guard-stack_name compile
 		--watch \
 		--template-file SAMtemplates/main_template.yaml \
 		--parameter-overrides \
-			  EnableSplunk=false
+			  EnableSplunk=false \
+			  DeployCheckPrescriptionStatusUpdate=true 
 
 sam-deploy: guard-AWS_DEFAULT_PROFILE guard-stack_name
 	sam deploy \
