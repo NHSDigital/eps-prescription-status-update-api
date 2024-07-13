@@ -12,29 +12,26 @@ type LoggerAndLevel = {
 function validationErrorHandler({logger = console, level = "error"}: LoggerAndLevel) {
   return {
     onError: async (handler) => {
+      const setErrorResponse = (body: any) => {
+        handler.response = {
+          statusCode: 400,
+          body: JSON.stringify(JSON.stringify(body)),
+          headers: handler.event.headers
+        }
+      }
+
       const error: any = handler.error
 
       if (!error?.cause?.data) {
         logger[level as keyof HandlerLogger]("Validation error", error)
-        handler.response = {
-          statusCode: 400,
-          body: JSON.stringify([{error: error.message}]),
-          headers: handler.event.headers
-        }
+        setErrorResponse([{error: error.message}])
         return
       }
 
       const errors = error.cause.data.map(parseError)
 
       logger[level as keyof HandlerLogger]("Validation error", errors)
-
-      const responseBody = {
-        statusCode: 400,
-        body: JSON.stringify(errors),
-        headers: handler.event.headers
-      }
-
-      handler.response = responseBody
+      setErrorResponse(errors)
     }
   } satisfies MiddlewareObj<any, any, Error, any>
 }
