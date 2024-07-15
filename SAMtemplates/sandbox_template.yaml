@@ -92,6 +92,10 @@ Resources:
       CodeUri: ../packages
       Handler: statusLambda.handler
       Role: !GetAtt StatusResources.Outputs.LambdaRoleArn
+      Environment:
+        Variables:
+          VERSION_NUMBER: !Ref VersionNumber
+          COMMIT_ID: !Ref CommitId
       Events:
         status:
           Type: HttpApi
