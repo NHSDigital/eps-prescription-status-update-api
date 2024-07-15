@@ -258,11 +258,11 @@ paths:
                     $ref: examples/response-checkprescriptionstatusupdates.json
           headers:
             LastEvaluatedKey-PrescriptionID:
-              description: The value of this header should be used in subsequent requests in the header ExclusiveStartKey-PrescriptionID
+              description: The value of this header should be used in subsequent requests in the header ExclusiveStartKey-PrescriptionID. If not present, there are no more results available.
               schema:
                 type: string
             LastEvaluatedKey-TaskID:
-              description: The value of this header should be used in subsequent requests in the header ExclusiveStartKey-TaskID
+              description: The value of this header should be used in subsequent requests in the header ExclusiveStartKey-TaskID. If not present, there are no more results available.
               schema:
                 type: string
         4XX:
