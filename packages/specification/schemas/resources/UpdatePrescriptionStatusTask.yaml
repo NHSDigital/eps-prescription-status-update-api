@@ -114,9 +114,9 @@ properties:
     description: The eRD Repeat Number, with the prescription tracking status updates for eRD prescriptions. This is optional and only required for eRD type prescriptions.
     items:
       type: object
-      required: [_type, valueInteger]
+      required: [type, valueInteger]
       properties:
-        _type:
+        type:
           type: object
           required: [text]
           properties:

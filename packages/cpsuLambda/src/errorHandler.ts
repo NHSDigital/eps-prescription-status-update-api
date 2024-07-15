@@ -8,32 +8,30 @@ type LoggerAndLevel = {
   level?: string
 }
 
-// custom middy error handler to handle valiation errors
-
+// custom middy error handler to handle validation errors
 function validationErrorHandler({logger = console, level = "error"}: LoggerAndLevel) {
   return {
     onError: async (handler) => {
+      const setErrorResponse = (body: any) => {
+        handler.response = {
+          statusCode: 400,
+          body: JSON.stringify(JSON.stringify(body)),
+          headers: handler.event.headers
+        }
+      }
+
       const error: any = handler.error
 
       if (!error?.cause?.data) {
         logger[level as keyof HandlerLogger]("Validation error", error)
-        handler.response = {
-          statusCode: 400,
-          body: JSON.stringify([{error: error.message}])
-        }
+        setErrorResponse([{error: error.message}])
         return
       }
 
       const errors = error.cause.data.map(parseError)
 
       logger[level as keyof HandlerLogger]("Validation error", errors)
-
-      const responseBody = {
-        statusCode: 400,
-        body: JSON.stringify(errors)
-      }
-
-      handler.response = responseBody
+      setErrorResponse(errors)
     }
   } satisfies MiddlewareObj<any, any, Error, any>
 }
