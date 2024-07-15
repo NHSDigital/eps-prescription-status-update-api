@@ -41,7 +41,7 @@ export function buildQuery(inputData: InputData): buildQueryResult {
 
   const query: QueryCommandInput | ScanCommandInput = {
     TableName: tableName,
-    Limit: 10
+    Limit: inputData.maxResults || 15
   }
 
   if (
