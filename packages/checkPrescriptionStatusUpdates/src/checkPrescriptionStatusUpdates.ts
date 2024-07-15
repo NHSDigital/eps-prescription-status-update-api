@@ -58,31 +58,43 @@ const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPro
     exclusiveStartKeyPrescriptionID: event.headers["exclusivestartkey-prescriptionid"],
     exclusiveStartKeyTaskID: event.headers["exclusivestartkey-taskid"]
   }
-  const queryResult = await getItemStatusUpdates(inputData, logger)
 
-  let statusCode = 200
   const result = {
     items: []
   }
-  if (queryResult.Count === 0) {
-    statusCode = 404
-  } else {
-    result.items = queryResult.Items
-  }
-
   const headers = {
     "Content-Type": "application/json",
     "Cache-Control": "no-cache"
   }
 
-  if (queryResult.LastEvaluatedKey) {
-    for (const key in queryResult.LastEvaluatedKey) {
-      headers[`LastEvaluatedKey-${key}`] = queryResult.LastEvaluatedKey[key]
+  const MIN_RESULTS_RETURNED = 5
+  const MAX_RESULTS_RETURNED = 15
+  for (;;) {
+    const maxResults = MAX_RESULTS_RETURNED - result.items.length
+    inputData.maxResults = maxResults
+    const queryResult = await getItemStatusUpdates(inputData, logger)
+
+    result.items = result.items.concat(queryResult.Items)
+
+    const moreResults = Boolean(queryResult.LastEvaluatedKey)
+    const enoughResults = result.items.length >= MIN_RESULTS_RETURNED
+    const maxResultsReached = result.items.length > MAX_RESULTS_RETURNED
+
+    const shouldContinueQuery = !maxResultsReached && moreResults && !enoughResults
+    if (shouldContinueQuery) {
+      continue
     }
+
+    if (moreResults) {
+      for (const key in queryResult.LastEvaluatedKey) {
+        headers[`LastEvaluatedKey-${key}`] = queryResult.LastEvaluatedKey[key]
+      }
+    }
+    break
   }
 
   return {
-    statusCode: statusCode,
+    statusCode: result.items.length > 0 ? 200 : 404,
     body: JSON.stringify(result),
     headers
   }
