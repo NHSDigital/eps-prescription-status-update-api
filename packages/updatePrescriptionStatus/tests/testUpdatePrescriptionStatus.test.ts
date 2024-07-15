@@ -228,4 +228,32 @@ describe("buildDataItems", () => {
     expect(dataItems[0].PrescriptionID).toEqual(prescriptionID)
     expect(dataItems[0].PharmacyODSCode).toEqual(pharmacyODSCode)
   })
+
+  it("should include RepeatNo in data item when defined", () => {
+    const task = validTask()
+    const repeatNo = 1
+
+    task.input = [
+      {
+        valueInteger: repeatNo,
+        type: {
+          coding: [
+            {
+              system: "http://example.com/system",
+              code: "repeat-number"
+            }
+          ]
+        }
+      }
+    ]
+
+    const requestEntry: BundleEntry = {
+      resource: task,
+      fullUrl: ""
+    }
+
+    const dataItems = buildDataItems([requestEntry], "", "")
+
+    expect(dataItems[0].RepeatNo).toEqual(repeatNo)
+  })
 })
