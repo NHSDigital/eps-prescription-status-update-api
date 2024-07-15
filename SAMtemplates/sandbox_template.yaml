@@ -32,6 +32,12 @@ Parameters:
     Default: false
     AllowedValues: [true, false]
 
+  VersionNumber:
+    Type: String
+
+  CommitId:
+    Type: String
+
   LogLevel:
     Type: String
     Default: INFO
