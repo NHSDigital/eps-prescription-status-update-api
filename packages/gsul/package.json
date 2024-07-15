@@ -20,7 +20,7 @@
     "@aws-sdk/lib-dynamodb": "^3.614.0",
     "@aws-sdk/util-dynamodb": "^3.614.0",
     "@middy/core": "^5.4.5",
-    "@middy/input-output-logger": "^5.4.4",
+    "@middy/input-output-logger": "^5.4.5",
     "@middy/validator": "^5.4.5",
     "@PrescriptionStatusUpdate_common/middyErrorHandler": "^1.0.0",
     "json-schema-to-ts": "^3.1.0"
