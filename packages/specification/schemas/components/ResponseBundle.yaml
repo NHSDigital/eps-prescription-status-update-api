@@ -42,4 +42,5 @@ properties:
                         enum: [success]
                       diagnostics:
                         type: string
-                        enum: [Data not committed due to issues in other entries.]
+                        description: A description of the reasoning for including an OperationOutcome
+                        example: No issues detected during validation.
