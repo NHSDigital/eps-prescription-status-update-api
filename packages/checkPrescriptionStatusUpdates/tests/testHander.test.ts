@@ -108,15 +108,10 @@ describe("test handler", () => {
   })
 
   it("returns no more than 15 results", async () => {
-    // 16 results in 2 calls (15 and 1), expecting 15 results
-    jest
-      .spyOn(DynamoDBDocumentClient.prototype, "send")
-      .mockImplementationOnce(() => {
-        return Promise.resolve(generate_reply(15, false))
-      })
-      .mockImplementationOnce(() => {
-        return Promise.resolve(generate_reply(1))
-      })
+    // >15 results (15 with pagination headers), expecting 15 results
+    jest.spyOn(DynamoDBDocumentClient.prototype, "send").mockImplementationOnce(() => {
+      return Promise.resolve(generate_reply(15, false))
+    })
 
     const response = await handler(mockAPIGatewayProxyEvent, mockContext)
     expect(response.statusCode).toBe(200)
