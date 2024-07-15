@@ -208,7 +208,9 @@ paths:
         ## Overview
         This returns prescription status updates created by the authorized application. The result can be filtered by a combination of odscode, nhsnumber or prescription id.   
 
-        A maximum of 10 results is returned. If more than 10 results are available, then headers LastEvaluatedKey-PrescriptionID and LastEvaluatedKey-TaskID are returned in the result. These values of these should be used in a subsequent request in the headers ExclusiveStartKey-PrescriptionID and ExclusiveStartKey-TaskID
+        A maximum of 10 results is returned. If more results are available, then headers LastEvaluatedKey-PrescriptionID and LastEvaluatedKey-TaskID are returned in the result. These values of these should be used in a subsequent request in the headers ExclusiveStartKey-PrescriptionID and ExclusiveStartKey-TaskID.
+
+        Note that it is possible that less than 10 results are returned even when more are available. This is a feature of the database and filtering method being used.
       parameters:
         - in: query
           name: odscode
@@ -254,6 +256,15 @@ paths:
                   description: A successful response to a checkprescriptionstatusupdates request.
                   value:
                     $ref: examples/response-checkprescriptionstatusupdates.json
+          headers:
+            LastEvaluatedKey-PrescriptionID:
+              description: The value of this header should be used in subsequent requests in the header ExclusiveStartKey-PrescriptionID
+              schema:
+                type: string
+            LastEvaluatedKey-TaskID:
+              description: The value of this header should be used in subsequent requests in the header ExclusiveStartKey-TaskID
+              schema:
+                type: string
         4XX:
           description: |
             An error occurred as follows:
