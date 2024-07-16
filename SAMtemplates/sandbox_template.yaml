@@ -32,6 +32,12 @@ Parameters:
     Default: false
     AllowedValues: [true, false]
 
+  VersionNumber:
+    Type: String
+
+  CommitId:
+    Type: String
+
   LogLevel:
     Type: String
     Default: INFO
@@ -84,6 +90,53 @@ Resources:
         tsconfig: sandbox/tsconfig.json
         EntryPoints:
           - sandbox/src/sandbox.ts
+
+  Status:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub ${AWS::StackName}-status
+      CodeUri: ../packages
+      Handler: statusLambda.handler
+      Role: !GetAtt StatusResources.Outputs.LambdaRoleArn
+      Environment:
+        Variables:
+          VERSION_NUMBER: !Ref VersionNumber
+          COMMIT_ID: !Ref CommitId
+      Events:
+        status:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref HttpApiGateway
+            Path: /_status
+            Method: get
+    Metadata:
+      BuildMethod: esbuild
+      BuildProperties:
+        Minify: true
+        Target: es2020
+        Sourcemap: true
+        tsconfig: statusLambda/tsconfig.json
+        packages: bundle
+        EntryPoints:
+          - statusLambda/src/statusLambda.ts
+
+  StatusResources:
+    Type: AWS::Serverless::Application
+    Properties:
+      Location: functions/lambda_resources.yaml
+      Parameters:
+        StackName: AWS::StackName
+        LambdaName: !Sub ${AWS::StackName}-status
+        LambdaArn: !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:${AWS::StackName}-status
+        IncludeAdditionalPolicies: true
+        AdditionalPolicies: !Join
+          - ","
+          - - !ImportValue account-resources:LambdaAccessSecretsPolicy
+        LogRetentionInDays: !Ref LogRetentionInDays
+        CloudWatchKMSKeyId: !ImportValue account-resources:CloudwatchLogsKmsKeyArn
+        EnableSplunk: !Ref EnableSplunk
+        SplunkSubscriptionFilterRole: !ImportValue lambda-resources:SplunkSubscriptionFilterRole
+        SplunkDeliveryStreamArn: !ImportValue lambda-resources:SplunkDeliveryStream
 
   CapabilityStatement:
     Type: AWS::Serverless::Function
