@@ -77,18 +77,19 @@ const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPro
     result.items = result.items.concat(queryResult.Items)
 
     const moreResults = Boolean(queryResult.LastEvaluatedKey)
-    const enoughResults = result.items.length >= MIN_RESULTS_RETURNED
+    if (moreResults) {
+      for (const key in queryResult.LastEvaluatedKey) {
+        headers[`LastEvaluatedKey-${key}`] = queryResult.LastEvaluatedKey[key]
+        inputData[`exclusiveStartKey${key}`] = queryResult.LastEvaluatedKey[key]
+      }
+    }
 
+    const enoughResults = result.items.length >= MIN_RESULTS_RETURNED
     const shouldContinueQuery = moreResults && !enoughResults
     if (shouldContinueQuery) {
       continue
     }
 
-    if (moreResults) {
-      for (const key in queryResult.LastEvaluatedKey) {
-        headers[`LastEvaluatedKey-${key}`] = queryResult.LastEvaluatedKey[key]
-      }
-    }
     break
   }
 

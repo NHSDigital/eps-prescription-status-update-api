@@ -107,6 +107,51 @@ describe("test handler", () => {
     })
   })
 
+  it("returns just more than 5 results with pagination headers", async () => {
+    jest
+      .spyOn(DynamoDBDocumentClient.prototype, "send")
+      .mockImplementationOnce(() => {
+        const reply = generate_reply(2, false)
+        reply.LastEvaluatedKey = {
+          PrescriptionID: "prescriptionId2",
+          TaskID: "taskId2"
+        }
+        return Promise.resolve(reply)
+      })
+      .mockImplementationOnce(() => {
+        const reply = generate_reply(2, false)
+        reply.LastEvaluatedKey = {
+          PrescriptionID: "prescriptionId3",
+          TaskID: "taskId3"
+        }
+        return Promise.resolve(reply)
+      })
+      .mockImplementationOnce(() => {
+        return Promise.resolve(generate_reply(2))
+      })
+    const mockSend = DynamoDBDocumentClient.prototype.send as jest.Mock
+
+    const event = JSON.parse(JSON.stringify(mockAPIGatewayProxyEvent))
+    event.headers["exclusivestartkey-prescriptionid"] = "prescriptionId1"
+    event.headers["exclusivestartkey-taskid"] = "taskId1"
+
+    const response = await handler(event, mockContext)
+    expect(response.statusCode).toBe(200)
+    expect(JSON.parse(response.body)).toMatchObject({
+      items: Array(6).fill(defaultItem)
+    })
+    expect(response.headers).toMatchObject({
+      "Content-Type": "application/json",
+      "Cache-Control": "no-cache"
+    })
+
+    const startKeys = mockSend.mock.calls.map((call) => call[0]["input"]["ExclusiveStartKey"])
+    const prescriptionIDs = startKeys.map((key) => key["PrescriptionID"])
+    const taskIDs = startKeys.map((key) => key["TaskID"])
+    expect(prescriptionIDs).toEqual(["prescriptionId1", "prescriptionId2", "prescriptionId3"])
+    expect(taskIDs).toEqual(["taskId1", "taskId2", "taskId3"])
+  })
+
   it("returns no more than 15 results", async () => {
     // >15 results (15 with pagination headers), expecting 15 results
     jest.spyOn(DynamoDBDocumentClient.prototype, "send").mockImplementationOnce(() => {
