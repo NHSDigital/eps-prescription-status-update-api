@@ -78,9 +78,8 @@ const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPro
 
     const moreResults = Boolean(queryResult.LastEvaluatedKey)
     const enoughResults = result.items.length >= MIN_RESULTS_RETURNED
-    const maxResultsReached = result.items.length > MAX_RESULTS_RETURNED
 
-    const shouldContinueQuery = !maxResultsReached && moreResults && !enoughResults
+    const shouldContinueQuery = moreResults && !enoughResults
     if (shouldContinueQuery) {
       continue
     }
