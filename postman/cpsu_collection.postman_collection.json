@@ -28,11 +28,16 @@
       },
       "request": {
         "auth": {
-          "type": "bearer",
-          "bearer": [
+          "type": "apikey",
+          "apikey": [
             {
-              "key": "token",
-              "value": "{{authorization_header_value}}",
+              "key": "value",
+              "value": "{{cpsu_api_key}}",
+              "type": "string"
+            },
+            {
+              "key": "key",
+              "value": "apikey",
               "type": "string"
             }
           ]
@@ -46,16 +51,11 @@
           {
             "key": "x-correlation-id",
             "value": "{{$guid}}"
-          },
-          {
-            "key": "Content-Type",
-            "value": "application/fhir+json",
-            "disabled": true
           }
         ],
         "body": {
           "mode": "raw",
-          "raw": "{\n  \"resourceType\": \"Bundle\",\n  \"type\": \"transaction\",\n  \"entry\": [\n    {\n      \"fullUrl\": \"urn:uuid:{{task_identifier}}\",\n      \"resource\": {\n        \"resourceType\": \"Task\",\n        \"id\": \"{{task_identifier}}\",\n        \"basedOn\": [\n          {\n            \"identifier\": {\n              \"system\": \"https://fhir.nhs.uk/Id/prescription-order-number\",\n              \"value\": \"16B2E0-A83008-81C13H\"\n            }\n          }\n        ],\n        \"status\": \"completed\",\n        \"businessStatus\": {\n          \"coding\": [\n            {\n              \"system\": \"https://fhir.nhs.uk/CodeSystem/task-businessStatus-nppt\",\n              \"code\": \"dispatched\"\n            }\n          ]\n        },\n        \"intent\": \"order\",\n        \"focus\": {\n          \"identifier\": {\n            \"system\": \"https://fhir.nhs.uk/Id/prescription-order-item-number\",\n            \"value\": \"6989b7bd-8db6-428c-a593-4022e3044c00\"\n          }\n        },\n        \"for\": {\n          \"identifier\": {\n            \"system\": \"https://fhir.nhs.uk/Id/nhs-number\",\n            \"value\": \"9449304130\"\n          }\n        },\n        \"lastModified\": \"2023-10-11T10:11:12Z\",\n        \"owner\": {\n          \"identifier\": {\n            \"system\": \"https://fhir.nhs.uk/Id/ods-organization-code\",\n            \"value\": \"C9Z1O\"\n          }\n        }\n      },\n      \"request\": {\n        \"method\": \"POST\",\n        \"url\": \"Task\"\n      }\n    }\n  ]\n}\n",
+          "raw": "{\n  \"version\": \"1.0\",\n  \"status\": \"PatientMatched\",\n  \"messageDate\": \"2024-04-12 11:36:47\",\n  \"prescriptionUUID\": \"490795-B83002-00001S\",\n  \"gPSurgery\": \"Doctors Office A\",\n  \"prescriptionType\": \"repeatDispensing\",\n  \"repeatNo\": 3,\n  \"nextRepeatDueDate\": \"2022-01-01\",\n  \"expiryDate\": \"2022-01-01 23:59:59\",\n  \"patientID\": \"12345-000005\",\n  \"nHSCHI\": \"9449304130\",\n  \"deliveryType\": \"Delivery required\",\n  \"oDSCode\": \"FHA82\",\n  \"items\": [\n    {\n      \"itemID\": \"73014c50-1bd1-4359-9c9f-d587d7d03e66\",\n      \"dMDCode\": \"319781007\",\n      \"dMDDesc\": \"Aspirin 75mg gastro-resistant tablets\",\n      \"uOMDesc\": \"tablet\",\n      \"qty\": \"99\",\n      \"dosage\": \"Take one daily\",\n      \"status\": \"Pending\"\n    },\n    {\n      \"itemID\": \"73014c50-1bd1-4361-9c9f-d587d7d03e66\",\n      \"dMDCode\": \"134531009\",\n      \"dMDDesc\": \"Almotriptan 12.5mg tablets\",\n      \"uOMDesc\": \"tablet\",\n      \"qty\": \"12\",\n      \"dosage\": \"As Directed\",\n      \"status\": \"Pending\"\n    }\n  ],\n  \"MessageType\": \"PrescriptionStatusChanged\"\n}\n",
           "options": {
             "raw": {
               "language": "json"
@@ -63,10 +63,10 @@
           }
         },
         "url": {
-          "raw": "https://int.api.service.nhs.uk/custom-prescription-status-update/",
+          "raw": "https://int.api.service.nhs.uk/custom-prescription-status-update/format-1",
           "protocol": "https",
           "host": ["int", "api", "service", "nhs", "uk"],
-          "path": ["custom-prescription-status-update", ""]
+          "path": ["custom-prescription-status-update", "format-1"]
         }
       },
       "response": []
