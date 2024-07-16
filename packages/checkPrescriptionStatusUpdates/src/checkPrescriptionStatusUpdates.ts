@@ -69,7 +69,7 @@ const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPro
 
   const MIN_RESULTS_RETURNED = 5
   const MAX_RESULTS_RETURNED = 15
-  let exclusiveStartKey: Record<string, any> = {
+  let exclusiveStartKey: Record<string, string> = {
     PrescriptionID: event.headers["exclusivestartkey-prescriptionid"],
     TaskID: event.headers["exclusivestartkey-taskid"]
   }
