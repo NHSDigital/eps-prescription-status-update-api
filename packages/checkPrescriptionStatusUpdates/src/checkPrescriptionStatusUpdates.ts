@@ -69,7 +69,7 @@ const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPro
 
   const MIN_RESULTS_RETURNED = 5
   const MAX_RESULTS_RETURNED = 15
-  for (;;) {
+  while (true) {
     const maxResults = MAX_RESULTS_RETURNED - result.items.length
     inputData.maxResults = maxResults
     const queryResult = await getItemStatusUpdates(inputData, logger)
