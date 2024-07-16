@@ -2,25 +2,37 @@
   "info": {
     "_postman_id": "2cb4089f-f9ff-481f-87c9-ea66716b4839",
     "name": "PSU Collection",
-    "description": "Postman collection to call PSU APIs.",
+    "description": "This collection provides endpoints for interacting with the Prescription Status Update API in the `int` environment. It is designed for use by developers and testers, encompassing calls to the following endpoints:\n\n- `update`\n    \n- `checkprescriptionstatusupdates`\n    \n- `metadata`\n    \n\n### Authentication Setup\n\nA pre-request script at the top level automates the authentication process. To ensure its functionality, configure the following variables. Refer to the [NHS Developer Documentation](https://digital.nhs.uk/developer/guides-and-documentation/security-and-authorisation/application-restricted-restful-apis-signed-jwt-authentication#step-1-register-your-application-on-the-api-platform) for instructions on obtaining an API key and creating a public/private key pair, which you'll need to upload to the JWKS server.\n\n- `api_key` should be set to the Apigee API key for your application\n    \n- `private_key` should be your private key that you have created for the environment\n    \n- `kid` should be the KID that you used when creating the JWKS",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
     "_exporter_id": "24760919"
   },
   "item": [
     {
-      "name": "PSU Update",
+      "name": "Apigee PSU update",
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "exec": [
+              "const task_identifier=pm.variables.replaceIn(\"{{$guid}}\");",
+              "",
+              "pm.globals.set(\"task_identifier\",task_identifier.toLowerCase());"
+            ],
+            "type": "text/javascript",
+            "packages": {}
+          }
+        }
+      ],
+      "protocolProfileBehavior": {
+        "disabledSystemHeaders": {}
+      },
       "request": {
         "auth": {
-          "type": "apikey",
-          "apikey": [
+          "type": "bearer",
+          "bearer": [
             {
-              "key": "value",
-              "value": "{{psu_api_key}}",
-              "type": "string"
-            },
-            {
-              "key": "key",
-              "value": "apikey",
+              "key": "token",
+              "value": "{{authorization_header_value}}",
               "type": "string"
             }
           ]
@@ -34,11 +46,16 @@
           {
             "key": "x-correlation-id",
             "value": "{{$guid}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/fhir+json",
+            "disabled": true
           }
         ],
         "body": {
           "mode": "raw",
-          "raw": "{\n  \"version\": \"1.0\",\n  \"status\": \"PatientMatched\",\n  \"messageDate\": \"2024-04-12 11:36:47\",\n  \"prescriptionUUID\": \"490795-B83002-00001S\",\n  \"gPSurgery\": \"Doctors Office A\",\n  \"prescriptionType\": \"repeatDispensing\",\n  \"repeatNo\": 3,\n  \"nextRepeatDueDate\": \"2022-01-01\",\n  \"expiryDate\": \"2022-01-01 23:59:59\",\n  \"patientID\": \"12345-000005\",\n  \"nHSCHI\": \"9449304130\",\n  \"deliveryType\": \"Delivery required\",\n  \"items\": [\n    {\n      \"itemID\": \"73014c50-1bd1-4359-9c9f-d587d7d03e66\",\n      \"dMDCode\": \"319781007\",\n      \"dMDDesc\": \"Aspirin 75mg gastro-resistant tablets\",\n      \"uOMDesc\": \"tablet\",\n      \"qty\": \"99\",\n      \"dosage\": \"Take one daily\",\n      \"status\": \"Pending\"\n    },\n    {\n      \"itemID\": \"73014c50-1bd1-4361-9c9f-d587d7d03e66\",\n      \"dMDCode\": \"134531009\",\n      \"dMDDesc\": \"Almotriptan 12.5mg tablets\",\n      \"uOMDesc\": \"tablet\",\n      \"qty\": \"12\",\n      \"dosage\": \"As Directed\",\n      \"status\": \"Pending\"\n    }\n  ],\n  \"MessageType\": \"PrescriptionStatusChanged\"\n}",
+          "raw": "{\n  \"resourceType\": \"Bundle\",\n  \"type\": \"transaction\",\n  \"entry\": [\n    {\n      \"fullUrl\": \"urn:uuid:{{task_identifier}}\",\n      \"resource\": {\n        \"resourceType\": \"Task\",\n        \"id\": \"{{task_identifier}}\",\n        \"basedOn\": [\n          {\n            \"identifier\": {\n              \"system\": \"https://fhir.nhs.uk/Id/prescription-order-number\",\n              \"value\": \"16B2E0-A83008-81C13H\"\n            }\n          }\n        ],\n        \"status\": \"completed\",\n        \"businessStatus\": {\n          \"coding\": [\n            {\n              \"system\": \"https://fhir.nhs.uk/CodeSystem/task-businessStatus-nppt\",\n              \"code\": \"dispatched\"\n            }\n          ]\n        },\n        \"intent\": \"order\",\n        \"focus\": {\n          \"identifier\": {\n            \"system\": \"https://fhir.nhs.uk/Id/prescription-order-item-number\",\n            \"value\": \"6989b7bd-8db6-428c-a593-4022e3044c00\"\n          }\n        },\n        \"for\": {\n          \"identifier\": {\n            \"system\": \"https://fhir.nhs.uk/Id/nhs-number\",\n            \"value\": \"9449304130\"\n          }\n        },\n        \"lastModified\": \"2023-10-11T10:11:12Z\",\n        \"owner\": {\n          \"identifier\": {\n            \"system\": \"https://fhir.nhs.uk/Id/ods-organization-code\",\n            \"value\": \"C9Z1O\"\n          }\n        }\n      },\n      \"request\": {\n        \"method\": \"POST\",\n        \"url\": \"Task\"\n      }\n    }\n  ]\n}\n",
           "options": {
             "raw": {
               "language": "json"
@@ -46,16 +63,16 @@
           }
         },
         "url": {
-          "raw": "https://int.api.service.nhs.uk/prescription-status-update/update",
+          "raw": "https://int.api.service.nhs.uk/prescription-status-update/",
           "protocol": "https",
           "host": ["int", "api", "service", "nhs", "uk"],
-          "path": ["prescription-status-update", "update"]
+          "path": ["prescription-status-update", ""]
         }
       },
       "response": []
     },
     {
-      "name": "Check Prescription Status Updates",
+      "name": "Apigee PSU checkprescriptionstatusupdates",
       "request": {
         "auth": {
           "type": "bearer",
@@ -76,19 +93,51 @@
           {
             "key": "x-correlation-id",
             "value": "{{$guid}}"
+          },
+          {
+            "key": "x-override-application-name",
+            "value": "ab-1",
+            "disabled": true
+          },
+          {
+            "key": "ExclusiveStartKey-PrescriptionID",
+            "value": "16B2E0-A83008-81C13H",
+            "disabled": true
+          },
+          {
+            "key": "ExclusiveStartKey-TaskID",
+            "value": "01a01744-4c66-47f7-be6d-a8f48439c014",
+            "disabled": true
           }
         ],
         "url": {
           "raw": "https://int.api.service.nhs.uk/prescription-status-update/checkprescriptionstatusupdates",
           "protocol": "https",
           "host": ["int", "api", "service", "nhs", "uk"],
-          "path": ["prescription-status-update", "checkprescriptionstatusupdates"]
+          "path": ["prescription-status-update", "checkprescriptionstatusupdates"],
+          "query": [
+            {
+              "key": "odscode",
+              "value": "C9Z1O",
+              "disabled": true
+            },
+            {
+              "key": "nhsnumber",
+              "value": "9449304130",
+              "disabled": true
+            },
+            {
+              "key": "prescriptionid",
+              "value": "16B2E0-A83008-81C13H",
+              "disabled": true
+            }
+          ]
         }
       },
       "response": []
     },
     {
-      "name": "Metadata",
+      "name": "Apigee PSU metadata",
       "request": {
         "auth": {
           "type": "bearer",
@@ -131,9 +180,9 @@
           "\r",
           "const uuid = require('uuid')\r",
           "\r",
+          "const host = 'int.api.service.nhs.uk'\r",
           "const privateKey = pm.environment.get('private_key') || ''\r",
           "const api_key_value = pm.environment.get('api_key') || ''\r",
-          "const host = pm.environment.get('host') || ''\r",
           "const kid = pm.environment.get('kid') || ''\r",
           "const environment_name = pm.environment.name\r",
           "\r",
@@ -147,10 +196,6 @@
           "\r",
           "if (!api_key_value) {\r",
           "    throw new Error(\"Variable api_key must be set with your integration testing application API key.\")\r",
-          "}\r",
-          "\r",
-          "if (!host) {\r",
-          "    throw new Error(\"Variable host must be set with host name for the environment.\")\r",
           "}\r",
           "\r",
           "if (!kid) {\r",
