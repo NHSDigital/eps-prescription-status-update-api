@@ -10,13 +10,16 @@ import {v4 as uuidv4} from "uuid"
 import {Transformer} from "../../handler"
 import {wrap_with_status} from "../../utils"
 import {Md5} from "ts-md5"
+import {Logger} from "@aws-lambda-powertools/logger"
+
+const logger = new Logger({serviceName: "CustomUpdatePrescriptionStatus"})
 
 export const transformer: Transformer<requestType> = (requestBody, _logger, headers) => {
   const bundle_entry_template = generateTemplate(requestBody)
 
-  const populated_templates = requestBody.items.map((item) =>
-    populateTemplate(bundle_entry_template, item, requestBody)
-  )
+  const populated_templates = requestBody.items
+    .map((item) => populateTemplate(bundle_entry_template, item, requestBody))
+    .filter((entry) => entry !== undefined)
 
   return collectResult(populated_templates).map(bundle_entries).mapErr(wrap_with_status(400, headers))
 }
@@ -79,8 +82,19 @@ export function populateTemplate(
   template: string,
   prescriptionItem: itemType,
   prescriptionDetails: requestType
-): Result<BundleEntry<Task>, string> {
+): Result<BundleEntry<Task>, string> | undefined {
   const entry = JSON.parse(template) as BundleEntry<Task>
+
+  if (prescriptionItem.status === "DispensingComplete") {
+    const forbiddenStatuses = ["NotDispensed", "Expired", "Cancelled"]
+
+    if (prescriptionItem.completedStatus && forbiddenStatuses.includes(prescriptionItem.completedStatus)) {
+      logger.info("Skipping data store update for DispensingComplete with NotDispensed or Expired status", {
+        itemID: prescriptionItem.itemID
+      })
+      return undefined
+    }
+  }
 
   const businessStatus = getBusinessStatus(prescriptionDetails.deliveryType, prescriptionItem.status)
 
