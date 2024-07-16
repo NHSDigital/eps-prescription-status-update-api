@@ -8,6 +8,8 @@ import {getItemStatusUpdates} from "./dynamoDBclient"
 import {MiddyErrorHandler} from "@PrescriptionStatusUpdate_common/middyErrorHandler"
 import {InputData} from "./types"
 
+const MIN_RESULTS_RETURNED = process.env.MIN_RESULTS_RETURNED || 5
+const MAX_RESULTS_RETURNED = process.env.MAX_RESULTS_RETURNED || 15
 const logger = new Logger({serviceName: "status"})
 
 const errorResponseBody = {
@@ -67,8 +69,6 @@ const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPro
     "Cache-Control": "no-cache"
   }
 
-  const MIN_RESULTS_RETURNED = 5
-  const MAX_RESULTS_RETURNED = 15
   let exclusiveStartKey: Record<string, string> = {
     PrescriptionID: event.headers["exclusivestartkey-prescriptionid"],
     TaskID: event.headers["exclusivestartkey-taskid"]
