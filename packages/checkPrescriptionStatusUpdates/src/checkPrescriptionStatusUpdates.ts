@@ -69,28 +69,27 @@ const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPro
 
   const MIN_RESULTS_RETURNED = 5
   const MAX_RESULTS_RETURNED = 15
-  while (true) {
+  let exclusiveStartKey: Record<string, any> = {
+    PrescriptionID: event.headers["exclusivestartkey-prescriptionid"],
+    TaskID: event.headers["exclusivestartkey-taskid"]
+  }
+  while (exclusiveStartKey && result.items.length < MIN_RESULTS_RETURNED) {
     const maxResults = MAX_RESULTS_RETURNED - result.items.length
     inputData.maxResults = maxResults
+    for (const key in exclusiveStartKey) {
+      inputData[`exclusiveStartKey${key}`] = exclusiveStartKey[key]
+    }
     const queryResult = await getItemStatusUpdates(inputData, logger)
 
     result.items = result.items.concat(queryResult.Items)
 
-    const moreResults = Boolean(queryResult.LastEvaluatedKey)
-    if (moreResults) {
-      for (const key in queryResult.LastEvaluatedKey) {
-        headers[`LastEvaluatedKey-${key}`] = queryResult.LastEvaluatedKey[key]
-        inputData[`exclusiveStartKey${key}`] = queryResult.LastEvaluatedKey[key]
-      }
-    }
+    exclusiveStartKey = queryResult.LastEvaluatedKey
+  }
 
-    const enoughResults = result.items.length >= MIN_RESULTS_RETURNED
-    const shouldContinueQuery = moreResults && !enoughResults
-    if (shouldContinueQuery) {
-      continue
+  if (exclusiveStartKey) {
+    for (const key in exclusiveStartKey) {
+      headers[`LastEvaluatedKey-${key}`] = exclusiveStartKey[key]
     }
-
-    break
   }
 
   return {
