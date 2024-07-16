@@ -8,8 +8,8 @@ import {getItemStatusUpdates} from "./dynamoDBclient"
 import {MiddyErrorHandler} from "@PrescriptionStatusUpdate_common/middyErrorHandler"
 import {InputData} from "./types"
 
-const MIN_RESULTS_RETURNED = process.env.MIN_RESULTS_RETURNED || 5
-const MAX_RESULTS_RETURNED = process.env.MAX_RESULTS_RETURNED || 15
+const MIN_RESULTS_RETURNED = parseInt(process.env.MIN_RESULTS_RETURNED) || 5
+const MAX_RESULTS_RETURNED = parseInt(process.env.MAX_RESULTS_RETURNED) || 15
 const logger = new Logger({serviceName: "status"})
 
 const errorResponseBody = {
