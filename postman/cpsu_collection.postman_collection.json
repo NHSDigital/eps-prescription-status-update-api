@@ -1,0 +1,238 @@
+{
+  "info": {
+    "_postman_id": "58224de1-c996-45e0-9ff7-124d02466fa8",
+    "name": "CPSU Collection",
+    "description": "Postman collection to call CPSU APIs.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "24760919"
+  },
+  "item": [
+    {
+      "name": "CPSU Update",
+      "request": {
+        "auth": {
+          "type": "apikey",
+          "apikey": [
+            {
+              "key": "value",
+              "value": "{{cpsu_api_key}}",
+              "type": "string"
+            },
+            {
+              "key": "key",
+              "value": "apikey",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [
+          {
+            "key": "x-request-id",
+            "value": "{{$guid}}"
+          },
+          {
+            "key": "x-correlation-id",
+            "value": "{{$guid}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"version\": \"1.0\",\n  \"status\": \"PatientMatched\",\n  \"messageDate\": \"2024-04-12 11:36:47\",\n  \"prescriptionUUID\": \"490795-B83002-00001S\",\n  \"gPSurgery\": \"Doctors Office A\",\n  \"prescriptionType\": \"repeatDispensing\",\n  \"repeatNo\": 3,\n  \"nextRepeatDueDate\": \"2022-01-01\",\n  \"expiryDate\": \"2022-01-01 23:59:59\",\n  \"patientID\": \"12345-000005\",\n  \"nHSCHI\": \"9449304130\",\n  \"deliveryType\": \"Delivery required\",\n  \"items\": [\n    {\n      \"itemID\": \"73014c50-1bd1-4359-9c9f-d587d7d03e66\",\n      \"dMDCode\": \"319781007\",\n      \"dMDDesc\": \"Aspirin 75mg gastro-resistant tablets\",\n      \"uOMDesc\": \"tablet\",\n      \"qty\": \"99\",\n      \"dosage\": \"Take one daily\",\n      \"status\": \"Pending\"\n    },\n    {\n      \"itemID\": \"73014c50-1bd1-4361-9c9f-d587d7d03e66\",\n      \"dMDCode\": \"134531009\",\n      \"dMDDesc\": \"Almotriptan 12.5mg tablets\",\n      \"uOMDesc\": \"tablet\",\n      \"qty\": \"12\",\n      \"dosage\": \"As Directed\",\n      \"status\": \"Pending\"\n    }\n  ],\n  \"MessageType\": \"PrescriptionStatusChanged\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "https://int.api.service.nhs.uk/custom-prescription-status-update/format-1",
+          "protocol": "https",
+          "host": ["int", "api", "service", "nhs", "uk"],
+          "path": ["custom-prescription-status-update", "format-1"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Check Prescription Status Updates",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{authorization_header_value}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [
+          {
+            "key": "x-request-id",
+            "value": "{{$guid}}"
+          },
+          {
+            "key": "x-correlation-id",
+            "value": "{{$guid}}"
+          }
+        ],
+        "url": {
+          "raw": "https://int.api.service.nhs.uk/custom-prescription-status-update/checkprescriptionstatusupdates",
+          "protocol": "https",
+          "host": ["int", "api", "service", "nhs", "uk"],
+          "path": ["custom-prescription-status-update", "checkprescriptionstatusupdates"]
+        }
+      },
+      "response": []
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "packages": {},
+        "exec": [""]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "packages": {},
+        "exec": [
+          "\r",
+          "const uuid = require('uuid')\r",
+          "\r",
+          "const privateKey = pm.environment.get('private_key') || ''\r",
+          "const api_key_value = pm.environment.get('api_key') || ''\r",
+          "const host = pm.environment.get('host') || ''\r",
+          "const kid = pm.environment.get('kid') || ''\r",
+          "const environment_name = pm.environment.name\r",
+          "\r",
+          "if (environment_name.endsWith(\"sandbox\")) {\r",
+          "    return\r",
+          "}\r",
+          "\r",
+          "if (!privateKey) {\r",
+          "    throw new Error(\"Variable private_key must be set with your private key for signed JWT authentication.\")\r",
+          "}\r",
+          "\r",
+          "if (!api_key_value) {\r",
+          "    throw new Error(\"Variable api_key must be set with your integration testing application API key.\")\r",
+          "}\r",
+          "\r",
+          "if (!host) {\r",
+          "    throw new Error(\"Variable host must be set with host name for the environment.\")\r",
+          "}\r",
+          "\r",
+          "if (!kid) {\r",
+          "    throw new Error(\"Variable kid must be set with kid for the jwt.\")\r",
+          "}\r",
+          "\r",
+          "const auth_url = `https://${host}/oauth2/token`\r",
+          "let navigator = {}\r",
+          "var window = {}\r",
+          "const interval = setTimeout(() => {}, 2147483647)\r",
+          "\r",
+          "\r",
+          "return new Promise((resolve, reject) => {        \r",
+          "    if (pm.globals.has('jsrsasign-js') && pm.globals.get('jsrsasign-js') !== \"\") {\r",
+          "        return resolve()\r",
+          "    }\r",
+          "\r",
+          "    pm.sendRequest(\r",
+          "        {\r",
+          "            url: 'https://kjur.github.io/jsrsasign/jsrsasign-all-min.js',\r",
+          "            method: 'GET'\r",
+          "        }, function (err, res) {\r",
+          "            if (err) {\r",
+          "                return reject(err)\r",
+          "            }\r",
+          "\r",
+          "            pm.globals.set('jsrsasign-js', res.text())\r",
+          "            return resolve()\r",
+          "        }\r",
+          "    );\r",
+          "}).then(() => {             \r",
+          "    eval(pm.globals.get(\"jsrsasign-js\"))\r",
+          "\r",
+          "    // Set headers for JWT\r",
+          "    const header = {\r",
+          "        'typ': 'JWT',\r",
+          "        'alg': 'RS512',\r",
+          "        'kid': kid\r",
+          "    };\r",
+          "\r",
+          "    // Prepare timestamp in seconds\r",
+          "    const currentTimestamp = Math.floor(Date.now() / 1000)\r",
+          "    const uuid = require('uuid')\r",
+          "    const jti_value = uuid.v4()\r",
+          "    const data = {\r",
+          "        'sub': api_key_value,\r",
+          "        'iss': api_key_value,\r",
+          "        'jti': jti_value,\r",
+          "        'aud': auth_url,\r",
+          "        'exp': currentTimestamp + 180, // expiry time is 180 seconds from time of creation\r",
+          "    }    \r",
+          "\r",
+          "    const sJWT = KJUR.jws.JWS.sign(header.alg, JSON.stringify(header), JSON.stringify(data), privateKey)\r",
+          "    return new Promise((resolve, reject) => {                              \r",
+          "        pm.sendRequest({\r",
+          "            url: auth_url,\r",
+          "            method: \"POST\",\r",
+          "            header: {\r",
+          "                \"Content-Type\": \"application/x-www-form-urlencoded\"\r",
+          "            },\r",
+          "            body: {\r",
+          "                mode: \"urlencoded\",\r",
+          "                urlencoded: [\r",
+          "                    {\r",
+          "                        key: \"grant_type\",\r",
+          "                        value: \"client_credentials\"\r",
+          "                    },\r",
+          "                    {\r",
+          "                        key: \"client_assertion_type\",\r",
+          "                        value: \"urn:ietf:params:oauth:client-assertion-type:jwt-bearer\",\r",
+          "                    },\r",
+          "                    {\r",
+          "                        key: \"client_assertion\",\r",
+          "                        value: sJWT\r",
+          "                    }\r",
+          "                ]\r",
+          "            }\r",
+          "        }, function (err, res) {                                            \r",
+          "            if (err) {\r",
+          "                return reject(err)\r",
+          "            }\r",
+          "            const access_token = res.json().access_token\r",
+          "            //assign the authorization header value\r",
+          "            pm.environment.set('authorization_header_value', access_token)\r",
+          "\r",
+          "            //assign the message batch reference\r",
+          "            pm.environment.set(\"message_batch_reference\", uuid.v4())\r",
+          "\r",
+          "            //assign the message reference\r",
+          "            pm.environment.set(\"message_reference\", uuid.v4())\r",
+          "\r",
+          "            //generate a correlation identifier\r",
+          "            pm.environment.set(\"correlation_id\", uuid.v4())\r",
+          "            console.log(`access token : ${access_token}`)\r",
+          "\r",
+          "            return resolve()\r",
+          "        });        \r",
+          "    });\r",
+          "}).then(() => {    \r",
+          "    clearTimeout(interval)\r",
+          "}).catch((err) => {     \r",
+          "    console.error(err)\r",
+          "    clearTimeout(interval)\r",
+          "});\r",
+          ""
+        ]
+      }
+    }
+  ]
+}
