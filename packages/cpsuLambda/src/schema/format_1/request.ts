@@ -88,6 +88,7 @@ type deliveryType = FromSchema<typeof deliveryTypeSchema>
 type prescriptionStatusType = FromSchema<typeof prescriptionStatusSchema>
 type itemType = FromSchema<typeof itemSchema>
 type itemStatusType = FromSchema<typeof itemStatusSchema>
+type completedStatusType = FromSchema<typeof completedStatusSchema>
 export {
   eventSchema,
   eventType,
@@ -100,5 +101,7 @@ export {
   itemSchema,
   itemType,
   itemStatusSchema,
-  itemStatusType
+  itemStatusType,
+  completedStatusSchema,
+  completedStatusType
 }

@@ -4,7 +4,8 @@ import {
   itemType,
   requestType,
   deliveryType,
-  itemStatusType
+  itemStatusType,
+  completedStatusType
 } from "../../src/schema/format_1"
 
 interface BusinessStatusTestCase {
@@ -16,8 +17,11 @@ interface BusinessStatusTestCase {
 interface PopulateTemplateTestCase {
   itemStatus: itemStatusType
   deliveryType: deliveryType
-  expectedBusinessStatus: string
-  expectedTaskStatus: string
+  expectItemDefined: boolean
+  // Optional fields, which may or may not be present
+  expectedBusinessStatus?: string
+  expectedTaskStatus?: string
+  itemCompletedStatus?: completedStatusType
 }
 
 describe("getBusinessStatus function", () => {
@@ -44,52 +48,96 @@ describe("populateTemplate function", () => {
       itemStatus: "ReadyForCollection",
       deliveryType: "Robot Collection",
       expectedBusinessStatus: "Ready to Dispatch",
-      expectedTaskStatus: "in-progress"
+      expectedTaskStatus: "in-progress",
+      expectItemDefined: true
     },
     {
       itemStatus: "DispensingComplete",
       deliveryType: "Robot Collection",
       expectedBusinessStatus: "Dispatched",
-      expectedTaskStatus: "completed"
+      expectedTaskStatus: "completed",
+      expectItemDefined: true
+    },
+    {
+      itemStatus: "DispensingComplete",
+      itemCompletedStatus: "Cancelled",
+      deliveryType: "Not known",
+      expectItemDefined: false
+    },
+    {
+      itemStatus: "DispensingComplete",
+      itemCompletedStatus: "Expired",
+      deliveryType: "Not known",
+      expectItemDefined: false
+    },
+    {
+      itemStatus: "DispensingComplete",
+      itemCompletedStatus: "NotDispensed",
+      deliveryType: "Not known",
+      expectItemDefined: false
+    },
+    {
+      itemStatus: "DispensingComplete",
+      itemCompletedStatus: "Collected",
+      deliveryType: "Robot Collection",
+      expectedBusinessStatus: "Dispatched",
+      expectedTaskStatus: "completed",
+      expectItemDefined: true
     }
   ]
 
-  testCases.forEach(({itemStatus, deliveryType, expectedBusinessStatus, expectedTaskStatus}) => {
-    it(`should populate template correctly for itemStatus: ${itemStatus} and deliveryType: ${deliveryType}`, () => {
-      const template: string = generateTemplate({
-        MessageType: "ExampleMessageType",
-        items: [{itemID: "item1", status: itemStatus}],
-        prescriptionUUID: "123456789",
-        nHSCHI: "123456",
-        messageDate: new Date().toISOString(),
-        oDSCode: "XYZ",
-        deliveryType: deliveryType,
-        repeatNo: 1
+  testCases.forEach(
+    ({
+      itemStatus,
+      deliveryType,
+      expectedBusinessStatus,
+      expectedTaskStatus,
+      expectItemDefined,
+      itemCompletedStatus
+    }) => {
+      it(`should populate template correctly for itemStatus: ${itemStatus} and deliveryType: ${deliveryType}`, () => {
+        const template: string = generateTemplate({
+          MessageType: "ExampleMessageType",
+          items: [{itemID: "item1", status: itemStatus, completedStatus: itemCompletedStatus}],
+          prescriptionUUID: "123456789",
+          nHSCHI: "123456",
+          messageDate: new Date().toISOString(),
+          oDSCode: "XYZ",
+          deliveryType: deliveryType,
+          repeatNo: 1
+        })
+
+        const prescriptionItem: itemType = {
+          itemID: "item1",
+          status: itemStatus,
+          completedStatus: itemCompletedStatus
+        }
+
+        const prescriptionDetails: requestType = {
+          MessageType: "ExampleMessageType",
+          items: [{itemID: "item1", status: itemStatus, completedStatus: itemCompletedStatus}],
+          prescriptionUUID: "123456789",
+          nHSCHI: "123456",
+          messageDate: new Date().toISOString(),
+          oDSCode: "XYZ",
+          deliveryType: deliveryType,
+          repeatNo: 1
+        }
+
+        const result = populateTemplate(template, prescriptionItem, prescriptionDetails)
+
+        // If expectItemDefined is false, we expect result to be undefined.
+        if (!expectItemDefined) {
+          expect(result).toBeUndefined()
+        } else if (result && result.isOk()) {
+          // Otherwise, check that the template is correctly populated
+          const entry: BundleEntry<Task> = result.value() as BundleEntry<Task>
+          expect(entry.resource!.businessStatus!.coding![0].code).toEqual(expectedBusinessStatus)
+          expect(entry.resource!.status).toEqual(expectedTaskStatus)
+        } else {
+          fail("Result is not Ok")
+        }
       })
-
-      const prescriptionItem: itemType = {
-        itemID: "item1",
-        status: itemStatus
-      }
-
-      const prescriptionDetails: requestType = {
-        MessageType: "ExampleMessageType",
-        items: [{itemID: "item1", status: itemStatus}],
-        prescriptionUUID: "123456789",
-        nHSCHI: "123456",
-        messageDate: new Date().toISOString(),
-        oDSCode: "XYZ",
-        deliveryType: deliveryType,
-        repeatNo: 1
-      }
-
-      const result = populateTemplate(template, prescriptionItem, prescriptionDetails)
-
-      if (result.isOk()) {
-        const entry: BundleEntry<Task> = result.value() as BundleEntry<Task>
-        expect(entry.resource!.businessStatus!.coding![0].code).toEqual(expectedBusinessStatus)
-        expect(entry.resource!.status).toEqual(expectedTaskStatus)
-      }
-    })
-  })
+    }
+  )
 })
