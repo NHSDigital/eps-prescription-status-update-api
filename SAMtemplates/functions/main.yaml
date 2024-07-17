@@ -86,8 +86,8 @@ Resources:
         LogRetentionInDays: !Ref LogRetentionInDays
         CloudWatchKMSKeyId: !ImportValue account-resources:CloudwatchLogsKmsKeyArn
         EnableSplunk: !Ref EnableSplunk
-        SplunkSubscriptionFilterRole: !ImportValue lambda-resources:SplunkSubscriptionFilterRole
-        SplunkDeliveryStreamArn: !ImportValue lambda-resources:SplunkDeliveryStream
+        SplunkSubscriptionFilterRole: !ImportValue lambda-resources-pr-290:SplunkSubscriptionFilterRole
+        SplunkDeliveryStreamArn: !ImportValue lambda-resources-pr-290:SplunkDeliveryStream
 
   ConvertRequestToFhirFormat:
     Type: AWS::Serverless::Function
@@ -122,8 +122,8 @@ Resources:
         LogRetentionInDays: !Ref LogRetentionInDays
         CloudWatchKMSKeyId: !ImportValue account-resources:CloudwatchLogsKmsKeyArn
         EnableSplunk: !Ref EnableSplunk
-        SplunkSubscriptionFilterRole: !ImportValue lambda-resources:SplunkSubscriptionFilterRole
-        SplunkDeliveryStreamArn: !ImportValue lambda-resources:SplunkDeliveryStream
+        SplunkSubscriptionFilterRole: !ImportValue lambda-resources-pr-290:SplunkSubscriptionFilterRole
+        SplunkDeliveryStreamArn: !ImportValue lambda-resources-pr-290:SplunkDeliveryStream
 
   GetStatusUpdates:
     Type: AWS::Serverless::Function
@@ -162,8 +162,8 @@ Resources:
         LogRetentionInDays: !Ref LogRetentionInDays
         CloudWatchKMSKeyId: !ImportValue account-resources:CloudwatchLogsKmsKeyArn
         EnableSplunk: !Ref EnableSplunk
-        SplunkSubscriptionFilterRole: !ImportValue lambda-resources:SplunkSubscriptionFilterRole
-        SplunkDeliveryStreamArn: !ImportValue lambda-resources:SplunkDeliveryStream
+        SplunkSubscriptionFilterRole: !ImportValue lambda-resources-pr-290:SplunkSubscriptionFilterRole
+        SplunkDeliveryStreamArn: !ImportValue lambda-resources-pr-290:SplunkDeliveryStream
 
   Status:
     Type: AWS::Serverless::Function
@@ -202,8 +202,8 @@ Resources:
         LogRetentionInDays: !Ref LogRetentionInDays
         CloudWatchKMSKeyId: !ImportValue account-resources:CloudwatchLogsKmsKeyArn
         EnableSplunk: !Ref EnableSplunk
-        SplunkSubscriptionFilterRole: !ImportValue lambda-resources:SplunkSubscriptionFilterRole
-        SplunkDeliveryStreamArn: !ImportValue lambda-resources:SplunkDeliveryStream
+        SplunkSubscriptionFilterRole: !ImportValue lambda-resources-pr-290:SplunkSubscriptionFilterRole
+        SplunkDeliveryStreamArn: !ImportValue lambda-resources-pr-290:SplunkDeliveryStream
 
   CapabilityStatement:
     Type: AWS::Serverless::Function
@@ -234,8 +234,8 @@ Resources:
         LogRetentionInDays: !Ref LogRetentionInDays
         CloudWatchKMSKeyId: !ImportValue account-resources:CloudwatchLogsKmsKeyArn
         EnableSplunk: !Ref EnableSplunk
-        SplunkSubscriptionFilterRole: !ImportValue lambda-resources:SplunkSubscriptionFilterRole
-        SplunkDeliveryStreamArn: !ImportValue lambda-resources:SplunkDeliveryStream
+        SplunkSubscriptionFilterRole: !ImportValue lambda-resources-pr-290:SplunkSubscriptionFilterRole
+        SplunkDeliveryStreamArn: !ImportValue lambda-resources-pr-290:SplunkDeliveryStream
 
   CheckPrescriptionStatusUpdates:
     Condition: ShouldDeployCheckPrescriptionStatusUpdate
@@ -277,8 +277,8 @@ Resources:
         LogRetentionInDays: !Ref LogRetentionInDays
         CloudWatchKMSKeyId: !ImportValue account-resources:CloudwatchLogsKmsKeyArn
         EnableSplunk: !Ref EnableSplunk
-        SplunkSubscriptionFilterRole: !ImportValue lambda-resources:SplunkSubscriptionFilterRole
-        SplunkDeliveryStreamArn: !ImportValue lambda-resources:SplunkDeliveryStream
+        SplunkSubscriptionFilterRole: !ImportValue lambda-resources-pr-290:SplunkSubscriptionFilterRole
+        SplunkDeliveryStreamArn: !ImportValue lambda-resources-pr-290:SplunkDeliveryStream
 
 Outputs:
   UpdatePrescriptionStatusFunctionName:
