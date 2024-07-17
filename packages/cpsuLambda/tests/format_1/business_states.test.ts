@@ -7,6 +7,7 @@ import {
   itemStatusType,
   completedStatusType
 } from "../../src/schema/format_1"
+import {Logger} from "@aws-lambda-powertools/logger"
 
 interface BusinessStatusTestCase {
   itemStatus: itemStatusType
@@ -62,7 +63,9 @@ describe("populateTemplate function", () => {
       itemStatus: "DispensingComplete",
       itemCompletedStatus: "Cancelled",
       deliveryType: "Not known",
-      expectItemDefined: false
+      expectedBusinessStatus: "Collected",
+      expectedTaskStatus: "completed",
+      expectItemDefined: true
     },
     {
       itemStatus: "DispensingComplete",
@@ -95,7 +98,7 @@ describe("populateTemplate function", () => {
       expectItemDefined,
       itemCompletedStatus
     }) => {
-      it(`should populate template correctly for itemStatus: ${itemStatus} and deliveryType: ${deliveryType}`, () => {
+      it(`should populate template for itemStatus: ${itemStatus} and completedStatus: ${itemCompletedStatus}`, () => {
         const template: string = generateTemplate({
           MessageType: "ExampleMessageType",
           items: [{itemID: "item1", status: itemStatus, completedStatus: itemCompletedStatus}],
@@ -124,7 +127,8 @@ describe("populateTemplate function", () => {
           repeatNo: 1
         }
 
-        const result = populateTemplate(template, prescriptionItem, prescriptionDetails)
+        const logger = new Logger() // Replace `Logger` with the actual logger class you are using
+        const result = populateTemplate(template, prescriptionItem, prescriptionDetails, logger)
 
         // If expectItemDefined is false, we expect result to be undefined.
         if (!expectItemDefined) {
