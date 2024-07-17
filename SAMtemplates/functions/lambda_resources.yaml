@@ -81,8 +81,8 @@ Resources:
           - ','
           - - !Ref LambdaManagedPolicy
             - !ImportValue lambda-resources-pr-290:LambdaInsightsLogGroupPolicy
-            - !ImportValue account-resources-pr-290:CloudwatchEncryptionKMSPolicyArn
-            - !ImportValue account-resources-pr-290:LambdaDecryptSecretsKMSPolicy
+            - !ImportValue account-resources:CloudwatchEncryptionKMSPolicyArn
+            - !ImportValue account-resources:LambdaDecryptSecretsKMSPolicy
             - !If
               - ShouldIncludeAdditionalPolicies
               - !Join
