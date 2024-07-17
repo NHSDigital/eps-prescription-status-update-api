@@ -8,6 +8,8 @@ import {getItemStatusUpdates} from "./dynamoDBclient"
 import {MiddyErrorHandler} from "@PrescriptionStatusUpdate_common/middyErrorHandler"
 import {InputData} from "./types"
 
+const MIN_RESULTS_RETURNED = parseInt(process.env.MIN_RESULTS_RETURNED) || 5
+const MAX_RESULTS_RETURNED = parseInt(process.env.MAX_RESULTS_RETURNED) || 15
 const logger = new Logger({serviceName: "status"})
 
 const errorResponseBody = {
@@ -58,31 +60,40 @@ const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPro
     exclusiveStartKeyPrescriptionID: event.headers["exclusivestartkey-prescriptionid"],
     exclusiveStartKeyTaskID: event.headers["exclusivestartkey-taskid"]
   }
-  const queryResult = await getItemStatusUpdates(inputData, logger)
 
-  let statusCode = 200
   const result = {
     items: []
   }
-  if (queryResult.Count === 0) {
-    statusCode = 404
-  } else {
-    result.items = queryResult.Items
-  }
-
   const headers = {
     "Content-Type": "application/json",
     "Cache-Control": "no-cache"
   }
 
-  if (queryResult.LastEvaluatedKey) {
-    for (const key in queryResult.LastEvaluatedKey) {
-      headers[`LastEvaluatedKey-${key}`] = queryResult.LastEvaluatedKey[key]
+  let exclusiveStartKey: Record<string, string> = {
+    PrescriptionID: event.headers["exclusivestartkey-prescriptionid"],
+    TaskID: event.headers["exclusivestartkey-taskid"]
+  }
+  while (exclusiveStartKey && result.items.length < MIN_RESULTS_RETURNED) {
+    const maxResults = MAX_RESULTS_RETURNED - result.items.length
+    inputData.maxResults = maxResults
+    for (const key in exclusiveStartKey) {
+      inputData[`exclusiveStartKey${key}`] = exclusiveStartKey[key]
+    }
+    const queryResult = await getItemStatusUpdates(inputData, logger)
+
+    result.items = result.items.concat(queryResult.Items)
+
+    exclusiveStartKey = queryResult.LastEvaluatedKey
+  }
+
+  if (exclusiveStartKey) {
+    for (const key in exclusiveStartKey) {
+      headers[`LastEvaluatedKey-${key}`] = exclusiveStartKey[key]
     }
   }
 
   return {
-    statusCode: statusCode,
+    statusCode: result.items.length > 0 ? 200 : 404,
     body: JSON.stringify(result),
     headers
   }
