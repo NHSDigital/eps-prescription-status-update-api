@@ -249,6 +249,8 @@ Resources:
         Variables:
           TABLE_NAME: !Ref PrescriptionStatusUpdatesTableName
           LOG_LEVEL: !Ref LogLevel
+          MIN_RESULTS_RETURNED: 5
+          MAX_RESULTS_RETURNED: 15
     Metadata:
       BuildMethod: esbuild
       BuildProperties:

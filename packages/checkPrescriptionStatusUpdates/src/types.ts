@@ -7,4 +7,5 @@ export interface InputData {
   overrideApplicationName: string
   exclusiveStartKeyPrescriptionID: string
   exclusiveStartKeyTaskID: string
+  maxResults?: number
 }
