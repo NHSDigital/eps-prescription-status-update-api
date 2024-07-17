@@ -41,7 +41,7 @@ export function buildQuery(inputData: InputData): buildQueryResult {
 
   const query: QueryCommandInput | ScanCommandInput = {
     TableName: tableName,
-    Limit: 10
+    Limit: inputData.maxResults || 15
   }
 
   if (
@@ -67,14 +67,14 @@ export function buildQuery(inputData: InputData): buildQueryResult {
       isScanQuery: false,
       query: queryToRun
     }
-  } else {
-    if (Object.keys(expressionAttributeValues).length > 0) {
-      query.ExpressionAttributeValues = expressionAttributeValues
-    }
-    return {
-      isScanQuery: true,
-      query
-    }
+  }
+
+  if (Object.keys(expressionAttributeValues).length > 0) {
+    query.ExpressionAttributeValues = expressionAttributeValues
+  }
+  return {
+    isScanQuery: true,
+    query
   }
 }
 
