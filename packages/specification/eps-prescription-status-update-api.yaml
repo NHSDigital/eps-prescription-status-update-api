@@ -126,8 +126,7 @@ paths:
                   $ref: examples/request-ready-to-dispatch.json
               ready-to-dispatch-partial:
                 summary: ready-to-dispatch-partial
-                description:
-                  A request message contains tracking status `Ready to Dispatch -
+                description: A request message contains tracking status `Ready to Dispatch -
                   Partial`.
                 value:
                   $ref: examples/request-ready-to-dispatch-partial.json
@@ -160,14 +159,12 @@ paths:
                 $ref: "#/components/schemas/ResponseBundle"
               examples:
                 single-item:
-                  description:
-                    A successful response to a UpdatePrescriptionStatus request,
+                  description: A successful response to a UpdatePrescriptionStatus request,
                     contains a single item.
                   value:
                     $ref: examples/response-single-item.json
                 multiple-items:
-                  description:
-                    A successful response to a UpdatePrescriptionStatus request,
+                  description: A successful response to a UpdatePrescriptionStatus request,
                     contains multiple items.
                   value:
                     $ref: examples/response-multiple-items.json
@@ -180,6 +177,7 @@ paths:
             | 400         | `value`             | Missing values or invalid JSON in request                                                                                                 |
             | 401         | `processing`        | Missing or invalid OAuth 2.0 bearer token in request                                                                                      |
             | 408         | `timeout`           | Request timed out                                                                                                                         |
+            | 409         | `duplicate`         | Request contains a task ID and prescription ID identical to a record already in the data store.                                           |
             | 429         | `throttled`         | You have exceeded your application's [rate limit](https://digital.nhs.uk/developer/guides-and-documentation/reference-guide#rate-limits). |
             The error code will be included in the returned OperationOutcome (below).
           content:
@@ -330,8 +328,7 @@ components:
             - Bundle
         type:
           type: string
-          description:
-            Denotes that the bundle is a list of status updates to be performed
+          description: Denotes that the bundle is a list of status updates to be performed
             as one transaction.
           enum:
             - transaction
