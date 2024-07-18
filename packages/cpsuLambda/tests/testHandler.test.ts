@@ -25,7 +25,7 @@ const TEST_HEADERS = {
   "x-correlation-id": "test-x-correlation-id",
   "attribute-name": "test-attribute-value"
 }
-// Add a test for translate a 409 response code to 202 response code
+
 describe("generic handler", () => {
   test("Headers are appended to logger", async () => {
     const event = {
