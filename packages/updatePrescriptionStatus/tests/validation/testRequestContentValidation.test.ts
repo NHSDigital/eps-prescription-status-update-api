@@ -62,7 +62,10 @@ describe("Unit test for validateContent", () => {
     task.focus!.identifier!.system = "invalidLineItemIdCodeSystem"
     const entry: BundleEntry = {fullUrl: FULL_URL_0, resource: task}
 
-    const expectedOutcome = {valid: false, issues: "NHS number is invalid. Invalid CodeSystem(s) - LineItemID."}
+    const expectedOutcome = {
+      valid: false,
+      issues: "NHS number is invalid. NHS number is not in a known, valid range. Invalid CodeSystem(s) - LineItemID."
+    }
 
     const actual: ValidationOutcome = validateContent(entry)
 
@@ -83,7 +86,11 @@ describe("Unit test for taskContent", () => {
     task.for!.identifier!.value = "invalidNhsNumber"
     task.focus!.identifier!.system = "invalidLineItemIdCodeSystem"
 
-    const expectedOutcome = ["NHS number is invalid.", "Invalid CodeSystem(s) - LineItemID."]
+    const expectedOutcome = [
+      "NHS number is invalid.",
+      "NHS number is not in a known, valid range.",
+      "Invalid CodeSystem(s) - LineItemID."
+    ]
 
     const actual: Array<string> = taskContent(task)
 
@@ -224,7 +231,16 @@ describe("Unit tests for validation of NHS number range", () => {
       scenarioDescription: "When NHS number is in the Northern Irish range, should return expected issue."
     },
     {
-      nhsNumbers: ["3113000000", "3200000000", "4000000000", "4999999999", "6000000000", "7999999999"],
+      nhsNumbers: [
+        "3113000000",
+        "3200000000",
+        "4000000000",
+        "4999999999",
+        "6000000000",
+        "7999999999",
+        "9000000000",
+        "9999999999"
+      ],
       expected: undefined,
       scenarioDescription: "When NHS number is in the NHSE range."
     }

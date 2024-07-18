@@ -80,7 +80,8 @@ export function nhsNumberRange(task: Task): string | undefined {
   const validRanges: Array<Range> = [
     {low: 3_113_000_000, high: 3_200_000_000},
     {low: 4_000_000_000, high: 4_999_999_999},
-    {low: 6_000_000_000, high: 7_999_999_999}
+    {low: 6_000_000_000, high: 7_999_999_999},
+    {low: 9_000_000_000, high: 9_999_999_999}
   ]
 
   const nhsNumber = Number(task.for!.identifier!.value)
@@ -167,6 +168,7 @@ export function taskContent(task: Task): Array<string> {
     businessStatus,
     lastModified,
     nhsNumber,
+    nhsNumberRange,
     prescriptionID,
     resourceType,
     taskStatusAgainstBusinessStatus,
