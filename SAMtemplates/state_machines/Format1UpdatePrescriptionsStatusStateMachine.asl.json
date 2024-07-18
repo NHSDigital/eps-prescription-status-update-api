@@ -85,7 +85,7 @@
             "Content-Type": "application/fhir+json",
             "Cache-Control": "no-cache"
           },
-          "body": "{\"resourceType\":\"OperationOutcome\",\"issue\":[{\"severity\":\"information\",\"code\":\"information\",\"diagnostics\":\"Duplicate update detected. The message was valid but did not result in an update.\"}]}"
+          "body": "{\"resourceType\":\"OperationOutcome\",\"issue\":[{\"severity\":\"information\",\"code\":\"informational\",\"diagnostics\":\"Duplicate update detected. The message was valid but did not result in an update.\"}]}"
         }
       },
       "End": true
