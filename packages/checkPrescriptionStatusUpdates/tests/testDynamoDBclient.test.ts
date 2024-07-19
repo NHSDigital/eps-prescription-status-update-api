@@ -26,7 +26,7 @@ describe("testing buildQuery", () => {
       },
       expectedIsScan: true,
       expectedQuery: {
-        Limit: 10,
+        Limit: 15,
         TableName: "dummy_table"
       },
       scenarioDescription: "nothing passed in"
@@ -48,7 +48,7 @@ describe("testing buildQuery", () => {
           ":ApplicationName": "unknown"
         },
         FilterExpression: "ApplicationName = :ApplicationName",
-        Limit: 10,
+        Limit: 15,
         TableName: "dummy_table"
       },
       scenarioDescription: "only application name passed in"
@@ -70,7 +70,7 @@ describe("testing buildQuery", () => {
           ":PharmacyODSCode": "C9Z1O"
         },
         FilterExpression: "PharmacyODSCode = :PharmacyODSCode",
-        Limit: 10,
+        Limit: 15,
         TableName: "dummy_table"
       },
       scenarioDescription: "only odsCode name passed in"
@@ -92,7 +92,7 @@ describe("testing buildQuery", () => {
           ":PatientNHSNumber": "9449304130"
         },
         FilterExpression: "PatientNHSNumber = :PatientNHSNumber",
-        Limit: 10,
+        Limit: 15,
         TableName: "dummy_table"
       },
       scenarioDescription: "only nhsNumber name passed in"
@@ -119,7 +119,7 @@ describe("testing buildQuery", () => {
         FilterExpression:
           "ApplicationName = :ApplicationName AND PharmacyODSCode = :PharmacyODSCode AND PatientNHSNumber = :PatientNHSNumber",
         KeyConditionExpression: "PrescriptionID = :inputPrescriptionID",
-        Limit: 10,
+        Limit: 15,
         TableName: "dummy_table"
       },
       scenarioDescription: "everything apart from exclusiveStartKeys passed in"
@@ -146,7 +146,7 @@ describe("testing buildQuery", () => {
         FilterExpression:
           "ApplicationName = :ApplicationName AND PharmacyODSCode = :PharmacyODSCode AND PatientNHSNumber = :PatientNHSNumber",
         KeyConditionExpression: "PrescriptionID = :inputPrescriptionID",
-        Limit: 10,
+        Limit: 15,
         TableName: "dummy_table",
         ExclusiveStartKey: {
           PrescriptionID: "16B2E0-A83008-81C13H",
@@ -168,7 +168,7 @@ describe("testing buildQuery", () => {
       },
       expectedIsScan: true,
       expectedQuery: {
-        Limit: 10,
+        Limit: 15,
         TableName: "dummy_table"
       },
       scenarioDescription: "only exclusiveStartKeyPrescriptionID passed in"
@@ -186,7 +186,7 @@ describe("testing buildQuery", () => {
       },
       expectedIsScan: true,
       expectedQuery: {
-        Limit: 10,
+        Limit: 15,
         TableName: "dummy_table"
       },
       scenarioDescription: "only exclusiveStartKeyTaskID passed in"
@@ -204,7 +204,7 @@ describe("testing buildQuery", () => {
       },
       expectedIsScan: true,
       expectedQuery: {
-        Limit: 10,
+        Limit: 15,
         TableName: "dummy_table"
       },
       scenarioDescription: "showAllSuppliers is set to true and overrideApplicationName is not set"
@@ -227,10 +227,29 @@ describe("testing buildQuery", () => {
         },
         FilterExpression: "ApplicationName = :ApplicationName",
 
-        Limit: 10,
+        Limit: 15,
         TableName: "dummy_table"
       },
       scenarioDescription: "showAllSuppliers is set to true and overrideApplicationName is set"
+    },
+    {
+      inputData: {
+        prescriptionID: undefined,
+        applicationName: undefined,
+        odsCode: undefined,
+        nhsNumber: undefined,
+        showAllSuppliers: undefined,
+        overrideApplicationName: undefined,
+        exclusiveStartKeyPrescriptionID: undefined,
+        exclusiveStartKeyTaskID: undefined,
+        maxResults: 10
+      },
+      expectedIsScan: true,
+      expectedQuery: {
+        Limit: 10,
+        TableName: "dummy_table"
+      },
+      scenarioDescription: "Limit is set to less than 15"
     }
   ])("build correct query when $scenarioDescription", ({inputData, expectedIsScan, expectedQuery}) => {
     const result = buildQuery(inputData)

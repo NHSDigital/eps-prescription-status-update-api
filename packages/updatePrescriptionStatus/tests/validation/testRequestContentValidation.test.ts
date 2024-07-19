@@ -23,7 +23,8 @@ import {
   validateEntry,
   ValidationOutcome,
   validateContent,
-  entryContent
+  entryContent,
+  nhsNumberRange
 } from "../../src/validation/content"
 
 import {generateInvalidNhsNumbers, generateValidNhsNumbers} from "../utils/nhsNumber"
@@ -61,7 +62,10 @@ describe("Unit test for validateContent", () => {
     task.focus!.identifier!.system = "invalidLineItemIdCodeSystem"
     const entry: BundleEntry = {fullUrl: FULL_URL_0, resource: task}
 
-    const expectedOutcome = {valid: false, issues: "NHS number is invalid. Invalid CodeSystem(s) - LineItemID."}
+    const expectedOutcome = {
+      valid: false,
+      issues: "NHS number is invalid. NHS number is not in a known, valid range. Invalid CodeSystem(s) - LineItemID."
+    }
 
     const actual: ValidationOutcome = validateContent(entry)
 
@@ -82,7 +86,11 @@ describe("Unit test for taskContent", () => {
     task.for!.identifier!.value = "invalidNhsNumber"
     task.focus!.identifier!.system = "invalidLineItemIdCodeSystem"
 
-    const expectedOutcome = ["NHS number is invalid.", "Invalid CodeSystem(s) - LineItemID."]
+    const expectedOutcome = [
+      "NHS number is invalid.",
+      "NHS number is not in a known, valid range.",
+      "Invalid CodeSystem(s) - LineItemID."
+    ]
 
     const actual: Array<string> = taskContent(task)
 
@@ -207,6 +215,43 @@ describe("Unit tests for validation of NHS number", () => {
     const actual = nhsNumber(task as Task)
 
     expect(actual).toEqual(expected)
+  })
+})
+
+describe("Unit tests for validation of NHS number range", () => {
+  it.each([
+    {
+      nhsNumbers: ["0101000000", "3112999999"],
+      expected: "NHS number is in the Scottish range.",
+      scenarioDescription: "When NHS number is in the Scottish range, should return expected issue."
+    },
+    {
+      nhsNumbers: ["3200000001", "3999999999"],
+      expected: "NHS number is in the Northern Irish range.",
+      scenarioDescription: "When NHS number is in the Northern Irish range, should return expected issue."
+    },
+    {
+      nhsNumbers: [
+        "3113000000",
+        "3200000000",
+        "4000000000",
+        "4999999999",
+        "6000000000",
+        "7999999999",
+        "9000000000",
+        "9999999999"
+      ],
+      expected: undefined,
+      scenarioDescription: "When NHS number is in the NHSE range."
+    }
+  ])("$scenarioDescription", async ({nhsNumbers, expected}) => {
+    for (const _nhsNumber of nhsNumbers) {
+      const task = {for: {identifier: {value: _nhsNumber}}}
+
+      const actual = nhsNumberRange(task as Task)
+
+      expect(actual).toEqual(expected)
+    }
   })
 })
 
