@@ -143,7 +143,8 @@ if [[ "${DRY_RUN}" == "false" ]]; then
         --arg apiName "${apigee_api}" \
         --arg environment "internal-dev" \
         --arg instance "${instance}" \
-        '{apiName: $apiName, environment: $environment, specDefinition: $spec, instance: $instance}' > output.json
+        --arg kid "${PROXYGEN_KID}" \
+        '{apiName: $apiName, environment: $environment, specDefinition: $spec, instance: $instance, kid: $kid}' > output.json
 
 
     aws lambda invoke --function-name "arn:aws:lambda:eu-west-2:591291862413:function:lambda-resources-pr-294-ProxygenDeploy" --cli-binary-format raw-in-base64-out --payload file://output.json out.txt
