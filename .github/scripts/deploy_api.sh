@@ -138,7 +138,18 @@ fi
 echo
 echo "Deploy the API instance using Proxygen CLI"
 if [[ "${DRY_RUN}" == "false" ]]; then
-    "${PROXYGEN_PATH}" instance deploy --no-confirm "${APIGEE_ENVIRONMENT}" "${instance}" "${SPEC_PATH}"
+
+    jq -n --argfile spec "${SPEC_PATH}" \
+        --arg apiName "${apigee_api}" \
+        --arg environment "internal-dev" \
+        --arg instance "${instance}" \
+        '{apiName: $apiName, environment: $environment, specDefinition: $spec, instance: $instance}' > output.json
+
+
+    aws lambda invoke --function-name "arn:aws:lambda:eu-west-2:591291862413:function:lambda-resources-pr-294-ProxygenDeploy" --cli-binary-format raw-in-base64-out --payload file://output.json out.txt
+    cat out.txt
+
+#    "${PROXYGEN_PATH}" instance deploy --no-confirm "${APIGEE_ENVIRONMENT}" "${instance}" "${SPEC_PATH}"
 else
     echo "Would run this command"
     echo "${PROXYGEN_PATH} instance deploy --no-confirm ${APIGEE_ENVIRONMENT} ${instance} ${SPEC_PATH}"
