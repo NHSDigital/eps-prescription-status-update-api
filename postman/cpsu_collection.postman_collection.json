@@ -111,10 +111,10 @@
           }
         ],
         "url": {
-          "raw": "https://int.api.service.nhs.uk/custom-prescription-status-update/checkprescriptionstatusupdates",
+          "raw": "https://int.api.service.nhs.uk/prescription-status-update/checkprescriptionstatusupdates",
           "protocol": "https",
           "host": ["int", "api", "service", "nhs", "uk"],
-          "path": ["custom-prescription-status-update", "checkprescriptionstatusupdates"],
+          "path": ["prescription-status-update", "checkprescriptionstatusupdates"],
           "query": [
             {
               "key": "odscode",
