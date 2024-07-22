@@ -8,229 +8,6 @@
   },
   "item": [
     {
-      "name": "Custom Stack Deployment",
-      "item": [
-        {
-          "name": "AWS custom stack psu update",
-          "event": [
-            {
-              "listen": "prerequest",
-              "script": {
-                "exec": [
-                  "const task_identifier=pm.variables.replaceIn(\"{{$guid}}\");",
-                  "",
-                  "pm.globals.set(\"task_identifier\",task_identifier.toLowerCase());"
-                ],
-                "type": "text/javascript",
-                "packages": {}
-              }
-            }
-          ],
-          "request": {
-            "auth": {
-              "type": "noauth"
-            },
-            "method": "POST",
-            "header": [
-              {
-                "key": "x-request-id",
-                "value": "{{$guid}}"
-              },
-              {
-                "key": "x-correlation-id",
-                "value": "{{$guid}}"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"resourceType\": \"Bundle\",\n  \"type\": \"transaction\",\n  \"entry\": [\n    {\n      \"fullUrl\": \"urn:uuid:{{task_identifier}}\",\n      \"resource\": {\n        \"resourceType\": \"Task\",\n        \"id\": \"{{task_identifier}}\",\n        \"basedOn\": [\n          {\n            \"identifier\": {\n              \"system\": \"https://fhir.nhs.uk/Id/prescription-order-number\",\n              \"value\": \"16B2E0-A83008-81C13H\"\n            }\n          }\n        ],\n        \"status\": \"completed\",\n        \"businessStatus\": {\n          \"coding\": [\n            {\n              \"system\": \"https://fhir.nhs.uk/CodeSystem/task-businessStatus-nppt\",\n              \"code\": \"dispatched\"\n            }\n          ]\n        },\n        \"intent\": \"order\",\n        \"focus\": {\n          \"identifier\": {\n            \"system\": \"https://fhir.nhs.uk/Id/prescription-order-item-number\",\n            \"value\": \"6989b7bd-8db6-428c-a593-4022e3044c00\"\n          }\n        },\n        \"for\": {\n          \"identifier\": {\n            \"system\": \"https://fhir.nhs.uk/Id/nhs-number\",\n            \"value\": \"9449304130\"\n          }\n        },\n        \"lastModified\": \"2023-10-11T10:11:12Z\",\n        \"owner\": {\n          \"identifier\": {\n            \"system\": \"https://fhir.nhs.uk/Id/ods-organization-code\",\n            \"value\": \"C9Z1O\"\n          }\n        }\n      },\n      \"request\": {\n        \"method\": \"POST\",\n        \"url\": \"Task\"\n      }\n    }\n  ]\n}\n",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": {
-              "raw": "https://{{custom_stack_name}}.dev.eps.national.nhs.uk/",
-              "protocol": "https",
-              "host": ["{{custom_stack_name}}", "dev", "eps", "national", "nhs", "uk"],
-              "path": [""]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "AWS custom stack cpsu update",
-          "event": [
-            {
-              "listen": "prerequest",
-              "script": {
-                "exec": [
-                  "const task_identifier=pm.variables.replaceIn(\"{{$guid}}\");",
-                  "",
-                  "pm.globals.set(\"task_identifier\",task_identifier.toLowerCase());"
-                ],
-                "type": "text/javascript",
-                "packages": {}
-              }
-            }
-          ],
-          "request": {
-            "auth": {
-              "type": "noauth"
-            },
-            "method": "POST",
-            "header": [
-              {
-                "key": "x-request-id",
-                "value": "{{$guid}}"
-              },
-              {
-                "key": "x-correlation-id",
-                "value": "{{$guid}}"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"version\": \"1.0\",\n  \"status\": \"PatientMatched\",\n  \"messageDate\": \"2024-04-12 11:36:47\",\n  \"prescriptionUUID\": \"490795-B83002-00001S\",\n  \"gPSurgery\": \"Doctors Office A\",\n  \"prescriptionType\": \"repeatDispensing\",\n  \"repeatNo\": 3,\n  \"nextRepeatDueDate\": \"2022-01-01\",\n  \"expiryDate\": \"2022-01-01 23:59:59\",\n  \"patientID\": \"12345-000005\",\n  \"nHSCHI\": \"9449304130\",\n  \"deliveryType\": \"Delivery required\",\n  \"oDSCode\": \"FHA82\",\n  \"items\": [\n    {\n      \"itemID\": \"73014c50-1bd1-4359-9c9f-d587d7d03e66\",\n      \"dMDCode\": \"319781007\",\n      \"dMDDesc\": \"Aspirin 75mg gastro-resistant tablets\",\n      \"uOMDesc\": \"tablet\",\n      \"qty\": \"99\",\n      \"dosage\": \"Take one daily\",\n      \"status\": \"Pending\"\n    },\n    {\n      \"itemID\": \"73014c50-1bd1-4361-9c9f-d587d7d03e66\",\n      \"dMDCode\": \"134531009\",\n      \"dMDDesc\": \"Almotriptan 12.5mg tablets\",\n      \"uOMDesc\": \"tablet\",\n      \"qty\": \"12\",\n      \"dosage\": \"As Directed\",\n      \"status\": \"Pending\"\n    }\n  ],\n  \"MessageType\": \"PrescriptionStatusChanged\"\n}\n",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": {
-              "raw": "https://{{custom_stack_name}}.dev.eps.national.nhs.uk/format-1",
-              "protocol": "https",
-              "host": ["{{custom_stack_name}}", "dev", "eps", "national", "nhs", "uk"],
-              "path": ["format-1"]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "custom stack psu update status",
-          "request": {
-            "auth": {
-              "type": "noauth"
-            },
-            "method": "GET",
-            "header": [
-              {
-                "key": "x-request-id",
-                "value": "{{$guid}}"
-              },
-              {
-                "key": "x-correlation-id",
-                "value": "{{$guid}}"
-              }
-            ],
-            "url": {
-              "raw": "https://{{custom_stack_name}}.dev.eps.national.nhs.uk/_status",
-              "protocol": "https",
-              "host": ["{{custom_stack_name}}", "dev", "eps", "national", "nhs", "uk"],
-              "path": ["_status"]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "custom stack psu checkprescriptionstatusupdates",
-          "request": {
-            "auth": {
-              "type": "noauth"
-            },
-            "method": "GET",
-            "header": [
-              {
-                "key": "x-request-id",
-                "value": "{{$guid}}"
-              },
-              {
-                "key": "x-correlation-id",
-                "value": "{{$guid}}"
-              },
-              {
-                "key": "attribute-name",
-                "value": "unknown",
-                "disabled": true
-              },
-              {
-                "key": "show-all-suppliers",
-                "value": "true",
-                "disabled": true
-              },
-              {
-                "key": "x-override-application-name",
-                "value": "ab-1",
-                "disabled": true
-              },
-              {
-                "key": "ExclusiveStartKey-PrescriptionID",
-                "value": "16B2E0-A83008-81C13H",
-                "disabled": true
-              },
-              {
-                "key": "ExclusiveStartKey-TaskID",
-                "value": "01a01744-4c66-47f7-be6d-a8f48439c014",
-                "disabled": true
-              }
-            ],
-            "url": {
-              "raw": "https://{{custom_stack_name}}.dev.eps.national.nhs.uk/checkprescriptionstatusupdates",
-              "protocol": "https",
-              "host": ["{{custom_stack_name}}", "dev", "eps", "national", "nhs", "uk"],
-              "path": ["checkprescriptionstatusupdates"],
-              "query": [
-                {
-                  "key": "odscode",
-                  "value": "C9Z1O",
-                  "disabled": true
-                },
-                {
-                  "key": "nhsnumber",
-                  "value": "9449304130",
-                  "disabled": true
-                },
-                {
-                  "key": "prescriptionid",
-                  "value": "16B2E0-A83008-81C13H",
-                  "disabled": true
-                }
-              ]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "custom stack psu update metadata",
-          "request": {
-            "auth": {
-              "type": "noauth"
-            },
-            "method": "GET",
-            "header": [
-              {
-                "key": "x-request-id",
-                "value": "{{$guid}}"
-              },
-              {
-                "key": "x-correlation-id",
-                "value": "{{$guid}}"
-              }
-            ],
-            "url": {
-              "raw": "https://{{custom_stack_name}}.dev.eps.national.nhs.uk/metadata",
-              "protocol": "https",
-              "host": ["{{custom_stack_name}}", "dev", "eps", "national", "nhs", "uk"],
-              "path": ["metadata"]
-            }
-          },
-          "response": []
-        }
-      ]
-    },
-    {
       "name": "Pull Request Deployment",
       "item": [
         {
@@ -803,68 +580,227 @@
       ]
     },
     {
-      "name": "Apigee cpsu update",
-      "event": [
+      "name": "Custom Stack Deployment",
+      "item": [
         {
-          "listen": "prerequest",
-          "script": {
-            "exec": [
-              "const task_identifier=pm.variables.replaceIn(\"{{$guid}}\");",
-              "",
-              "pm.globals.set(\"task_identifier\",task_identifier.toLowerCase());"
-            ],
-            "type": "text/javascript",
-            "packages": {}
-          }
-        }
-      ],
-      "protocolProfileBehavior": {
-        "disabledSystemHeaders": {}
-      },
-      "request": {
-        "auth": {
-          "type": "apikey",
-          "apikey": [
+          "name": "AWS custom stack psu update",
+          "event": [
             {
-              "key": "value",
-              "value": "{{cpsu_api_key}}",
-              "type": "string"
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "const task_identifier=pm.variables.replaceIn(\"{{$guid}}\");",
+                  "",
+                  "pm.globals.set(\"task_identifier\",task_identifier.toLowerCase());"
+                ],
+                "type": "text/javascript",
+                "packages": {}
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
             },
-            {
-              "key": "key",
-              "value": "apikey",
-              "type": "string"
+            "method": "POST",
+            "header": [
+              {
+                "key": "x-request-id",
+                "value": "{{$guid}}"
+              },
+              {
+                "key": "x-correlation-id",
+                "value": "{{$guid}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"resourceType\": \"Bundle\",\n  \"type\": \"transaction\",\n  \"entry\": [\n    {\n      \"fullUrl\": \"urn:uuid:{{task_identifier}}\",\n      \"resource\": {\n        \"resourceType\": \"Task\",\n        \"id\": \"{{task_identifier}}\",\n        \"basedOn\": [\n          {\n            \"identifier\": {\n              \"system\": \"https://fhir.nhs.uk/Id/prescription-order-number\",\n              \"value\": \"16B2E0-A83008-81C13H\"\n            }\n          }\n        ],\n        \"status\": \"completed\",\n        \"businessStatus\": {\n          \"coding\": [\n            {\n              \"system\": \"https://fhir.nhs.uk/CodeSystem/task-businessStatus-nppt\",\n              \"code\": \"dispatched\"\n            }\n          ]\n        },\n        \"intent\": \"order\",\n        \"focus\": {\n          \"identifier\": {\n            \"system\": \"https://fhir.nhs.uk/Id/prescription-order-item-number\",\n            \"value\": \"6989b7bd-8db6-428c-a593-4022e3044c00\"\n          }\n        },\n        \"for\": {\n          \"identifier\": {\n            \"system\": \"https://fhir.nhs.uk/Id/nhs-number\",\n            \"value\": \"9449304130\"\n          }\n        },\n        \"lastModified\": \"2023-10-11T10:11:12Z\",\n        \"owner\": {\n          \"identifier\": {\n            \"system\": \"https://fhir.nhs.uk/Id/ods-organization-code\",\n            \"value\": \"C9Z1O\"\n          }\n        }\n      },\n      \"request\": {\n        \"method\": \"POST\",\n        \"url\": \"Task\"\n      }\n    }\n  ]\n}\n",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "https://{{custom_stack_name}}.dev.eps.national.nhs.uk/",
+              "protocol": "https",
+              "host": ["{{custom_stack_name}}", "dev", "eps", "national", "nhs", "uk"],
+              "path": [""]
             }
-          ]
-        },
-        "method": "POST",
-        "header": [
-          {
-            "key": "x-request-id",
-            "value": "{{$guid}}"
           },
-          {
-            "key": "x-correlation-id",
-            "value": "{{$guid}}"
-          }
-        ],
-        "body": {
-          "mode": "raw",
-          "raw": "{\n  \"version\": \"1.0\",\n  \"status\": \"PatientMatched\",\n  \"messageDate\": \"2024-04-12 11:36:47\",\n  \"prescriptionUUID\": \"490795-B83002-00001S\",\n  \"gPSurgery\": \"Doctors Office A\",\n  \"prescriptionType\": \"repeatDispensing\",\n  \"repeatNo\": 3,\n  \"nextRepeatDueDate\": \"2022-01-01\",\n  \"expiryDate\": \"2022-01-01 23:59:59\",\n  \"patientID\": \"12345-000005\",\n  \"nHSCHI\": \"9449304130\",\n  \"deliveryType\": \"Delivery required\",\n  \"oDSCode\": \"FHA82\",\n  \"items\": [\n    {\n      \"itemID\": \"73014c50-1bd1-4359-9c9f-d587d7d03e66\",\n      \"dMDCode\": \"319781007\",\n      \"dMDDesc\": \"Aspirin 75mg gastro-resistant tablets\",\n      \"uOMDesc\": \"tablet\",\n      \"qty\": \"99\",\n      \"dosage\": \"Take one daily\",\n      \"status\": \"Pending\"\n    },\n    {\n      \"itemID\": \"73014c50-1bd1-4361-9c9f-d587d7d03e66\",\n      \"dMDCode\": \"134531009\",\n      \"dMDDesc\": \"Almotriptan 12.5mg tablets\",\n      \"uOMDesc\": \"tablet\",\n      \"qty\": \"12\",\n      \"dosage\": \"As Directed\",\n      \"status\": \"Pending\"\n    }\n  ],\n  \"MessageType\": \"PrescriptionStatusChanged\"\n}\n",
-          "options": {
-            "raw": {
-              "language": "json"
-            }
-          }
+          "response": []
         },
-        "url": {
-          "raw": "https://{{host}}/custom-prescription-status-update/format-1",
-          "protocol": "https",
-          "host": ["{{host}}"],
-          "path": ["custom-prescription-status-update", "format-1"]
+        {
+          "name": "AWS custom stack cpsu update",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "const task_identifier=pm.variables.replaceIn(\"{{$guid}}\");",
+                  "",
+                  "pm.globals.set(\"task_identifier\",task_identifier.toLowerCase());"
+                ],
+                "type": "text/javascript",
+                "packages": {}
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "x-request-id",
+                "value": "{{$guid}}"
+              },
+              {
+                "key": "x-correlation-id",
+                "value": "{{$guid}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"version\": \"1.0\",\n  \"status\": \"PatientMatched\",\n  \"messageDate\": \"2024-04-12 11:36:47\",\n  \"prescriptionUUID\": \"490795-B83002-00001S\",\n  \"gPSurgery\": \"Doctors Office A\",\n  \"prescriptionType\": \"repeatDispensing\",\n  \"repeatNo\": 3,\n  \"nextRepeatDueDate\": \"2022-01-01\",\n  \"expiryDate\": \"2022-01-01 23:59:59\",\n  \"patientID\": \"12345-000005\",\n  \"nHSCHI\": \"9449304130\",\n  \"deliveryType\": \"Delivery required\",\n  \"oDSCode\": \"FHA82\",\n  \"items\": [\n    {\n      \"itemID\": \"73014c50-1bd1-4359-9c9f-d587d7d03e66\",\n      \"dMDCode\": \"319781007\",\n      \"dMDDesc\": \"Aspirin 75mg gastro-resistant tablets\",\n      \"uOMDesc\": \"tablet\",\n      \"qty\": \"99\",\n      \"dosage\": \"Take one daily\",\n      \"status\": \"Pending\"\n    },\n    {\n      \"itemID\": \"73014c50-1bd1-4361-9c9f-d587d7d03e66\",\n      \"dMDCode\": \"134531009\",\n      \"dMDDesc\": \"Almotriptan 12.5mg tablets\",\n      \"uOMDesc\": \"tablet\",\n      \"qty\": \"12\",\n      \"dosage\": \"As Directed\",\n      \"status\": \"Pending\"\n    }\n  ],\n  \"MessageType\": \"PrescriptionStatusChanged\"\n}\n",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "https://{{custom_stack_name}}.dev.eps.national.nhs.uk/format-1",
+              "protocol": "https",
+              "host": ["{{custom_stack_name}}", "dev", "eps", "national", "nhs", "uk"],
+              "path": ["format-1"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "custom stack psu update status",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [
+              {
+                "key": "x-request-id",
+                "value": "{{$guid}}"
+              },
+              {
+                "key": "x-correlation-id",
+                "value": "{{$guid}}"
+              }
+            ],
+            "url": {
+              "raw": "https://{{custom_stack_name}}.dev.eps.national.nhs.uk/_status",
+              "protocol": "https",
+              "host": ["{{custom_stack_name}}", "dev", "eps", "national", "nhs", "uk"],
+              "path": ["_status"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "custom stack psu checkprescriptionstatusupdates",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [
+              {
+                "key": "x-request-id",
+                "value": "{{$guid}}"
+              },
+              {
+                "key": "x-correlation-id",
+                "value": "{{$guid}}"
+              },
+              {
+                "key": "attribute-name",
+                "value": "unknown",
+                "disabled": true
+              },
+              {
+                "key": "show-all-suppliers",
+                "value": "true",
+                "disabled": true
+              },
+              {
+                "key": "x-override-application-name",
+                "value": "ab-1",
+                "disabled": true
+              },
+              {
+                "key": "ExclusiveStartKey-PrescriptionID",
+                "value": "16B2E0-A83008-81C13H",
+                "disabled": true
+              },
+              {
+                "key": "ExclusiveStartKey-TaskID",
+                "value": "01a01744-4c66-47f7-be6d-a8f48439c014",
+                "disabled": true
+              }
+            ],
+            "url": {
+              "raw": "https://{{custom_stack_name}}.dev.eps.national.nhs.uk/checkprescriptionstatusupdates",
+              "protocol": "https",
+              "host": ["{{custom_stack_name}}", "dev", "eps", "national", "nhs", "uk"],
+              "path": ["checkprescriptionstatusupdates"],
+              "query": [
+                {
+                  "key": "odscode",
+                  "value": "C9Z1O",
+                  "disabled": true
+                },
+                {
+                  "key": "nhsnumber",
+                  "value": "9449304130",
+                  "disabled": true
+                },
+                {
+                  "key": "prescriptionid",
+                  "value": "16B2E0-A83008-81C13H",
+                  "disabled": true
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "custom stack psu update metadata",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [
+              {
+                "key": "x-request-id",
+                "value": "{{$guid}}"
+              },
+              {
+                "key": "x-correlation-id",
+                "value": "{{$guid}}"
+              }
+            ],
+            "url": {
+              "raw": "https://{{custom_stack_name}}.dev.eps.national.nhs.uk/metadata",
+              "protocol": "https",
+              "host": ["{{custom_stack_name}}", "dev", "eps", "national", "nhs", "uk"],
+              "path": ["metadata"]
+            }
+          },
+          "response": []
         }
-      },
-      "response": []
+      ]
     },
     {
       "name": "Apigee psu update",
@@ -931,14 +867,31 @@
       "response": []
     },
     {
-      "name": "Apigee cpsu status",
+      "name": "Apigee cpsu update",
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "exec": [
+              "const task_identifier=pm.variables.replaceIn(\"{{$guid}}\");",
+              "",
+              "pm.globals.set(\"task_identifier\",task_identifier.toLowerCase());"
+            ],
+            "type": "text/javascript",
+            "packages": {}
+          }
+        }
+      ],
+      "protocolProfileBehavior": {
+        "disabledSystemHeaders": {}
+      },
       "request": {
         "auth": {
           "type": "apikey",
           "apikey": [
             {
               "key": "value",
-              "value": "{{status_api_key}}",
+              "value": "{{cpsu_api_key}}",
               "type": "string"
             },
             {
@@ -948,7 +901,7 @@
             }
           ]
         },
-        "method": "GET",
+        "method": "POST",
         "header": [
           {
             "key": "x-request-id",
@@ -959,108 +912,20 @@
             "value": "{{$guid}}"
           }
         ],
-        "url": {
-          "raw": "https://{{host}}/custom-prescription-status-update/_status",
-          "protocol": "https",
-          "host": ["{{host}}"],
-          "path": ["custom-prescription-status-update", "_status"]
-        }
-      },
-      "response": []
-    },
-    {
-      "name": "Apigee psu status",
-      "request": {
-        "auth": {
-          "type": "apikey",
-          "apikey": [
-            {
-              "key": "value",
-              "value": "{{status_api_key}}",
-              "type": "string"
-            },
-            {
-              "key": "key",
-              "value": "apikey",
-              "type": "string"
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"version\": \"1.0\",\n  \"status\": \"PatientMatched\",\n  \"messageDate\": \"2024-04-12 11:36:47\",\n  \"prescriptionUUID\": \"490795-B83002-00001S\",\n  \"gPSurgery\": \"Doctors Office A\",\n  \"prescriptionType\": \"repeatDispensing\",\n  \"repeatNo\": 3,\n  \"nextRepeatDueDate\": \"2022-01-01\",\n  \"expiryDate\": \"2022-01-01 23:59:59\",\n  \"patientID\": \"12345-000005\",\n  \"nHSCHI\": \"9449304130\",\n  \"deliveryType\": \"Delivery required\",\n  \"oDSCode\": \"FHA82\",\n  \"items\": [\n    {\n      \"itemID\": \"73014c50-1bd1-4359-9c9f-d587d7d03e66\",\n      \"dMDCode\": \"319781007\",\n      \"dMDDesc\": \"Aspirin 75mg gastro-resistant tablets\",\n      \"uOMDesc\": \"tablet\",\n      \"qty\": \"99\",\n      \"dosage\": \"Take one daily\",\n      \"status\": \"Pending\"\n    },\n    {\n      \"itemID\": \"73014c50-1bd1-4361-9c9f-d587d7d03e66\",\n      \"dMDCode\": \"134531009\",\n      \"dMDDesc\": \"Almotriptan 12.5mg tablets\",\n      \"uOMDesc\": \"tablet\",\n      \"qty\": \"12\",\n      \"dosage\": \"As Directed\",\n      \"status\": \"Pending\"\n    }\n  ],\n  \"MessageType\": \"PrescriptionStatusChanged\"\n}\n",
+          "options": {
+            "raw": {
+              "language": "json"
             }
-          ]
-        },
-        "method": "GET",
-        "header": [
-          {
-            "key": "x-request-id",
-            "value": "{{$guid}}"
-          },
-          {
-            "key": "x-correlation-id",
-            "value": "{{$guid}}"
           }
-        ],
+        },
         "url": {
-          "raw": "https://{{host}}/prescription-status-update/_status",
+          "raw": "https://{{host}}/custom-prescription-status-update/format-1",
           "protocol": "https",
           "host": ["{{host}}"],
-          "path": ["prescription-status-update", "_status"]
-        }
-      },
-      "response": []
-    },
-    {
-      "name": "Apigee psu metadata",
-      "request": {
-        "auth": {
-          "type": "bearer",
-          "bearer": [
-            {
-              "key": "token",
-              "value": "{{authorization_header_value}}",
-              "type": "string"
-            }
-          ]
-        },
-        "method": "GET",
-        "header": [
-          {
-            "key": "x-request-id",
-            "value": "{{$guid}}"
-          },
-          {
-            "key": "x-correlation-id",
-            "value": "{{$guid}}"
-          }
-        ],
-        "url": {
-          "raw": "https://{{host}}/prescription-status-update/metadata",
-          "protocol": "https",
-          "host": ["{{host}}"],
-          "path": ["prescription-status-update", "metadata"]
-        }
-      },
-      "response": []
-    },
-    {
-      "name": "Apigee psu ping",
-      "request": {
-        "auth": {
-          "type": "noauth"
-        },
-        "method": "GET",
-        "header": [
-          {
-            "key": "x-request-id",
-            "value": "{{$guid}}"
-          },
-          {
-            "key": "x-correlation-id",
-            "value": "{{$guid}}"
-          }
-        ],
-        "url": {
-          "raw": "https://{{host}}/prescription-status-update/_ping",
-          "protocol": "https",
-          "host": ["{{host}}"],
-          "path": ["prescription-status-update", "_ping"]
+          "path": ["custom-prescription-status-update", "format-1"]
         }
       },
       "response": []
@@ -1126,6 +991,141 @@
               "disabled": true
             }
           ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Apigee psu ping",
+      "request": {
+        "auth": {
+          "type": "noauth"
+        },
+        "method": "GET",
+        "header": [
+          {
+            "key": "x-request-id",
+            "value": "{{$guid}}"
+          },
+          {
+            "key": "x-correlation-id",
+            "value": "{{$guid}}"
+          }
+        ],
+        "url": {
+          "raw": "https://{{host}}/prescription-status-update/_ping",
+          "protocol": "https",
+          "host": ["{{host}}"],
+          "path": ["prescription-status-update", "_ping"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Apigee psu metadata",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{authorization_header_value}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [
+          {
+            "key": "x-request-id",
+            "value": "{{$guid}}"
+          },
+          {
+            "key": "x-correlation-id",
+            "value": "{{$guid}}"
+          }
+        ],
+        "url": {
+          "raw": "https://{{host}}/prescription-status-update/metadata",
+          "protocol": "https",
+          "host": ["{{host}}"],
+          "path": ["prescription-status-update", "metadata"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Apigee psu status",
+      "request": {
+        "auth": {
+          "type": "apikey",
+          "apikey": [
+            {
+              "key": "value",
+              "value": "{{status_api_key}}",
+              "type": "string"
+            },
+            {
+              "key": "key",
+              "value": "apikey",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [
+          {
+            "key": "x-request-id",
+            "value": "{{$guid}}"
+          },
+          {
+            "key": "x-correlation-id",
+            "value": "{{$guid}}"
+          }
+        ],
+        "url": {
+          "raw": "https://{{host}}/prescription-status-update/_status",
+          "protocol": "https",
+          "host": ["{{host}}"],
+          "path": ["prescription-status-update", "_status"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Apigee cpsu status",
+      "request": {
+        "auth": {
+          "type": "apikey",
+          "apikey": [
+            {
+              "key": "value",
+              "value": "{{status_api_key}}",
+              "type": "string"
+            },
+            {
+              "key": "key",
+              "value": "apikey",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [
+          {
+            "key": "x-request-id",
+            "value": "{{$guid}}"
+          },
+          {
+            "key": "x-correlation-id",
+            "value": "{{$guid}}"
+          }
+        ],
+        "url": {
+          "raw": "https://{{host}}/custom-prescription-status-update/_status",
+          "protocol": "https",
+          "host": ["{{host}}"],
+          "path": ["custom-prescription-status-update", "_status"]
         }
       },
       "response": []
