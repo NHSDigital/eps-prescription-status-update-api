@@ -173,8 +173,7 @@ paths:
                     contains multiple items.
                   value:
                     $ref: examples/response-multiple-items.json
-
-        4XX:
+        "4XX":
           description: |
             An error occurred as follows:
             | HTTP status | Error code          | Description                                                                                                                               |
@@ -191,6 +190,13 @@ paths:
                 $ref: "#/components/schemas/OperationOutcome"
               example:
                 $ref: examples/error-ods-code.json
+        "5XX":
+          description: |
+            An error occurred due to a server-side issue. Below are the possible status codes within the 5XX range that may be returned:
+            | HTTP status | Error code      | Description                                                                                                 |
+            | ----------- | --------------- | ----------------------------------------------------------------------------------------------------------- |
+            | 500         | `exception`     | The server has encountered an error processing the request.                                                 |
+            | 504         | `timeout`       | The server has timed out while processing the request sent by the client.                                   |
       security:
         - app-level3: []
   /metadata:

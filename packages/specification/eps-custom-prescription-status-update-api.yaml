@@ -106,7 +106,12 @@ paths:
         "4XX":
           description: An error occurred.
         "5XX":
-          description: An error occurred.
+          description: |
+            An error occurred due to a server-side issue. Below are the possible status codes within the 5XX range that may be returned:
+            | HTTP status | Error code      | Description                                                                                                 |
+            | ----------- | --------------- | ----------------------------------------------------------------------------------------------------------- |
+            | 500         | `exception`     | The server has encountered an error processing the request.                                                 |
+            | 504         | `timeout`       | The server has timed out while processing the request sent by the client.                                   |
       security:
         - app-level0: []
 components:
