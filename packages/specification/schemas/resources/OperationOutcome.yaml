@@ -81,4 +81,4 @@ properties:
         diagnostics:
           type: string
           description: A description of the reasoning for including an OperationOutcome
-          example: Some prescriptions have been invalidated so could not be returned.
+          example: Prescription ID is invalid.
