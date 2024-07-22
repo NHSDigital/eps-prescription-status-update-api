@@ -151,8 +151,13 @@ paths:
                 value:
                   $ref: examples/request-multiple-items.json
       responses:
-        "200":
-          description: Successful retrieval.
+        "2XX":
+          description: |
+            The request was processed successfully. Below are the possible status codes within the 2XX range that may be returned:
+            | HTTP status | Status code     | Description                                                                                                                            |
+            | ----------- | --------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+            | 200         | `success`       | The request was successfully processed.                                                                                                |
+            | 201         | `success`       | A new resource was successfully created. No issues detected during validation.                                                         |
           content:
             application/fhir+json:
               schema:
