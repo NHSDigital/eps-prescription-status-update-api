@@ -8,7 +8,7 @@
   },
   "item": [
     {
-      "name": "Apigee CPSU update",
+      "name": "Apigee cpsu update",
       "event": [
         {
           "listen": "prerequest",
@@ -72,7 +72,7 @@
       "response": []
     },
     {
-      "name": "Apigee CPSU checkprescriptionstatusupdates",
+      "name": "Apigee cpsu checkprescriptionstatusupdates",
       "request": {
         "auth": {
           "type": "bearer",

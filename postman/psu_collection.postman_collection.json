@@ -8,7 +8,7 @@
   },
   "item": [
     {
-      "name": "Apigee PSU update",
+      "name": "Apigee psu update",
       "event": [
         {
           "listen": "prerequest",
@@ -72,7 +72,7 @@
       "response": []
     },
     {
-      "name": "Apigee PSU checkprescriptionstatusupdates",
+      "name": "Apigee psu checkprescriptionstatusupdates",
       "request": {
         "auth": {
           "type": "bearer",
@@ -137,7 +137,7 @@
       "response": []
     },
     {
-      "name": "Apigee PSU metadata",
+      "name": "Apigee psu metadata",
       "request": {
         "auth": {
           "type": "bearer",
