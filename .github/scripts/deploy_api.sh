@@ -145,11 +145,17 @@ if [[ "${DRY_RUN}" == "false" ]]; then
         --arg instance "${instance}" \
         --arg kid "${PROXYGEN_KID}" \
         --arg proxygenSecretName "${proxygen_private_key_arn}" \
-        '{apiName: $apiName, environment: $environment, specDefinition: $spec, instance: $instance, kid: $kid, proxygenSecretName: $proxygenSecretName}' > output.json
+        '{apiName: $apiName, environment: $environment, specDefinition: $spec, instance: $instance, kid: $kid, proxygenSecretName: $proxygenSecretName}' > payload.json
 
 
-    aws lambda invoke --function-name "arn:aws:lambda:eu-west-2:591291862413:function:lambda-resources-pr-294-ProxygenProdInstancePut" --cli-binary-format raw-in-base64-out --payload file://output.json out.txt
-    cat out.txt
+    aws lambda invoke --function-name "arn:aws:lambda:eu-west-2:591291862413:function:lambda-resources-pr-294-ProxygenProdInstancePut" --cli-binary-format raw-in-base64-out --payload file://payload.json out.txt > response.json
+
+    if eval "cat response.json | jq -e '.FunctionError' >/dev/null"; then
+        echo 'Error calling lambda'
+        cat out.txt
+        exit 1
+    fi
+
 
 #    "${PROXYGEN_PATH}" instance deploy --no-confirm "${APIGEE_ENVIRONMENT}" "${instance}" "${SPEC_PATH}"
 else
