@@ -1,0 +1,13 @@
+{
+  "resourceType": "OperationOutcome",
+  "meta": {
+    "lastUpdated": "2024-07-22T13:36:44.502Z"
+  },
+  "issue": [
+    {
+      "code": "processing",
+      "severity": "error",
+      "diagnostics": "Prescription ID is invalid."
+    }
+  ]
+}

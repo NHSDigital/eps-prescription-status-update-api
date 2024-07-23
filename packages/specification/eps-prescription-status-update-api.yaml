@@ -189,7 +189,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/OperationOutcome"
               example:
-                $ref: examples/error-ods-code.json
+                $ref: examples/error-invalid-prescriptionid.json
         "5XX":
           description: |
             An error occurred due to a server-side issue. Below are the possible status codes within the 5XX range that may be returned:
