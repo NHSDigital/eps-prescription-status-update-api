@@ -51,7 +51,7 @@
         "Payload.$": "$",
         "FunctionName": "${UpdatePrescriptionStatusFunctionArn}"
       },
-      "End": true,
+      "Next": "Check Update Prescription Status Result",
       "Catch": [
         {
           "ErrorEquals": [
@@ -64,6 +64,35 @@
         "Payload.$": "$.Payload"
       },
       "InputPath": "$.Payload "
+    },
+    "Check Update Prescription Status Result": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Variable": "$.Payload.statusCode",
+          "NumericEquals": 409,
+          "Next": "Translate 409 to 202"
+        }
+      ],
+      "Default": "End State"
+    },
+    "Translate 409 to 202": {
+      "Type": "Pass",
+      "Result": {
+        "Payload": {
+          "statusCode": 202,
+          "headers": {
+            "Content-Type": "application/fhir+json",
+            "Cache-Control": "no-cache"
+          },
+          "body": "{\"resourceType\":\"OperationOutcome\",\"issue\":[{\"severity\":\"information\",\"code\":\"informational\",\"diagnostics\":\"Duplicate update detected. The message was valid but did not result in an update.\"}]}"
+        }
+      },
+      "End": true
+    },
+    "End State": {
+      "Type": "Pass",
+      "End": true
     },
     "CatchAllError": {
       "Type": "Pass",
