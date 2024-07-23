@@ -144,7 +144,8 @@ if [[ "${DRY_RUN}" == "false" ]]; then
         --arg environment "internal-dev" \
         --arg instance "${instance}" \
         --arg kid "${PROXYGEN_KID}" \
-        '{apiName: $apiName, environment: $environment, specDefinition: $spec, instance: $instance, kid: $kid}' > output.json
+        --arg proxygenSecretName "${proxygen_private_key_arn}" \
+        '{apiName: $apiName, environment: $environment, specDefinition: $spec, instance: $instance, kid: $kid, proxygenSecretName: $proxygenSecretName}' > output.json
 
 
     aws lambda invoke --function-name "arn:aws:lambda:eu-west-2:591291862413:function:lambda-resources-pr-294-ProxygenDeploy" --cli-binary-format raw-in-base64-out --payload file://output.json out.txt
