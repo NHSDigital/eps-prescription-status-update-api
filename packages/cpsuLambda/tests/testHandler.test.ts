@@ -291,8 +291,8 @@ describe("format_1 handler", () => {
       {
         status: "DispensingComplete",
         completedStatus: "Cancelled",
-        expectedEntriesCount: 2,
-        description: "should include items with Cancelled completedStatus"
+        expectedEntriesCount: 0,
+        description: "should exclude items with Cancelled completedStatus"
       },
       {
         status: "DispensingComplete",
@@ -324,7 +324,9 @@ describe("format_1 handler", () => {
 
         const response = await format_1_handler(event as format_1.eventType, dummyContext)
         const responseBody = JSON.parse(response.body)
+        console.log("Response Body: ", responseBody)
         const entries = responseBody.entry
+        console.log("Entries: ", entries)
         expect(entries.length).toBe(expectedEntriesCount)
       })
     })

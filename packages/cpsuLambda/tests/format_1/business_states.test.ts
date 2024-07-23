@@ -63,9 +63,7 @@ describe("populateTemplate function", () => {
       itemStatus: "DispensingComplete",
       itemCompletedStatus: "Cancelled",
       deliveryType: "Not known",
-      expectedBusinessStatus: "Collected",
-      expectedTaskStatus: "completed",
-      expectItemDefined: true
+      expectItemDefined: false
     },
     {
       itemStatus: "DispensingComplete",
@@ -127,19 +125,20 @@ describe("populateTemplate function", () => {
           repeatNo: 1
         }
 
-        const logger = new Logger() // Replace `Logger` with the actual logger class you are using
+        const logger = new Logger()
         const result = populateTemplate(template, prescriptionItem, prescriptionDetails, logger)
 
-        // If expectItemDefined is false, we expect result to be undefined.
-        if (!expectItemDefined) {
-          expect(result).toBeUndefined()
-        } else if (result && result.isOk()) {
-          // Otherwise, check that the template is correctly populated
-          const entry: BundleEntry<Task> = result.value() as BundleEntry<Task>
+        console.log("result", result)
+        const entry: BundleEntry<Task> = result.value() as BundleEntry<Task>
+        console.log("entry", entry)
+
+        if (expectItemDefined) {
+          // Check that the template is correctly populated
           expect(entry.resource!.businessStatus!.coding![0].code).toEqual(expectedBusinessStatus)
           expect(entry.resource!.status).toEqual(expectedTaskStatus)
         } else {
-          fail("Result is not Ok")
+          // If expectItemDefined is false, we expect an Err
+          expect(result.isErr()).toBeTruthy()
         }
       })
     }

@@ -5,7 +5,12 @@ import {
   requestType,
   deliveryType
 } from "./request"
-import {Ok, Result, collectResult} from "pratica"
+import {
+  Err,
+  Ok,
+  Result,
+  collectResult
+} from "pratica"
 import {v4 as uuidv4} from "uuid"
 import {Transformer} from "../../handler"
 import {wrap_with_status} from "../../utils"
@@ -17,7 +22,7 @@ export const transformer: Transformer<requestType> = (requestBody, _logger, head
 
   const populated_templates = requestBody.items
     .map((item) => populateTemplate(bundle_entry_template, item, requestBody, _logger))
-    .filter((entry) => entry !== undefined)
+    .filter((result) => result.isOk())
 
   return collectResult(populated_templates).map(bundle_entries).mapErr(wrap_with_status(400, headers))
 }
@@ -81,18 +86,18 @@ export function populateTemplate(
   prescriptionItem: itemType,
   prescriptionDetails: requestType,
   _logger: Logger
-): Result<BundleEntry<Task>, string> | undefined {
+): Result<BundleEntry<Task>, string> {
   const entry = JSON.parse(template) as BundleEntry<Task>
 
   if (prescriptionItem.status === "DispensingComplete") {
-    const forbiddenStatuses = ["Expired", "NotDispensed"]
+    const forbiddenStatuses = ["Expired", "NotDispensed", "Cancelled"]
 
     if (prescriptionItem.completedStatus && forbiddenStatuses.includes(prescriptionItem.completedStatus)) {
       _logger.info("Skipping data store update for DispensingComplete - completedStatus is an ignored value", {
         itemID: prescriptionItem.itemID,
         completedStatus: prescriptionItem.completedStatus
       })
-      return undefined
+      return Err("Operation skipped due to forbidden completion status.")
     }
   }
 
