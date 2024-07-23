@@ -1,13 +1,25 @@
 {
-  "resourceType": "OperationOutcome",
-  "meta": {
-    "lastUpdated": "2024-07-22T13:36:44.502Z"
-  },
-  "issue": [
+  "resourceType": "Bundle",
+  "type": "transaction-response",
+  "entry": [
     {
-      "code": "processing",
-      "severity": "error",
-      "diagnostics": "Prescription ID is invalid."
+      "response": {
+        "status": "400 Bad Request",
+        "outcome": {
+          "resourceType": "OperationOutcome",
+          "meta": {
+            "lastUpdated": "2024-07-22T23:59:07.673Z"
+          },
+          "issue": [
+            {
+              "code": "value",
+              "severity": "error",
+              "diagnostics": "Prescription ID is invalid."
+            }
+          ]
+        }
+      },
+      "fullUrl": "urn:uuid:3b2d36a9-3cff-45e4-93a7-d1f70f911496"
     }
   ]
 }
