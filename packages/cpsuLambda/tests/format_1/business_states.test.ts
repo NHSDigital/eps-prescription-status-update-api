@@ -137,8 +137,8 @@ describe("populateTemplate function", () => {
           expect(entry.resource!.businessStatus!.coding![0].code).toEqual(expectedBusinessStatus)
           expect(entry.resource!.status).toEqual(expectedTaskStatus)
         } else {
-          // If expectItemDefined is false, we expect an Err
-          expect(result.isErr()).toBeTruthy()
+          // If expectItemDefined is false, we expect Nothing
+          expect(result.isNothing()).toBeTruthy()
         }
       })
     }

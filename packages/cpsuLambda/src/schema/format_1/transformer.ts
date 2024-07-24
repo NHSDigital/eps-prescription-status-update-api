@@ -6,10 +6,10 @@ import {
   deliveryType
 } from "./request"
 import {
-  Err,
-  Ok,
-  Result,
-  collectResult
+  collectMaybe,
+  Just,
+  Maybe,
+  Nothing
 } from "pratica"
 import {v4 as uuidv4} from "uuid"
 import {Transformer} from "../../handler"
@@ -22,9 +22,14 @@ export const transformer: Transformer<requestType> = (requestBody, _logger, head
 
   const populated_templates = requestBody.items
     .map((item) => populateTemplate(bundle_entry_template, item, requestBody, _logger))
-    .filter((result) => result.isOk())
+    .filter((entry) => entry.isJust())
 
-  return collectResult(populated_templates).map(bundle_entries).mapErr(wrap_with_status(400, headers))
+  const maybeBundleEntries = collectMaybe(populated_templates).map(bundle_entries)
+
+  // Convert Maybe<Bundle<Task>> to Result<Bundle<Task>, APIGatewayProxyResult>
+  // Note that, in theory, the maybeBundleEntries by this point will always be a Just, so
+  // the mapErr is not strictly necessary. However, it is included anyway, just in case.
+  return maybeBundleEntries.toResult().mapErr(wrap_with_status(400, headers))
 }
 
 function bundle_entries(entries: Array<BundleEntry<Task>>): Bundle<Task> {
@@ -86,7 +91,7 @@ export function populateTemplate(
   prescriptionItem: itemType,
   prescriptionDetails: requestType,
   _logger: Logger
-): Result<BundleEntry<Task>, string> {
+): Maybe<BundleEntry<Task>> {
   const entry = JSON.parse(template) as BundleEntry<Task>
 
   if (prescriptionItem.status === "DispensingComplete") {
@@ -97,7 +102,7 @@ export function populateTemplate(
         itemID: prescriptionItem.itemID,
         completedStatus: prescriptionItem.completedStatus
       })
-      return Err("Operation skipped due to forbidden completion status.")
+      return Nothing
     }
   }
 
@@ -122,7 +127,7 @@ export function populateTemplate(
   const urn = `urn:uuid:${uuid}`
   entry.fullUrl = urn
 
-  return Ok(entry)
+  return Just(entry)
 }
 
 /**
