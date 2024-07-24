@@ -130,15 +130,14 @@ if [[ "${is_pull_request}" == "true" ]]; then
     if [[ "${DRY_RUN}" == "false" ]]; then
 #        "${PROXYGEN_PATH}" secret put --mtls-cert ~/.proxygen/tmp/client_cert.pem --mtls-key ~/.proxygen/tmp/client_private_key.pem "${APIGEE_ENVIRONMENT}" psu-mtls-1
 
-        jq -n --argfile spec "${SPEC_PATH}" \
-            --arg apiName "${apigee_api}" \
+        jq -n --arg apiName "${apigee_api}" \
             --arg environment "${APIGEE_ENVIRONMENT}" \
-            --arg secretName "${instance}" \
+            --arg secretName "psu-mtls-1" \
             --arg secretKey "${client_private_key}" \
             --arg secretCert "${client_cert}" \
             --arg kid "${PROXYGEN_KID}" \
             --arg proxygenSecretName "${proxygen_private_key_arn}" \
-            '{apiName: $apiName, environment: $environment, secretName: $secretName, secretValue: $secretValue, kid, $kid, proxygenSecretName: $proxygenSecretName}' > payload.json
+            '{apiName: $apiName, environment: $environment, secretName: $secretName, secretKey: $secretKey, secretCert: $secretCert, kid, $kid, proxygenSecretName: $proxygenSecretName}' > payload.json
 
 
         aws lambda invoke --function-name "arn:aws:lambda:eu-west-2:591291862413:function:lambda-resources-pr-294-ProxygenPTLMTLSSecretPut" --cli-binary-format raw-in-base64-out --payload file://payload.json out.txt > response.json
