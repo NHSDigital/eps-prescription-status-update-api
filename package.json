@@ -30,8 +30,8 @@
     "@semantic-release/release-notes-generator": "^14.0.1",
     "@types/aws-lambda": "^8.10.141",
     "@types/jest": "^29.5.12",
-    "@types/node": "^20.14.11",
-    "@typescript-eslint/eslint-plugin": "^7.16.1",
+    "@types/node": "^20.14.12",
+    "@typescript-eslint/eslint-plugin": "^7.17.0",
     "@typescript-eslint/parser": "^7.16.1",
     "aws-lambda": "^1.0.7",
     "eslint": "^8.57.0",
@@ -46,7 +46,7 @@
     "semantic-release": "^24.0.0",
     "ts-jest": "^29.2.3",
     "ts-node": "^10.9.2",
-    "typescript": "^5.5.3"
+    "typescript": "^5.5.4"
   },
   "dependencies": {
     "@PrescriptionStatusUpdate_common/middyErrorHandler": "^1.0.0",
