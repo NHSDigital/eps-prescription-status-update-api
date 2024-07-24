@@ -182,7 +182,7 @@ else
     echo "${PROXYGEN_PATH} instance deploy --no-confirm ${APIGEE_ENVIRONMENT} ${instance} ${SPEC_PATH}"
 fi
 
-if [[ "${APIGEE_ENVIRONMENT}" == "int" ]]; then
+if [[ "${APIGEE_ENVIRONMENT}" == "internal-dev" ]]; then
     echo
     echo "Deploy the API spec if in the int environment"
     if [[ "${DRY_RUN}" == "false" ]]; then
