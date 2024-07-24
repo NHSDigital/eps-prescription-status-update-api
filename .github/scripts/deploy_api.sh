@@ -124,7 +124,7 @@ endpoint_url: https://proxygen.prod.api.platform.nhs.uk
 spec_output_format: json
 EOF
 
-if [[ "${is_pull_request}" == "true" ]]; then
+if [[ "${is_pull_request}" == "false" ]]; then
     echo
     echo "Store the secret used for mutual TLS to AWS using Proxygen proxy lambda"
     if [[ "${DRY_RUN}" == "false" ]]; then
@@ -166,7 +166,6 @@ if [[ "${DRY_RUN}" == "false" ]]; then
         --arg proxygenSecretName "${proxygen_private_key_arn}" \
         '{apiName: $apiName, environment: $environment, specDefinition: $spec, instance: $instance, kid: $kid, proxygenSecretName: $proxygenSecretName}' > payload.json
 
-
     aws lambda invoke --function-name "arn:aws:lambda:eu-west-2:591291862413:function:lambda-resources-pr-294-ProxygenPTLInstancePut" --cli-binary-format raw-in-base64-out --payload file://payload.json out.txt > response.json
 
     if eval "cat response.json | jq -e '.FunctionError' >/dev/null"; then
@@ -187,7 +186,17 @@ if [[ "${APIGEE_ENVIRONMENT}" == "int" ]]; then
     echo
     echo "Deploy the API spec if in the int environment"
     if [[ "${DRY_RUN}" == "false" ]]; then
-        "${PROXYGEN_PATH}" spec publish --no-confirm "${SPEC_PATH}"
+#        "${PROXYGEN_PATH}" spec publish --no-confirm "${SPEC_PATH}"
+    jq -n --argfile spec "${SPEC_PATH}" \
+        --arg apiName "${apigee_api}" \
+        --arg environment "uat" \
+        --arg instance "${instance}" \
+        --arg kid "${PROXYGEN_KID}" \
+        --arg proxygenSecretName "${proxygen_private_key_arn}" \
+        '{apiName: $apiName, environment: $environment, specDefinition: $spec, instance: $instance, kid: $kid, proxygenSecretName: $proxygenSecretName}' > payload.json
+
+    aws lambda invoke --function-name "arn:aws:lambda:eu-west-2:591291862413:function:lambda-resources-pr-294-ProxygenPTLSpecPublish" --cli-binary-format raw-in-base64-out --payload file://payload.json out.txt > response.json
+
     else
         echo "Would run this command"
         echo "${PROXYGEN_PATH} spec publish --no-confirm ${SPEC_PATH}"

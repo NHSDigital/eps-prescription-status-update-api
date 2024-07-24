@@ -21,12 +21,12 @@ main() {
   delete_cloudformation_stacks
   create_proxygen_credentials "PSUProxygenPrivateKey" "eps-cli-key-1" "prescription-status-update-api"
   delete_apigee_deployments "internal-dev"
-  delete_apigee_deployments "internal-dev-sandbox"
+  delete_apigee_deployments "internal-dev-sandbox" "prescription-status-update-api"
 
   PULL_REQUEST_PROXYGEN_REGEX=custom-prescription-status-update-pr-
   create_proxygen_credentials "CPSUProxygenPrivateKey" "eps-cli-key-cpsu-1" "custom-prescription-status-update-api"
   delete_apigee_deployments "internal-dev"
-  delete_apigee_deployments "internal-dev-sandbox"
+  delete_apigee_deployments "internal-dev-sandbox" "custom-prescription-status-update-api"
 }
 
 delete_cloudformation_stacks() {
@@ -97,9 +97,28 @@ EOF
 
 delete_apigee_deployments() {
   APIGEE_ENVIRONMENT=$1
+  APIGEE_API=$2
   echo
   echo "checking apigee deployments on ${APIGEE_ENVIRONMENT}"
   echo
+
+  jq -n --arg apiName "${APIGEE_API}" \
+            --arg environment "${APIGEE_ENVIRONMENT}" \
+            --arg kid "${PROXYGEN_KID}" \
+            --arg proxygenSecretName "${proxygen_private_key_arn}" \
+            '{apiName: $apiName, environment: $environment, kid, $kid, proxygenSecretName: $proxygenSecretName}' > payload.json
+
+  aws lambda invoke --function-name "arn:aws:lambda:eu-west-2:591291862413:function:lambda-resources-pr-294-ProxygenPTLInstanceGet" --cli-binary-format raw-in-base64-out --payload file://payload.json out.txt > response.json
+
+  if eval "cat response.json | jq -e '.FunctionError' >/dev/null"; then
+      echo 'Error calling lambda'
+      cat out.txt
+      exit 1
+  fi
+  # This returns a JSON array in out.txt that looks like this      
+  # [{"environment":"internal-dev","type":"instance","name":"prescription-status-update-pr-495","last_modified":"2024-07-09T15:18:34+00:00","spec_hash":"4ae4a2e8e30e77576f58d98ccbc9ec23","temporary":"False"},{"environment":"internal-dev","type":"instance","name":"prescription-status-update-pr-544","last_modified":"2024-07-24T14:00:46+00:00","spec_hash":"a250eb95d16df57374b3e0e9cba53c62","temporary":"False"},{"environment":"internal-dev","type":"instance","name":"prescription-status-update-pr-552","last_modified":"2024-07-23T11:38:56+00:00","spec_hash":"54b0fe2a35b59609fa83a85c0265670e","temporary":"False"},{"environment":"internal-dev","type":"instance","name":"prescription-status-update-pr-559","last_modified":"2024-07-23T16:20:21+00:00","spec_hash":"e33779f5575ea061b7de17be4518dd0b","temporary":"False"},{"environment":"internal-dev","type":"instance","name":"prescription-status-update-pr-565","last_modified":"2024-07-23T09:45:12+00:00","spec_hash":"3215a7efcf0453da913f175252f50338","temporary":"False"},{"environment":"internal-dev","type":"instance","name":"prescription-status-update","last_modified":"2024-07-24T11:44:44+00:00","spec_hash":"5f5d3e3d43231016723779bcf92b6f34","temporary":"False"}]
+  # will need to put this into an array we can loop around
+  # then delete the next lines
   ACTIVE_APIGEE=$(poetry run proxygen instance list --env "${APIGEE_ENVIRONMENT}" | awk 'NR > 2 {print $3}')
   mapfile -t ACTIVE_APIGEE_ARRAY <<< "$ACTIVE_APIGEE"
 
@@ -113,7 +132,22 @@ delete_apigee_deployments() {
     STATE=$(echo "${RESPONSE}" | jq -r .state)
     if [ "$STATE" == "closed" ]; then
       echo "** going to delete apigee deployment $i as state is ${STATE} **"
-      poetry run proxygen instance delete --no-confirm "${APIGEE_ENVIRONMENT}" "${i}"
+      # poetry run proxygen instance delete --no-confirm "${APIGEE_ENVIRONMENT}" "${i}"
+      jq -n --arg apiName "${APIGEE_API}" \
+                --arg environment "${APIGEE_ENVIRONMENT}" \
+                --arg instance "${i}" \
+                --arg kid "${PROXYGEN_KID}" \
+                --arg proxygenSecretName "${proxygen_private_key_arn}" \
+                '{apiName: $apiName, environment: $environment, kid, $kid, proxygenSecretName: $proxygenSecretName, instance: $instance}' > payload.json
+
+      aws lambda invoke --function-name "arn:aws:lambda:eu-west-2:591291862413:function:lambda-resources-pr-294-ProxygenPTLInstanceDelete" --cli-binary-format raw-in-base64-out --payload file://payload.json out.txt > response.json
+        if eval "cat response.json | jq -e '.FunctionError' >/dev/null"; then
+            echo 'Error calling lambda'
+            cat out.txt
+            exit 1
+        fi
+
+
     else
       echo "not going to delete apigee deployment $i as state is ${STATE}"
     fi
