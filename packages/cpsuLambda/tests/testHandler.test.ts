@@ -324,9 +324,7 @@ describe("format_1 handler", () => {
 
         const response = await format_1_handler(event as format_1.eventType, dummyContext)
         const responseBody = JSON.parse(response.body)
-        console.log("Response Body: ", responseBody)
         const entries = responseBody.entry
-        console.log("Entries: ", entries)
         expect(entries.length).toBe(expectedEntriesCount)
       })
     })

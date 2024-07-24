@@ -128,9 +128,7 @@ describe("populateTemplate function", () => {
         const logger = new Logger()
         const result = populateTemplate(template, prescriptionItem, prescriptionDetails, logger)
 
-        console.log("result", result)
         const entry: BundleEntry<Task> = result.value() as BundleEntry<Task>
-        console.log("entry", entry)
 
         if (expectItemDefined) {
           // Check that the template is correctly populated
