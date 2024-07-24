@@ -9,27 +9,26 @@ import {
   collectMaybe,
   Just,
   Maybe,
-  Nothing
+  Nothing,
+  Ok
 } from "pratica"
 import {v4 as uuidv4} from "uuid"
 import {Transformer} from "../../handler"
-import {wrap_with_status} from "../../utils"
+import "../../utils"
 import {Md5} from "ts-md5"
 import {Logger} from "@aws-lambda-powertools/logger"
 
-export const transformer: Transformer<requestType> = (requestBody, _logger, headers) => {
+export const transformer: Transformer<requestType> = (requestBody, _logger) => {
   const bundle_entry_template = generateTemplate(requestBody)
 
   const populated_templates = requestBody.items
     .map((item) => populateTemplate(bundle_entry_template, item, requestBody, _logger))
     .filter((entry) => entry.isJust())
 
-  const maybeBundleEntries = collectMaybe(populated_templates).map(bundle_entries)
-
-  // Convert Maybe<Bundle<Task>> to Result<Bundle<Task>, APIGatewayProxyResult>
-  // Note that, in theory, the maybeBundleEntries by this point will always be a Just, so
-  // the mapErr is not strictly necessary. However, it is included anyway, just in case.
-  return maybeBundleEntries.toResult().mapErr(wrap_with_status(400, headers))
+  const bundleEntries = bundle_entries(
+    collectMaybe(populated_templates).cata({Just: (entries) => entries, Nothing: () => []})
+  )
+  return Ok(bundleEntries)
 }
 
 function bundle_entries(entries: Array<BundleEntry<Task>>): Bundle<Task> {
