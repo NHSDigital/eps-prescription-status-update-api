@@ -134,7 +134,8 @@ if [[ "${is_pull_request}" == "true" ]]; then
             --arg apiName "${apigee_api}" \
             --arg environment "${APIGEE_ENVIRONMENT}" \
             --arg secretName "${instance}" \
-            --arg secretValue "${client_private_key}" \
+            --arg secretKey "${client_private_key}" \
+            --arg secretCert "${client_cert}" \
             --arg kid "${PROXYGEN_KID}" \
             --arg proxygenSecretName "${proxygen_private_key_arn}" \
             '{apiName: $apiName, environment: $environment, secretName: $secretName, secretValue: $secretValue, kid, $kid, proxygenSecretName: $proxygenSecretName}' > payload.json
