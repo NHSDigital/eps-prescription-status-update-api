@@ -57,26 +57,26 @@ jobs:
     needs: get_issue_number
     uses: ./.github/workflows/run_package_code_and_api.yml
 
-  release_code:
-    needs: [get_issue_number, package_code, get_commit_id]
-    uses: ./.github/workflows/run_release_code_and_api.yml
-    with:
-      STACK_NAME: psu-pr-${{needs.get_issue_number.outputs.issue_number}}
-      ARTIFACT_BUCKET_PREFIX: PR-${{needs.get_issue_number.outputs.issue_number}}
-      AWS_ENVIRONMENT: dev
-      APIGEE_ENVIRONMENT: internal-dev
-      ENABLE_MUTUAL_TLS: false
-      BUILD_ARTIFACT: packaged_code
-      TRUSTSTORE_FILE: psu-truststore.pem
-      VERSION_NUMBER: PR-${{ needs.get_issue_number.outputs.issue_number }}
-      COMMIT_ID: ${{ needs.get_commit_id.outputs.commit_id }}
-      LOG_RETENTION_DAYS: 30
-      DEPLOY_APIGEE: true
-      DYNAMODB_AUTOSCALE: false
-      DEPLOY_APIGEE_CPSU: true
-      DEPLOY_CHECK_PRESCRIPTION_STATUS_UPDATE: true
-    secrets:
-      CLOUD_FORMATION_DEPLOY_ROLE: ${{ secrets.DEV_CLOUD_FORMATION_DEPLOY_ROLE }}
+  #  release_code:
+  #    needs: [get_issue_number, package_code, get_commit_id]
+  #    uses: ./.github/workflows/run_release_code_and_api.yml
+  #    with:
+  #      STACK_NAME: psu-pr-${{needs.get_issue_number.outputs.issue_number}}
+  #      ARTIFACT_BUCKET_PREFIX: PR-${{needs.get_issue_number.outputs.issue_number}}
+  #      AWS_ENVIRONMENT: dev
+  #      APIGEE_ENVIRONMENT: internal-dev
+  #      ENABLE_MUTUAL_TLS: false
+  #      BUILD_ARTIFACT: packaged_code
+  #      TRUSTSTORE_FILE: psu-truststore.pem
+  #      VERSION_NUMBER: PR-${{ needs.get_issue_number.outputs.issue_number }}
+  #      COMMIT_ID: ${{ needs.get_commit_id.outputs.commit_id }}
+  #      LOG_RETENTION_DAYS: 30
+  #      DEPLOY_APIGEE: true
+  #      DYNAMODB_AUTOSCALE: false
+  #      DEPLOY_APIGEE_CPSU: true
+  #      DEPLOY_CHECK_PRESCRIPTION_STATUS_UPDATE: true
+  #    secrets:
+  #      CLOUD_FORMATION_DEPLOY_ROLE: ${{ secrets.DEV_CLOUD_FORMATION_DEPLOY_ROLE }}
 
   release_sandbox_code:
     needs: [get_issue_number, package_code, get_commit_id]
