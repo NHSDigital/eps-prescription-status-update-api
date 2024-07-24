@@ -126,27 +126,27 @@ EOF
 
 if [[ "${is_pull_request}" == "true" ]]; then
     echo
-    echo "Store the secret used for mutual TLS to AWS using Proxygen CLI"
+    echo "Store the secret used for mutual TLS to AWS using Proxygen proxy lambda"
     if [[ "${DRY_RUN}" == "false" ]]; then
-        "${PROXYGEN_PATH}" secret put --mtls-cert ~/.proxygen/tmp/client_cert.pem --mtls-key ~/.proxygen/tmp/client_private_key.pem "${APIGEE_ENVIRONMENT}" psu-mtls-1
+#        "${PROXYGEN_PATH}" secret put --mtls-cert ~/.proxygen/tmp/client_cert.pem --mtls-key ~/.proxygen/tmp/client_private_key.pem "${APIGEE_ENVIRONMENT}" psu-mtls-1
 
-    jq -n --argfile spec "${SPEC_PATH}" \
-        --arg apiName "${apigee_api}" \
-        --arg environment "${APIGEE_ENVIRONMENT}" \
-        --arg secretName "${instance}" \
-        --arg secretValue "${PROXYGEN_KID}" \
-        --arg kid "${PROXYGEN_KID}" \
-        --arg proxygenSecretName "${proxygen_private_key_arn}" \
-        '{apiName: $apiName, environment: $environment, secretName: $secretName, secretValue: $secretValue, kid, $kid, proxygenSecretName: $proxygenSecretName}' > payload.json
+        jq -n --argfile spec "${SPEC_PATH}" \
+            --arg apiName "${apigee_api}" \
+            --arg environment "${APIGEE_ENVIRONMENT}" \
+            --arg secretName "${instance}" \
+            --arg secretValue "${client_private_key}" \
+            --arg kid "${PROXYGEN_KID}" \
+            --arg proxygenSecretName "${proxygen_private_key_arn}" \
+            '{apiName: $apiName, environment: $environment, secretName: $secretName, secretValue: $secretValue, kid, $kid, proxygenSecretName: $proxygenSecretName}' > payload.json
 
 
-    aws lambda invoke --function-name "arn:aws:lambda:eu-west-2:591291862413:function:lambda-resources-pr-294-ProxygenPTLSecretPut" --cli-binary-format raw-in-base64-out --payload file://payload.json out.txt > response.json
-    if eval "cat response.json | jq -e '.FunctionError' >/dev/null"; then
-        echo 'Error calling lambda'
-        cat out.txt
-        exit 1
-    fi
-    echo "Secret stored succesfully"
+        aws lambda invoke --function-name "arn:aws:lambda:eu-west-2:591291862413:function:lambda-resources-pr-294-ProxygenPTLMTLSSecretPut" --cli-binary-format raw-in-base64-out --payload file://payload.json out.txt > response.json
+        if eval "cat response.json | jq -e '.FunctionError' >/dev/null"; then
+            echo 'Error calling lambda'
+            cat out.txt
+            exit 1
+        fi
+        echo "Secret stored succesfully"
 
     else
         echo "Would run this command"
@@ -155,7 +155,7 @@ if [[ "${is_pull_request}" == "true" ]]; then
 fi
 
 echo
-echo "Deploy the API instance using Proxygen CLI"
+echo "Deploy the API instance using Proxygen proxy lambda"
 if [[ "${DRY_RUN}" == "false" ]]; then
 
     jq -n --argfile spec "${SPEC_PATH}" \
