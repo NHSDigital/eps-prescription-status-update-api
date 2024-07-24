@@ -124,7 +124,7 @@ endpoint_url: https://proxygen.prod.api.platform.nhs.uk
 spec_output_format: json
 EOF
 
-if [[ "${is_pull_request}" == "false" ]]; then
+if [[ "${is_pull_request}" == "true" ]]; then
     echo
     echo "Store the secret used for mutual TLS to AWS using Proxygen CLI"
     if [[ "${DRY_RUN}" == "false" ]]; then
@@ -132,7 +132,7 @@ if [[ "${is_pull_request}" == "false" ]]; then
 
     jq -n --argfile spec "${SPEC_PATH}" \
         --arg apiName "${apigee_api}" \
-        --arg environment "internal-dev" \
+        --arg environment "${APIGEE_ENVIRONMENT}" \
         --arg secretName "${instance}" \
         --arg secretValue "${PROXYGEN_KID}" \
         --arg kid "${PROXYGEN_KID}" \
@@ -160,7 +160,7 @@ if [[ "${DRY_RUN}" == "false" ]]; then
 
     jq -n --argfile spec "${SPEC_PATH}" \
         --arg apiName "${apigee_api}" \
-        --arg environment "internal-dev" \
+        --arg environment "${APIGEE_ENVIRONMENT}" \
         --arg instance "${instance}" \
         --arg kid "${PROXYGEN_KID}" \
         --arg proxygenSecretName "${proxygen_private_key_arn}" \
