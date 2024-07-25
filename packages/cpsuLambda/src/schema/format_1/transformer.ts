@@ -5,20 +5,30 @@ import {
   requestType,
   deliveryType
 } from "./request"
-import {Ok, Result, collectResult} from "pratica"
+import {
+  collectMaybe,
+  Just,
+  Maybe,
+  Nothing,
+  Ok
+} from "pratica"
 import {v4 as uuidv4} from "uuid"
 import {Transformer} from "../../handler"
-import {wrap_with_status} from "../../utils"
+import "../../utils"
 import {Md5} from "ts-md5"
+import {Logger} from "@aws-lambda-powertools/logger"
 
-export const transformer: Transformer<requestType> = (requestBody, _logger, headers) => {
+export const transformer: Transformer<requestType> = (requestBody, _logger) => {
   const bundle_entry_template = generateTemplate(requestBody)
 
-  const populated_templates = requestBody.items.map((item) =>
-    populateTemplate(bundle_entry_template, item, requestBody)
-  )
+  const populated_templates = requestBody.items
+    .map((item) => populateTemplate(bundle_entry_template, item, requestBody, _logger))
+    .filter((entry) => entry.isJust())
 
-  return collectResult(populated_templates).map(bundle_entries).mapErr(wrap_with_status(400, headers))
+  const bundleEntries = bundle_entries(
+    collectMaybe(populated_templates).cata({Just: (entries) => entries, Nothing: () => []})
+  )
+  return Ok(bundleEntries)
 }
 
 function bundle_entries(entries: Array<BundleEntry<Task>>): Bundle<Task> {
@@ -78,9 +88,22 @@ export function generateTemplate(requestBody: requestType): string {
 export function populateTemplate(
   template: string,
   prescriptionItem: itemType,
-  prescriptionDetails: requestType
-): Result<BundleEntry<Task>, string> {
+  prescriptionDetails: requestType,
+  _logger: Logger
+): Maybe<BundleEntry<Task>> {
   const entry = JSON.parse(template) as BundleEntry<Task>
+
+  if (prescriptionItem.status === "DispensingComplete") {
+    const forbiddenStatuses = ["Expired", "NotDispensed", "Cancelled"]
+
+    if (prescriptionItem.completedStatus && forbiddenStatuses.includes(prescriptionItem.completedStatus)) {
+      _logger.info("Skipping data store update for DispensingComplete - completedStatus is an ignored value", {
+        itemID: prescriptionItem.itemID,
+        completedStatus: prescriptionItem.completedStatus
+      })
+      return Nothing
+    }
+  }
 
   const businessStatus = getBusinessStatus(prescriptionDetails.deliveryType, prescriptionItem.status)
 
@@ -103,7 +126,7 @@ export function populateTemplate(
   const urn = `urn:uuid:${uuid}`
   entry.fullUrl = urn
 
-  return Ok(entry)
+  return Just(entry)
 }
 
 /**
