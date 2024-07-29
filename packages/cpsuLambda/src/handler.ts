@@ -46,26 +46,24 @@ async function generic_handler<Event extends EventWithHeaders, Message>(
 }
 
 function append_headers(headers: Record<string, string>, logger: Logger) {
-  logger.info("in append_headers", {headers})
   const headers_to_append: Record<string, string> = {}
   if (headers["apigw-request-id"]) {
-    logger.info("adding apigw-request-id")
     headers_to_append["apigw-request-id"] = headers["apigw-request-id"]
   }
   if (headers["nhsd-correlation-id"]) {
-    logger.info("nhsd-correlation-id")
     headers_to_append["nhsd-correlation-id"] = headers["nhsd-correlation-id"]
   }
   if (headers["nhsd-request-id"]) {
-    logger.info("adding nhsd-request-id")
     headers_to_append["nhsd-request-id"] = headers["nhsd-request-id"]
   }
   if (headers["x-correlation-id"]) {
-    logger.info("adding x-correlation-id")
     headers_to_append["x-correlation-id"] = headers["x-correlation-id"]
   }
-  logger.info("headers_to_append", {headers_to_append})
+  if (headers["x-request-id"]) {
+    headers_to_append["x-request-id"] = headers["x-request-id"]
+  }
   logger.appendKeys(headers_to_append)
+  logger.info("added headers to logger for tracing", {headers_to_append})
 }
 
 /**
