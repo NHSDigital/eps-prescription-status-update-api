@@ -19,7 +19,7 @@ export function badRequest(diagnostics: string, fullUrl: string | undefined = un
         },
         issue: [
           {
-            code: "processing",
+            code: "value",
             severity: "error",
             diagnostics: diagnostics
           }
