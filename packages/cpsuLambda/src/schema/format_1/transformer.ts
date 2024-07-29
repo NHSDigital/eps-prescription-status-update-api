@@ -166,7 +166,7 @@ export function getBusinessStatus(deliveryType: deliveryType, itemStatus: itemSt
   }
   return status[deliveryType]
 }
-
+// AEA-4288 Translate Cegedim collected status update
 type DeliveryTypeMap = Record<deliveryType, string>
 type ItemStatusMap = Record<itemStatusType, string | DeliveryTypeMap>
 const BUSINESS_STATUS_MAP: ItemStatusMap = {
