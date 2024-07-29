@@ -59,7 +59,11 @@ function append_headers(headers: Record<string, string>, logger: Logger) {
   if (headers["x-correlation-id"]) {
     headers_to_append["x-correlation-id"] = headers["x-correlation-id"]
   }
+  if (headers["x-request-id"]) {
+    headers_to_append["x-request-id"] = headers["x-request-id"]
+  }
   logger.appendKeys(headers_to_append)
+  logger.info("added headers to logger for tracing", {headers_to_append})
 }
 
 /**
