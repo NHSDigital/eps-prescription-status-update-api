@@ -30,6 +30,16 @@
       "qty": "12",
       "dosage": "As Directed",
       "status": "Pending"
+    },
+    {
+      "itemID": "73014c50-1bd1-4361-9c9f-d587d7d03e66",
+      "dMDCode": "323416001",
+      "dMDDesc": "Phenoxymethylpenicillin 250mg tablets",
+      "uOMDesc": "tablet",
+      "qty": "28",
+      "dosage": "As Directed",
+      "status": "NotDispensed",
+      "completedStatus": "Expired"
     }
   ],
   "MessageType": "PrescriptionStatusChanged"

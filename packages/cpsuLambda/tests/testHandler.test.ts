@@ -273,4 +273,79 @@ describe("format_1 handler", () => {
     expect(response_1_body.entry[1].fullUrl).toBe(response_2_body.entry[1].fullUrl)
     expect(response_1_body.entry[1].resource.id).toBe(response_2_body.entry[1].resource.id)
   })
+
+  describe("format_1 handler with completedStatus checks", () => {
+    const testData = [
+      {
+        status: "DispensingComplete",
+        completedStatus: "Expired",
+        expectedEntriesCount: 0,
+        description: "should exclude items with Expired completedStatus"
+      },
+      {
+        status: "DispensingComplete",
+        completedStatus: "NotDispensed",
+        expectedEntriesCount: 0,
+        description: "should exclude items with NotDispensed completedStatus"
+      },
+      {
+        status: "DispensingComplete",
+        completedStatus: "Cancelled",
+        expectedEntriesCount: 0,
+        description: "should exclude items with Cancelled completedStatus"
+      },
+      {
+        status: "DispensingComplete",
+        completedStatus: "Collected",
+        expectedEntriesCount: 2,
+        description: "should include items with Collected completedStatus"
+      },
+      {
+        status: "Pending",
+        expectedEntriesCount: 2,
+        description: "should include items with no completedStatus definition"
+      }
+    ]
+
+    testData.forEach(({status, completedStatus, expectedEntriesCount, description}) => {
+      test(description, async () => {
+        const body = format_1_request()
+        body.items.forEach((item: {completedStatus?: string; status: string}) => {
+          item.status = status
+          if (completedStatus !== undefined) {
+            item.completedStatus = completedStatus
+          }
+        })
+
+        const event = {
+          headers: {},
+          body
+        }
+
+        const response = await format_1_handler(event as format_1.eventType, dummyContext)
+        const responseBody = JSON.parse(response.body)
+        const entries = responseBody.entry
+        expect(entries.length).toBe(expectedEntriesCount)
+      })
+    })
+
+    test("Should handle mixed statuses correctly", async () => {
+      const body = format_1_request()
+      // Assigning different statuses to different items
+      body.items[1] = {...body.items[1], status: "DispensingComplete", completedStatus: "Expired"}
+
+      const event = {
+        headers: {},
+        body
+      }
+
+      const response = await format_1_handler(event as format_1.eventType, dummyContext)
+      const responseBody = JSON.parse(response.body)
+      const entries = responseBody.entry
+
+      // Only the valid item should be included
+      expect(entries.length).toBe(1)
+      expect(entries[0].resource.status).toBe("in-progress")
+    })
+  })
 })

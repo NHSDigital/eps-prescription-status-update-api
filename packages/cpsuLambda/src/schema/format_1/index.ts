@@ -10,7 +10,9 @@ export {
   itemSchema,
   itemType,
   itemStatusSchema,
-  itemStatusType
+  itemStatusType,
+  completedStatusSchema,
+  completedStatusType
 } from "./request"
 export {validator} from "./validator"
 export {transformer} from "./transformer"

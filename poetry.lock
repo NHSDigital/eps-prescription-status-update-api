@@ -96,17 +96,17 @@ uvloop = ["uvloop (>=0.15.2)"]
 
 [[package]]
 name = "boto3"
-version = "1.34.146"
+version = "1.34.149"
 description = "The AWS SDK for Python"
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "boto3-1.34.146-py3-none-any.whl", hash = "sha256:7ec568fb19bce82a70be51f08fddac1ef927ca3fb0896cbb34303a012ba228d8"},
-    {file = "boto3-1.34.146.tar.gz", hash = "sha256:5686fe2a6d1aa1de8a88e9589cdcc33361640d3d7a13da718a30717248886124"},
+    {file = "boto3-1.34.149-py3-none-any.whl", hash = "sha256:11edeeacdd517bda3b7615b754d8440820cdc9ddd66794cc995a9693ddeaa3be"},
+    {file = "boto3-1.34.149.tar.gz", hash = "sha256:f4e6489ba9dc7fb37d53e0e82dbc97f2cb0a4969ef3970e2c88b8f94023ae81a"},
 ]
 
 [package.dependencies]
-botocore = ">=1.34.146,<1.35.0"
+botocore = ">=1.34.149,<1.35.0"
 jmespath = ">=0.7.1,<2.0.0"
 s3transfer = ">=0.10.0,<0.11.0"
 
@@ -115,13 +115,13 @@ crt = ["botocore[crt] (>=1.21.0,<2.0a0)"]
 
 [[package]]
 name = "botocore"
-version = "1.34.146"
+version = "1.34.149"
 description = "Low-level, data-driven core of boto 3."
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "botocore-1.34.146-py3-none-any.whl", hash = "sha256:3fd4782362bd29c192704ebf859c5c8c5189ad05719e391eefe23088434427ae"},
-    {file = "botocore-1.34.146.tar.gz", hash = "sha256:849cb8e54e042443aeabcd7822b5f2b76cb5cfe33fe3a71f91c7c069748a869c"},
+    {file = "botocore-1.34.149-py3-none-any.whl", hash = "sha256:ae6c4be52eeee96f68c116b27d252bab069cd046d61a17cfe8e9da411cf22906"},
+    {file = "botocore-1.34.149.tar.gz", hash = "sha256:2e1eb5ef40102a3d796bb3dd05f2ac5e8fb43fe1ff114b4f6d33153437f5a372"},
 ]
 
 [package.dependencies]
@@ -964,13 +964,13 @@ files = [
 
 [[package]]
 name = "pip-licenses"
-version = "4.5.1"
+version = "5.0.0"
 description = "Dump the software license list of Python packages installed with pip."
 optional = false
-python-versions = "~=3.8"
+python-versions = ">=3.9"
 files = [
-    {file = "pip-licenses-4.5.1.tar.gz", hash = "sha256:fad5f56fbaa56b8e414434e36c32394a9412ff10ddf2cef92b51951bdf193869"},
-    {file = "pip_licenses-4.5.1-py3-none-any.whl", hash = "sha256:7c982bc6837f47d32d4016b43d9174c0ce723b450710a2111a3ebbb910f152b7"},
+    {file = "pip_licenses-5.0.0-py3-none-any.whl", hash = "sha256:82c83666753efb86d1af1c405c8ab273413eb10d6689c218df2f09acf40e477d"},
+    {file = "pip_licenses-5.0.0.tar.gz", hash = "sha256:0633a1f9aab58e5a6216931b0e1d5cdded8bcc2709ff563674eb0e2ff9e77e8e"},
 ]
 
 [package.dependencies]
@@ -978,7 +978,7 @@ prettytable = ">=2.3.0"
 tomli = ">=2"
 
 [package.extras]
-test = ["docutils", "mypy", "pytest-cov", "pytest-pycodestyle", "pytest-runner", "tomli-w"]
+dev = ["autopep8", "black", "docutils", "isort", "mypy", "pip-tools", "pypandoc", "pytest-cov", "pytest-pycodestyle", "pytest-runner", "tomli-w", "twine", "wheel"]
 
 [[package]]
 name = "platformdirs"
@@ -1200,13 +1200,13 @@ tests = ["coverage[toml] (==5.0.4)", "pytest (>=6.0.0,<7.0.0)"]
 
 [[package]]
 name = "pytest"
-version = "8.3.1"
+version = "8.3.2"
 description = "pytest: simple powerful testing with Python"
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "pytest-8.3.1-py3-none-any.whl", hash = "sha256:e9600ccf4f563976e2c99fa02c7624ab938296551f280835ee6516df8bc4ae8c"},
-    {file = "pytest-8.3.1.tar.gz", hash = "sha256:7e8e5c5abd6e93cb1cc151f23e57adc31fcf8cfd2a3ff2da63e23f732de35db6"},
+    {file = "pytest-8.3.2-py3-none-any.whl", hash = "sha256:4ba08f9ae7dcf84ded419494d229b48d0903ea6407b030eaec46df5e6a73bba5"},
+    {file = "pytest-8.3.2.tar.gz", hash = "sha256:c132345d12ce551242c87269de812483f5bcc87cdbb4722e48487ba194f9fdce"},
 ]
 
 [package.dependencies]
@@ -1736,4 +1736,4 @@ termcolor = ">=2.3,<3.0"
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.12"
-content-hash = "b1c1f5818f561f19c716c6a463073941db11c146e950d65f5d6113c474c3bb75"
+content-hash = "e235bd1f902e1f10d0f77ca5fbdb9f1550a4535fcfd4169524fc483e0bf78b1a"
