@@ -166,7 +166,7 @@ export function getBusinessStatus(deliveryType: deliveryType, itemStatus: itemSt
   }
   return status[deliveryType]
 }
-
+// AEA-4288 Translate Format 1 collected status update
 type DeliveryTypeMap = Record<deliveryType, string>
 type ItemStatusMap = Record<itemStatusType, string | DeliveryTypeMap>
 const BUSINESS_STATUS_MAP: ItemStatusMap = {
