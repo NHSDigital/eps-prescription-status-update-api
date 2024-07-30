@@ -33,7 +33,8 @@ describe("generic handler", () => {
         "apigw-request-id": "test-apigw-request-id",
         "nhsd-correlation-id": "test-nhsd-correlation-id",
         "nhsd-request-id": "test-nhsd-request-id",
-        "x-correlation-id": "test-x-correlation-id"
+        "x-correlation-id": "test-x-correlation-id",
+        "x-request-id": "test-x-request-id"
       }
     }
 
@@ -62,6 +63,7 @@ describe("generic handler", () => {
     expect(logger_call["nhsd-correlation-id"]).toEqual("test-nhsd-correlation-id")
     expect(logger_call["nhsd-request-id"]).toEqual("test-nhsd-request-id")
     expect(logger_call["x-correlation-id"]).toEqual("test-x-correlation-id")
+    expect(logger_call["x-request-id"]).toEqual("test-x-request-id")
   })
 })
 
