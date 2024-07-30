@@ -32,7 +32,11 @@ describe("getBusinessStatus function", () => {
     {itemStatus: "Expired", deliveryType: "Robot Collection", expectedStatus: "Not Dispensed"},
     {itemStatus: "DispensingComplete", deliveryType: "Robot Collection", expectedStatus: "Dispatched"},
     {itemStatus: "ReadyForCollection", deliveryType: "Delivery required", expectedStatus: "Ready to Dispatch"},
-    {itemStatus: "DispensingComplete", deliveryType: "Delivery required", expectedStatus: "Dispatched"}
+    {itemStatus: "DispensingComplete", deliveryType: "Delivery required", expectedStatus: "Dispatched"},
+    {itemStatus: "Collected", deliveryType: "Robot Collection", expectedStatus: "Dispatched"},
+    {itemStatus: "Collected", deliveryType: "Delivery required", expectedStatus: "Dispatched"},
+    {itemStatus: "Collected", deliveryType: "In-Store Collection", expectedStatus: "Collected"},
+    {itemStatus: "Collected", deliveryType: "Not known", expectedStatus: "Collected"}
   ]
 
   testCases.forEach(({itemStatus, deliveryType, expectedStatus}) => {
@@ -82,6 +86,34 @@ describe("populateTemplate function", () => {
       itemCompletedStatus: "Collected",
       deliveryType: "Robot Collection",
       expectedBusinessStatus: "Dispatched",
+      expectedTaskStatus: "completed",
+      expectItemDefined: true
+    },
+    {
+      itemStatus: "Collected",
+      deliveryType: "Robot Collection",
+      expectedBusinessStatus: "Dispatched",
+      expectedTaskStatus: "completed",
+      expectItemDefined: true
+    },
+    {
+      itemStatus: "Collected",
+      deliveryType: "Delivery required",
+      expectedBusinessStatus: "Dispatched",
+      expectedTaskStatus: "completed",
+      expectItemDefined: true
+    },
+    {
+      itemStatus: "Collected",
+      deliveryType: "In-Store Collection",
+      expectedBusinessStatus: "Collected",
+      expectedTaskStatus: "completed",
+      expectItemDefined: true
+    },
+    {
+      itemStatus: "Collected",
+      deliveryType: "Not known",
+      expectedBusinessStatus: "Collected",
       expectedTaskStatus: "completed",
       expectItemDefined: true
     }

@@ -166,7 +166,7 @@ export function getBusinessStatus(deliveryType: deliveryType, itemStatus: itemSt
   }
   return status[deliveryType]
 }
-// AEA-4288 Translate Format 1 collected status update
+
 type DeliveryTypeMap = Record<deliveryType, string>
 type ItemStatusMap = Record<itemStatusType, string | DeliveryTypeMap>
 const BUSINESS_STATUS_MAP: ItemStatusMap = {
@@ -187,6 +187,12 @@ const BUSINESS_STATUS_MAP: ItemStatusMap = {
     "In-Store Collection": "Collected",
     "Robot Collection": "Dispatched",
     "Delivery required": "Dispatched"
+  },
+  Collected: {
+    "Not known": "Collected",
+    "In-Store Collection": "Collected",
+    "Robot Collection": "Dispatched",
+    "Delivery required": "Dispatched"
   }
 }
 
@@ -198,5 +204,6 @@ const TASK_STATUS_MAP: Record<itemStatusType, Task["status"]> = {
   Cancelled: "completed",
   Expired: "completed",
   NotDispensed: "completed",
-  DispensingComplete: "completed"
+  DispensingComplete: "completed",
+  Collected: "completed"
 }
