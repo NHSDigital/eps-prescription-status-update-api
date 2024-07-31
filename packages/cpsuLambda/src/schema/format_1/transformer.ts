@@ -187,6 +187,12 @@ const BUSINESS_STATUS_MAP: ItemStatusMap = {
     "In-Store Collection": "Collected",
     "Robot Collection": "Dispatched",
     "Delivery required": "Dispatched"
+  },
+  Collected: {
+    "Not known": "Collected",
+    "In-Store Collection": "Collected",
+    "Robot Collection": "Dispatched",
+    "Delivery required": "Dispatched"
   }
 }
 
@@ -198,5 +204,6 @@ const TASK_STATUS_MAP: Record<itemStatusType, Task["status"]> = {
   Cancelled: "completed",
   Expired: "completed",
   NotDispensed: "completed",
-  DispensingComplete: "completed"
+  DispensingComplete: "completed",
+  Collected: "completed"
 }
