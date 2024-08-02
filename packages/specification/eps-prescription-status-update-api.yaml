@@ -185,6 +185,7 @@ paths:
             | 408         | `timeout`           | Request timed out.                                                                                                                        |
             | 409         | `duplicate`         | Request contains a task ID and prescription ID identical to a record already in the data store.                                           |
             | 429         | `throttled`         | You have exceeded your application's [rate limit](https://digital.nhs.uk/developer/guides-and-documentation/reference-guide#rate-limits). |
+
             The error code will be included in the returned OperationOutcome (below).
           content:
             application/fhir+json:
