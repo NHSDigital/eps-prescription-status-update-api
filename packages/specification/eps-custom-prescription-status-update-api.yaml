@@ -105,12 +105,11 @@ paths:
         "2XX":
           description: |
             The request was processed successfully. Below are the possible status codes within the 2XX range that may be returned:
-            | HTTP status | Status code     | Description                                                                                                                            |
-            | ----------- | --------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
-            | 200         | `success`       | The request was successfully processed.                                                                                                |
-            | 201         | `success`       | A new resource was successfully created. No issues detected during validation.                                                         |
-            | 202         | `informational` | The request was accepted for processing. A duplicate update was detected, and the message was valid but did not result in a change.    |
-
+            | HTTP status | Status code     | Description                                                                                                 |
+            | ----------- | --------------- | ----------------------------------------------------------------------------------------------------------- |
+            | 200         | `success`       | The request was successfully processed.                                                                     |
+            | 201         | `success`       | A new resource was successfully created. No issues detected during validation.                              |
+            | 202         | `informational` | The request was accepted, but no change occurred due to a duplicate update.                                 |
         "4XX":
           description: An error occurred.
         "5XX":
