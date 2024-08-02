@@ -31,7 +31,9 @@ Consumers of the API will find developer documentation on the [NHS Digital Devel
 
 ## Database Backups (LOOK HERE IF YOU ARE PANICKING)
 
-Stacks deployed to AWS use a DynamoDB database for data persistence, and this is configured to use Point In Time Recovery ([PITR](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Point-in-time-recovery.html)). This allows the database to be rolled back to a previous state, in cases where the present state of the database is unwholesome. Backups are (at the time of writing) persisted for 35 days, or 5 calendar weeks. For instructions on how to roll back the database table, please refer to the [AWS documentation](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/pointintimerecovery_restores.html). Note that the console version of the instructions is likely to be the one used.
+Stacks deployed to AWS use a DynamoDB database for data persistence, and this is configured to use Point In Time Recovery ([PITR](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Point-in-time-recovery.html)). This allows the database to be rolled back to a previous state, in cases where the present state of the database is unwholesome. Backups are (at the time of writing) persisted for 35 days, or 5 calendar weeks. For instructions on how to roll back the database table, please refer to the [AWS documentation](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/pointintimerecovery_restores.html). The console version of the instructions is likely to be the one used.
+
+Note that backups are "restored" as new tables, and cannot overwrite the existing one - the SAM template will need to be updated to use the new table. In addition, the newly created table will not have PITR enabled by default. Any recovery strategy requiring the backups must be cognizant of these quirks.
 
 ## Contributing
 
