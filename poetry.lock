@@ -96,17 +96,17 @@ uvloop = ["uvloop (>=0.15.2)"]
 
 [[package]]
 name = "boto3"
-version = "1.34.151"
+version = "1.34.152"
 description = "The AWS SDK for Python"
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "boto3-1.34.151-py3-none-any.whl", hash = "sha256:35bc76faacf1667d3fbb66c1966acf2230ef26206557efc26d9d9d79337bef43"},
-    {file = "boto3-1.34.151.tar.gz", hash = "sha256:30498a76b6f651ee2af7ae8edc1704379279ab8b91f1a8dd1f4ddf51259b0bc2"},
+    {file = "boto3-1.34.152-py3-none-any.whl", hash = "sha256:92726a5be7083fd62585f8de251251ec7e53f4c7ee69c9c3168873fe979ec511"},
+    {file = "boto3-1.34.152.tar.gz", hash = "sha256:d34d7efe608b98cc10cfb43983bd2c511eb32efd5780ef72b171a3e3325462ff"},
 ]
 
 [package.dependencies]
-botocore = ">=1.34.151,<1.35.0"
+botocore = ">=1.34.152,<1.35.0"
 jmespath = ">=0.7.1,<2.0.0"
 s3transfer = ">=0.10.0,<0.11.0"
 
@@ -115,13 +115,13 @@ crt = ["botocore[crt] (>=1.21.0,<2.0a0)"]
 
 [[package]]
 name = "botocore"
-version = "1.34.151"
+version = "1.34.152"
 description = "Low-level, data-driven core of boto 3."
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "botocore-1.34.151-py3-none-any.whl", hash = "sha256:9018680d7d4a8060c26d127ceec5ab5b270879f423ea39b863d8a46f3e34c404"},
-    {file = "botocore-1.34.151.tar.gz", hash = "sha256:0d0968e427a94378f295b49d59170dad539938487ec948de3d030f06092ec6dc"},
+    {file = "botocore-1.34.152-py3-none-any.whl", hash = "sha256:e291e425e34e9fdcdf32d7c37fc099be057335b58cccabf5ee7c945322dbcd87"},
+    {file = "botocore-1.34.152.tar.gz", hash = "sha256:8531eb0f8d3b7913df8b32ca96d415d3187de8681e4ac908657803eacc87ac54"},
 ]
 
 [package.dependencies]
@@ -220,13 +220,13 @@ files = [
 
 [[package]]
 name = "cfn-lint"
-version = "1.9.2"
+version = "1.9.3"
 description = "Checks CloudFormation templates for practices and behaviour that could potentially be improved"
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "cfn_lint-1.9.2-py3-none-any.whl", hash = "sha256:6920bd71875e76b36f244bd2ac70975a843e4e859a390625c60d16eaa0e3f3f3"},
-    {file = "cfn_lint-1.9.2.tar.gz", hash = "sha256:cc540882762e1545c37a08b23849f13f2034acfe5ae46079a8815c740bbdcfa2"},
+    {file = "cfn_lint-1.9.3-py3-none-any.whl", hash = "sha256:18eba3e8dfdaabf8cacac160c77af9a12b00853607a32265fda91c03b342cced"},
+    {file = "cfn_lint-1.9.3.tar.gz", hash = "sha256:a24288d29807b00770246f01f483d001a3dd991cd2851a685527318aa68ee45a"},
 ]
 
 [package.dependencies]
@@ -1180,13 +1180,13 @@ windows-terminal = ["colorama (>=0.4.6)"]
 
 [[package]]
 name = "pyjwt"
-version = "2.8.0"
+version = "2.9.0"
 description = "JSON Web Token implementation in Python"
 optional = false
-python-versions = ">=3.7"
+python-versions = ">=3.8"
 files = [
-    {file = "PyJWT-2.8.0-py3-none-any.whl", hash = "sha256:59127c392cc44c2da5bb3192169a91f429924e17aff6534d70fdc02ab3e04320"},
-    {file = "PyJWT-2.8.0.tar.gz", hash = "sha256:57e28d156e3d5c10088e0c68abb90bfac3df82b40a71bd0daa20c65ccd5c23de"},
+    {file = "PyJWT-2.9.0-py3-none-any.whl", hash = "sha256:3b02fb0f44517787776cf48f2ae25d8e14f300e6d7545a4315cee571a415e850"},
+    {file = "pyjwt-2.9.0.tar.gz", hash = "sha256:7e1e5b56cc735432a7369cbfa0efe50fa113ebecdc04ae6922deba8b84582d0c"},
 ]
 
 [package.dependencies]
@@ -1194,8 +1194,8 @@ cryptography = {version = ">=3.4.0", optional = true, markers = "extra == \"cryp
 
 [package.extras]
 crypto = ["cryptography (>=3.4.0)"]
-dev = ["coverage[toml] (==5.0.4)", "cryptography (>=3.4.0)", "pre-commit", "pytest (>=6.0.0,<7.0.0)", "sphinx (>=4.5.0,<5.0.0)", "sphinx-rtd-theme", "zope.interface"]
-docs = ["sphinx (>=4.5.0,<5.0.0)", "sphinx-rtd-theme", "zope.interface"]
+dev = ["coverage[toml] (==5.0.4)", "cryptography (>=3.4.0)", "pre-commit", "pytest (>=6.0.0,<7.0.0)", "sphinx", "sphinx-rtd-theme", "zope.interface"]
+docs = ["sphinx", "sphinx-rtd-theme", "zope.interface"]
 tests = ["coverage[toml] (==5.0.4)", "pytest (>=6.0.0,<7.0.0)"]
 
 [[package]]
@@ -1736,4 +1736,4 @@ termcolor = ">=2.3,<3.0"
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.12"
-content-hash = "7681da60003d877a12b2f96839e85dda8ba7015427db6b59da253e000b370427"
+content-hash = "5f7a3cefb09a685d0e83afe54e12364c0ef9d9a2af49eaa93a7952d19efe18e2"
