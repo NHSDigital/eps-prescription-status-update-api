@@ -57,20 +57,19 @@ jobs:
     needs: get_issue_number
     uses: ./.github/workflows/run_package_code_and_api.yml
 
-  release_ref:
+  release_code:
     needs: [get_issue_number, package_code, get_commit_id]
     uses: ./.github/workflows/run_release_code_and_api.yml
     with:
+      STACK_NAME: psu-pr-${{needs.get_issue_number.outputs.issue_number}}
       ARTIFACT_BUCKET_PREFIX: PR-${{needs.get_issue_number.outputs.issue_number}}
-      STACK_NAME: psu
-      AWS_ENVIRONMENT: ref
-      APIGEE_ENVIRONMENT: ref
-      ENABLE_MUTUAL_TLS: true
+      AWS_ENVIRONMENT: dev
+      APIGEE_ENVIRONMENT: internal-dev
+      ENABLE_MUTUAL_TLS: false
       BUILD_ARTIFACT: packaged_code
       TRUSTSTORE_FILE: psu-truststore.pem
       VERSION_NUMBER: PR-${{ needs.get_issue_number.outputs.issue_number }}
-      COMMIT_ID: ${{needs.get_commit_id.outputs.commit_id}}
-      LOG_LEVEL: DEBUG
+      COMMIT_ID: ${{ needs.get_commit_id.outputs.commit_id }}
       LOG_RETENTION_DAYS: 30
       DEPLOY_APIGEE: true
       DYNAMODB_AUTOSCALE: false
