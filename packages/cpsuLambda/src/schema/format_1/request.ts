@@ -10,8 +10,14 @@ const itemStatusSchema = {
     "Cancelled",
     "Expired",
     "NotDispensed",
-    "DispensingComplete"
+    "DispensingComplete",
+    "Collected"
   ]
+} as const satisfies JSONSchema
+
+const completedStatusSchema = {
+  type: "string",
+  enum: ["Cancelled", "Expired", "NotDispensed", "Collected"]
 } as const satisfies JSONSchema
 
 const itemSchema = {
@@ -21,7 +27,8 @@ const itemSchema = {
     itemID: {
       type: "string"
     },
-    status: itemStatusSchema
+    status: itemStatusSchema,
+    completedStatus: completedStatusSchema
   }
 } as const satisfies JSONSchema
 
@@ -82,6 +89,7 @@ type deliveryType = FromSchema<typeof deliveryTypeSchema>
 type prescriptionStatusType = FromSchema<typeof prescriptionStatusSchema>
 type itemType = FromSchema<typeof itemSchema>
 type itemStatusType = FromSchema<typeof itemStatusSchema>
+type completedStatusType = FromSchema<typeof completedStatusSchema>
 export {
   eventSchema,
   eventType,
@@ -94,5 +102,7 @@ export {
   itemSchema,
   itemType,
   itemStatusSchema,
-  itemStatusType
+  itemStatusType,
+  completedStatusSchema,
+  completedStatusType
 }

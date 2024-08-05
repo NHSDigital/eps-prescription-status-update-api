@@ -10,6 +10,7 @@ echo "AWS environment: ${AWS_ENVIRONMENT}"
 echo "Apigee environment: ${APIGEE_ENVIRONMENT}"
 echo "Proxygen private key name: ${PROXYGEN_PRIVATE_KEY_NAME}"
 echo "Proxygen KID: ${PROXYGEN_KID}"
+echo "Deploy Check Prescription Status Update: ${DEPLOY_CHECK_PRESCRIPTION_STATUS_UPDATE}"
 echo "Dry run: ${DRY_RUN}"
 
 is_pull_request=false
@@ -71,6 +72,21 @@ else
         jq '.components.securitySchemes."app-level0" = {"$ref": "https://proxygen.ptl.api.platform.nhs.uk/components/securitySchemes/app-level0"}' "${SPEC_PATH}" > temp.json && mv temp.json "${SPEC_PATH}"
     fi
 fi
+
+# Remove target attributes if the environment is sandbox
+if [[ "${APIGEE_ENVIRONMENT}" == *"sandbox"* ]]; then
+    echo "Removing target attributes for sandbox environment"
+    jq 'del(."x-nhsd-apim"."target-attributes")' "$SPEC_PATH" > temp.json && mv temp.json "$SPEC_PATH"
+fi
+
+# Remove checkprescriptionstatusupdates if its not needed
+if [[ "${DEPLOY_CHECK_PRESCRIPTION_STATUS_UPDATE}" == "false" ]]; then
+    if [[ "${API_TYPE}" == "standard" ]]; then
+        echo "Removing checkprescriptionstatusupdates endpoint"
+        jq 'del(.paths."/checkprescriptionstatusupdates")' "$SPEC_PATH" > temp.json && mv temp.json "$SPEC_PATH"
+    fi
+fi
+
 
 echo
 

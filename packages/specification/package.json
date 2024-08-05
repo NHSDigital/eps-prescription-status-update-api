@@ -4,10 +4,9 @@
   "description": "OAS (Swagger v3) API Definition for EPS Prescription Status Update",
   "type": "module",
   "scripts": {
-    "unit": "POWERTOOLS_DEV=true NODE_OPTIONS=--experimental-vm-modules jest --no-cache --coverage",
-    "lint": "swagger-cli validate eps-prescription-status-update-api.yaml",
-    "resolve": "swagger-cli bundle eps-prescription-status-update-api.yaml -r -o dist/eps-prescription-status-update-api.resolved.json",
-    "resolve-cpsu": "swagger-cli bundle eps-custom-prescription-status-update-api.yaml -r -o dist/eps-custom-prescription-status-update-api.resolved.json",
+    "lint": "redocly lint --extends=recommended --config ./redocly.yaml",
+    "resolve": "redocly bundle eps-prescription-status-update-api.yaml -d -o dist/eps-prescription-status-update-api.resolved.json",
+    "resolve-cpsu": "redocly bundle eps-custom-prescription-status-update-api.yaml -d -o dist/eps-custom-prescription-status-update-api.resolved.json",
     "clean": "rm -rf lib coverage",
     "check-licenses": "license-checker --failOn GPL --failOn LGPL --start ../.."
   },
@@ -18,7 +17,7 @@
     "npm": "10.2.x"
   },
   "homepage": "https://github.com/NHSDigital/eps-prescription-status-update-api",
-  "dependencies": {
-    "@apidevtools/swagger-cli": "^4.0.4"
+  "devDependencies": {
+    "@redocly/cli": "^1.19.0"
   }
 }

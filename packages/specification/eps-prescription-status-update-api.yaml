@@ -5,7 +5,7 @@
 openapi: 3.0.3
 info:
   title: Prescription Status Update API
-  version: "0.0.1"
+  version: 0.0.1
   contact:
     name: Prescription Status Update API Support
     url: https://digital.nhs.uk/developer/help-and-support
@@ -15,108 +15,76 @@ info:
     The Prescription Status Update API allows dispensing suppliers to push status information about electronic prescriptions to patients on a national scale via the NHS App (and potential other third parties in the future).
     This includes letting patients know when their prescription is ready to collect.
     The overall aim of the service is to reduce burden to front line NHS services by reducing the number of routine patient queries about their prescriptions.
-
     You can:
     * Enable patients to know when their prescription is ready
     * Enable dispensing suppliers to push status information about electronic prescriptions
-
     ## Who can use this API
     The Prescription Status Update API is intended for NHS England internal use only; however, the specification of the data stores will be required by dispensing suppliers so they can provide and push the information required to a central NHS data store.
-        
     ## Related APIs
     The following APIs are related to the "Prescription Status Update" API:
     * [Electronic Prescriptions Service](https://digital.nhs.uk/developer/api-catalogue/electronic-prescription-service-fhir): the national service for creating and dispensing prescriptions across health and social care.
     * [Prescriptions for Patients](https://digital.nhs.uk/developer/api-catalogue/prescriptions-for-patients): the national service to retrieve prescriptions data for individual patients from the Electronic Prescription Service (EPS), for use in patient-facing applications.
-
     ## API Status and Roadmap
     This API is [in development](https://digital.nhs.uk/developer/guides-and-documentation/reference-guide#statuses), meaning the API will soon be available for testing via a sandbox service or an integration environment - but we expect to make breaking changes based on developer feedback.
-
     ## Service Level
-    This API is a platinum service, meaning it is operational and supported 24 hours a day, 365 days a year.
-
+    This API is a silver service, meaning it is operational and supported between 8am and 6pm, Monday to Friday, but not bank holidays.
     For more details see [service levels](https://digital.nhs.uk/developer/guides-and-documentation/reference-guide#service-levels).
-
     ## Technology
     This API is [RESTful](https://digital.nhs.uk/developer/guides-and-documentation/our-api-technologies#basic-rest).
-
     It conforms to the [FHIR](https://digital.nhs.uk/developer/guides-and-documentation/our-api-technologies#fhir) global standard for health care data exchange, specifically to [FHIR R4 (v4.0.1)](https://hl7.org/fhir/r4/).
-
     It includes some country-specific FHIR extensions, which are built against FHIR UK Core, specifically [UK Core STU3 (v0.0.9)](https://simplifier.net/HL7FHIRUKCoreR4/).
-
     You do not need to know much about FHIR to use this API. The API only supports POST requests containing FHIR transactions.
-
     FHIR APIs are just RESTful APIs that follow specific rules.
     These rules mean:
     * resource names are capitalised and singular, for example `/Bundle` not `/bundle`
     * array names are singular, for example `line` not `lines` for address lines
     * data items that are country specific and not included in the FHIR global base resources are usually wrapped in an `extension` object
-
     There are [libraries and software development kits](https://digital.nhs.uk/developer/guides-and-documentation/api-technologies-at-nhs-digital#fhir-libraries-and-sdks) available to help with FHIR API integration.
-
     ## Network Access
     This API is available on the internet.
-
     For more details see [Network access for APIs](https://digital.nhs.uk/developer/guides-and-documentation/network-access-for-apis).
-
     ## Security and Authorisation
     This API only supports [application-restricted access](https://digital.nhs.uk/developer/guides-and-documentation/security-and-authorisation#application-restricted-apis), meaning we authenticate the calling application but not the end user.
-
     ### Application-restricted Access
     The end user could be:
-
     * a healthcare worker - in which case you must ensure they are authenticated and suitably authorised locally
     * not present at all - for example as part of a back end process to check NHS numbers for data flowing from one system to another
-
-
     To use this access mode, use the following security pattern:
     * [Application-restricted RESTful API - signed JWT authentication](https://digital.nhs.uk/developer/guides-and-documentation/security-and-authorisation/application-restricted-restful-apis-signed-jwt-authentication)
-
     ### Errors
     We use standard HTTP status codes to show whether an API request succeeded or not.
     They are usually in the range:
-
     * 200 to 299 if it succeeded, including code 202 if it was accepted by an API that needs to wait for further action
     * 400 to 499 if it failed because of a client error by your application
     * 500 to 599 if it failed because of an error on our server
-
     Errors specific to each API are shown in the Endpoints section, under Response. See our [reference guide](https://digital.nhs.uk/developer/guides-and-documentation/reference-guide#http-status-codes) for more on errors.
-
     ## Open source
     You might find the following [open source](https://digital.nhs.uk/developer/guides-and-documentation/reference-guide#open-source) resources useful:
-
     | Resource | Description | Links |
     |----------|-------------|-------|
     | FHIR libraries and SDKs | Various open source libraries for integrating with FHIR APIs. | [FHIR libraries and SDKs](https://digital.nhs.uk/developer/guides-and-documentation/api-technologies-at-nhs-digital#fhir-libraries-and-sdks) |
     | nhs-number | Python package containing utilities for NHS numbers including validity checks, normalisation and generation. | [GitHub repo](https://github.com/uk-fci/nhs-number) \| [Python Package index](https://pypi.org/project/nhs-number/) \| [Docs](https://nhs-number.uk-fci.tech/) |
-    | Prescription Status Update API | Source code for the EPS Prescription Status Update API | [GitHub](https://github.com/NHSDigital/eps-prescription-status-update-ap) |
+    | Prescription Status Update API | Source code for the EPS Prescription Status Update API | [GitHub](https://github.com/NHSDigital/eps-prescription-status-update-api) |
     | EPS FHIR Validator Lambda | An AWS Lambda function that validates FHIR R4 messages | [GitHub](https://github.com/NHSDigital/eps-FHIR-validator-lambda) |
-
     ## Environment and testing
     | Environment      | Base URL                                                            |
     |------------------|---------------------------------------------------------------------|
     | Sandbox          | `https://sandbox.api.service.nhs.uk/prescription-status-update`     |
     | Integration test | `https://int.api.service.nhs.uk/prescription-status-update`         |
     | Production       | `https://api.service.nhs.uk/prescription-status-update`             |
-
     ### Sandbox testing
     Our [sandbox environment](https://digital.nhs.uk/developer/guides-and-documentation/testing#sandbox-testing):
-
     * is for early developer testing
     * only covers a limited set of scenarios
     * is stateless, so it does not actually persist any updates
     * is open access, so does not allow you to test authorisation
-
     For details of sandbox testing, or to try out the sandbox using our "Try this API" feature, see the documentation for each endpoint.
-
     ### Integration testing
     Our [integration test environment](https://digital.nhs.uk/developer/guides-and-documentation/testing#integration-testing):
-
     * is for formal integration testing
     * is stateful, so persists updates
     * includes authorisation, with [smartcard](https://digital.nhs.uk/developer/guides-and-documentation/security-and-authorisation/nhs-smartcards-for-developers) and non-smartcard options
-
     For more details see [integration testing with our RESTful APIs](https://digital.nhs.uk/developer/guides-and-documentation/testing#integration-testing-with-our-restful-apis).
-
     ## Onboarding
     All dispenser suppliers are being asked to integrate with this new service.
 
@@ -127,10 +95,10 @@ x-spec-publication:
           path: /Bundle
 
 servers:
-  - url: "https://int.api.service.nhs.uk/prescription-status-update"
-    description: "Integration"
-  - url: "https://api.service.nhs.uk/prescription-status-update"
-    description: "Production"
+  - url: https://int.api.service.nhs.uk/prescription-status-update
+    description: Integration
+  - url: https://api.service.nhs.uk/prescription-status-update
+    description: Production
 
 paths:
   /:
@@ -158,7 +126,8 @@ paths:
                   $ref: examples/request-ready-to-dispatch.json
               ready-to-dispatch-partial:
                 summary: ready-to-dispatch-partial
-                description: A request message contains tracking status `Ready to Dispatch - Partial`.
+                description: A request message contains tracking status `Ready to Dispatch -
+                  Partial`.
                 value:
                   $ref: examples/request-ready-to-dispatch-partial.json
               dispatched:
@@ -182,31 +151,37 @@ paths:
                 value:
                   $ref: examples/request-multiple-items.json
       responses:
-        "200":
-          description: Successful retrieval.
+        "2XX":
+          description: |
+            The request was processed successfully. Below are the possible status codes within the 2XX range that may be returned:
+            | HTTP status | Status code     | Description                                                                                                                            |
+            | ----------- | --------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+            | 200         | `success`       | The request was successfully processed.                                                                                                |
+            | 201         | `success`       | A new resource was successfully created. No issues detected during validation.                                                         |
           content:
             application/fhir+json:
               schema:
                 $ref: "#/components/schemas/ResponseBundle"
               examples:
                 single-item:
-                  description: A successful response to a UpdatePrescriptionStatus request, contains a single item.
+                  description: A successful response to a UpdatePrescriptionStatus request,
+                    contains a single item.
                   value:
-                    $ref: "examples/response-single-item.json"
+                    $ref: examples/response-single-item.json
                 multiple-items:
-                  description: A successful response to a UpdatePrescriptionStatus request, contains multiple items.
+                  description: A successful response to a UpdatePrescriptionStatus request,
+                    contains multiple items.
                   value:
-                    $ref: "examples/response-multiple-items.json"
-
+                    $ref: examples/response-multiple-items.json
         "4XX":
           description: |
             An error occurred as follows:
-
             | HTTP status | Error code          | Description                                                                                                                               |
             | ----------- | ------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
-            | 400         | `value`             | Missing values or invalid JSON in request                                                                                                 |
-            | 401         | `processing`        | Missing or invalid OAuth 2.0 bearer token in request                                                                                      |
-            | 408         | `timeout`           | Request timed out                                                                                                                         |
+            | 400         | `value`             | Missing values or invalid JSON in request.                                                                                                |
+            | 401         | `processing`        | Missing or invalid OAuth 2.0 bearer token in request.                                                                                     |
+            | 408         | `timeout`           | Request timed out.                                                                                                                        |
+            | 409         | `duplicate`         | Request contains a task ID and prescription ID identical to a record already in the data store.                                           |
             | 429         | `throttled`         | You have exceeded your application's [rate limit](https://digital.nhs.uk/developer/guides-and-documentation/reference-guide#rate-limits). |
 
             The error code will be included in the returned OperationOutcome (below).
@@ -215,7 +190,14 @@ paths:
               schema:
                 $ref: "#/components/schemas/OperationOutcome"
               example:
-                $ref: examples/error-ods-code.json
+                $ref: examples/error-invalid-prescriptionid.json
+        "5XX":
+          description: |
+            An error occurred due to a server-side issue. Below are the possible status codes within the 5XX range that may be returned:
+            | HTTP status | Error code      | Description                                                                                                 |
+            | ----------- | --------------- | ----------------------------------------------------------------------------------------------------------- |
+            | 500         | `exception`     | The server has encountered an error processing the request.                                                 |
+            | 504         | `timeout`       | The server has timed out while processing the request sent by the client.                                   |
       security:
         - app-level3: []
   /metadata:
@@ -225,6 +207,83 @@ paths:
       responses:
         "200":
           description: Successful retrieval of metadata.
+      security:
+        - app-level3: []
+  /checkprescriptionstatusupdates:
+    get:
+      operationId: check-prescription-status-updates
+      summary: Check Prescription status updates
+      description: |
+        ## This endpoint is only available in PTL environments
+        ## Overview
+        This returns prescription status updates created by the authorized application. The result can be filtered by a combination of odscode, nhsnumber or prescription id.   
+
+        A maximum of 15 results is returned. If more results are available, then headers LastEvaluatedKey-PrescriptionID and LastEvaluatedKey-TaskID are returned in the result. These values should be used in a subsequent request in the headers ExclusiveStartKey-PrescriptionID and ExclusiveStartKey-TaskID.
+
+        Note that it is possible that less than 15 results are returned even when more are available. This is a feature of the database and filtering method being used. At least 5 results will be returned, if available.
+      parameters:
+        - in: query
+          name: odscode
+          schema:
+            type: string
+          description: The ods code to return prescription status updates for
+        - in: query
+          name: nhsnumber
+          schema:
+            type: string
+          description: The nhs number to return prescription status updates for
+        - in: query
+          name: prescriptionid
+          schema:
+            type: string
+          description: The prescription id to return prescription status updates for
+        - in: header
+          name: ExclusiveStartKey-PrescriptionID
+          schema:
+            type: string
+          description: Used to paginate through results in combination with
+            ExclusiveStartKey-TaskID. When paginated results are available, this
+            should be set to the value of this value of
+            LastEvaluatedKey-PrescriptionID returned in the header of a previous
+            request
+        - in: header
+          name: ExclusiveStartKey-TaskID
+          schema:
+            type: string
+          description: Used to paginate through results in combination with
+            ExclusiveStartKey-PrescriptionID. When paginated results are
+            available, this should be set to the value of this value of
+            LastEvaluatedKey-TaskID returned in the header of a previous request
+      responses:
+        "200":
+          description: Successful retrieval of prescription-status-updates.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CheckPrescriptionStatusUpdates"
+              examples:
+                single-item:
+                  description: A successful response to a checkprescriptionstatusupdates request.
+                  value:
+                    $ref: examples/response-checkprescriptionstatusupdates.json
+          headers:
+            LastEvaluatedKey-PrescriptionID:
+              description: The value of this header should be used in subsequent requests in the header ExclusiveStartKey-PrescriptionID. If not present, there are no more results available.
+              schema:
+                type: string
+            LastEvaluatedKey-TaskID:
+              description: The value of this header should be used in subsequent requests in the header ExclusiveStartKey-TaskID. If not present, there are no more results available.
+              schema:
+                type: string
+        4XX:
+          description: |
+            An error occurred as follows:
+            | HTTP status | Error code          | Description                                                                                                                               |
+            | ----------- | ------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
+            | 401         | `processing`        | Missing or invalid OAuth 2.0 bearer token in request                                                                                      |
+            | 408         | `timeout`           | Request timed out                                                                                                                         |
+            | 429         | `throttled`         | You have exceeded your application's [rate limit](https://digital.nhs.uk/developer/guides-and-documentation/reference-guide#rate-limits). |
+
       security:
         - app-level3: []
 
@@ -241,8 +300,8 @@ components:
       required: true
       schema:
         type: string
-        format: '^Bearer\ [[:ascii:]]+$'
-        example: "Bearer g1112R_ccQ1Ebbb4gtHBP1aaaNM"
+        format: ^Bearer\ [[:ascii:]]+$
+        example: Bearer g1112R_ccQ1Ebbb4gtHBP1aaaNM
     RequestID:
       in: header
       name: X-Request-ID
@@ -253,7 +312,7 @@ components:
         Mirrored back in a response header.
       schema:
         type: string
-        pattern: "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
+        pattern: ^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$
         example: 60E0B220-8136-4CA5-AE46-1D97EF59D068
     CorrelationID:
       in: header
@@ -268,24 +327,33 @@ components:
   schemas:
     UpdatePrescriptionStatusBundle:
       type: object
-      required: [entry, resourceType, type]
+      required:
+        - entry
+        - resourceType
+        - type
       description: A FHIR transaction Bundle.
       properties:
         resourceType:
           type: string
           description: FHIR resource type.
-          enum: [Bundle]
+          enum:
+            - Bundle
         type:
           type: string
-          description: Denotes that the bundle is a list of status updates to be performed as one transaction.
-          enum: [transaction]
+          description: Denotes that the bundle is a list of status updates to be performed
+            as one transaction.
+          enum:
+            - transaction
         entry:
           type: array
           description: |
             A collection of resources contained within the Bundle.
           items:
             type: object
-            required: [fullUrl, resource, request]
+            required:
+              - fullUrl
+              - resource
+              - request
             description: A FHIR collection Bundle.
             properties:
               fullUrl:
@@ -295,20 +363,26 @@ components:
                 $ref: "#/components/schemas/UpdatePrescriptionStatusTask"
               request:
                 type: object
-                required: [method, url]
+                required:
+                  - method
+                  - url
                 properties:
                   method:
                     type: string
-                    enum: [POST]
+                    enum:
+                      - POST
                   url:
                     type: string
-                    enum: [Task]
+                    enum:
+                      - Task
     UpdatePrescriptionStatusTask:
       $ref: schemas/resources/UpdatePrescriptionStatusTask.yaml
     ResponseBundle:
-      $ref: "schemas/components/ResponseBundle.yaml"
+      $ref: schemas/components/ResponseBundle.yaml
     OperationOutcome:
       $ref: schemas/resources/OperationOutcome.yaml
+    CheckPrescriptionStatusUpdates:
+      $ref: schemas/resources/CheckPrescriptionStatusUpdates.yaml
 security:
   - app-level3: []
 x-nhsd-apim:
@@ -328,7 +402,10 @@ x-nhsd-apim:
   target-attributes:
     - name: name
       required: true
+    - name: show-all-suppliers
+      required: false
+      header: show-all-suppliers
   ratelimiting:
     proxy:
-      timeunit: "second"
+      timeunit: second
       limit: 60

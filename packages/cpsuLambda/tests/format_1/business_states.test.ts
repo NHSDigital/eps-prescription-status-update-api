@@ -4,8 +4,10 @@ import {
   itemType,
   requestType,
   deliveryType,
-  itemStatusType
+  itemStatusType,
+  completedStatusType
 } from "../../src/schema/format_1"
+import {Logger} from "@aws-lambda-powertools/logger"
 
 interface BusinessStatusTestCase {
   itemStatus: itemStatusType
@@ -16,8 +18,11 @@ interface BusinessStatusTestCase {
 interface PopulateTemplateTestCase {
   itemStatus: itemStatusType
   deliveryType: deliveryType
-  expectedBusinessStatus: string
-  expectedTaskStatus: string
+  expectItemDefined: boolean
+  // Optional fields, which may or may not be present
+  expectedBusinessStatus?: string
+  expectedTaskStatus?: string
+  itemCompletedStatus?: completedStatusType
 }
 
 describe("getBusinessStatus function", () => {
@@ -27,7 +32,11 @@ describe("getBusinessStatus function", () => {
     {itemStatus: "Expired", deliveryType: "Robot Collection", expectedStatus: "Not Dispensed"},
     {itemStatus: "DispensingComplete", deliveryType: "Robot Collection", expectedStatus: "Dispatched"},
     {itemStatus: "ReadyForCollection", deliveryType: "Delivery required", expectedStatus: "Ready to Dispatch"},
-    {itemStatus: "DispensingComplete", deliveryType: "Delivery required", expectedStatus: "Dispatched"}
+    {itemStatus: "DispensingComplete", deliveryType: "Delivery required", expectedStatus: "Dispatched"},
+    {itemStatus: "Collected", deliveryType: "Robot Collection", expectedStatus: "Dispatched"},
+    {itemStatus: "Collected", deliveryType: "Delivery required", expectedStatus: "Dispatched"},
+    {itemStatus: "Collected", deliveryType: "In-Store Collection", expectedStatus: "Collected"},
+    {itemStatus: "Collected", deliveryType: "Not known", expectedStatus: "Collected"}
   ]
 
   testCases.forEach(({itemStatus, deliveryType, expectedStatus}) => {
@@ -44,52 +53,124 @@ describe("populateTemplate function", () => {
       itemStatus: "ReadyForCollection",
       deliveryType: "Robot Collection",
       expectedBusinessStatus: "Ready to Dispatch",
-      expectedTaskStatus: "in-progress"
+      expectedTaskStatus: "in-progress",
+      expectItemDefined: true
     },
     {
       itemStatus: "DispensingComplete",
       deliveryType: "Robot Collection",
       expectedBusinessStatus: "Dispatched",
-      expectedTaskStatus: "completed"
+      expectedTaskStatus: "completed",
+      expectItemDefined: true
+    },
+    {
+      itemStatus: "DispensingComplete",
+      itemCompletedStatus: "Cancelled",
+      deliveryType: "Not known",
+      expectItemDefined: false
+    },
+    {
+      itemStatus: "DispensingComplete",
+      itemCompletedStatus: "Expired",
+      deliveryType: "Not known",
+      expectItemDefined: false
+    },
+    {
+      itemStatus: "DispensingComplete",
+      itemCompletedStatus: "NotDispensed",
+      deliveryType: "Not known",
+      expectItemDefined: false
+    },
+    {
+      itemStatus: "DispensingComplete",
+      itemCompletedStatus: "Collected",
+      deliveryType: "Robot Collection",
+      expectedBusinessStatus: "Dispatched",
+      expectedTaskStatus: "completed",
+      expectItemDefined: true
+    },
+    {
+      itemStatus: "Collected",
+      deliveryType: "Robot Collection",
+      expectedBusinessStatus: "Dispatched",
+      expectedTaskStatus: "completed",
+      expectItemDefined: true
+    },
+    {
+      itemStatus: "Collected",
+      deliveryType: "Delivery required",
+      expectedBusinessStatus: "Dispatched",
+      expectedTaskStatus: "completed",
+      expectItemDefined: true
+    },
+    {
+      itemStatus: "Collected",
+      deliveryType: "In-Store Collection",
+      expectedBusinessStatus: "Collected",
+      expectedTaskStatus: "completed",
+      expectItemDefined: true
+    },
+    {
+      itemStatus: "Collected",
+      deliveryType: "Not known",
+      expectedBusinessStatus: "Collected",
+      expectedTaskStatus: "completed",
+      expectItemDefined: true
     }
   ]
 
-  testCases.forEach(({itemStatus, deliveryType, expectedBusinessStatus, expectedTaskStatus}) => {
-    it(`should populate template correctly for itemStatus: ${itemStatus} and deliveryType: ${deliveryType}`, () => {
-      const template: string = generateTemplate({
-        MessageType: "ExampleMessageType",
-        items: [{itemID: "item1", status: itemStatus}],
-        prescriptionUUID: "123456789",
-        nHSCHI: "123456",
-        messageDate: new Date().toISOString(),
-        oDSCode: "XYZ",
-        deliveryType: deliveryType,
-        repeatNo: 1
-      })
+  testCases.forEach(
+    ({
+      itemStatus,
+      deliveryType,
+      expectedBusinessStatus,
+      expectedTaskStatus,
+      expectItemDefined,
+      itemCompletedStatus
+    }) => {
+      it(`should populate template for itemStatus: ${itemStatus} and completedStatus: ${itemCompletedStatus}`, () => {
+        const template: string = generateTemplate({
+          MessageType: "ExampleMessageType",
+          items: [{itemID: "item1", status: itemStatus, completedStatus: itemCompletedStatus}],
+          prescriptionUUID: "123456789",
+          nHSCHI: "123456",
+          messageDate: new Date().toISOString(),
+          oDSCode: "XYZ",
+          deliveryType: deliveryType,
+          repeatNo: 1
+        })
 
-      const prescriptionItem: itemType = {
-        itemID: "item1",
-        status: itemStatus
-      }
+        const prescriptionItem: itemType = {
+          itemID: "item1",
+          status: itemStatus,
+          completedStatus: itemCompletedStatus
+        }
 
-      const prescriptionDetails: requestType = {
-        MessageType: "ExampleMessageType",
-        items: [{itemID: "item1", status: itemStatus}],
-        prescriptionUUID: "123456789",
-        nHSCHI: "123456",
-        messageDate: new Date().toISOString(),
-        oDSCode: "XYZ",
-        deliveryType: deliveryType,
-        repeatNo: 1
-      }
+        const prescriptionDetails: requestType = {
+          MessageType: "ExampleMessageType",
+          items: [{itemID: "item1", status: itemStatus, completedStatus: itemCompletedStatus}],
+          prescriptionUUID: "123456789",
+          nHSCHI: "123456",
+          messageDate: new Date().toISOString(),
+          oDSCode: "XYZ",
+          deliveryType: deliveryType,
+          repeatNo: 1
+        }
 
-      const result = populateTemplate(template, prescriptionItem, prescriptionDetails)
+        const logger = new Logger()
+        const result = populateTemplate(template, prescriptionItem, prescriptionDetails, logger)
 
-      if (result.isOk()) {
         const entry: BundleEntry<Task> = result.value() as BundleEntry<Task>
-        expect(entry.resource!.businessStatus!.coding![0].code).toEqual(expectedBusinessStatus)
-        expect(entry.resource!.status).toEqual(expectedTaskStatus)
-      }
-    })
-  })
+
+        if (expectItemDefined) {
+          // Check that the template is correctly populated
+          expect(entry.resource!.businessStatus!.coding![0].code).toEqual(expectedBusinessStatus)
+          expect(entry.resource!.status).toEqual(expectedTaskStatus)
+        } else {
+          // If expectItemDefined is false, we expect Nothing
+          expect(result.isNothing()).toBeTruthy()
+        }
+      })
+    }
+  )
 })

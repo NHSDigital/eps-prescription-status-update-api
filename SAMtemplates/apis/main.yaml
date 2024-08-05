@@ -46,16 +46,30 @@ Parameters:
     Type: String
     Default: none
 
+  CheckPrescriptionStatusUpdatesFunctionName:
+    Type: String
+    Default: none
+
+  CheckPrescriptionStatusUpdatesFunctionArn:
+    Type: String
+    Default: none
+
   LogRetentionInDays:
     Type: Number
 
   EnableSplunk:
     Type: String
 
+  DeployCheckPrescriptionStatusUpdate:
+    Type: String
+
 Conditions:
   ShouldUseMutualTLS: !Equals
     - true
     - !Ref EnableMutualTLS
+  ShouldDeployCheckPrescriptionStatusUpdate: !Equals
+    - true
+    - !Ref DeployCheckPrescriptionStatusUpdate
 
 Resources:
   GenerateCertificate:
@@ -286,7 +300,7 @@ Resources:
             ResponseTemplates:
               application/json: |-
                 #set($context.responseOverride.header["Content-Type"] ="application/fhir+json")
-                {"resourceType":"OperationOutcome","issue": [{"severity":"error","code":"processing","diagnostics":"System error"}]}
+                {"resourceType":"OperationOutcome","issue": [{"severity":"error","code":"value","diagnostics":"Badly formatted request body."}]}
           - StatusCode: 500
             SelectionPattern: ^5\d{2}.*
             ResponseTemplates:
@@ -400,7 +414,7 @@ Resources:
             ResponseTemplates:
               application/json: |-
                 #set($context.responseOverride.header["Content-Type"] ="application/fhir+json")
-                {"resourceType":"OperationOutcome","issue": [{"severity":"error","code":"processing","diagnostics":"System error"}]}
+                {"resourceType":"OperationOutcome","issue": [{"severity":"error","code":"value","diagnostics":"Badly formatted request body."}]}
           - StatusCode: 500
             SelectionPattern: ^5\d{2}.*
             ResponseTemplates:
@@ -453,11 +467,56 @@ Resources:
         IntegrationHttpMethod: POST
         Uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${CapabilityStatementFunctionArn}/invocations
 
+  CheckPrescriptionStatusUpdatesResource:
+    Condition: ShouldDeployCheckPrescriptionStatusUpdate
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId: !Ref RestApiGateway
+      ParentId: !GetAtt RestApiGateway.RootResourceId
+      PathPart: checkprescriptionstatusupdates
+
+  CheckPrescriptionStatusUpdatesMethod:
+    Condition: ShouldDeployCheckPrescriptionStatusUpdate
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref RestApiGateway
+      ResourceId: !Ref CheckPrescriptionStatusUpdatesResource
+      HttpMethod: GET
+      AuthorizationType: NONE
+      Integration:
+        Type: AWS_PROXY
+        Credentials: !GetAtt RestApiGatewayResources.Outputs.ApiGwRoleArn
+        IntegrationHttpMethod: POST
+        Uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${CheckPrescriptionStatusUpdatesFunctionArn}/invocations
+
+  # we can not use a conditional in depends on in ApiGateway::Deployment
+  # so instead we use a wait condition that has the conditional in it and use that as a dependency
+  # taken from https://garbe.io/blog/2017/07/17/cloudformation-hacks/
+  CheckPrescriptionStatusUpdatesHandle:
+    Condition: ShouldDeployCheckPrescriptionStatusUpdate
+    DependsOn: CheckPrescriptionStatusUpdatesMethod
+    Type: "AWS::CloudFormation::WaitConditionHandle"
+
+  CheckPrescriptionStatusUpdatesWaitHandle:
+    Type: "AWS::CloudFormation::WaitConditionHandle"
+
+  CheckPrescriptionStatusUpdatesWaitCondition:
+    Type: "AWS::CloudFormation::WaitCondition"
+    Properties:
+      Handle:
+        !If [
+          ShouldDeployCheckPrescriptionStatusUpdate,
+          !Ref CheckPrescriptionStatusUpdatesHandle,
+          !Ref CheckPrescriptionStatusUpdatesWaitHandle
+        ]
+      Timeout: "1"
+      Count: 0
+
   # *********************************************************************
   # if you add a new endpoint, then change the name of this resource
   # also need to change it in RestApiGatewayStage.Properties.DeploymentId
   # *********************************************************************
-  RestApiGatewayDeploymentV1d:
+  RestApiGatewayDeploymentV1e:
     Type: AWS::ApiGateway::Deployment
     DependsOn:
       # see note above if you add something in here when you add a new endpoint
@@ -465,6 +524,7 @@ Resources:
       - StatusLambdaMethod
       - CapabilityStatementMethod
       - Format1UpdatePrescriptionStatusMethod
+      - CheckPrescriptionStatusUpdatesWaitCondition
       # see note above if you add something in here when you add a new endpoint
     Properties:
       RestApiId: !Ref RestApiGateway
@@ -473,7 +533,7 @@ Resources:
     Type: AWS::ApiGateway::Stage
     Properties:
       RestApiId: !Ref RestApiGateway
-      DeploymentId: !Ref RestApiGatewayDeploymentV1d
+      DeploymentId: !Ref RestApiGatewayDeploymentV1e
       StageName: prod
       TracingEnabled: true
       AccessLogSetting:
@@ -498,6 +558,11 @@ Resources:
             - Fn::ImportValue: !Sub ${StackName}:functions:${StatusFunctionName}:ExecuteLambdaPolicyArn
             - Fn::ImportValue: !Sub ${StackName}:functions:${CapabilityStatementFunctionName}:ExecuteLambdaPolicyArn
             - Fn::ImportValue: !Sub ${StackName}:state-machines:${Format1UpdatePrescriptionsStatusStateMachineName}:ExecuteStateMachinePolicy
+            - !If
+              - ShouldDeployCheckPrescriptionStatusUpdate
+              - Fn::ImportValue: !Sub ${StackName}:functions:${CheckPrescriptionStatusUpdatesFunctionName}:ExecuteLambdaPolicyArn
+              - !Ref AWS::NoValue
+
         ApiName: !Sub ${StackName}-apigw
         LogRetentionInDays: !Ref LogRetentionInDays
         EnableSplunk: !Ref EnableSplunk

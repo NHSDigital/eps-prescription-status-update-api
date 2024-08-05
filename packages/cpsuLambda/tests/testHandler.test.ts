@@ -18,6 +18,13 @@ const format_1_response = () => {
 }
 
 const dummyContext = mockContext
+const TEST_HEADERS = {
+  "apigw-request-id": "test-apigw-request-id",
+  "nhsd-correlation-id": "test-nhsd-correlation-id",
+  "nhsd-request-id": "test-nhsd-request-id",
+  "x-correlation-id": "test-x-correlation-id",
+  "attribute-name": "test-attribute-value"
+}
 
 describe("generic handler", () => {
   test("Headers are appended to logger", async () => {
@@ -26,7 +33,8 @@ describe("generic handler", () => {
         "apigw-request-id": "test-apigw-request-id",
         "nhsd-correlation-id": "test-nhsd-correlation-id",
         "nhsd-request-id": "test-nhsd-request-id",
-        "x-correlation-id": "test-x-correlation-id"
+        "x-correlation-id": "test-x-correlation-id",
+        "x-request-id": "test-x-request-id"
       }
     }
 
@@ -55,6 +63,7 @@ describe("generic handler", () => {
     expect(logger_call["nhsd-correlation-id"]).toEqual("test-nhsd-correlation-id")
     expect(logger_call["nhsd-request-id"]).toEqual("test-nhsd-request-id")
     expect(logger_call["x-correlation-id"]).toEqual("test-x-correlation-id")
+    expect(logger_call["x-request-id"]).toEqual("test-x-request-id")
   })
 })
 
@@ -64,12 +73,7 @@ describe("format_1 handler", () => {
   })
   test("Happy path", async () => {
     const event = {
-      headers: {
-        "apigw-request-id": "test-apigw-request-id",
-        "nhsd-correlation-id": "test-nhsd-correlation-id",
-        "nhsd-request-id": "test-nhsd-request-id",
-        "x-correlation-id": "test-x-correlation-id"
-      },
+      headers: TEST_HEADERS,
       body: format_1_request()
     }
 
@@ -87,13 +91,7 @@ describe("format_1 handler", () => {
     responseBody.entry[1].resource.id = expectedResponseBody.entry[1].resource.id
     responseBody.entry[1].resource.lastModified = expectedResponseBody.entry[1].resource.lastModified
 
-    expect(response.headers).toEqual({
-      "apigw-request-id": "test-apigw-request-id",
-      "nhsd-correlation-id": "test-nhsd-correlation-id",
-      "nhsd-request-id": "test-nhsd-request-id",
-      "x-correlation-id": "test-x-correlation-id"
-    })
-
+    expect(response.headers).toEqual(TEST_HEADERS)
     expect(responseBody).toEqual(expectedResponseBody)
   })
 
@@ -162,12 +160,15 @@ describe("format_1 handler", () => {
     delete body.oDSCode
 
     const event = {
-      headers: {},
+      headers: TEST_HEADERS,
       body: body
     }
     const response = await format_1_handler(event as format_1.eventType, dummyContext)
     expect(response.statusCode).toEqual(400)
-    expect(JSON.parse(response.body)).toEqual([{error: "must have required property 'oDSCode'", path: "/body"}])
+    expect(response.body).toEqual(
+      '"[{\\"path\\":\\"/body\\",\\"error\\":\\"must have required property \'oDSCode\'\\"}]"'
+    )
+    expect(response.headers).toEqual(TEST_HEADERS)
   })
 
   test("Message missing fields receives 400 and appropriate message", async () => {
@@ -176,15 +177,16 @@ describe("format_1 handler", () => {
     delete body.items[0].itemID
 
     const event = {
-      headers: {},
+      headers: TEST_HEADERS,
       body: body
     }
     const response = await format_1_handler(event as format_1.eventType, dummyContext)
     expect(response.statusCode).toEqual(400)
-    expect(JSON.parse(response.body)).toEqual([
-      {error: "must have required property 'oDSCode'", path: "/body"},
-      {error: "must have required property 'itemID'", path: "/body/items/0"}
-    ])
+    expect(response.body).toEqual(
+      '"[{\\"path\\":\\"/body\\",\\"error\\":\\"must have required property \'oDSCode\'\\"},' +
+        '{\\"path\\":\\"/body/items/0\\",\\"error\\":\\"must have required property \'itemID\'\\"}]"'
+    )
+    expect(response.headers).toEqual(TEST_HEADERS)
   })
 
   test("Message with incorrect field type receives 400 and appropriate message", async () => {
@@ -192,12 +194,13 @@ describe("format_1 handler", () => {
     body.repeatNo = "not a number"
 
     const event = {
-      headers: {},
+      headers: TEST_HEADERS,
       body: body
     }
     const response = await format_1_handler(event as format_1.eventType, dummyContext)
     expect(response.statusCode).toEqual(400)
-    expect(JSON.parse(response.body)).toEqual([{error: "must be number", path: "/body/repeatNo"}])
+    expect(response.body).toEqual('"[{\\"path\\":\\"/body/repeatNo\\",\\"error\\":\\"must be number\\"}]"')
+    expect(response.headers).toEqual(TEST_HEADERS)
   })
 
   test("Requests with no repeatNo are accepted", async () => {
@@ -271,5 +274,80 @@ describe("format_1 handler", () => {
     // Same uuid since item ID is not different
     expect(response_1_body.entry[1].fullUrl).toBe(response_2_body.entry[1].fullUrl)
     expect(response_1_body.entry[1].resource.id).toBe(response_2_body.entry[1].resource.id)
+  })
+
+  describe("format_1 handler with completedStatus checks", () => {
+    const testData = [
+      {
+        status: "DispensingComplete",
+        completedStatus: "Expired",
+        expectedEntriesCount: 0,
+        description: "should exclude items with Expired completedStatus"
+      },
+      {
+        status: "DispensingComplete",
+        completedStatus: "NotDispensed",
+        expectedEntriesCount: 0,
+        description: "should exclude items with NotDispensed completedStatus"
+      },
+      {
+        status: "DispensingComplete",
+        completedStatus: "Cancelled",
+        expectedEntriesCount: 0,
+        description: "should exclude items with Cancelled completedStatus"
+      },
+      {
+        status: "DispensingComplete",
+        completedStatus: "Collected",
+        expectedEntriesCount: 2,
+        description: "should include items with Collected completedStatus"
+      },
+      {
+        status: "Pending",
+        expectedEntriesCount: 2,
+        description: "should include items with no completedStatus definition"
+      }
+    ]
+
+    testData.forEach(({status, completedStatus, expectedEntriesCount, description}) => {
+      test(description, async () => {
+        const body = format_1_request()
+        body.items.forEach((item: {completedStatus?: string; status: string}) => {
+          item.status = status
+          if (completedStatus !== undefined) {
+            item.completedStatus = completedStatus
+          }
+        })
+
+        const event = {
+          headers: {},
+          body
+        }
+
+        const response = await format_1_handler(event as format_1.eventType, dummyContext)
+        const responseBody = JSON.parse(response.body)
+        const entries = responseBody.entry
+        expect(entries.length).toBe(expectedEntriesCount)
+      })
+    })
+
+    test("Should handle mixed statuses correctly", async () => {
+      const body = format_1_request()
+      // Assigning different statuses to different items
+      body.items[1] = {...body.items[1], status: "DispensingComplete", completedStatus: "Expired"}
+
+      const event = {
+        headers: {},
+        body
+      }
+
+      const response = await format_1_handler(event as format_1.eventType, dummyContext)
+      const responseBody = JSON.parse(response.body)
+      const entries = responseBody.entry
+
+      // Only the valid item should be included
+      expect(entries.length).toBe(1)
+      expect(entries[0].resource.status).toBe("in-progress")
+    })
   })
 })

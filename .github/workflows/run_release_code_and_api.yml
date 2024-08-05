@@ -58,6 +58,9 @@ on:
       DEPLOY_APIGEE_CPSU:
         type: boolean
         default: true
+      DEPLOY_CHECK_PRESCRIPTION_STATUS_UPDATE:
+        type: boolean
+        default: false
     secrets:
       CLOUD_FORMATION_DEPLOY_ROLE:
         required: true
@@ -174,6 +177,7 @@ jobs:
           TRUSTSTORE_FILE: ${{ inputs.TRUSTSTORE_FILE }}
           VERSION_NUMBER: ${{ inputs.VERSION_NUMBER }}
           DYNAMODB_AUTOSCALE: ${{ inputs.DYNAMODB_AUTOSCALE }}
+          DEPLOY_CHECK_PRESCRIPTION_STATUS_UPDATE: ${{ inputs.DEPLOY_CHECK_PRESCRIPTION_STATUS_UPDATE }}
         run: ./release_code.sh
 
       - name: Deploy PSU API
@@ -191,6 +195,7 @@ jobs:
           PROXYGEN_PRIVATE_KEY_NAME: PSUProxygenPrivateKey
           PROXYGEN_KID: "eps-cli-key-1"
           DRY_RUN: false
+          DEPLOY_CHECK_PRESCRIPTION_STATUS_UPDATE: ${{ inputs.DEPLOY_CHECK_PRESCRIPTION_STATUS_UPDATE }}
         run: poetry run ./deploy_api.sh
 
       - name: Deploy CPSU API
@@ -208,6 +213,7 @@ jobs:
           PROXYGEN_PRIVATE_KEY_NAME: CPSUProxygenPrivateKey
           PROXYGEN_KID: eps-cli-key-cpsu-1
           DRY_RUN: false
+          DEPLOY_CHECK_PRESCRIPTION_STATUS_UPDATE: ${{ inputs.DEPLOY_CHECK_PRESCRIPTION_STATUS_UPDATE }}
         run: poetry run ./deploy_api.sh
 
       - name: create_int_release_notes

@@ -31,10 +31,26 @@
     {
       "name": "packages/capabilityStatement",
       "path": "../packages/capabilityStatement"
+    },
+    {
+      "name": "packages/checkPrescriptionStatusUpdates",
+      "path": "../packages/checkPrescriptionStatusUpdates"
+    },
+    {
+      "name": "packages/common/testing",
+      "path": "../packages/common/testing"
+    },
+    {
+      "name": "packages/common/middyErrorHandler",
+      "path": "../packages/common/middyErrorHandler"
     }
   ],
   "settings": {
-    "jest.disabledWorkspaceFolders": ["eps-prescription-status-update-monorepo"],
+    "jest.disabledWorkspaceFolders": [
+      "eps-prescription-status-update-monorepo",
+      "packages/common/testing",
+      "packages/specification"
+    ],
     "files.exclude": {
       "packages/": true
     },
@@ -50,9 +66,14 @@
       "Codeable",
       "codeinline",
       "codesystem",
+      "cpsu",
+      "dbaeumer",
       "devcontainer",
+      "direnv",
+      "eamodio",
       "eps-prescription-status-update-api",
       "esbuild",
+      "excelviewer",
       "fhir",
       "Formik",
       "Fulfillment",
@@ -62,34 +83,48 @@
       "Helpdesk",
       "homecare",
       "HSCN",
+      "kohler",
       "liter",
+      "mermade",
       "milliliter",
+      "mkhl",
       "nHSCHI",
       "NHSD",
       "nhsdlogin",
+      "NHSE",
       "nhslogin",
       "NOSONAR",
       "OIDC",
+      "openapi",
+      "orta",
       "Orthoptist",
       "Payor",
       "pino",
       "pollable",
       "powertools",
+      "pratica",
+      "prescriptionid",
       "Prosthetist",
+      "pylint",
+      "pytest",
       "querystring",
       "reingest",
       "reingested",
       "Reingestion",
+      "rvest",
       "serialisation",
+      "shellcheck",
       "smartcard",
       "smartcards",
       "Snomed",
       "sourcetype",
+      "timonwong",
       "Truststore",
       "URID",
       "URPID",
       "uuidv4",
       "vars",
+      "venv",
       "versionable",
       "whens"
     ],

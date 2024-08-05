@@ -7,11 +7,7 @@ import {Bundle, Task} from "fhir/r4"
 import {wrap_with_status} from "./utils"
 
 export type Validator<Event, Message> = (event: Event, logger: Logger) => Result<Message, APIGatewayProxyResult>
-export type Transformer<Message> = (
-  requestBody: Message,
-  logger: Logger,
-  headers: {[key: string]: string}
-) => Result<Bundle<Task>, APIGatewayProxyResult>
+export type Transformer<Message> = (requestBody: Message, logger: Logger) => Result<Bundle<Task>, APIGatewayProxyResult>
 
 type EventWithHeaders = {
   headers: {
@@ -45,7 +41,7 @@ async function generic_handler<Event extends EventWithHeaders, Message>(
   append_headers(event.headers, logger)
 
   const validator = (event: Event) => params.validator(event, logger)
-  const transformer = (requestBody: Message) => params.transformer(requestBody, logger, event.headers)
+  const transformer = (requestBody: Message) => params.transformer(requestBody, logger)
   return validator(event).chain(transformer).map(wrap_with_status(200, event.headers)).value()
 }
 
@@ -63,7 +59,11 @@ function append_headers(headers: Record<string, string>, logger: Logger) {
   if (headers["x-correlation-id"]) {
     headers_to_append["x-correlation-id"] = headers["x-correlation-id"]
   }
+  if (headers["x-request-id"]) {
+    headers_to_append["x-request-id"] = headers["x-request-id"]
+  }
   logger.appendKeys(headers_to_append)
+  logger.info("added headers to logger for tracing", {headers_to_append})
 }
 
 /**
