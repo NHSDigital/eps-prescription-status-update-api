@@ -411,8 +411,8 @@ x-nhsd-apim:
       header: show-all-suppliers
   ratelimiting:
     proxy:
-      limit: 900
+      limit: 16500
       timeunit: minute
     app-default:
-      limit: 900
+      limit: 16500
       timeunit: minute
