@@ -176,7 +176,7 @@ jobs:
           PROXYGEN_KID: "eps-cli-key-1"
           DRY_RUN: false
           DEPLOY_CHECK_PRESCRIPTION_STATUS_UPDATE: ${{ inputs.DEPLOY_CHECK_PRESCRIPTION_STATUS_UPDATE }}
-        run: poetry run ./deploy_api.sh
+        run: ./deploy_api.sh
 
       - name: Deploy CPSU API
         shell: bash
@@ -194,7 +194,7 @@ jobs:
           PROXYGEN_KID: eps-cli-key-cpsu-1
           DRY_RUN: false
           DEPLOY_CHECK_PRESCRIPTION_STATUS_UPDATE: ${{ inputs.DEPLOY_CHECK_PRESCRIPTION_STATUS_UPDATE }}
-        run: poetry run ./deploy_api.sh
+        run: ./deploy_api.sh
 
       - name: create_int_release_notes
         uses: ./.github/actions/update_confluence_jira
