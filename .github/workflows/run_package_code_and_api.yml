@@ -21,7 +21,7 @@ jobs:
         uses: asdf-vm/actions/setup@05e0d2ed97b598bfce82fd30daf324ae0c4570e6
         with:
           asdf_branch: v0.11.3
-  
+
       - name: Cache asdf
         uses: actions/cache@v4
         with:
@@ -37,14 +37,14 @@ jobs:
           asdf_branch: v0.11.3
         env:
           PYTHON_CONFIGURE_OPTS: --enable-shared
-      
+
       - name: Setting up .npmrc
         env:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           echo "//npm.pkg.github.com/:_authToken=${NODE_AUTH_TOKEN}" >> ~/.npmrc
           echo "@nhsdigital:registry=https://npm.pkg.github.com" >> ~/.npmrc
-          
+
       - name: Run make install
         run: |
           make install
@@ -71,17 +71,7 @@ jobs:
             .aws-sam/build
             SAMtemplates/state_machines/UpdatePrescriptionStatusStateMachine.asl.json
             SAMtemplates/state_machines/Format1UpdatePrescriptionsStatusStateMachine.asl.json
-            
-      - uses: actions/upload-artifact@v4
-        name: Upload python dependency files
-        with:
-          name: python_dependency_files
-          path: |
-            .tool-versions
-            poetry.lock
-            poetry.toml
-            pyproject.toml
-    
+
       - shell: bash
         name: Package sandbox
         run: |
@@ -95,7 +85,6 @@ jobs:
           mkdir -p .aws-sam/build/specification
           cp packages/specification/dist/eps-prescription-status-update-api.resolved.json .aws-sam/build/specification/
           cp packages/specification/dist/eps-custom-prescription-status-update-api.resolved.json .aws-sam/build/specification/
-
 
       # Readme is included to stop the action flattening the folder structure of aws-sam/build when it is the only item to upload
       - uses: actions/upload-artifact@v4

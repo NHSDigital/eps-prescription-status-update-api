@@ -1,4 +1,4 @@
-name: 'Delete old cloudformation stacks'
+name: "Delete old cloudformation stacks"
 
 # Controls when the action will run - in this case triggered manually
 on:
@@ -13,8 +13,8 @@ jobs:
     # The type of runner that the job will run on
     runs-on: ubuntu-latest
     permissions:
-        id-token: write
-        contents: read
+      id-token: write
+      contents: read
 
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
@@ -24,40 +24,26 @@ jobs:
           ref: ${{ env.BRANCH_NAME }}
           fetch-depth: 0
 
-      # using git commit sha for version of action to ensure we have stable version
-      - name: Install asdf
-        uses: asdf-vm/actions/setup@05e0d2ed97b598bfce82fd30daf324ae0c4570e6
-        with:
-          asdf_branch: v0.11.3
-
-      - name: Cache asdf
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.asdf
-          key: ${{ runner.os }}-asdf-${{ hashFiles('**/.tool-versions') }}
-          restore-keys: |
-            ${{ runner.os }}-asdf-
-
-      - name: Install asdf dependencies in .tool-versions
-        uses: asdf-vm/actions/install@05e0d2ed97b598bfce82fd30daf324ae0c4570e6
-        with:
-          asdf_branch: v0.11.3
-        env:
-          PYTHON_CONFIGURE_OPTS: --enable-shared
-
-      - name: make install
-        run: |
-          make install
-
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
           aws-region: eu-west-2
           role-to-assume: ${{ secrets.DEV_CLOUD_FORMATION_DEPLOY_ROLE }}
-          role-session-name: github-actions
+          role-session-name: delete-old-stacks
 
       - name: delete stacks
         shell: bash
         working-directory: .github/scripts
         run: ./delete_stacks.sh
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-region: eu-west-2
+          role-to-assume: ${{ secrets.PROXYGEN_PTL_ROLE }}
+          role-session-name: delete-old-proxygen
+
+      - name: delete stacks
+        shell: bash
+        working-directory: .github/scripts
+        run: ./delete_proxygen_deployments.sh
