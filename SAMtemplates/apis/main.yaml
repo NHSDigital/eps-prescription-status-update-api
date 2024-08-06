@@ -300,7 +300,7 @@ Resources:
             ResponseTemplates:
               application/json: |-
                 #set($context.responseOverride.header["Content-Type"] ="application/fhir+json")
-                {"resourceType":"OperationOutcome","issue": [{"severity":"error","code":"processing","diagnostics":"System error"}]}
+                {"resourceType":"OperationOutcome","issue": [{"severity":"error","code":"value","diagnostics":"Badly formatted request body."}]}
           - StatusCode: 500
             SelectionPattern: ^5\d{2}.*
             ResponseTemplates:
@@ -414,7 +414,7 @@ Resources:
             ResponseTemplates:
               application/json: |-
                 #set($context.responseOverride.header["Content-Type"] ="application/fhir+json")
-                {"resourceType":"OperationOutcome","issue": [{"severity":"error","code":"processing","diagnostics":"System error"}]}
+                {"resourceType":"OperationOutcome","issue": [{"severity":"error","code":"value","diagnostics":"Badly formatted request body."}]}
           - StatusCode: 500
             SelectionPattern: ^5\d{2}.*
             ResponseTemplates:
@@ -507,7 +507,7 @@ Resources:
         !If [
           ShouldDeployCheckPrescriptionStatusUpdate,
           !Ref CheckPrescriptionStatusUpdatesHandle,
-          !Ref CheckPrescriptionStatusUpdatesWaitHandle,
+          !Ref CheckPrescriptionStatusUpdatesWaitHandle
         ]
       Timeout: "1"
       Count: 0

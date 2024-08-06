@@ -10,7 +10,8 @@ const itemStatusSchema = {
     "Cancelled",
     "Expired",
     "NotDispensed",
-    "DispensingComplete"
+    "DispensingComplete",
+    "Collected"
   ]
 } as const satisfies JSONSchema
 

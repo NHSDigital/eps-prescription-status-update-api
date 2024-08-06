@@ -25,7 +25,7 @@ info:
     ## API Status and Roadmap
     This API is [in development](https://digital.nhs.uk/developer/guides-and-documentation/reference-guide#statuses), meaning the API will soon be available for testing via a sandbox service or an integration environment - but we expect to make breaking changes based on developer feedback.
     ## Service Level
-    This API is a platinum service, meaning it is operational and supported 24 hours a day, 365 days a year.
+    This API is a silver service, meaning it is operational and supported between 8am and 6pm, Monday to Friday, but not bank holidays.
     For more details see [service levels](https://digital.nhs.uk/developer/guides-and-documentation/reference-guide#service-levels).
     ## Technology
     This API is [RESTful](https://digital.nhs.uk/developer/guides-and-documentation/our-api-technologies#basic-rest).
@@ -94,12 +94,23 @@ paths:
                 value:
                   $ref: "examples/format-1-request-multiple-items.json"
       responses:
-        "200":
-          description: Successful creation.
+        "2XX":
+          description: |
+            The request was processed successfully. Below are the possible status codes within the 2XX range that may be returned:
+            | HTTP status | Status code     | Description                                                                                                 |
+            | ----------- | --------------- | ----------------------------------------------------------------------------------------------------------- |
+            | 200         | `success`       | The request was successfully processed.                                                                     |
+            | 201         | `success`       | A new resource was successfully created. No issues detected during validation.                              |
+            | 202         | `informational` | The request was accepted, but no change occurred due to a duplicate update.                                 |
         "4XX":
           description: An error occurred.
         "5XX":
-          description: An error occurred.
+          description: |
+            An error occurred due to a server-side issue. Below are the possible status codes within the 5XX range that may be returned:
+            | HTTP status | Error code      | Description                                                                                                 |
+            | ----------- | --------------- | ----------------------------------------------------------------------------------------------------------- |
+            | 500         | `exception`     | The server has encountered an error processing the request.                                                 |
+            | 504         | `timeout`       | The server has timed out while processing the request sent by the client.                                   |
       security:
         - app-level0: []
 components:
