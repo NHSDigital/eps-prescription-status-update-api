@@ -7,12 +7,14 @@ REPO_NAME=eps-prescription-status-update-api
 
 # this should be customised to delete cloudformation stacks and proxygen deployments if they are used
 main() {
+  echo "Checking prescripton status update deployments"
   PULL_REQUEST_PROXYGEN_REGEX=prescription-status-update-pr-
   delete_apigee_deployments "internal-dev" "prescription-status-update-api" "PSUProxygenPrivateKey" "eps-cli-key-1"
   delete_apigee_deployments "internal-dev-sandbox" "prescription-status-update-api" "PSUProxygenPrivateKey" "eps-cli-key-1"
 
+  echo "Checking custom prescripton status update deployments"
   PULL_REQUEST_PROXYGEN_REGEX=custom-prescription-status-update-pr-
-  delete_apigee_deployments "internal-dev" "prescription-status-update-api" "CPSUProxygenPrivateKey" "eps-cli-key-cpsu-1"
+  delete_apigee_deployments "internal-dev" "custom-prescription-status-update-api" "CPSUProxygenPrivateKey" "eps-cli-key-cpsu-1"
   delete_apigee_deployments "internal-dev-sandbox" "custom-prescription-status-update-api" "CPSUProxygenPrivateKey" "eps-cli-key-cpsu-1"
 }
 
