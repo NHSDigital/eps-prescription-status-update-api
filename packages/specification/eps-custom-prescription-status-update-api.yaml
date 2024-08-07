@@ -15,6 +15,10 @@ info:
     The Custom Prescription Status Update API is restricted to dispensing suppliers with an existing prescription 
     status update solution, who can onboard to provide updates to patients on a national scale via the NHS App 
     (and other third parties in the future) by September 2024.
+
+    You can:
+    * enable patients to know when their prescription is ready
+    * enable dispensing suppliers to push status information about electronic prescriptions
     ## Who can use this API
     The Custom Prescription Status Update API is intended for those dispensing suppliers who have signed the MOU to 
     supply status updates by September 2024, so they can provide and push the information required to a central NHS data store.
