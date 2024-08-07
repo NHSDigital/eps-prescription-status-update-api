@@ -2,7 +2,6 @@
 set -eu pipefail
 
 echo "API type: ${API_TYPE}"
-echo "Proxygen path: ${PROXYGEN_PATH}"
 echo "Specification path: ${SPEC_PATH}"
 echo "Specification version: ${VERSION_NUMBER}"
 echo "Stack name: ${STACK_NAME}"
