@@ -28,7 +28,7 @@ info:
     ## API Status and Roadmap
     This API is [in development](https://digital.nhs.uk/developer/guides-and-documentation/reference-guide#statuses), meaning the API will soon be available for testing via a sandbox service or an integration environment - but we expect to make breaking changes based on developer feedback.
     ## Service Level
-    This API is a platinum service, meaning it is operational and supported 24 hours a day, 365 days a year.
+    This API is a silver service, meaning it is operational and supported between 8am and 6pm, Monday to Friday, but not bank holidays.
     For more details see [service levels](https://digital.nhs.uk/developer/guides-and-documentation/reference-guide#service-levels).
     ## Technology
     This API is [RESTful](https://digital.nhs.uk/developer/guides-and-documentation/our-api-technologies#basic-rest).
