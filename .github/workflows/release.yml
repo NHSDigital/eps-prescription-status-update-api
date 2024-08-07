@@ -137,6 +137,7 @@ jobs:
       INT_CLOUD_FORMATION_CHECK_VERSION_ROLE: ${{ secrets.INT_CLOUD_FORMATION_CHECK_VERSION_ROLE }}
       PROD_CLOUD_FORMATION_CHECK_VERSION_ROLE: ${{ secrets.PROD_CLOUD_FORMATION_CHECK_VERSION_ROLE }}
       DEV_CLOUD_FORMATION_EXECUTE_LAMBDA_ROLE: ${{ secrets.DEV_CLOUD_FORMATION_EXECUTE_LAMBDA_ROLE }}
+      PROXYGEN_ROLE: ${{ secrets.PROXYGEN_PTL_ROLE }}
 
   release_dev_sandbox:
     needs: [tag_release, package_code, get_commit_id]
@@ -158,6 +159,7 @@ jobs:
       DEPLOY_CHECK_PRESCRIPTION_STATUS_UPDATE: true
     secrets:
       CLOUD_FORMATION_DEPLOY_ROLE: ${{ secrets.DEV_CLOUD_FORMATION_DEPLOY_ROLE }}
+      PROXYGEN_ROLE: ${{ secrets.PROXYGEN_PTL_ROLE }}
 
   release_ref:
     needs:
@@ -187,6 +189,7 @@ jobs:
       DEPLOY_CHECK_PRESCRIPTION_STATUS_UPDATE: true
     secrets:
       CLOUD_FORMATION_DEPLOY_ROLE: ${{ secrets.REF_CLOUD_FORMATION_DEPLOY_ROLE }}
+      PROXYGEN_ROLE: ${{ secrets.PROXYGEN_PTL_ROLE }}
 
   release_qa:
     needs:
@@ -216,6 +219,7 @@ jobs:
       DEPLOY_CHECK_PRESCRIPTION_STATUS_UPDATE: true
     secrets:
       CLOUD_FORMATION_DEPLOY_ROLE: ${{ secrets.QA_CLOUD_FORMATION_DEPLOY_ROLE }}
+      PROXYGEN_ROLE: ${{ secrets.PROXYGEN_PTL_ROLE }}
 
   release_int:
     needs: [tag_release, release_qa, package_code, get_commit_id]
@@ -244,6 +248,7 @@ jobs:
       INT_CLOUD_FORMATION_CHECK_VERSION_ROLE: ${{ secrets.INT_CLOUD_FORMATION_CHECK_VERSION_ROLE }}
       PROD_CLOUD_FORMATION_CHECK_VERSION_ROLE: ${{ secrets.PROD_CLOUD_FORMATION_CHECK_VERSION_ROLE }}
       DEV_CLOUD_FORMATION_EXECUTE_LAMBDA_ROLE: ${{ secrets.DEV_CLOUD_FORMATION_EXECUTE_LAMBDA_ROLE }}
+      PROXYGEN_ROLE: ${{ secrets.PROXYGEN_PROD_ROLE }}
 
   release_int_sandbox:
     needs: [tag_release, release_qa, package_code, get_commit_id]
@@ -265,6 +270,7 @@ jobs:
       DEPLOY_CHECK_PRESCRIPTION_STATUS_UPDATE: true
     secrets:
       CLOUD_FORMATION_DEPLOY_ROLE: ${{ secrets.INT_CLOUD_FORMATION_DEPLOY_ROLE }}
+      PROXYGEN_ROLE: ${{ secrets.PROXYGEN_PROD_ROLE }}
 
   release_prod:
     needs:
@@ -300,3 +306,4 @@ jobs:
       INT_CLOUD_FORMATION_CHECK_VERSION_ROLE: ${{ secrets.INT_CLOUD_FORMATION_CHECK_VERSION_ROLE }}
       PROD_CLOUD_FORMATION_CHECK_VERSION_ROLE: ${{ secrets.PROD_CLOUD_FORMATION_CHECK_VERSION_ROLE }}
       DEV_CLOUD_FORMATION_EXECUTE_LAMBDA_ROLE: ${{ secrets.DEV_CLOUD_FORMATION_EXECUTE_LAMBDA_ROLE }}
+      PROXYGEN_ROLE: ${{ secrets.PROXYGEN_PROD_ROLE }}

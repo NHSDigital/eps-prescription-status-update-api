@@ -2,7 +2,6 @@
 set -eu pipefail
 
 echo "API type: ${API_TYPE}"
-echo "Proxygen path: ${PROXYGEN_PATH}"
 echo "Specification path: ${SPEC_PATH}"
 echo "Specification version: ${VERSION_NUMBER}"
 echo "Stack name: ${STACK_NAME}"
@@ -12,6 +11,30 @@ echo "Proxygen private key name: ${PROXYGEN_PRIVATE_KEY_NAME}"
 echo "Proxygen KID: ${PROXYGEN_KID}"
 echo "Deploy Check Prescription Status Update: ${DEPLOY_CHECK_PRESCRIPTION_STATUS_UPDATE}"
 echo "Dry run: ${DRY_RUN}"
+
+
+client_private_key=$(cat ~/.proxygen/tmp/client_private_key)
+client_cert=$(cat ~/.proxygen/tmp/client_cert)
+
+if [ -z "${client_private_key}" ]; then
+    echo "client_private_key is unset or set to the empty string"
+    exit 1
+fi
+if [ -z "${client_cert}" ]; then
+    echo "client_cert is unset or set to the empty string"
+    exit 1
+fi
+
+put_secret_lambda=lambda-resources-ProxygenPTLMTLSSecretPut
+instance_put_lambda=lambda-resources-ProxygenPTLInstancePut
+spec_publish_lambda=lambda-resources-ProxygenPTLSpecPublish
+
+if [[ "$APIGEE_ENVIRONMENT" =~ ^(int|sandbox|prod)$ ]]; then 
+    put_secret_lambda=lambda-resources-ProxygenProdMTLSSecretPut
+    instance_put_lambda=lambda-resources-ProxygenProdInstancePut
+    spec_publish_lambda=lambda-resources-ProxygenProdSpecPublish
+fi
+
 
 is_pull_request=false
 instance_suffix=""
@@ -94,64 +117,72 @@ echo "Retrieving proxygen credentials"
 
 # Retrieve the proxygen private key and client private key and cert from AWS Secrets Manager
 proxygen_private_key_arn=$(aws cloudformation list-exports --query "Exports[?Name=='account-resources:${PROXYGEN_PRIVATE_KEY_NAME}'].Value" --output text)
-client_private_key_arn=$(aws cloudformation list-exports --query "Exports[?Name=='account-resources:PsuClientKeySecret'].Value" --output text)
-client_cert_arn=$(aws cloudformation list-exports --query "Exports[?Name=='account-resources:PsuClientCertSecret'].Value" --output text)
-
-proxygen_private_key=$(aws secretsmanager get-secret-value --secret-id "${proxygen_private_key_arn}" --query SecretString --output text)
-client_private_key=$(aws secretsmanager get-secret-value --secret-id "${client_private_key_arn}" --query SecretString --output text)
-client_cert=$(aws secretsmanager get-secret-value --secret-id "${client_cert_arn}" --query SecretString --output text)
-
-# Create the .proxygen/tmp directory if it doesn't exist
-mkdir -p ~/.proxygen/tmp
-
-# Save the proxygen private key, client private key, and client cert to temporary files
-echo "${proxygen_private_key}" > ~/.proxygen/tmp/proxygen_private_key.pem
-echo "${client_private_key}" > ~/.proxygen/tmp/client_private_key.pem
-echo "${client_cert}" > ~/.proxygen/tmp/client_cert.pem
-
-cat <<EOF > ~/.proxygen/credentials.yaml
-client_id: ${apigee_api}-client
-key_id: ${PROXYGEN_KID}
-private_key_path: tmp/proxygen_private_key.pem
-base_url: https://identity.prod.api.platform.nhs.uk/realms/api-producers
-client_secret: https://nhsdigital.github.io/identity-service-jwks/jwks/paas/${apigee_api}.json
-EOF
-
-# Create settings.yaml file
-cat <<EOF > ~/.proxygen/settings.yaml
-api: ${apigee_api}
-endpoint_url: https://proxygen.prod.api.platform.nhs.uk
-spec_output_format: json
-EOF
 
 if [[ "${is_pull_request}" == "false" ]]; then
     echo
-    echo "Store the secret used for mutual TLS to AWS using Proxygen CLI"
+    echo "Store the secret used for mutual TLS to AWS using Proxygen proxy lambda"
     if [[ "${DRY_RUN}" == "false" ]]; then
-        "${PROXYGEN_PATH}" secret put --mtls-cert ~/.proxygen/tmp/client_cert.pem --mtls-key ~/.proxygen/tmp/client_private_key.pem "${APIGEE_ENVIRONMENT}" psu-mtls-1
+        jq -n --arg apiName "${apigee_api}" \
+            --arg environment "${APIGEE_ENVIRONMENT}" \
+            --arg secretName "psu-mtls-1" \
+            --arg secretKey "${client_private_key}" \
+            --arg secretCert "${client_cert}" \
+            --arg kid "${PROXYGEN_KID}" \
+            --arg proxygenSecretName "${proxygen_private_key_arn}" \
+            '{apiName: $apiName, environment: $environment, secretName: $secretName, secretKey: $secretKey, secretCert: $secretCert, kid, $kid, proxygenSecretName: $proxygenSecretName}' > payload.json
+
+        aws lambda invoke --function-name "${put_secret_lambda}" --cli-binary-format raw-in-base64-out --payload file://payload.json out.txt > response.json
+        if eval "cat response.json | jq -e '.FunctionError' >/dev/null"; then
+            echo 'Error calling lambda'
+            cat out.txt
+            exit 1
+        fi
+        echo "Secret stored succesfully"
+
     else
-        echo "Would run this command"
-        echo "${PROXYGEN_PATH} secret put --mtls-cert ~/.proxygen/tmp/client_cert.pem --mtls-key ~/.proxygen/tmp/client_private_key.pem ${APIGEE_ENVIRONMENT} psu-mtls-1"
+        echo "Would call ${put_secret_lambda}"
     fi
 fi
 
 echo
-echo "Deploy the API instance using Proxygen CLI"
+echo "Deploy the API instance using Proxygen proxy lambda"
 if [[ "${DRY_RUN}" == "false" ]]; then
-    "${PROXYGEN_PATH}" instance deploy --no-confirm "${APIGEE_ENVIRONMENT}" "${instance}" "${SPEC_PATH}"
+
+    jq -n --argfile spec "${SPEC_PATH}" \
+        --arg apiName "${apigee_api}" \
+        --arg environment "${APIGEE_ENVIRONMENT}" \
+        --arg instance "${instance}" \
+        --arg kid "${PROXYGEN_KID}" \
+        --arg proxygenSecretName "${proxygen_private_key_arn}" \
+        '{apiName: $apiName, environment: $environment, specDefinition: $spec, instance: $instance, kid: $kid, proxygenSecretName: $proxygenSecretName}' > payload.json
+
+    aws lambda invoke --function-name "${instance_put_lambda}" --cli-binary-format raw-in-base64-out --payload file://payload.json out.txt > response.json
+
+    if eval "cat response.json | jq -e '.FunctionError' >/dev/null"; then
+        echo 'Error calling lambda'
+        cat out.txt
+        exit 1
+    fi
+    echo "Instance deployed"
 else
-    echo "Would run this command"
-    echo "${PROXYGEN_PATH} instance deploy --no-confirm ${APIGEE_ENVIRONMENT} ${instance} ${SPEC_PATH}"
+    echo "Would call ${instance_put_lambda}"
 fi
 
 if [[ "${APIGEE_ENVIRONMENT}" == "int" ]]; then
     echo
     echo "Deploy the API spec if in the int environment"
     if [[ "${DRY_RUN}" == "false" ]]; then
-        "${PROXYGEN_PATH}" spec publish --no-confirm "${SPEC_PATH}"
+        jq -n --argfile spec "${SPEC_PATH}" \
+            --arg apiName "${apigee_api}" \
+            --arg environment "uat" \
+            --arg instance "${instance}" \
+            --arg kid "${PROXYGEN_KID}" \
+            --arg proxygenSecretName "${proxygen_private_key_arn}" \
+            '{apiName: $apiName, environment: $environment, specDefinition: $spec, instance: $instance, kid: $kid, proxygenSecretName: $proxygenSecretName}' > payload.json
+
+        aws lambda invoke --function-name "${spec_publish_lambda}" --cli-binary-format raw-in-base64-out --payload file://payload.json out.txt > response.json
     else
-        echo "Would run this command"
-        echo "${PROXYGEN_PATH} spec publish --no-confirm ${SPEC_PATH}"
+        echo "Would call ${spec_publish_lambda}"
     fi
 fi
 
@@ -159,9 +190,16 @@ if [[ "${APIGEE_ENVIRONMENT}" == "internal-dev" && "${is_pull_request}" == "fals
     echo
     echo "Deploy the API spec to uat if in the internal-dev environment"
     if [[ "${DRY_RUN}" == "false" ]]; then
-        "${PROXYGEN_PATH}" spec publish --uat --no-confirm "${SPEC_PATH}"
+        jq -n --argfile spec "${SPEC_PATH}" \
+            --arg apiName "${apigee_api}" \
+            --arg environment "uat" \
+            --arg instance "${instance}" \
+            --arg kid "${PROXYGEN_KID}" \
+            --arg proxygenSecretName "${proxygen_private_key_arn}" \
+            '{apiName: $apiName, environment: $environment, specDefinition: $spec, instance: $instance, kid: $kid, proxygenSecretName: $proxygenSecretName}' > payload.json
+
+        aws lambda invoke --function-name "${spec_publish_lambda}" --cli-binary-format raw-in-base64-out --payload file://payload.json out.txt > response.json
     else
-        echo "Would run this command"
-        echo "${PROXYGEN_PATH} spec publish --uat --no-confirm ${SPEC_PATH}"
+        echo "Would call ${spec_publish_lambda}"
     fi
 fi
