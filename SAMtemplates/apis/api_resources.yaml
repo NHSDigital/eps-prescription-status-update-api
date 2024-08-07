@@ -56,10 +56,10 @@ Resources:
     Condition: ShouldUseSplunk
     Type: AWS::Logs::SubscriptionFilter
     Properties:
-      RoleArn: !ImportValue lambda-resources-pr-294:SplunkSubscriptionFilterRole
+      RoleArn: !ImportValue lambda-resources:SplunkSubscriptionFilterRole
       LogGroupName: !Ref ApiGwAccessLogs
       FilterPattern: ""
-      DestinationArn: !ImportValue lambda-resources-pr-294:SplunkDeliveryStream
+      DestinationArn: !ImportValue lambda-resources:SplunkDeliveryStream
 
 Outputs:
   ApiGwRoleArn:

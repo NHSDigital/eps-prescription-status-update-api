@@ -72,8 +72,8 @@ Resources:
         LogRetentionInDays: !Ref LogRetentionInDays
         CloudWatchKMSKeyId: !ImportValue account-resources:CloudwatchLogsKmsKeyArn
         EnableSplunk: !Ref EnableSplunk
-        SplunkSubscriptionFilterRole: !ImportValue lambda-resources-pr-294:SplunkSubscriptionFilterRole
-        SplunkDeliveryStreamArn: !ImportValue lambda-resources-pr-294:SplunkDeliveryStream
+        SplunkSubscriptionFilterRole: !ImportValue lambda-resources:SplunkSubscriptionFilterRole
+        SplunkDeliveryStreamArn: !ImportValue lambda-resources:SplunkDeliveryStream
 
   Format1UpdatePrescriptionsStatusStateMachine:
     Type: AWS::Serverless::StateMachine
@@ -109,8 +109,8 @@ Resources:
         LogRetentionInDays: !Ref LogRetentionInDays
         CloudWatchKMSKeyId: !ImportValue account-resources:CloudwatchLogsKmsKeyArn
         EnableSplunk: !Ref EnableSplunk
-        SplunkSubscriptionFilterRole: !ImportValue lambda-resources-pr-294:SplunkSubscriptionFilterRole
-        SplunkDeliveryStreamArn: !ImportValue lambda-resources-pr-294:SplunkDeliveryStream
+        SplunkSubscriptionFilterRole: !ImportValue lambda-resources:SplunkSubscriptionFilterRole
+        SplunkDeliveryStreamArn: !ImportValue lambda-resources:SplunkDeliveryStream
 
 Outputs:
   UpdatePrescriptionStatusStateMachineArn:
