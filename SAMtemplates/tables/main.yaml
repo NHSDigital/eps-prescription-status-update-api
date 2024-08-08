@@ -130,7 +130,7 @@ Resources:
     DependsOn: PrescriptionStatusUpdatesTable
     Condition: EnableDynamoDBAutoScalingCondition
     Properties:
-      MaxCapacity: 200
+      MaxCapacity: 400
       MinCapacity: 100
       ResourceId: !Sub table/${PrescriptionStatusUpdatesTable}
       RoleARN: !GetAtt DynamoDbScalingRole.Arn
@@ -182,7 +182,7 @@ Resources:
     DependsOn: PrescriptionStatusUpdatesTable
     Condition: EnableDynamoDBAutoScalingCondition
     Properties:
-      MaxCapacity: 200
+      MaxCapacity: 400
       MinCapacity: 100
       ResourceId: !Sub table/${PrescriptionStatusUpdatesTable}/index/PharmacyODSCodePrescriptionIDIndex
       RoleARN: !GetAtt DynamoDbScalingRole.Arn
@@ -234,7 +234,7 @@ Resources:
     DependsOn: PrescriptionStatusUpdatesTable
     Condition: EnableDynamoDBAutoScalingCondition
     Properties:
-      MaxCapacity: 200
+      MaxCapacity: 400
       MinCapacity: 100
       ResourceId: !Sub table/${PrescriptionStatusUpdatesTable}/index/PatientNHSNumberIndex
       RoleARN: !GetAtt DynamoDbScalingRole.Arn
