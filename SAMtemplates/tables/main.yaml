@@ -308,12 +308,3 @@ Outputs:
   UsePrescriptionStatusUpdatesKMSKeyPolicyArn:
     Description: Use kms key policy arn
     Value: !GetAtt UsePrescriptionStatusUpdatesKMSKeyPolicy.PolicyArn
-    Export:
-      Name:
-        !Join [
-          ":",
-          [
-            !Ref "AWS::StackName",
-            "UsePrescriptionStatusUpdatesKMSKeyPolicyArn",
-          ],
-        ]

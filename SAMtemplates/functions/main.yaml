@@ -43,6 +43,9 @@ Parameters:
   DeployCheckPrescriptionStatusUpdate:
     Type: String
 
+  UsePrescriptionStatusUpdatesKMSKeyPolicyArn:
+    Type: String
+
 Conditions:
   ShouldDeployCheckPrescriptionStatusUpdate: !Equals
     - true
@@ -83,7 +86,7 @@ Resources:
         AdditionalPolicies: !Join
           - ","
           - - Fn::ImportValue: !Sub ${StackName}:tables:${PrescriptionStatusUpdatesTableName}:TableWritePolicyArn
-            - Fn::ImportValue: !Sub ${StackName}:UsePrescriptionStatusUpdatesKMSKeyPolicyArn
+            - !Ref usePrescriptionStatusUpdatesKMSKeyPolicyArn
         LogRetentionInDays: !Ref LogRetentionInDays
         CloudWatchKMSKeyId: !ImportValue account-resources:CloudwatchLogsKmsKeyArn
         EnableSplunk: !Ref EnableSplunk
@@ -160,7 +163,7 @@ Resources:
         AdditionalPolicies: !Join
           - ","
           - - Fn::ImportValue: !Sub ${StackName}:tables:${PrescriptionStatusUpdatesTableName}:TableReadPolicyArn
-            - Fn::ImportValue: !Sub ${StackName}:UsePrescriptionStatusUpdatesKMSKeyPolicyArn
+            - !Ref usePrescriptionStatusUpdatesKMSKeyPolicyArn
         LogRetentionInDays: !Ref LogRetentionInDays
         CloudWatchKMSKeyId: !ImportValue account-resources:CloudwatchLogsKmsKeyArn
         EnableSplunk: !Ref EnableSplunk
@@ -276,7 +279,7 @@ Resources:
         AdditionalPolicies: !Join
           - ","
           - - Fn::ImportValue: !Sub ${StackName}:tables:${PrescriptionStatusUpdatesTableName}:TableReadPolicyArn
-            - Fn::ImportValue: !Sub ${StackName}:UsePrescriptionStatusUpdatesKMSKeyPolicyArn
+            - !Ref usePrescriptionStatusUpdatesKMSKeyPolicyArn
         LogRetentionInDays: !Ref LogRetentionInDays
         CloudWatchKMSKeyId: !ImportValue account-resources:CloudwatchLogsKmsKeyArn
         EnableSplunk: !Ref EnableSplunk

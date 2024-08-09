@@ -115,6 +115,7 @@ Resources:
         VersionNumber: !Ref VersionNumber
         CommitId: !Ref CommitId
         DeployCheckPrescriptionStatusUpdate: !Ref DeployCheckPrescriptionStatusUpdate
+        UsePrescriptionStatusUpdatesKMSKeyPolicyArn: !GetAtt Tables.UsePrescriptionStatusUpdatesKMSKeyPolicyArn
 
   StateMachines:
     Type: AWS::Serverless::Application
