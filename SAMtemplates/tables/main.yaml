@@ -13,7 +13,7 @@ Parameters:
 
   MinWritePrescriptionStatusUpdatesCapacity:
     Type: Number
-    Default: 25
+    Default: 50
 
   MaxWritePrescriptionStatusUpdatesCapacity:
     Type: Number
