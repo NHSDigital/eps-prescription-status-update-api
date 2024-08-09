@@ -135,7 +135,8 @@ Resources:
         Version: "2012-10-17"
         Statement:
           - Effect: Allow
-            Principal: {"Service": ["dynamodb.application-autoscaling.amazonaws.com"]}
+            Principal:
+              { "Service": ["dynamodb.application-autoscaling.amazonaws.com"] }
             Action: ["sts:AssumeRole"]
       Path: "/"
       Policies:
@@ -303,8 +304,15 @@ Outputs:
     Description: PrescriptionStatusUpdates table arn
     Value: !GetAtt PrescriptionStatusUpdatesTable.Arn
 
-  TableReadPolicyArn:
+  UsePrescriptionStatusUpdatesKMSKeyPolicyArn:
     Description: Use kms key policy arn
     Value: !GetAtt UsePrescriptionStatusUpdatesKMSKeyPolicy.PolicyArn
     Export:
-      Name: !Sub ${StackName}:tables:${TableName}:UsePrescriptionStatusUpdatesKMSKeyPolicyArn
+      Name:
+        !Join [
+          ":",
+          [
+            !Ref "AWS::StackName",
+            "UsePrescriptionStatusUpdatesKMSKeyPolicyArn",
+          ],
+        ]
