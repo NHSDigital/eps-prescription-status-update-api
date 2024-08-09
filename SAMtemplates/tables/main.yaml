@@ -155,7 +155,7 @@ Resources:
       TargetTrackingScalingPolicyConfiguration:
         TargetValue: 50
         ScaleInCooldown: 600
-        ScaleOutCooldown: 10
+        ScaleOutCooldown: 0
         PredefinedMetricSpecification:
           PredefinedMetricType: DynamoDBWriteCapacityUtilization
 
@@ -207,7 +207,7 @@ Resources:
       TargetTrackingScalingPolicyConfiguration:
         TargetValue: 50
         ScaleInCooldown: 600
-        ScaleOutCooldown: 10
+        ScaleOutCooldown: 0
         PredefinedMetricSpecification:
           PredefinedMetricType: DynamoDBWriteCapacityUtilization
 
@@ -259,7 +259,7 @@ Resources:
       TargetTrackingScalingPolicyConfiguration:
         TargetValue: 50
         ScaleInCooldown: 600
-        ScaleOutCooldown: 10
+        ScaleOutCooldown: 0
         PredefinedMetricSpecification:
           PredefinedMetricType: DynamoDBWriteCapacityUtilization
 
