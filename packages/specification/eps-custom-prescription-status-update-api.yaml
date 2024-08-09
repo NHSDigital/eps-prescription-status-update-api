@@ -15,6 +15,10 @@ info:
     The Custom Prescription Status Update API is restricted to dispensing suppliers with an existing prescription 
     status update solution, who can onboard to provide updates to patients on a national scale via the NHS App 
     (and other third parties in the future) by September 2024.
+
+    You can:
+    * enable patients to know when their prescription is ready
+    * enable dispensing suppliers to push status information about electronic prescriptions
     ## Who can use this API
     The Custom Prescription Status Update API is intended for those dispensing suppliers who have signed the MOU to 
     supply status updates by September 2024, so they can provide and push the information required to a central NHS data store.
@@ -22,17 +26,17 @@ info:
     The following APIs are related to the "Custom Prescription Status Update" API:
     * [Electronic Prescriptions Service](https://digital.nhs.uk/developer/api-catalogue/electronic-prescription-service-fhir): the national service for creating and dispensing prescriptions across health and social care.
     * [Prescriptions for Patients](https://digital.nhs.uk/developer/api-catalogue/prescriptions-for-patients): the national service to retrieve prescriptions data for individual patients from the Electronic Prescription Service (EPS), for use in patient-facing applications.
-    ## API Status and Roadmap
+    ## API status and roadmap
     This API is [in development](https://digital.nhs.uk/developer/guides-and-documentation/reference-guide#statuses), meaning the API will soon be available for testing via a sandbox service or an integration environment - but we expect to make breaking changes based on developer feedback.
     ## Service Level
     This API is a silver service, meaning it is operational and supported between 8am and 6pm, Monday to Friday, but not bank holidays.
     For more details see [service levels](https://digital.nhs.uk/developer/guides-and-documentation/reference-guide#service-levels).
     ## Technology
     This API is [RESTful](https://digital.nhs.uk/developer/guides-and-documentation/our-api-technologies#basic-rest).
-    ## Network Access
+    ## Network access
     This API is available on the internet.
     For more details see [Network access for APIs](https://digital.nhs.uk/developer/guides-and-documentation/network-access-for-apis).
-    ## Security and Authorisation
+    ## Security and authorisation
     This API only supports [application-restricted access](https://digital.nhs.uk/developer/guides-and-documentation/security-and-authorisation/application-restricted-restful-apis-api-key-authentication), meaning we authenticate the calling application but not the end user.
     ### Application-restricted Access
     The end user could be:
@@ -45,6 +49,14 @@ info:
     * 400 to 499 if it failed because of a client error by your application
     * 500 to 599 if it failed because of an error on our server
     Errors specific to each API are shown in the Endpoints section, under Response. See our [reference guide](https://digital.nhs.uk/developer/guides-and-documentation/reference-guide#http-status-codes) for more on errors.
+     ## Open source
+    You might find the following [open source](https://digital.nhs.uk/developer/guides-and-documentation/reference-guide#open-source) resources useful:
+    | Resource | Description | Links |
+    |----------|-------------|-------|
+    | FHIR libraries and SDKs | Various open source libraries for integrating with FHIR APIs. | [FHIR libraries and SDKs](https://digital.nhs.uk/developer/guides-and-documentation/api-technologies-at-nhs-digital#fhir-libraries-and-sdks) |
+    | nhs-number | Python package containing utilities for NHS numbers including validity checks, normalisation and generation. | [GitHub repo](https://github.com/uk-fci/nhs-number) \| [Python Package index](https://pypi.org/project/nhs-number/) \| [Docs](https://nhs-number.uk-fci.tech/) |
+    | Prescription Status Update API | Source code for the EPS Prescription Status Update API | [GitHub](https://github.com/NHSDigital/eps-prescription-status-update-api) |
+    | EPS FHIR Validator Lambda | An AWS Lambda function that validates FHIR R4 messages | [GitHub](https://github.com/NHSDigital/eps-FHIR-validator-lambda) |
     ## Environment and testing
     | Environment      | Base URL                                                            |
     |------------------|---------------------------------------------------------------------|
@@ -77,7 +89,7 @@ paths:
   /format-1:
     post:
       operationId: format-1-prescription-status-update
-      summary: Format 1 Update prescription status
+      summary: Format 1 update prescription status
       description: |
         ## Overview
         Status updates to be provided on prescription items to allow users of the NHS App and third-party app consumers to track the progress of their prescriptions and when ready to collect.
