@@ -51,42 +51,6 @@ Resources:
               - !Ref TableArn
               - !Sub ${TableArn}/index/*
 
-  PrescriptionStatusUpdatesKMSKey:
-    Type: AWS::KMS::Key
-    Properties:
-      EnableKeyRotation: true
-      KeyPolicy:
-        Version: 2012-10-17
-        Id: key-s3
-        Statement:
-          - Sid: Enable IAM User Permissions
-            Effect: Allow
-            Principal:
-              AWS: !Sub "arn:aws:iam::${AWS::AccountId}:root"
-            Action:
-              - kms:*
-            Resource: "*"
-
-  PrescriptionStatusUpdatesKMSKeyAlias:
-    Type: AWS::KMS::Alias
-    Properties:
-      AliasName: !Sub alias/${StackName}-PrescriptionStatusUpdatesKMSKeyAlias
-      TargetKeyId: !Ref PrescriptionStatusUpdatesKMSKey
-
-  UsePrescriptionStatusUpdatesKMSKeyPolicy:
-    Type: AWS::IAM::ManagedPolicy
-    Properties:
-      PolicyDocument:
-        Version: 2012-10-17
-        Statement:
-          - Effect: Allow
-            Action:
-              - kms:DescribeKey
-              - kms:GenerateDataKey*
-              - kms:Encrypt
-              - kms:ReEncrypt*
-              - kms:Decrypt
-            Resource: !GetAtt PrescriptionStatusUpdatesKMSKey.Arn
 Outputs:
   TableReadPolicyArn:
     Description: Table read policy arn
@@ -107,13 +71,3 @@ Outputs:
   TableWritePolicyId:
     Description: Table write policy id
     Value: !GetAtt TableWriteManagedPolicy.PolicyId
-
-  PrescriptionStatusUpdatesKMSKey:
-    Description: KMS Key id
-    Value: !Ref PrescriptionStatusUpdatesKMSKey
-
-  UsePrescriptionStatusUpdatesKMSKeyPolicyArn:
-    Description: Use kms key policy arn
-    Value: !GetAtt UsePrescriptionStatusUpdatesKMSKeyPolicy.PolicyArn
-    Export:
-      Name: !Sub ${StackName}:tables:${TableName}:UsePrescriptionStatusUpdatesKMSKeyPolicyArn
