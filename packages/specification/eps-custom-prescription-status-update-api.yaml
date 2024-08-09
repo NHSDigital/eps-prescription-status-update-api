@@ -149,5 +149,8 @@ x-nhsd-apim:
       header: attribute-name
   ratelimiting:
     proxy:
-      timeunit: "second"
-      limit: 40
+      limit: 20000
+      timeunit: minute
+    app-default:
+      limit: 20000
+      timeunit: minute
