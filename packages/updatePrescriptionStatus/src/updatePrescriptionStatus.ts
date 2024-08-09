@@ -2,10 +2,12 @@
 import {APIGatewayProxyEvent, APIGatewayProxyResult} from "aws-lambda"
 import {Logger} from "@aws-lambda-powertools/logger"
 import {injectLambdaContext} from "@aws-lambda-powertools/logger/middleware"
-import middy from "@middy/core"
+import middy, {MiddlewareObj} from "@middy/core"
 import inputOutputLogger from "@middy/input-output-logger"
 import errorHandler from "@nhs/fhir-middy-error-handler"
 import httpHeaderNormalizer from "@middy/http-header-normalizer"
+import validator from "@middy/validator"
+import {transpileSchema} from "@middy/validator/transpile"
 import {Bundle, BundleEntry, Task} from "fhir/r4"
 import {persistDataItems} from "./utils/databaseClient"
 import {jobWithTimeout, hasTimedOut} from "./utils/timeoutUtils"
@@ -13,6 +15,7 @@ import {transactionBundle, validateEntry} from "./validation/content"
 import {
   accepted,
   badRequest,
+  badRequestOutcome,
   bundleWrap,
   conflictDuplicate,
   createSuccessResponseEntries,
@@ -20,6 +23,7 @@ import {
   timeoutResponse
 } from "./utils/responses"
 import {TransactionCanceledException} from "@aws-sdk/client-dynamodb"
+import {updatePrescriptionStatusBundleSchema} from "./schema/request"
 
 const LAMBDA_TIMEOUT_MS = 9500
 const logger = new Logger({serviceName: "updatePrescriptionStatus"})
@@ -226,8 +230,55 @@ function response(statusCode: number, responseEntries: Array<BundleEntry>) {
   }
 }
 
+type HandlerLogger = Console | Logger
+type LoggerAndLevel = {
+  logger: HandlerLogger
+  level?: keyof HandlerLogger
+}
+
+type ValidationErrorCause = {
+  data: Array<ValidationError>
+}
+
+type ValidationError = {
+  instancePath: string
+  message: string
+}
+
+function isValidationErrorCause(cause: any): cause is ValidationErrorCause {
+  return Array.isArray(cause?.data)
+}
+
+function validationErrorHandler({
+  logger = console,
+  level = "error"
+}: LoggerAndLevel): MiddlewareObj<any, any, Error, any> {
+  return {
+    onError: async (handler) => {
+      const error = handler.error
+
+      if (!isValidationErrorCause(error?.cause)) {
+        return // let the default error handler deal with this
+      }
+
+      const errors = error.cause.data.map((error) => `${error.message} at ${error.instancePath}`)
+
+      logger[level]("Validation errors", error)
+
+      const responseBody = {
+        statusCode: 400,
+        body: JSON.stringify(badRequestOutcome(errors))
+      }
+
+      handler.response = responseBody
+    }
+  }
+}
+
 export const handler = middy(lambdaHandler)
   .use(injectLambdaContext(logger, {clearState: true}))
+  .use(validator({eventSchema: transpileSchema(updatePrescriptionStatusBundleSchema)}))
+  .use(validationErrorHandler({logger: logger}))
   .use(httpHeaderNormalizer())
   .use(
     inputOutputLogger({

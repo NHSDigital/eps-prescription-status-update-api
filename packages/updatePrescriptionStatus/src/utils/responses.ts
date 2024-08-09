@@ -1,4 +1,4 @@
-import {Bundle, BundleEntry} from "fhir/r4"
+import {Bundle, BundleEntry, OperationOutcome} from "fhir/r4"
 
 export function bundleWrap(entries: Array<BundleEntry>): Bundle {
   return {
@@ -12,25 +12,29 @@ export function badRequest(diagnostics: string, fullUrl: string | undefined = un
   const bundleEntry: BundleEntry = {
     response: {
       status: "400 Bad Request",
-      outcome: {
-        resourceType: "OperationOutcome",
-        meta: {
-          lastUpdated: new Date().toISOString()
-        },
-        issue: [
-          {
-            code: "value",
-            severity: "error",
-            diagnostics: diagnostics
-          }
-        ]
-      }
+      outcome: badRequestOutcome([diagnostics])
     }
   }
   if (fullUrl) {
     bundleEntry.fullUrl = fullUrl
   }
   return bundleEntry
+}
+
+export function badRequestOutcome(diagnostics: Array<string>): OperationOutcome {
+  return {
+    resourceType: "OperationOutcome",
+    meta: {
+      lastUpdated: new Date().toISOString()
+    },
+    issue: diagnostics.map((diagnostic) => (
+      {
+        code: "value",
+        severity: "error",
+        diagnostics: diagnostic
+      }
+    ))
+  }
 }
 
 export function timeoutResponse(): BundleEntry {
