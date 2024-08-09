@@ -309,4 +309,4 @@ Outputs:
     Description: Use kms key policy arn
     Value: !GetAtt UsePrescriptionStatusUpdatesKMSKeyPolicy.PolicyArn
     Export:
-      Name: !Sub ${StackName}:tables:${TableName}:UsePrescriptionStatusUpdatesKMSKeyPolicyArn
+      Name: !Sub ${StackName}:tables:UsePrescriptionStatusUpdatesKMSKeyPolicyArn
