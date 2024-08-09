@@ -10,7 +10,9 @@ import {marshall} from "@aws-sdk/util-dynamodb"
 import {DataItem} from "../updatePrescriptionStatus"
 import {Timeout} from "./timeoutUtils"
 
-const client = new DynamoDBClient()
+const client = new DynamoDBClient({
+  maxAttempts: 10 // default is 3
+})
 const tableName = process.env.TABLE_NAME ?? "PrescriptionStatusUpdates"
 
 function createTransactionCommand(dataItems: Array<DataItem>, logger: Logger): TransactWriteItemsCommand {
