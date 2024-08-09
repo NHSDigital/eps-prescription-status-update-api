@@ -13,11 +13,11 @@ Parameters:
 
   MinWritePrescriptionStatusUpdatesCapacity:
     Type: Number
-    Default: 100
+    Default: 50
 
   MaxWritePrescriptionStatusUpdatesCapacity:
     Type: Number
-    Default: 800
+    Default: 600
 
 Conditions:
   EnableDynamoDBAutoScalingCondition: !Equals
