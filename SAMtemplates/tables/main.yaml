@@ -86,6 +86,7 @@ Resources:
       SSESpecification:
         KMSMasterKeyId: !Ref PrescriptionStatusUpdatesKMSKey
         SSEEnabled: true
+        SSEType: KMS
       GlobalSecondaryIndexes:
         - IndexName: PharmacyODSCodePrescriptionIDIndex
           KeySchema:
