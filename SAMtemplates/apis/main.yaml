@@ -129,18 +129,18 @@ Resources:
           - !Ref TruststoreVersion
           - !Ref AWS::NoValue
 
-  RestApiRecordSet:
-    Type: AWS::Route53::RecordSet
-    Properties:
-      Name: !Join
-        - .
-        - - !Ref StackName
-          - !ImportValue eps-route53-resources:EPS-domain
-      Type: A
-      HostedZoneId: !ImportValue eps-route53-resources:EPS-ZoneID
-      AliasTarget:
-        DNSName: !GetAtt RestApiDomain.RegionalDomainName
-        HostedZoneId: !GetAtt RestApiDomain.RegionalHostedZoneId
+  # RestApiRecordSet:
+  #   Type: AWS::Route53::RecordSet
+  #   Properties:
+  #     Name: !Join
+  #       - .
+  #       - - !Ref StackName
+  #         - !ImportValue eps-route53-resources:EPS-domain
+  #     Type: A
+  #     HostedZoneId: !ImportValue eps-route53-resources:EPS-ZoneID
+  #     AliasTarget:
+  #       DNSName: !GetAtt RestApiDomain.RegionalDomainName
+  #       HostedZoneId: !GetAtt RestApiDomain.RegionalHostedZoneId
 
   UpdatePrescriptionStatusMethod:
     Type: AWS::ApiGateway::Method
