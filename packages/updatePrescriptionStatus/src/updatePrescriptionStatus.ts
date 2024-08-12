@@ -22,6 +22,7 @@ import {
 import {TransactionCanceledException} from "@aws-sdk/client-dynamodb"
 
 const LAMBDA_TIMEOUT_MS = 9500
+// this is length of time from now when records in dynamodb will automatically be expired
 export const TTL_DELTA = 60 * 60 * 24 * 365 * 2 // Keep records for 2 years
 const logger = new Logger({serviceName: "updatePrescriptionStatus"})
 

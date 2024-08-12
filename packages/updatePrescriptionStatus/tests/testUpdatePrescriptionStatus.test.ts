@@ -20,9 +20,8 @@ import {APIGatewayProxyEvent} from "aws-lambda"
 
 import * as content from "../src/validation/content"
 import {TransactionCanceledException} from "@aws-sdk/client-dynamodb"
-import {TTL_DELTA} from "../src/updatePrescriptionStatus"
 const mockValidateEntry = mockInternalDependency("../src/validation/content", content, "validateEntry")
-const {castEventBody, getXRequestID, validateEntries, handleTransactionCancelledException, buildDataItems} =
+const {castEventBody, getXRequestID, validateEntries, handleTransactionCancelledException, buildDataItems, TTL_DELTA} =
   await import("../src/updatePrescriptionStatus")
 
 describe("Unit test getXRequestID", () => {
