@@ -72,20 +72,20 @@ Conditions:
     - !Ref DeployCheckPrescriptionStatusUpdate
 
 Resources:
-  GenerateCertificate:
-    Type: AWS::CertificateManager::Certificate
-    Properties:
-      ValidationMethod: DNS
-      DomainName: !Join
-        - .
-        - - !Ref StackName
-          - !ImportValue eps-route53-resources:EPS-domain
-      DomainValidationOptions:
-        - DomainName: !Join
-            - .
-            - - !Ref StackName
-              - !ImportValue eps-route53-resources:EPS-domain
-          HostedZoneId: !ImportValue eps-route53-resources:EPS-ZoneID
+  # GenerateCertificate:
+  #   Type: AWS::CertificateManager::Certificate
+  #   Properties:
+  #     ValidationMethod: DNS
+  #     DomainName: !Join
+  #       - .
+  #       - - !Ref StackName
+  #         - !ImportValue eps-route53-resources:EPS-domain
+  #     DomainValidationOptions:
+  #       - DomainName: !Join
+  #           - .
+  #           - - !Ref StackName
+  #             - !ImportValue eps-route53-resources:EPS-domain
+  #         HostedZoneId: !ImportValue eps-route53-resources:EPS-ZoneID
 
   RestApiGateway:
     Type: AWS::ApiGateway::RestApi
@@ -102,14 +102,14 @@ Resources:
   RestApiDomain:
     Type: AWS::ApiGateway::DomainName
     Properties:
-      DomainName: !Join
-        - .
-        - - !Ref StackName
-          - !ImportValue eps-route53-resources:EPS-domain
-      RegionalCertificateArn: !Ref GenerateCertificate
-      EndpointConfiguration:
-        Types:
-          - REGIONAL
+      # DomainName: !Join
+      #   - .
+      #   - - !Ref StackName
+      #     - !ImportValue eps-route53-resources:EPS-domain
+      # RegionalCertificateArn: !Ref GenerateCertificate
+      # EndpointConfiguration:
+      #   Types:
+      #     - REGIONAL
       SecurityPolicy: TLS_1_2
       MutualTlsAuthentication:
         TruststoreUri: !If
