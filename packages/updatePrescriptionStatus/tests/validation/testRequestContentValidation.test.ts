@@ -1,5 +1,3 @@
-/* eslint-disable  max-len */
-
 import {
   expect,
   describe,
@@ -64,7 +62,8 @@ describe("Unit test for validateContent", () => {
 
     const expectedOutcome = {
       valid: false,
-      issues: "NHS number is invalid. NHS number is not in a known, valid range. Invalid CodeSystem(s) - LineItemID."
+      issues:
+        "NHS number is invalid. NHS number is not in a known, valid range. Invalid CodeSystem(s) - LineItemID."
     }
 
     const actual: ValidationOutcome = validateContent(entry)
@@ -147,7 +146,9 @@ describe("Unit tests for validation of lastModified", () => {
   })
 
   it("When lastModified is over a day in the future, should return expected issue.", async () => {
-    const futureDate = new Date(DEFAULT_DATE.valueOf() + (ONE_DAY_IN_MS + 1000))
+    const futureDate = new Date(
+      DEFAULT_DATE.valueOf() + (ONE_DAY_IN_MS + 1000)
+    )
     const task = {lastModified: futureDate.toISOString()}
 
     const expected = "Invalid last modified value provided."
@@ -181,12 +182,14 @@ describe("Unit tests for validation of prescription ID", () => {
     {
       testPrescriptionID: "invalid",
       expected: "Prescription ID is invalid.",
-      scenarioDescription: "When prescription ID is invalid, should return expected issue."
+      scenarioDescription:
+        "When prescription ID is invalid, should return expected issue."
     },
     {
       testPrescriptionID: "07A66F-A83008-1EEEA0",
       expected: undefined,
-      scenarioDescription: "When prescription ID is valid, should return undefined."
+      scenarioDescription:
+        "When prescription ID is valid, should return undefined."
     }
   ])("$scenarioDescription", async ({testPrescriptionID, expected}) => {
     const task = {basedOn: [{identifier: {value: testPrescriptionID}}]}
@@ -202,7 +205,8 @@ describe("Unit tests for validation of NHS number", () => {
     {
       generatedNhsNumber: generateInvalidNhsNumbers(1)[0],
       expected: "NHS number is invalid.",
-      scenarioDescription: "When NHS number is invalid, should return expected issue."
+      scenarioDescription:
+        "When NHS number is invalid, should return expected issue."
     },
     {
       generatedNhsNumber: generateValidNhsNumbers(1)[0],
@@ -223,12 +227,14 @@ describe("Unit tests for validation of NHS number range", () => {
     {
       nhsNumbers: ["0101000000", "3112999999"],
       expected: "NHS number is in the Scottish range.",
-      scenarioDescription: "When NHS number is in the Scottish range, should return expected issue."
+      scenarioDescription:
+        "When NHS number is in the Scottish range, should return expected issue."
     },
     {
       nhsNumbers: ["3200000001", "3999999999"],
       expected: "NHS number is in the Northern Irish range.",
-      scenarioDescription: "When NHS number is in the Northern Irish range, should return expected issue."
+      scenarioDescription:
+        "When NHS number is in the Northern Irish range, should return expected issue."
     },
     {
       nhsNumbers: [
@@ -272,11 +278,15 @@ describe("Unit tests for validation of status against business status", () => {
     ])(
       "When status is 'completed' and business status is '$businessStatus', should return expected issue.",
       ({isValid, businessStatus}) => {
-        const task = {status: "completed", businessStatus: {coding: [{code: businessStatus}]}}
+        const task = {
+          status: "completed",
+          businessStatus: {coding: [{code: businessStatus}]}
+        }
         const actual = taskStatusAgainstBusinessStatus(task as Task)
         const expected = isValid
           ? undefined
-          : `Task.status field set to 'completed' but Task.businessStatus value of '${businessStatus}' requires follow up action.`
+          : // eslint-disable-next-line max-len
+          `Task.status field set to 'completed' but Task.businessStatus value of '${businessStatus}' requires follow up action.`
         expect(actual).toEqual(expected)
       }
     )
@@ -296,11 +306,15 @@ describe("Unit tests for validation of status against business status", () => {
     ])(
       "When status is 'in-progress' and business status is '$businessStatus', should return expected issue.",
       ({isValid, businessStatus}) => {
-        const task = {status: "in-progress", businessStatus: {coding: [{code: businessStatus}]}}
+        const task = {
+          status: "in-progress",
+          businessStatus: {coding: [{code: businessStatus}]}
+        }
         const actual = taskStatusAgainstBusinessStatus(task as Task)
         const expected = isValid
           ? undefined
-          : `Task.status field set to 'in-progress' but Task.businessStatus value of '${businessStatus}' has no possible follow up action.`
+          : // eslint-disable-next-line max-len
+          `Task.status field set to 'in-progress' but Task.businessStatus value of '${businessStatus}' has no possible follow up action.`
         expect(actual).toEqual(expected)
       }
     )
@@ -313,7 +327,10 @@ describe("Unit tests for validation of status against business status", () => {
     ])(
       "When status is '$status' and business status is '$businessStatus', should return unsupported issue.",
       ({status, businessStatus}) => {
-        const task = {status, businessStatus: {coding: [{code: businessStatus}]}}
+        const task = {
+          status,
+          businessStatus: {coding: [{code: businessStatus}]}
+        }
         const actual = taskStatusAgainstBusinessStatus(task as Task)
         const expected = `Unsupported Task.businessStatus '${businessStatus}'.`
         expect(actual).toEqual(expected)
@@ -327,12 +344,14 @@ describe("Unit tests for validation of resourceType", () => {
     {
       type: "NotTask",
       expected: "Resource's resourceType is not 'Task'.",
-      scenarioDescription: "When resourceType is not Task, should return expected issue."
+      scenarioDescription:
+        "When resourceType is not Task, should return expected issue."
     },
     {
       type: "Task",
       expected: undefined,
-      scenarioDescription: "When resourceType is Task, should return undefined."
+      scenarioDescription:
+        "When resourceType is Task, should return undefined."
     }
   ])("$scenarioDescription", async ({type, expected}) => {
     const task = {resourceType: type}
@@ -373,13 +392,16 @@ describe("Unit tests for validation of transaction bundle", () => {
 })
 
 describe("Unit tests for validation of businessStatus", () => {
-  it.each(BUSINESS_STATUSES)("When businessStatus is valid, should return undefined.", async (status) => {
-    const task = {businessStatus: {coding: [{code: status}]}}
+  it.each(BUSINESS_STATUSES)(
+    "When businessStatus is valid, should return undefined.",
+    async (status) => {
+      const task = {businessStatus: {coding: [{code: status}]}}
 
-    const actual = businessStatus(task as Task)
+      const actual = businessStatus(task as Task)
 
-    expect(actual).toEqual(undefined)
-  })
+      expect(actual).toEqual(undefined)
+    }
+  )
 
   it("When businessStatus is invalid, should return expected message.", async () => {
     const task = {businessStatus: {coding: [{code: "Invalid"}]}}
@@ -407,6 +429,8 @@ describe("Unit tests for validation of codeSystems", () => {
 
     const actual = codeSystems(entry.resource as Task)
 
-    expect(actual).toEqual("Invalid CodeSystem(s) - LineItemID, PatientNHSNumber.")
+    expect(actual).toEqual(
+      "Invalid CodeSystem(s) - LineItemID, PatientNHSNumber."
+    )
   })
 })

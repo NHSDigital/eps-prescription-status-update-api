@@ -1,26 +1,34 @@
-/* eslint-disable @typescript-eslint/no-explicit-any, max-len */
-
 import {BundleEntry, Task} from "fhir/r4"
 import {validatePrescriptionID} from "../utils/prescriptionID"
 import {validateNhsNumber} from "../utils/nhsNumber"
 import {validateFields} from "./fields"
 
-export type TaskValidation = (task: Task) => string | undefined
-export type BundleEntryValidation = (bundleEntry: BundleEntry) => string | undefined
+export type TaskValidation = (task: Task) => string | undefined;
+export type BundleEntryValidation = (
+  bundleEntry: BundleEntry,
+) => string | undefined;
 
 export type ValidationOutcome = {
-  valid: boolean
-  issues: string | undefined
-}
+  valid: boolean;
+  issues: string | undefined;
+};
 
 export const ONE_DAY_IN_MS = 86400000
-export const LINE_ITEM_ID_CODESYSTEM = "https://fhir.nhs.uk/Id/prescription-order-item-number"
+export const LINE_ITEM_ID_CODESYSTEM =
+  "https://fhir.nhs.uk/Id/prescription-order-item-number"
 export const NHS_NUMBER_CODESYSTEM = "https://fhir.nhs.uk/Id/nhs-number"
-export const ODS_CODE_CODESYSTEM = "https://fhir.nhs.uk/Id/ods-organization-code"
-export const PRESCRIPTION_ID_CODESYSTEM = "https://fhir.nhs.uk/Id/prescription-order-number"
-export const STATUS_CODESYSTEM = "https://fhir.nhs.uk/CodeSystem/task-businessStatus-nppt"
+export const ODS_CODE_CODESYSTEM =
+  "https://fhir.nhs.uk/Id/ods-organization-code"
+export const PRESCRIPTION_ID_CODESYSTEM =
+  "https://fhir.nhs.uk/Id/prescription-order-number"
+export const STATUS_CODESYSTEM =
+  "https://fhir.nhs.uk/CodeSystem/task-businessStatus-nppt"
 
-const COMPLETED_ONLY_BUSINESS_STATUSES = ["collected", "not dispensed", "dispatched"]
+const COMPLETED_ONLY_BUSINESS_STATUSES = [
+  "collected",
+  "not dispensed",
+  "dispatched"
+]
 const IN_PROGRESS_ONLY_BUSINESS_STATUSES = [
   "with pharmacy",
   "with pharmacy - preparing remainder",
@@ -29,18 +37,25 @@ const IN_PROGRESS_ONLY_BUSINESS_STATUSES = [
 ]
 const AGNOSTIC_BUSINESS_STATUSES = ["ready to dispatch", "ready to collect"]
 
-export const BUSINESS_STATUSES = COMPLETED_ONLY_BUSINESS_STATUSES.concat(IN_PROGRESS_ONLY_BUSINESS_STATUSES).concat(
+export const BUSINESS_STATUSES = COMPLETED_ONLY_BUSINESS_STATUSES.concat(
+  IN_PROGRESS_ONLY_BUSINESS_STATUSES
+).concat(AGNOSTIC_BUSINESS_STATUSES)
+const VALID_COMPLETED_STATUSES = COMPLETED_ONLY_BUSINESS_STATUSES.concat(
   AGNOSTIC_BUSINESS_STATUSES
 )
-const VALID_COMPLETED_STATUSES = COMPLETED_ONLY_BUSINESS_STATUSES.concat(AGNOSTIC_BUSINESS_STATUSES)
-const VALID_IN_PROGRESS_STATUSES = IN_PROGRESS_ONLY_BUSINESS_STATUSES.concat(AGNOSTIC_BUSINESS_STATUSES)
+const VALID_IN_PROGRESS_STATUSES = IN_PROGRESS_ONLY_BUSINESS_STATUSES.concat(
+  AGNOSTIC_BUSINESS_STATUSES
+)
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function transactionBundle(body: any): boolean {
   return body.resourceType === "Bundle" && body.type === "transaction"
 }
 
 export function entryContent(entry: BundleEntry): Array<string> {
-  return `urn:uuid:${entry.resource!.id}` === entry.fullUrl! ? [] : ["Invalid entry fullUrl or task id."]
+  return `urn:uuid:${entry.resource!.id}` === entry.fullUrl!
+    ? []
+    : ["Invalid entry fullUrl or task id."]
 }
 
 export function lastModified(task: Task): string | undefined {
@@ -75,7 +90,7 @@ export function nhsNumber(task: Task): string | undefined {
 }
 
 export function nhsNumberRange(task: Task): string | undefined {
-  type Range = {low: number; high: number; description?: string}
+  type Range = { low: number; high: number; description?: string };
 
   const validRanges: Array<Range> = [
     {low: 3_113_000_000, high: 3_200_000_000},
@@ -115,11 +130,26 @@ export function resourceType(task: Task): string | undefined {
 
 export function codeSystems(task: Task): string | undefined {
   const systems: Array<TaskValidation> = [
-    (t: Task) => (t.focus!.identifier!.system === LINE_ITEM_ID_CODESYSTEM ? undefined : "LineItemID"),
-    (t: Task) => (t.for!.identifier!.system === NHS_NUMBER_CODESYSTEM ? undefined : "PatientNHSNumber"),
-    (t: Task) => (t.owner!.identifier!.system === ODS_CODE_CODESYSTEM ? undefined : "PharmacyODSCode"),
-    (t: Task) => (t.basedOn![0].identifier!.system === PRESCRIPTION_ID_CODESYSTEM ? undefined : "PrescriptionID"),
-    (t: Task) => (t.businessStatus!.coding![0].system === STATUS_CODESYSTEM ? undefined : "Status")
+    (t: Task) =>
+      t.focus!.identifier!.system === LINE_ITEM_ID_CODESYSTEM
+        ? undefined
+        : "LineItemID",
+    (t: Task) =>
+      t.for!.identifier!.system === NHS_NUMBER_CODESYSTEM
+        ? undefined
+        : "PatientNHSNumber",
+    (t: Task) =>
+      t.owner!.identifier!.system === ODS_CODE_CODESYSTEM
+        ? undefined
+        : "PharmacyODSCode",
+    (t: Task) =>
+      t.basedOn![0].identifier!.system === PRESCRIPTION_ID_CODESYSTEM
+        ? undefined
+        : "PrescriptionID",
+    (t: Task) =>
+      t.businessStatus!.coding![0].system === STATUS_CODESYSTEM
+        ? undefined
+        : "Status"
   ]
   const incorrectCodeSystems: Array<string> = []
   for (const system of systems) {
@@ -140,7 +170,9 @@ export function businessStatus(task: Task): string | undefined {
   }
 }
 
-export function taskStatusAgainstBusinessStatus(task: Task): string | undefined {
+export function taskStatusAgainstBusinessStatus(
+  task: Task
+): string | undefined {
   const status = task.status
   const businessStatus: string = task.businessStatus!.coding![0].code!
   const lowercaseCode = businessStatus.toLowerCase()
@@ -152,11 +184,14 @@ export function taskStatusAgainstBusinessStatus(task: Task): string | undefined 
 
   const validCompleteStatus = VALID_COMPLETED_STATUSES.includes(lowercaseCode)
   if (status === "completed" && !validCompleteStatus) {
+    // eslint-disable-next-line max-len
     return `Task.status field set to '${status}' but Task.businessStatus value of '${businessStatus}' requires follow up action.`
   }
 
-  const validInProgressStatus = VALID_IN_PROGRESS_STATUSES.includes(lowercaseCode)
+  const validInProgressStatus =
+    VALID_IN_PROGRESS_STATUSES.includes(lowercaseCode)
   if (status === "in-progress" && !validInProgressStatus) {
+    // eslint-disable-next-line max-len
     return `Task.status field set to '${status}' but Task.businessStatus value of '${businessStatus}' has no possible follow up action.`
   }
 
@@ -187,7 +222,10 @@ export function taskContent(task: Task): Array<string> {
 }
 
 export function validateContent(entry: BundleEntry): ValidationOutcome {
-  const validationOutcome: ValidationOutcome = {valid: true, issues: undefined}
+  const validationOutcome: ValidationOutcome = {
+    valid: true,
+    issues: undefined
+  }
   const issues: Array<string> = []
   const task = entry.resource as Task
 
