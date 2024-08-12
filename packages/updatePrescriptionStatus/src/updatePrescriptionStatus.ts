@@ -22,7 +22,7 @@ import {
 import {TransactionCanceledException} from "@aws-sdk/client-dynamodb"
 
 const LAMBDA_TIMEOUT_MS = 9500
-const TTL_DELTA = 60 * 60 * 24 * 365 * 2 // Keep records for 2 years
+export const TTL_DELTA = 60 * 60 * 24 * 365 * 2 // Keep records for 2 years
 const logger = new Logger({serviceName: "updatePrescriptionStatus"})
 
 export interface DataItem {
