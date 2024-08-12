@@ -246,13 +246,13 @@ files = [
 
 [[package]]
 name = "cfn-lint"
-version = "1.9.6"
+version = "1.9.7"
 description = "Checks CloudFormation templates for practices and behaviour that could potentially be improved"
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "cfn_lint-1.9.6-py3-none-any.whl", hash = "sha256:528446b9131363d93aca6cb34e2276356e6201e2c74fdb98270e723d5806a8eb"},
-    {file = "cfn_lint-1.9.6.tar.gz", hash = "sha256:c2ebd44ce3a412144f7d147f9fd5e3c6a9daec8db61f8cdc1670d05d38c4708a"},
+    {file = "cfn_lint-1.9.7-py3-none-any.whl", hash = "sha256:80c67aa3eee1ab0dbfd9d1bc6b5a73aaf950bb2424263d6140c04a650f93cb54"},
+    {file = "cfn_lint-1.9.7.tar.gz", hash = "sha256:c9a460ad39b9a4aab1d54827ff8a88d878a585a522b73845d05be79fd2b0a988"},
 ]
 
 [package.dependencies]
@@ -1647,4 +1647,4 @@ files = [
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.12"
-content-hash = "c5106ab63d98d55617d95b6669a4702742fe98d6667c91eacce94ac5a745b833"
+content-hash = "11e6a53009d32cbddde13bb8307ec5ed95bfe429083901c244cf814f2a0f9e55"
