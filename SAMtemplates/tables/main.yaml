@@ -69,6 +69,8 @@ Resources:
           AttributeType: S
         - AttributeName: PharmacyODSCode
           AttributeType: S
+        - AttributeName: ExpiryTime
+          AttributeType: N
       KeySchema:
         - AttributeName: PrescriptionID
           KeyType: HASH
@@ -87,6 +89,9 @@ Resources:
         KMSMasterKeyId: !Ref PrescriptionStatusUpdatesKMSKey
         SSEEnabled: true
         SSEType: KMS
+      TimeToLiveSpecification:
+        AttributeName: ExpiryTime
+        Enabled: true
       GlobalSecondaryIndexes:
         - IndexName: PharmacyODSCodePrescriptionIDIndex
           KeySchema:

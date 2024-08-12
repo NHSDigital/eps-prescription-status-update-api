@@ -22,6 +22,7 @@ import {
 import {TransactionCanceledException} from "@aws-sdk/client-dynamodb"
 
 const LAMBDA_TIMEOUT_MS = 9500
+const TTL_DELTA = 60 * 60 * 24 * 365 * 2 // Keep records for 2 years
 const logger = new Logger({serviceName: "updatePrescriptionStatus"})
 
 export interface DataItem {
@@ -36,6 +37,7 @@ export interface DataItem {
   TaskID: string
   TerminalStatus: string
   ApplicationName: string
+  ExpiryTime: number
 }
 
 const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
@@ -207,7 +209,8 @@ export function buildDataItems(
       Status: task.businessStatus!.coding![0].code!,
       TaskID: task.id!,
       TerminalStatus: task.status,
-      ApplicationName: applicationName
+      ApplicationName: applicationName,
+      ExpiryTime: (Math.floor(+new Date() / 1000) + TTL_DELTA)
     }
 
     dataItems.push(dataItem)

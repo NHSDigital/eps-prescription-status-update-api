@@ -31,7 +31,8 @@ describe("Unit test persistDataItems", () => {
         Status: "Status_1",
         TaskID: "TaskID_1",
         TerminalStatus: "TerminalStatus_1",
-        ApplicationName: "name"
+        ApplicationName: "name",
+        ExpiryTime: 10
       },
       {
         LastModified: "2023-01-02T00:00:00Z",
@@ -43,7 +44,8 @@ describe("Unit test persistDataItems", () => {
         Status: "Status_2",
         TaskID: "TaskID_1",
         TerminalStatus: "TerminalStatus_2",
-        ApplicationName: "name"
+        ApplicationName: "name",
+        ExpiryTime: 10
       }
     ]
 
