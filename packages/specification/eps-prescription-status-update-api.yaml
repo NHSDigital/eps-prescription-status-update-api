@@ -98,9 +98,11 @@ x-spec-publication:
 
 servers:
   - url: "https://sandbox.api.service.nhs.uk/prescription-status-update"
-    description: "Sandbox"
-  - url: "https://int.service.nhs.uk/prescription-status-update"
-    description: "Integration"
+    description: Sandbox Environment
+  - url: "https://int.api.service.nhs.uk/prescription-status-update"
+    description: Integration Environment
+  - url: "https://api.service.nhs.uk/prescription-status-update"
+    description: Production Environment
 
 paths:
   /:

@@ -74,12 +74,12 @@ jq --arg version "${VERSION_NUMBER}" '.info.version = $version' "${SPEC_PATH}" >
 # Find and replace the x-nhsd-apim.target.url value
 jq --arg stack_name "${STACK_NAME}" --arg aws_env "${AWS_ENVIRONMENT}" '.["x-nhsd-apim"].target.url = "https://\($stack_name).\($aws_env).eps.national.nhs.uk"' "${SPEC_PATH}" > temp.json && mv temp.json "${SPEC_PATH}"
 
-# Find and replace the servers object
-# if [[ "${APIGEE_ENVIRONMENT}" == "prod" ]]; then
-#     jq --arg inst "${instance}" '.servers = [ { "url": "https://api.service.nhs.uk/\($inst)" } ]' "${SPEC_PATH}" > temp.json && mv temp.json "${SPEC_PATH}"
-# else
-#     jq --arg env "${APIGEE_ENVIRONMENT}" --arg inst "${instance}" '.servers = [ { "url": "https://\($env).api.service.nhs.uk/\($inst)" } ]' "${SPEC_PATH}" > temp.json && mv temp.json "${SPEC_PATH}"
-# fi
+Find and replace the servers object
+if [[ "${APIGEE_ENVIRONMENT}" == "prod" ]]; then
+    jq --arg inst "${instance}" '.servers = [ { "url": "https://api.service.nhs.uk/\($inst)" } ]' "${SPEC_PATH}" > temp.json && mv temp.json "${SPEC_PATH}"
+else
+    jq --arg env "${APIGEE_ENVIRONMENT}" --arg inst "${instance}" '.servers = [ { "url": "https://\($env).api.service.nhs.uk/\($inst)" } ]' "${SPEC_PATH}" > temp.json && mv temp.json "${SPEC_PATH}"
+fi
 
 # Find and replace securitySchemes
 if [[ "${APIGEE_ENVIRONMENT}" == "prod" ]]; then
