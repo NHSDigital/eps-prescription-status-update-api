@@ -11,6 +11,14 @@ Parameters:
   EnableDynamoDBAutoScaling:
     Type: String
 
+  MinWritePrescriptionStatusUpdatesCapacity:
+    Type: Number
+    Default: 50
+
+  MaxWritePrescriptionStatusUpdatesCapacity:
+    Type: Number
+    Default: 600
+
 Conditions:
   EnableDynamoDBAutoScalingCondition: !Equals
     - true
@@ -81,7 +89,7 @@ Resources:
       ProvisionedThroughput: !If
         - EnableDynamoDBAutoScalingCondition
         - ReadCapacityUnits: 1
-          WriteCapacityUnits: 1
+          WriteCapacityUnits: !Ref MinWritePrescriptionStatusUpdatesCapacity
         - !Ref "AWS::NoValue"
       SSESpecification:
         KMSMasterKeyId: !Ref PrescriptionStatusUpdatesKMSKey
@@ -105,7 +113,7 @@ Resources:
           ProvisionedThroughput: !If
             - EnableDynamoDBAutoScalingCondition
             - ReadCapacityUnits: 1
-              WriteCapacityUnits: 1
+              WriteCapacityUnits: !Ref MinWritePrescriptionStatusUpdatesCapacity
             - !Ref "AWS::NoValue"
         - IndexName: PatientNHSNumberIndex
           KeySchema:
@@ -116,7 +124,7 @@ Resources:
           ProvisionedThroughput: !If
             - EnableDynamoDBAutoScalingCondition
             - ReadCapacityUnits: 1
-              WriteCapacityUnits: 1
+              WriteCapacityUnits: !Ref MinWritePrescriptionStatusUpdatesCapacity
             - !Ref "AWS::NoValue"
 
   PrescriptionStatusUpdatesResources:
@@ -171,8 +179,8 @@ Resources:
     DependsOn: PrescriptionStatusUpdatesTable
     Condition: EnableDynamoDBAutoScalingCondition
     Properties:
-      MaxCapacity: 100
-      MinCapacity: 1
+      MinCapacity: !Ref MinWritePrescriptionStatusUpdatesCapacity
+      MaxCapacity: !Ref MaxWritePrescriptionStatusUpdatesCapacity
       ResourceId: !Sub table/${PrescriptionStatusUpdatesTable}
       RoleARN: !GetAtt DynamoDbScalingRole.Arn
       ScalableDimension: "dynamodb:table:WriteCapacityUnits"
@@ -186,9 +194,9 @@ Resources:
       PolicyType: TargetTrackingScaling
       ScalingTargetId: !Ref PrescriptionStatusUpdatesTableWriteScalingTarget
       TargetTrackingScalingPolicyConfiguration:
-        TargetValue: 70
-        ScaleInCooldown: 60
-        ScaleOutCooldown: 60
+        TargetValue: 50
+        ScaleInCooldown: 600
+        ScaleOutCooldown: 0
         PredefinedMetricSpecification:
           PredefinedMetricType: DynamoDBWriteCapacityUtilization
 
@@ -223,8 +231,8 @@ Resources:
     DependsOn: PrescriptionStatusUpdatesTable
     Condition: EnableDynamoDBAutoScalingCondition
     Properties:
-      MaxCapacity: 100
-      MinCapacity: 1
+      MinCapacity: !Ref MinWritePrescriptionStatusUpdatesCapacity
+      MaxCapacity: !Ref MaxWritePrescriptionStatusUpdatesCapacity
       ResourceId: !Sub table/${PrescriptionStatusUpdatesTable}/index/PharmacyODSCodePrescriptionIDIndex
       RoleARN: !GetAtt DynamoDbScalingRole.Arn
       ScalableDimension: "dynamodb:index:WriteCapacityUnits"
@@ -238,19 +246,45 @@ Resources:
       PolicyType: TargetTrackingScaling
       ScalingTargetId: !Ref PharmacyIndexScalingWriteTarget
       TargetTrackingScalingPolicyConfiguration:
-        TargetValue: 70
-        ScaleInCooldown: 60
-        ScaleOutCooldown: 60
+        TargetValue: 50
+        ScaleInCooldown: 600
+        ScaleOutCooldown: 0
         PredefinedMetricSpecification:
           PredefinedMetricType: DynamoDBWriteCapacityUtilization
 
-  NHSNumberIndexScalingWriteTarget:
+  PharmacyIndexScalingReadTarget:
     Type: AWS::ApplicationAutoScaling::ScalableTarget
     DependsOn: PrescriptionStatusUpdatesTable
     Condition: EnableDynamoDBAutoScalingCondition
     Properties:
       MaxCapacity: 100
       MinCapacity: 1
+      ResourceId: !Sub table/${PrescriptionStatusUpdatesTable}/index/PharmacyODSCodePrescriptionIDIndex
+      RoleARN: !GetAtt DynamoDbScalingRole.Arn
+      ScalableDimension: "dynamodb:index:ReadCapacityUnits"
+      ServiceNamespace: dynamodb
+
+  PharmacyIndexScalingReadPolicy:
+    Type: AWS::ApplicationAutoScaling::ScalingPolicy
+    Condition: EnableDynamoDBAutoScalingCondition
+    Properties:
+      PolicyName: NHSNumberIndexReadScalingPolicy
+      PolicyType: TargetTrackingScaling
+      ScalingTargetId: !Ref PharmacyIndexScalingReadTarget
+      TargetTrackingScalingPolicyConfiguration:
+        TargetValue: 70
+        ScaleInCooldown: 600
+        ScaleOutCooldown: 10
+        PredefinedMetricSpecification:
+          PredefinedMetricType: DynamoDBReadCapacityUtilization
+
+  NHSNumberIndexScalingWriteTarget:
+    Type: AWS::ApplicationAutoScaling::ScalableTarget
+    DependsOn: PrescriptionStatusUpdatesTable
+    Condition: EnableDynamoDBAutoScalingCondition
+    Properties:
+      MinCapacity: !Ref MinWritePrescriptionStatusUpdatesCapacity
+      MaxCapacity: !Ref MaxWritePrescriptionStatusUpdatesCapacity
       ResourceId: !Sub table/${PrescriptionStatusUpdatesTable}/index/PatientNHSNumberIndex
       RoleARN: !GetAtt DynamoDbScalingRole.Arn
       ScalableDimension: "dynamodb:index:WriteCapacityUnits"
@@ -264,9 +298,9 @@ Resources:
       PolicyType: TargetTrackingScaling
       ScalingTargetId: !Ref NHSNumberIndexScalingWriteTarget
       TargetTrackingScalingPolicyConfiguration:
-        TargetValue: 70
-        ScaleInCooldown: 60
-        ScaleOutCooldown: 60
+        TargetValue: 50
+        ScaleInCooldown: 600
+        ScaleOutCooldown: 0
         PredefinedMetricSpecification:
           PredefinedMetricType: DynamoDBWriteCapacityUtilization
 
