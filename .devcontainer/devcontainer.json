@@ -26,7 +26,6 @@
         "orta.vscode-jest",
         "42crunch.vscode-openapi",
         "mermade.openapi-lint",
-        "rvest.vs-code-prettier-eslint",
         "christian-kohler.npm-intellisense",
         "dbaeumer.vscode-eslint",
         "lfm.vscode-makefile-term",
@@ -46,15 +45,13 @@
         "pylint.enabled": false,
         "python.linting.flake8Enabled": true,
         "python.linting.enabled": true, // required to format on save
-        "editor.defaultFormatter": "rvest.vs-code-prettier-eslint",
         "editor.formatOnPaste": false, // required
         "editor.formatOnType": false, // required
         "editor.formatOnSave": true, // optional
         "editor.formatOnSaveMode": "file",
         "cSpell.words": ["fhir", "Formik", "pino", "serialisation"],
-        "[json]": {
-          "editor.defaultFormatter": "rvest.vs-code-prettier-eslint"
-        }
+        "editor.defaultFormatter": "dbaeumer.vscode-eslint"
+
       }
     }
   },

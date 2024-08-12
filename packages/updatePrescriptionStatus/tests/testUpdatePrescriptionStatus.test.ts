@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any, max-len */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import {
   expect,
   describe,

@@ -1,4 +1,5 @@
-/* eslint-disable @typescript-eslint/no-explicit-any, max-len */
+/* eslint-disable max-len */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import {APIGatewayProxyEvent, APIGatewayProxyResult} from "aws-lambda"
 import {
   expect,
@@ -54,7 +55,11 @@ describe("Integration tests for updatePrescriptionStatus handler", () => {
 
     expect(response.statusCode).toEqual(400)
     expect(JSON.parse(response.body)).toEqual(
-      bundleWrap([badRequest("Request body does not have resourceType of 'Bundle' and type of 'transaction'.")])
+      bundleWrap([
+        badRequest(
+          "Request body does not have resourceType of 'Bundle' and type of 'transaction'."
+        )
+      ])
     )
   })
 
@@ -70,7 +75,9 @@ describe("Integration tests for updatePrescriptionStatus handler", () => {
     expect(JSON.parse(response.body)).toEqual(responseSingleItem)
 
     expect(mockSend).toHaveBeenCalledTimes(1)
-    expect(mockSend).toHaveBeenCalledWith(expect.objectContaining(expectedItems))
+    expect(mockSend).toHaveBeenCalledWith(
+      expect.objectContaining(expectedItems)
+    )
   })
 
   it("when input field is absent in a single item request, expect DynamoDB item without RepeatNo field", async () => {
@@ -82,7 +89,8 @@ describe("Integration tests for updatePrescriptionStatus handler", () => {
 
     const event: APIGatewayProxyEvent = generateMockEvent(body)
     const expectedItems = generateExpectedItems()
-    const transactItem: any = expectedItems.input?.TransactItems?.[0]?.Put?.Item
+    const transactItem: any =
+      expectedItems.input?.TransactItems?.[0]?.Put?.Item
     if (transactItem?.RepeatNo) {
       delete transactItem.RepeatNo
     }
@@ -94,9 +102,13 @@ describe("Integration tests for updatePrescriptionStatus handler", () => {
     expect(response.statusCode).toEqual(201)
     expect(JSON.parse(response.body)).toEqual(responseSingleItem)
 
-    expect((expectedItems.input.TransactItems[0].Put.Item as any).RepeatNo).toEqual(undefined)
+    expect(
+      (expectedItems.input.TransactItems[0].Put.Item as any).RepeatNo
+    ).toEqual(undefined)
     expect(mockSend).toHaveBeenCalledTimes(1)
-    expect(mockSend).toHaveBeenCalledWith(expect.objectContaining(expectedItems))
+    expect(mockSend).toHaveBeenCalledWith(
+      expect.objectContaining(expectedItems)
+    )
   })
 
   it("when input field is present in a single item request, expect DynamoDB item with RepeatNo field", async () => {
@@ -109,7 +121,8 @@ describe("Integration tests for updatePrescriptionStatus handler", () => {
     const event: APIGatewayProxyEvent = generateMockEvent(body)
     const expectedItems = generateExpectedItems()
 
-    const transactItem: any = expectedItems.input?.TransactItems?.[0]?.Put?.Item
+    const transactItem: any =
+      expectedItems.input?.TransactItems?.[0]?.Put?.Item
     transactItem.RepeatNo = 1
 
     mockTransact.mockReturnValue(expectedItems)
@@ -119,9 +132,13 @@ describe("Integration tests for updatePrescriptionStatus handler", () => {
     expect(response.statusCode).toEqual(201)
     expect(JSON.parse(response.body)).toEqual(responseSingleItem)
 
-    expect((expectedItems.input.TransactItems[0].Put.Item as any).RepeatNo).toEqual(1)
+    expect(
+      (expectedItems.input.TransactItems[0].Put.Item as any).RepeatNo
+    ).toEqual(1)
     expect(mockSend).toHaveBeenCalledTimes(1)
-    expect(mockSend).toHaveBeenCalledWith(expect.objectContaining(expectedItems))
+    expect(mockSend).toHaveBeenCalledWith(
+      expect.objectContaining(expectedItems)
+    )
   })
 
   it("when multiple items in request, expect multiple items sent to DynamoDB in a single call", async () => {
@@ -136,7 +153,9 @@ describe("Integration tests for updatePrescriptionStatus handler", () => {
     expect(JSON.parse(response.body)).toEqual(responseMultipleItems)
 
     expect(mockSend).toHaveBeenCalledTimes(1)
-    expect(mockSend).toHaveBeenCalledWith(expect.objectContaining(expectedItems))
+    expect(mockSend).toHaveBeenCalledWith(
+      expect.objectContaining(expectedItems)
+    )
   })
 
   it.each([
@@ -155,16 +174,19 @@ describe("Integration tests for updatePrescriptionStatus handler", () => {
       httpResponseCode: 200,
       scenarioDescription: "200 status code if there are no entries to process"
     }
-  ])("should return $scenarioDescription", async ({example, httpResponseCode}) => {
-    const event: APIGatewayProxyEvent = generateMockEvent(example)
+  ])(
+    "should return $scenarioDescription",
+    async ({example, httpResponseCode}) => {
+      const event: APIGatewayProxyEvent = generateMockEvent(example)
 
-    const response: APIGatewayProxyResult = await handler(event, {})
+      const response: APIGatewayProxyResult = await handler(event, {})
 
-    const responseBody = JSON.parse(response.body)
-    expect(response.statusCode).toBe(httpResponseCode)
-    expect(responseBody).toHaveProperty("resourceType", "Bundle")
-    expect(responseBody).toHaveProperty("type", "transaction-response")
-  })
+      const responseBody = JSON.parse(response.body)
+      expect(response.statusCode).toBe(httpResponseCode)
+      expect(responseBody).toHaveProperty("resourceType", "Bundle")
+      expect(responseBody).toHaveProperty("type", "transaction-response")
+    }
+  )
 
   it("when missing fields, expect 400 status code and message indicating missing fields", async () => {
     const event: APIGatewayProxyEvent = generateMockEvent(requestMissingFields)
@@ -173,7 +195,12 @@ describe("Integration tests for updatePrescriptionStatus handler", () => {
 
     expect(response.statusCode).toBe(400)
     expect(JSON.parse(response.body)).toEqual(
-      bundleWrap([badRequest("Missing required field(s) - PharmacyODSCode, TaskID.", FULL_URL_0)])
+      bundleWrap([
+        badRequest(
+          "Missing required field(s) - PharmacyODSCode, TaskID.",
+          FULL_URL_0
+        )
+      ])
     )
   })
 
@@ -209,7 +236,10 @@ describe("Integration tests for updatePrescriptionStatus handler", () => {
     expect(response.statusCode).toEqual(400)
     expect(JSON.parse(response.body)).toEqual(
       bundleWrap([
-        badRequest("Missing required field(s) - PharmacyODSCode, TaskID.", FULL_URL_0),
+        badRequest(
+          "Missing required field(s) - PharmacyODSCode, TaskID.",
+          FULL_URL_0
+        ),
         badRequest("Missing required field(s) - PharmacyODSCode.", FULL_URL_1)
       ])
     )
@@ -223,7 +253,9 @@ describe("Integration tests for updatePrescriptionStatus handler", () => {
     const response: APIGatewayProxyResult = await handler(event, {})
 
     expect(response.statusCode).toEqual(400)
-    expect(JSON.parse(response.body)).toEqual(bundleWrap([badRequest("Missing or empty x-request-id header.")]))
+    expect(JSON.parse(response.body)).toEqual(
+      bundleWrap([badRequest("Missing or empty x-request-id header.")])
+    )
   })
 
   it("when x-request-id header is missing, expect 400 status code and relevant error message", async () => {
@@ -234,7 +266,9 @@ describe("Integration tests for updatePrescriptionStatus handler", () => {
     const response: APIGatewayProxyResult = await handler(event, {})
 
     expect(response.statusCode).toEqual(400)
-    expect(JSON.parse(response.body)).toEqual(bundleWrap([badRequest("Missing or empty x-request-id header.")]))
+    expect(JSON.parse(response.body)).toEqual(
+      bundleWrap([badRequest("Missing or empty x-request-id header.")])
+    )
   })
 
   it("when x-request-id header is mixed case, expect it to work", async () => {
@@ -257,7 +291,8 @@ describe("Integration tests for updatePrescriptionStatus handler", () => {
 
     mockSend.mockRejectedValue(
       new TransactionCanceledException({
-        message: "DynamoDB transaction cancelled due to conditional check failure.",
+        message:
+          "DynamoDB transaction cancelled due to conditional check failure.",
         $metadata: {},
         CancellationReasons: [
           {
@@ -277,12 +312,16 @@ describe("Integration tests for updatePrescriptionStatus handler", () => {
     expect(response.statusCode).toBe(409)
     expect(responseBody.entry).toHaveLength(2)
 
-    expect(responseBody.entry[0].fullUrl).toEqual("urn:uuid:4d70678c-81e4-4ff4-8c67-17596fd0aa46")
+    expect(responseBody.entry[0].fullUrl).toEqual(
+      "urn:uuid:4d70678c-81e4-4ff4-8c67-17596fd0aa46"
+    )
     expect(responseBody.entry[0].response.status).toEqual("200 OK")
     expect(responseBody.entry[0].response.outcome.issue[0].diagnostics).toEqual(
       "Data not committed due to issues in other entries."
     )
-    expect(responseBody.entry[1].response.location).toEqual("Task/d70678c-81e4-6665-8c67-17596fd0aa87")
+    expect(responseBody.entry[1].response.location).toEqual(
+      "Task/d70678c-81e4-6665-8c67-17596fd0aa87"
+    )
     expect(responseBody.entry[1].response.status).toEqual("409 Conflict")
     expect(responseBody.entry[1].response.outcome.issue[0].diagnostics).toEqual(
       "Request contains a task id and prescription id identical to a record already in the data store."
@@ -291,11 +330,14 @@ describe("Integration tests for updatePrescriptionStatus handler", () => {
   })
 
   it("when duplicates are introduced without any other entry, expect only 409 status with a message", async () => {
-    const mockEvent: APIGatewayProxyEvent = generateMockEvent(requestDuplicateItems)
+    const mockEvent: APIGatewayProxyEvent = generateMockEvent(
+      requestDuplicateItems
+    )
 
     mockSend.mockRejectedValue(
       new TransactionCanceledException({
-        message: "DynamoDB transaction cancelled due to conditional check failure.",
+        message:
+          "DynamoDB transaction cancelled due to conditional check failure.",
         $metadata: {},
         CancellationReasons: [
           {
@@ -315,7 +357,9 @@ describe("Integration tests for updatePrescriptionStatus handler", () => {
     expect(response.statusCode).toBe(409)
     expect(responseBody.entry).toHaveLength(1)
 
-    expect(responseBody.entry[0].response.location).toEqual("Task/d70678c-81e4-6665-8c67-17596fd0aa87")
+    expect(responseBody.entry[0].response.location).toEqual(
+      "Task/d70678c-81e4-6665-8c67-17596fd0aa87"
+    )
     expect(responseBody.entry[0].response.status).toEqual("409 Conflict")
     expect(responseBody.entry[0].response.outcome.issue[0].diagnostics).toEqual(
       "Request contains a task id and prescription id identical to a record already in the data store."
