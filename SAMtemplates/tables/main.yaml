@@ -17,6 +17,43 @@ Conditions:
     - !Ref EnableDynamoDBAutoScaling
 
 Resources:
+  PrescriptionStatusUpdatesKMSKey:
+    Type: AWS::KMS::Key
+    Properties:
+      EnableKeyRotation: true
+      KeyPolicy:
+        Version: 2012-10-17
+        Id: key-s3
+        Statement:
+          - Sid: Enable IAM User Permissions
+            Effect: Allow
+            Principal:
+              AWS: !Sub "arn:aws:iam::${AWS::AccountId}:root"
+            Action:
+              - kms:*
+            Resource: "*"
+
+  PrescriptionStatusUpdatesKMSKeyAlias:
+    Type: AWS::KMS::Alias
+    Properties:
+      AliasName: !Sub alias/${StackName}-PrescriptionStatusUpdatesKMSKeyAlias
+      TargetKeyId: !Ref PrescriptionStatusUpdatesKMSKey
+
+  UsePrescriptionStatusUpdatesKMSKeyPolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action:
+              - kms:DescribeKey
+              - kms:GenerateDataKey*
+              - kms:Encrypt
+              - kms:ReEncrypt*
+              - kms:Decrypt
+            Resource: !GetAtt PrescriptionStatusUpdatesKMSKey.Arn
+
   PrescriptionStatusUpdatesTable:
     Type: AWS::DynamoDB::Table
     Properties:
@@ -46,6 +83,10 @@ Resources:
         - ReadCapacityUnits: 1
           WriteCapacityUnits: 1
         - !Ref "AWS::NoValue"
+      SSESpecification:
+        KMSMasterKeyId: !Ref PrescriptionStatusUpdatesKMSKey
+        SSEEnabled: true
+        SSEType: KMS
       GlobalSecondaryIndexes:
         - IndexName: PharmacyODSCodePrescriptionIDIndex
           KeySchema:
@@ -95,7 +136,8 @@ Resources:
         Version: "2012-10-17"
         Statement:
           - Effect: Allow
-            Principal: {"Service": ["dynamodb.application-autoscaling.amazonaws.com"]}
+            Principal:
+              { "Service": ["dynamodb.application-autoscaling.amazonaws.com"] }
             Action: ["sts:AssumeRole"]
       Path: "/"
       Policies:
@@ -262,3 +304,9 @@ Outputs:
   PrescriptionStatusUpdatesTableArn:
     Description: PrescriptionStatusUpdates table arn
     Value: !GetAtt PrescriptionStatusUpdatesTable.Arn
+
+  UsePrescriptionStatusUpdatesKMSKeyPolicyArn:
+    Description: Use kms key policy arn
+    Value: !GetAtt UsePrescriptionStatusUpdatesKMSKeyPolicy.PolicyArn
+    Export:
+      Name: !Sub ${StackName}:tables:UsePrescriptionStatusUpdatesKMSKeyPolicyArn
