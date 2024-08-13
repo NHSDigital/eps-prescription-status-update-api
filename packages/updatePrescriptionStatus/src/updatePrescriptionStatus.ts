@@ -20,9 +20,19 @@ import {
   timeoutResponse
 } from "./utils/responses"
 import {TransactionCanceledException} from "@aws-sdk/client-dynamodb"
+import {
+  InterceptionResult,
+  testPrescription1Intercept,
+  testPrescription2Intercept
+} from "./utils/testPrescriptionIntercept"
 
-const LAMBDA_TIMEOUT_MS = 9500
-const logger = new Logger({serviceName: "updatePrescriptionStatus"})
+export const LAMBDA_TIMEOUT_MS = 9500
+export const logger = new Logger({serviceName: "updatePrescriptionStatus"})
+
+// AEA-4317 - Env vars for INT test prescriptions
+const INT_ENVIRONMENT = process.env.ENVIRONMENT === "INT"
+export const TEST_PRESCRIPTION_1 = process.env.TEST_PRESCRIPTION_1 || ""
+export const TEST_PRESCRIPTION_2 = process.env.TEST_PRESCRIPTION_2 || ""
 
 export interface DataItem {
   LastModified: string
@@ -76,6 +86,27 @@ const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPro
 
   const dataItems = buildDataItems(requestEntries, xRequestID, applicationName)
 
+  // AEA-4317 - Intercept INT test prescriptions
+  let testPrescription1Forced201 = false
+  let testPrescriptionForcedError = false
+  if (INT_ENVIRONMENT) {
+    let interceptionResponse: InterceptionResult = {}
+    const prescriptionIDs = dataItems.map((item) => item.PrescriptionID)
+
+    const isTestPrescription1 = prescriptionIDs.includes(TEST_PRESCRIPTION_1)
+    if (isTestPrescription1) {
+      interceptionResponse = await testPrescription1Intercept(logger)
+    }
+
+    const isTestPrescription2 = prescriptionIDs.includes(TEST_PRESCRIPTION_2)
+    if (isTestPrescription2) {
+      interceptionResponse = await testPrescription2Intercept(logger)
+    }
+
+    testPrescription1Forced201 = !!interceptionResponse.testPrescription1Forced201
+    testPrescriptionForcedError = !!interceptionResponse.testPrescriptionForcedError
+  }
+
   try {
     const persistSuccess = persistDataItems(dataItems, logger)
     const persistResponse = await jobWithTimeout(LAMBDA_TIMEOUT_MS, persistSuccess)
@@ -95,11 +126,25 @@ const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPro
     logger.info("Event processed successfully.")
   } catch (e) {
     if (e instanceof TransactionCanceledException) {
-      handleTransactionCancelledException(e, responseEntries)
+      // AEA-4317 - Forcing 201 response for INT test prescription 1
+      if (INT_ENVIRONMENT && testPrescription1Forced201) {
+        logger.info("Forcing 201 response for INT test prescription 1")
+        responseEntries = createSuccessResponseEntries(requestEntries)
+        return response(201, responseEntries)
+      }
 
+      handleTransactionCancelledException(e, responseEntries)
       return response(409, responseEntries)
     }
   }
+
+  // AEA-4317 - Forcing error for INT test prescription
+  if (INT_ENVIRONMENT && testPrescriptionForcedError) {
+    logger.info("Forcing error for INT test prescription")
+    responseEntries = [serverError()]
+    return response(500, responseEntries)
+  }
+
   return response(201, responseEntries)
 }
 
