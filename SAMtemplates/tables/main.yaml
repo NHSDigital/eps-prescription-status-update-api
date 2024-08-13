@@ -139,6 +139,35 @@ Resources:
         TableName: !Ref PrescriptionStatusUpdatesTable
         TableArn: !GetAtt PrescriptionStatusUpdatesTable.Arn
 
+  DynamoDbScalingRolePolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      Roles:
+        - Ref: DynamoDbScalingRole
+      PolicyDocument: !Sub |
+        {
+            "Version": "2012-10-17",
+            "Statement": [
+                {
+                    "Effect": "Allow",
+                    "Action": [
+                        "dynamodb:DescribeTable",
+                        "dynamodb:UpdateTable"
+                    ],
+                    "Resource": "${PrescriptionStatusUpdatesTable.Arn}"
+                },
+                {
+                    "Effect": "Allow",
+                    "Action": [
+                        "cloudwatch:PutMetricAlarm",
+                        "cloudwatch:DescribeAlarms",
+                        "cloudwatch:DeleteAlarms"
+                    ],
+                    "Resource": "*"
+                }
+            ]
+        }
+
   DynamoDbScalingRole:
     Condition: EnableDynamoDBAutoScalingCondition
     Type: AWS::IAM::Role
@@ -151,31 +180,6 @@ Resources:
               { "Service": ["dynamodb.application-autoscaling.amazonaws.com"] }
             Action: ["sts:AssumeRole"]
       Path: "/"
-      Policies:
-        - PolicyName: DynamoDBScaling
-          PolicyDocument: !Sub |
-            {
-                "Version": "2012-10-17",
-                "Statement": [
-                    {
-                        "Effect": "Allow",
-                        "Action": [
-                            "dynamodb:DescribeTable",
-                            "dynamodb:UpdateTable"
-                        ],
-                        "Resource": "${PrescriptionStatusUpdatesTable.Arn}"
-                    },
-                    {
-                        "Effect": "Allow",
-                        "Action": [
-                            "cloudwatch:PutMetricAlarm",
-                            "cloudwatch:DescribeAlarms",
-                            "cloudwatch:DeleteAlarms"
-                        ],
-                        "Resource": "*"
-                    }
-                ]
-            }
 
   PrescriptionStatusUpdatesTableWriteScalingTarget:
     Type: AWS::ApplicationAutoScaling::ScalableTarget
