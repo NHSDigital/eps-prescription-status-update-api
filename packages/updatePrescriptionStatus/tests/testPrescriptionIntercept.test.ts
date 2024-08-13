@@ -17,7 +17,7 @@ import responseSingleItem from "../../specification/examples/response-single-ite
 import {TransactionCanceledException} from "@aws-sdk/client-dynamodb"
 
 const {mockSend, mockTransact, mockGetItem} = mockDynamoDBClient()
-process.env.ENVIRONMENT = "INT"
+process.env.ENVIRONMENT = "int"
 process.env.TEST_PRESCRIPTION_1 = TASK_VALUES[0].prescriptionID
 process.env.TEST_PRESCRIPTION_2 = TASK_VALUES[1].prescriptionID
 

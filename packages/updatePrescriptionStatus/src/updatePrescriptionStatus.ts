@@ -32,7 +32,7 @@ export const TTL_DELTA = 60 * 60 * 24 * 365 * 2 // Keep records for 2 years
 export const logger = new Logger({serviceName: "updatePrescriptionStatus"})
 
 // AEA-4317 - Env vars for INT test prescriptions
-const INT_ENVIRONMENT = process.env.ENVIRONMENT === "INT"
+const INT_ENVIRONMENT = process.env.ENVIRONMENT === "int"
 export const TEST_PRESCRIPTION_1 = process.env.TEST_PRESCRIPTION_1 || ""
 export const TEST_PRESCRIPTION_2 = process.env.TEST_PRESCRIPTION_2 || ""
 

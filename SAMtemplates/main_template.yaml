@@ -71,6 +71,9 @@ Parameters:
   DeployCheckPrescriptionStatusUpdate:
     Type: String
 
+  Environment:
+    Type: String
+
 Resources:
   Tables:
     Type: AWS::Serverless::Application
@@ -115,6 +118,7 @@ Resources:
         VersionNumber: !Ref VersionNumber
         CommitId: !Ref CommitId
         DeployCheckPrescriptionStatusUpdate: !Ref DeployCheckPrescriptionStatusUpdate
+        Environment: !Ref Environment
 
   StateMachines:
     Type: AWS::Serverless::Application
