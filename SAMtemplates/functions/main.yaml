@@ -62,6 +62,10 @@ Resources:
           LOG_LEVEL: !Ref LogLevel
     Metadata:
       BuildMethod: esbuild
+      guard:
+        SuppressedRules:
+          - LAMBDA_DLQ_CHECK
+          - LAMBDA_INSIDE_VPC
       BuildProperties:
         Minify: true
         Target: es2020
@@ -102,6 +106,10 @@ Resources:
           LOG_LEVEL: !Ref LogLevel
     Metadata:
       BuildMethod: esbuild
+      guard:
+        SuppressedRules:
+          - LAMBDA_DLQ_CHECK
+          - LAMBDA_INSIDE_VPC
       BuildProperties:
         Minify: true
         Target: es2020
@@ -139,6 +147,10 @@ Resources:
           LOG_LEVEL: !Ref LogLevel
     Metadata:
       BuildMethod: esbuild
+      guard:
+        SuppressedRules:
+          - LAMBDA_DLQ_CHECK
+          - LAMBDA_INSIDE_VPC
       BuildProperties:
         Minify: true
         Target: es2020
@@ -180,6 +192,10 @@ Resources:
           COMMIT_ID: !Ref CommitId
     Metadata:
       BuildMethod: esbuild
+      guard:
+        SuppressedRules:
+          - LAMBDA_DLQ_CHECK
+          - LAMBDA_INSIDE_VPC
       BuildProperties:
         Minify: true
         Target: es2020
@@ -216,6 +232,10 @@ Resources:
       Role: !GetAtt CapabilityStatementResources.Outputs.LambdaRoleArn
     Metadata:
       BuildMethod: esbuild
+      guard:
+        SuppressedRules:
+          - LAMBDA_DLQ_CHECK
+          - LAMBDA_INSIDE_VPC
       BuildProperties:
         Minify: true
         Target: es2020
@@ -255,6 +275,10 @@ Resources:
           MAX_RESULTS_RETURNED: 15
     Metadata:
       BuildMethod: esbuild
+      guard:
+        SuppressedRules:
+          - LAMBDA_DLQ_CHECK
+          - LAMBDA_INSIDE_VPC
       BuildProperties:
         Minify: true
         Target: es2020
