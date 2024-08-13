@@ -39,8 +39,9 @@ const middyErrorHandler = new MiddyErrorHandler(errorResponse)
  *
  */
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
+const lambdaHandler = async (
+  event: APIGatewayProxyEvent
+): Promise<APIGatewayProxyResult> => {
   // there are deliberately no try..catch blocks in this as any errors are caught by custom middy error handler
   // and an error response is sent
 
@@ -57,7 +58,8 @@ const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPro
     nhsNumber: event.queryStringParameters?.nhsnumber,
     showAllSuppliers: event.headers["show-all-suppliers"],
     overrideApplicationName: event.headers["x-override-application-name"],
-    exclusiveStartKeyPrescriptionID: event.headers["exclusivestartkey-prescriptionid"],
+    exclusiveStartKeyPrescriptionID:
+      event.headers["exclusivestartkey-prescriptionid"],
     exclusiveStartKeyTaskID: event.headers["exclusivestartkey-taskid"]
   }
 

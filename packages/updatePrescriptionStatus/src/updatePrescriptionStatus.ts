@@ -27,6 +27,8 @@ import {
 } from "./utils/testPrescriptionIntercept"
 
 export const LAMBDA_TIMEOUT_MS = 9500
+// this is length of time from now when records in dynamodb will automatically be expired
+export const TTL_DELTA = 60 * 60 * 24 * 365 * 2 // Keep records for 2 years
 export const logger = new Logger({serviceName: "updatePrescriptionStatus"})
 
 // AEA-4317 - Env vars for INT test prescriptions
@@ -46,6 +48,7 @@ export interface DataItem {
   TaskID: string
   TerminalStatus: string
   ApplicationName: string
+  ExpiryTime: number
 }
 
 const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
@@ -252,7 +255,8 @@ export function buildDataItems(
       Status: task.businessStatus!.coding![0].code!,
       TaskID: task.id!,
       TerminalStatus: task.status,
-      ApplicationName: applicationName
+      ApplicationName: applicationName,
+      ExpiryTime: (Math.floor(+new Date() / 1000) + TTL_DELTA)
     }
 
     dataItems.push(dataItem)

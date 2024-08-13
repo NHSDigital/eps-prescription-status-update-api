@@ -1,21 +1,21 @@
 {
-    "name": "sandbox",
-    "version": "1.0.0",
-    "description": "Sandbox",
-    "main": "sandbox.js",
-    "author": "NHS Digital",
-    "license": "MIT",
-    "scripts": {
-        "unit": "POWERTOOLS_DEV=true NODE_OPTIONS=--experimental-vm-modules jest --no-cache --coverage",
-        "lint": "eslint . --ext .ts --max-warnings 0 --fix",
-        "compile": "tsc",
-        "test": "npm run compile && npm run unit",
-        "check-licenses": "license-checker --failOn GPL --failOn LGPL --start ../.."
-    },
-    "dependencies": {
-        "@aws-lambda-powertools/logger": "^2.6.0",
-        "@middy/core": "^5.4.5",
-        "@middy/input-output-logger": "^5.4.5",
-        "@nhs/fhir-middy-error-handler": "^2.0.13"
-    }
+  "name": "sandbox",
+  "version": "1.0.0",
+  "description": "Sandbox",
+  "main": "sandbox.js",
+  "author": "NHS Digital",
+  "license": "MIT",
+  "scripts": {
+    "unit": "POWERTOOLS_DEV=true NODE_OPTIONS=--experimental-vm-modules jest --no-cache --coverage",
+    "lint": "eslint  --max-warnings 0 --fix --config ../../eslint.config.mjs .",
+    "compile": "tsc",
+    "test": "npm run compile && npm run unit",
+    "check-licenses": "license-checker --failOn GPL --failOn LGPL --start ../.."
+  },
+  "dependencies": {
+    "@aws-lambda-powertools/logger": "^2.7.0",
+    "@middy/core": "^5.4.6",
+    "@middy/input-output-logger": "^5.4.6",
+    "@nhs/fhir-middy-error-handler": "^2.0.13"
+  }
 }

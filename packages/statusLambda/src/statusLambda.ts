@@ -19,7 +19,6 @@ const logger = new Logger({serviceName: "status"})
  *
  */
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
   logger.appendKeys({
     "x-request-id": event.headers["x-request-id"],

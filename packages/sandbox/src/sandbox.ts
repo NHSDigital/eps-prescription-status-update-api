@@ -8,8 +8,6 @@ import successData from "../../specification/examples/response-multiple-items.js
 
 const logger = new Logger({serviceName: "sandbox"})
 
-/* eslint-disable  max-len */
-
 /**
  *
  * Return doc: https://docs.aws.amazon.com/apigateway/latest/developerguide/set-up-lambda-proxy-integrations.html

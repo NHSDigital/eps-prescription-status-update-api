@@ -2,14 +2,18 @@
 import {MiddlewareObj} from "@middy/core"
 import {Logger} from "@aws-lambda-powertools/logger"
 
-type HandlerLogger = Console | Logger
+// eslint-disable-next-line no-undef
+type HandlerLogger = Console | Logger;
 type LoggerAndLevel = {
-  logger: HandlerLogger
-  level?: string
-}
+  logger: HandlerLogger;
+  level?: string;
+};
 
 // custom middy error handler to handle validation errors
-function validationErrorHandler({logger = console, level = "error"}: LoggerAndLevel) {
+function validationErrorHandler({
+  logger = console,
+  level = "error"
+}: LoggerAndLevel) {
   return {
     onError: async (handler) => {
       const setErrorResponse = (body: any) => {
@@ -37,9 +41,9 @@ function validationErrorHandler({logger = console, level = "error"}: LoggerAndLe
 }
 
 type ValidationError = {
-  path: string
-  error: string
-}
+  path: string;
+  error: string;
+};
 function parseError(error: any): ValidationError {
   return {
     path: error.instancePath,
