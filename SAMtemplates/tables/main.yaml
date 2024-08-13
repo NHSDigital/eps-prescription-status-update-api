@@ -95,6 +95,9 @@ Resources:
         KMSMasterKeyId: !Ref PrescriptionStatusUpdatesKMSKey
         SSEEnabled: true
         SSEType: KMS
+      TimeToLiveSpecification:
+        AttributeName: ExpiryTime
+        Enabled: true
       GlobalSecondaryIndexes:
         - IndexName: PharmacyODSCodePrescriptionIDIndex
           KeySchema:
