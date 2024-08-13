@@ -142,8 +142,6 @@ Resources:
   DynamoDbScalingRolePolicy:
     Type: AWS::IAM::ManagedPolicy
     Properties:
-      Roles:
-        - Ref: DynamoDbScalingRole
       PolicyDocument: !Sub |
         {
             "Version": "2012-10-17",
@@ -180,6 +178,8 @@ Resources:
               { "Service": ["dynamodb.application-autoscaling.amazonaws.com"] }
             Action: ["sts:AssumeRole"]
       Path: "/"
+      ManagedPolicyArns:
+        - !Ref DynamoDbScalingRolePolicy
 
   PrescriptionStatusUpdatesTableWriteScalingTarget:
     Type: AWS::ApplicationAutoScaling::ScalableTarget
