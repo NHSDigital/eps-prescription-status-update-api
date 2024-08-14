@@ -92,7 +92,7 @@ paths:
       summary: Format 1 update prescription status
       description: |
         ## Overview
-        Status updates to be provided on prescription items to allow users of the NHS App and third-party app consumers to track the progress of their prescriptions and when ready to collect.
+        Status updates will be provided on prescription items to allow users of the NHS App and third-party app consumers to track the progress of their prescriptions and when ready to collect.
       parameters:
         - $ref: "#/components/parameters/ApiKey"
       requestBody:
@@ -125,10 +125,6 @@ paths:
             | 504         | `timeout`       | The server has timed out while processing the request sent by the client.                                   |
       security:
         - app-level0: []
-components:
-  securitySchemes:
-    app-level0:
-      $ref: https://proxygen.prod.api.platform.nhs.uk/components/securitySchemes/app-level0
   parameters:
     ApiKey:
       in: header
