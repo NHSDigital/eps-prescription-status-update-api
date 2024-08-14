@@ -114,8 +114,31 @@ paths:
             | 200         | `success`       | The request was successfully processed.                                                                     |
             | 201         | `success`       | A new resource was successfully created. No issues detected during validation.                              |
             | 202         | `informational` | The request was accepted, but no change occurred due to a duplicate update.                                 |
+          content:
+            application/fhir+json:
+              schema:
+                $ref: "#/components/schemas/ResponseBundle"
+              examples:
+                single-item:
+                  description:
+                    A successful response to a UpdatePrescriptionStatus request,
+                    contains a single item.
+                  value:
+                    $ref: examples/response-single-item.json
+                multiple-items:
+                  description:
+                    A successful response to a UpdatePrescriptionStatus request,
+                    contains multiple items.
+                  value:
+                    $ref: examples/response-multiple-items.json
         "4XX":
           description: An error occurred.
+          content:
+            application/fhir+json:
+              schema:
+                $ref: "#/components/schemas/OperationOutcome"
+              example:
+                $ref: examples/error-invalid-prescriptionid.json
         "5XX":
           description: |
             An error occurred due to a server-side issue. Below are the possible status codes within the 5XX range that may be returned:
@@ -139,6 +162,11 @@ components:
       schema:
         type: string
         example: 11C46F5F-CDEF-4865-94B2-0EE0EDCC26DA
+  schemas:
+    ResponseBundle:
+      $ref: schemas/components/ResponseBundle.yaml
+    OperationOutcome:
+      $ref: schemas/resources/OperationOutcome.yaml
 security:
   - app-level0: []
 x-nhsd-apim:
