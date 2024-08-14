@@ -135,7 +135,7 @@ const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPro
   } catch (e) {
     if (e instanceof TransactionCanceledException) {
       // AEA-4317 - Forcing 201 response for INT test prescription 1
-      if (INT_ENVIRONMENT && testPrescription1Forced201) {
+      if (testPrescription1Forced201) {
         logger.info("Forcing 201 response for INT test prescription 1")
         responseEntries = createSuccessResponseEntries(requestEntries)
         return response(201, responseEntries)
@@ -147,7 +147,7 @@ const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPro
   }
 
   // AEA-4317 - Forcing error for INT test prescription
-  if (INT_ENVIRONMENT && testPrescriptionForcedError) {
+  if (testPrescriptionForcedError) {
     logger.info("Forcing error for INT test prescription")
     responseEntries = [serverError()]
     return response(500, responseEntries)
