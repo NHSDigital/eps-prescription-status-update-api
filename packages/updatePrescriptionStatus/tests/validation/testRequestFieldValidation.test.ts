@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 
 import {expect, describe, it} from "@jest/globals"
 import {BundleEntry, Task} from "fhir/r4"

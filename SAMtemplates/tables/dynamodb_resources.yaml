@@ -1,4 +1,4 @@
-AWSTemplateFormatVersion: '2010-09-09'
+AWSTemplateFormatVersion: "2010-09-09"
 Transform: AWS::Serverless-2016-10-31
 Description: |
   Related resources for a DynamoDB table
@@ -7,11 +7,11 @@ Parameters:
   StackName:
     Type: String
     Default: none
-  
+
   TableName:
     Type: String
     Default: none
-  
+
   TableArn:
     Type: String
     Default: none
@@ -34,7 +34,7 @@ Resources:
             Resource:
               - !Ref TableArn
               - !Sub ${TableArn}/index/*
-  
+
   TableWriteManagedPolicy:
     Type: AWS::IAM::ManagedPolicy
     Properties:
@@ -57,17 +57,17 @@ Outputs:
     Value: !GetAtt TableReadManagedPolicy.PolicyArn
     Export:
       Name: !Sub ${StackName}:tables:${TableName}:TableReadPolicyArn
-  
+
   TableReadPolicyId:
     Description: Table read policy id
     Value: !GetAtt TableReadManagedPolicy.PolicyId
-  
+
   TableWritePolicyArn:
     Description: Table write policy arn
     Value: !GetAtt TableWriteManagedPolicy.PolicyArn
     Export:
       Name: !Sub ${StackName}:tables:${TableName}:TableWritePolicyArn
-  
+
   TableWritePolicyId:
     Description: Table write policy id
     Value: !GetAtt TableWriteManagedPolicy.PolicyId
