@@ -42,7 +42,10 @@ describe("testPrescription1Intercept", () => {
 
     expect(mockGetItem).toHaveBeenCalledTimes(1)
     expect(mockGetItem).toHaveBeenCalledWith({
-      Key: {PrescriptionID: {S: TASK_VALUES[0].prescriptionID}},
+      Key: {
+        PrescriptionID: {S: TASK_VALUES[0].prescriptionID},
+        TaskID: {S: TASK_VALUES[0].id}
+      },
       TableName: "PrescriptionStatusUpdates"
     })
 
@@ -93,7 +96,10 @@ describe("testPrescription1Intercept", () => {
 
     expect(mockGetItem).toHaveBeenCalledTimes(1)
     expect(mockGetItem).toHaveBeenCalledWith({
-      Key: {PrescriptionID: {S: TASK_VALUES[0].prescriptionID}},
+      Key: {
+        PrescriptionID: {S: TASK_VALUES[0].prescriptionID},
+        TaskID: {S: TASK_VALUES[0].id}
+      },
       TableName: "PrescriptionStatusUpdates"
     })
   })
@@ -119,7 +125,10 @@ describe("testPrescription2Intercept", () => {
 
     expect(mockGetItem).toHaveBeenCalledTimes(1)
     expect(mockGetItem).toHaveBeenCalledWith({
-      Key: {PrescriptionID: {S: TASK_VALUES[1].prescriptionID}},
+      Key: {
+        PrescriptionID: {S: TASK_VALUES[1].prescriptionID},
+        TaskID: {S: TASK_VALUES[1].id}
+      },
       TableName: "PrescriptionStatusUpdates"
     })
 
@@ -174,7 +183,10 @@ describe("testPrescription2Intercept", () => {
 
     expect(mockGetItem).toHaveBeenCalledTimes(1)
     expect(mockGetItem).toHaveBeenCalledWith({
-      Key: {PrescriptionID: {S: TASK_VALUES[1].prescriptionID}},
+      Key: {
+        PrescriptionID: {S: TASK_VALUES[1].prescriptionID},
+        TaskID: {S: TASK_VALUES[1].id}
+      },
       TableName: "PrescriptionStatusUpdates"
     })
   })

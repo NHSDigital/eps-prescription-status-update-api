@@ -47,12 +47,17 @@ export async function persistDataItems(dataItems: Array<DataItem>, logger: Logge
   }
 }
 
-export async function checkPrescriptionRecordExistence(prescriptionID: string, logger: Logger): Promise<boolean> {
+export async function checkPrescriptionRecordExistence(
+  prescriptionID: string,
+  taskID: string,
+  logger: Logger
+): Promise<boolean> {
   logger.info("Checking if prescription record exists in DynamoDB.", {prescriptionID})
   const query: GetItemCommandInput = {
     TableName: tableName,
     Key: {
-      PrescriptionID: {S: prescriptionID}
+      PrescriptionID: {S: prescriptionID},
+      TaskID: {S: taskID}
     }
   }
   try {
