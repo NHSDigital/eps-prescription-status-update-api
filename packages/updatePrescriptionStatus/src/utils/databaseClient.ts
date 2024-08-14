@@ -52,7 +52,7 @@ export async function checkPrescriptionRecordExistence(
   taskID: string,
   logger: Logger
 ): Promise<boolean> {
-  logger.info("Checking if prescription record exists in DynamoDB.", {prescriptionID})
+  logger.info("Checking if prescription record exists in DynamoDB.", {prescriptionID}, {taskID})
   const query: GetItemCommandInput = {
     TableName: tableName,
     Key: {
