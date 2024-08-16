@@ -43,6 +43,9 @@ Parameters:
   DeployCheckPrescriptionStatusUpdate:
     Type: String
 
+  Environment:
+    Type: String
+
 Conditions:
   ShouldDeployCheckPrescriptionStatusUpdate: !Equals
     - true
@@ -60,6 +63,9 @@ Resources:
         Variables:
           TABLE_NAME: !Ref PrescriptionStatusUpdatesTableName
           LOG_LEVEL: !Ref LogLevel
+          ENVIRONMENT: !Ref Environment
+          TEST_PRESCRIPTION_1: "None"
+          TEST_PRESCRIPTION_2: "None"
     Metadata:
       BuildMethod: esbuild
       BuildProperties:
@@ -83,6 +89,7 @@ Resources:
         AdditionalPolicies: !Join
           - ","
           - - Fn::ImportValue: !Sub ${StackName}:tables:${PrescriptionStatusUpdatesTableName}:TableWritePolicyArn
+            - Fn::ImportValue: !Sub ${StackName}:tables:${PrescriptionStatusUpdatesTableName}:TableReadPolicyArn
             - Fn::ImportValue: !Sub ${StackName}:tables:UsePrescriptionStatusUpdatesKMSKeyPolicyArn
         LogRetentionInDays: !Ref LogRetentionInDays
         CloudWatchKMSKeyId: !ImportValue account-resources:CloudwatchLogsKmsKeyArn
