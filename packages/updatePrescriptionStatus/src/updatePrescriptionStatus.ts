@@ -246,7 +246,7 @@ type ValidationError = {
 }
 
 function isValidationErrorCause(cause: any): cause is ValidationErrorCause {
-  return Array.isArray(cause?.data)
+  return cause.package === '@middy/validator' && Array.isArray(cause?.data)
 }
 
 function validationErrorHandler({
