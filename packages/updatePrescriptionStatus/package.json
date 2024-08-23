@@ -21,7 +21,7 @@
     "@middy/core": "^5.4.6",
     "@middy/http-header-normalizer": "^5.4.6",
     "@middy/input-output-logger": "^5.4.6",
-    "@nhs/fhir-middy-error-handler": "^2.0.13"
+    "@nhs/fhir-middy-error-handler": "^2.1.0"
   },
   "devDependencies": {
     "@faker-js/faker": "^8.4.1",
