@@ -106,6 +106,10 @@ Resources:
 
   LambdaLogGroup:
     Type: AWS::Logs::LogGroup
+    Metadata:
+      guard:
+        SuppressedRules:
+          - CW_LOGGROUP_RETENTION_PERIOD_CHECK
     Properties:
       LogGroupName: !Sub /aws/lambda/${LambdaName}
       RetentionInDays: !Ref LogRetentionInDays

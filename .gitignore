@@ -25,3 +25,4 @@ _site/
 .jekyll-cache
 .jekyll-metadata
 vendor
+cfn_guard_output/
