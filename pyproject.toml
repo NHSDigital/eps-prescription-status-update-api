@@ -49,7 +49,7 @@ flake8 = "^7.1.1"
 jinja2 = "^3.1.4"
 pip-licenses = "^5.0.0"
 click = "^8.1.7"
-rich = "^13.7.1"
+rich = "^13.8.0"
 
 [build-system]
 requires = ["poetry>=0.12"]
