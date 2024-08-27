@@ -22,7 +22,8 @@ import {
   ValidationOutcome,
   validateContent,
   entryContent,
-  nhsNumberRange
+  nhsNumberRange,
+  status
 } from "../../src/validation/content"
 
 import {generateInvalidNhsNumbers, generateValidNhsNumbers} from "../utils/nhsNumber"
@@ -258,6 +259,35 @@ describe("Unit tests for validation of NHS number range", () => {
 
       expect(actual).toEqual(expected)
     }
+  })
+})
+
+describe("Unit tests for validation of status", () => {
+  it.each([
+    {
+      updateStatus: "completed",
+      expected: undefined,
+      scenarioDescription:
+        "When status is 'completed', should return undefined."
+    },
+    {
+      updateStatus: "in-progress",
+      expected: undefined,
+      scenarioDescription:
+        "When status is 'in-progress', should return undefined."
+    },
+    {
+      updateStatus: "rejected",
+      expected: "Unsupported Task.status 'rejected'.",
+      scenarioDescription:
+        "When status is unsupported, should return expected issue."
+    }
+  ])("$scenarioDescription", async ({updateStatus, expected}) => {
+    const task = {status: updateStatus}
+
+    const actual = status(task as Task)
+
+    expect(actual).toEqual(expected)
   })
 })
 
