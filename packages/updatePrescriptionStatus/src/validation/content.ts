@@ -24,6 +24,8 @@ export const PRESCRIPTION_ID_CODESYSTEM =
 export const STATUS_CODESYSTEM =
   "https://fhir.nhs.uk/CodeSystem/task-businessStatus-nppt"
 
+const VALID_STATUSES = ["completed", "in-progress"]
+
 const COMPLETED_ONLY_BUSINESS_STATUSES = [
   "collected",
   "not dispensed",
@@ -37,9 +39,11 @@ const IN_PROGRESS_ONLY_BUSINESS_STATUSES = [
 ]
 const AGNOSTIC_BUSINESS_STATUSES = ["ready to dispatch", "ready to collect"]
 
-export const BUSINESS_STATUSES = COMPLETED_ONLY_BUSINESS_STATUSES.concat(
-  IN_PROGRESS_ONLY_BUSINESS_STATUSES
-).concat(AGNOSTIC_BUSINESS_STATUSES)
+export const BUSINESS_STATUSES = [
+  ...COMPLETED_ONLY_BUSINESS_STATUSES,
+  ...IN_PROGRESS_ONLY_BUSINESS_STATUSES,
+  ...AGNOSTIC_BUSINESS_STATUSES
+]
 const VALID_COMPLETED_STATUSES = COMPLETED_ONLY_BUSINESS_STATUSES.concat(
   AGNOSTIC_BUSINESS_STATUSES
 )
@@ -163,6 +167,13 @@ export function codeSystems(task: Task): string | undefined {
   }
 }
 
+export function status(task: Task): string | undefined {
+  const status = task.status
+  if (!VALID_STATUSES.includes(status)) {
+    return `Unsupported Task.status '${status}'.`
+  }
+}
+
 export function businessStatus(task: Task): string | undefined {
   const code: string = task.businessStatus!.coding![0].code!
   if (!BUSINESS_STATUSES.includes(code.toLowerCase())) {
@@ -200,6 +211,7 @@ export function taskStatusAgainstBusinessStatus(
 
 export function taskContent(task: Task): Array<string> {
   const contentValidations: Array<TaskValidation> = [
+    status,
     businessStatus,
     lastModified,
     nhsNumber,
