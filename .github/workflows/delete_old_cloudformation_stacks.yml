@@ -35,6 +35,8 @@ jobs:
         shell: bash
         working-directory: .github/scripts
         run: ./delete_stacks.sh
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
