@@ -16,12 +16,13 @@ import {
   mockInternalDependency,
   validTask
 } from "./utils/testUtils"
-import {APIGatewayProxyEvent} from "aws-lambda"
 
 import * as content from "../src/validation/content"
 import {TransactionCanceledException} from "@aws-sdk/client-dynamodb"
+import {EventWithHeaders} from "../src/updatePrescriptionStatus"
+import {bundleEntryType} from "../src/schema/request"
 const mockValidateEntry = mockInternalDependency("../src/validation/content", content, "validateEntry")
-const {castEventBody, getXRequestID, validateEntries, handleTransactionCancelledException, buildDataItems} =
+const {getXRequestID, validateEntries, handleTransactionCancelledException, buildDataItems} =
   await import("../src/updatePrescriptionStatus")
 
 describe("Unit test getXRequestID", () => {
@@ -33,7 +34,7 @@ describe("Unit test getXRequestID", () => {
     const event: unknown = {headers: {"x-request-id": X_REQUEST_ID}}
     const responseEntries: Array<BundleEntry> = []
 
-    const result = getXRequestID(event as APIGatewayProxyEvent, responseEntries)
+    const result = getXRequestID(event as EventWithHeaders, responseEntries)
 
     expect(result).toEqual(X_REQUEST_ID)
     expect(responseEntries.length).toEqual(0)
@@ -51,48 +52,19 @@ describe("Unit test getXRequestID", () => {
   ])("$scenarioDescription", async ({event}) => {
     const responseEntries: Array<BundleEntry> = []
 
-    const result = getXRequestID(event as APIGatewayProxyEvent, responseEntries)
+    const result = getXRequestID(event as EventWithHeaders, responseEntries)
 
     expect(result).toEqual(undefined)
     expect(responseEntries.length).toEqual(1)
-    expect(responseEntries[0]).toEqual(badRequest("Missing or empty x-request-id header."))
-  })
-})
-
-describe("Unit test castEventBody", () => {
-  beforeAll(() => {
-    jest.useFakeTimers().setSystemTime(DEFAULT_DATE)
-  })
-
-  it("when body doesn't have correct resourceType and type, return undefined and a response entry", async () => {
-    const body = {resourceType: "NotBundle", type: "not_transaction"}
-    const responseEntries: Array<BundleEntry> = []
-
-    const result = castEventBody(body, responseEntries)
-
-    expect(result).toEqual(undefined)
-    expect(responseEntries.length).toEqual(1)
-    expect(responseEntries[0]).toEqual(
-      badRequest("Request body does not have resourceType of 'Bundle' and type of 'transaction'.")
-    )
-  })
-
-  it("when body has correct resourceType and type, return bundle and no response entries", async () => {
-    const body = {resourceType: "Bundle", type: "transaction"}
-    const responseEntries: Array<BundleEntry> = []
-
-    const result = castEventBody(body, responseEntries)
-
-    expect(result).toBeDefined()
-    expect(responseEntries.length).toEqual(0)
+    expect(responseEntries[0]).toEqual(badRequest(["Missing or empty x-request-id header."]))
   })
 })
 
 describe("Unit test validateEntries", () => {
   it("when a single entry is valid, returns true with a response in the response bundle", async () => {
-    mockValidateEntry.mockReturnValue({valid: true, issues: undefined})
+    mockValidateEntry.mockReturnValue({valid: true, issues: []})
 
-    const requestEntries = [{resource: {}, fullUrl: "valid"}] as Array<BundleEntry>
+    const requestEntries = [{resource: {}, fullUrl: "valid"}] as Array<bundleEntryType>
     const responseEntries: Array<BundleEntry> = []
 
     const result = validateEntries(requestEntries, responseEntries)
@@ -108,15 +80,15 @@ describe("Unit test validateEntries", () => {
   it("when one of two entries is invalid, returns false with two responses in the response bundle", async () => {
     mockValidateEntry.mockImplementation((entry: any) => {
       if (entry.fullUrl === "valid") {
-        return {valid: true, issues: undefined}
+        return {valid: true, issues: []}
       }
-      return {valid: false, issues: "issues"}
+      return {valid: false, issues: ["issues"]}
     })
 
     const requestEntries = [
       {resource: {}, fullUrl: "valid"},
       {resource: {}, fullUrl: "invalid"}
-    ] as Array<BundleEntry>
+    ] as Array<bundleEntryType>
     const responseEntries: Array<BundleEntry> = []
 
     const result = validateEntries(requestEntries, responseEntries)
@@ -217,12 +189,8 @@ describe("buildDataItems", () => {
     task.focus!.identifier!.value! = lineItemID.toLowerCase()
     task.owner!.identifier!.value! = pharmacyODSCode.toLowerCase()
     task.basedOn![0].identifier!.value! = prescriptionID.toLowerCase()
-    const requestEntry: BundleEntry = {
-      resource: task,
-      fullUrl: ""
-    }
 
-    const dataItems = buildDataItems([requestEntry], "", "")
+    const dataItems = buildDataItems([task], "", "")
 
     expect(dataItems[0].LineItemID).toEqual(lineItemID)
     expect(dataItems[0].PrescriptionID).toEqual(prescriptionID)
@@ -242,17 +210,13 @@ describe("buildDataItems", () => {
               system: "http://example.com/system",
               code: "repeat-number"
             }
-          ]
+          ],
+          text: "Repeat Number"
         }
       }
     ]
 
-    const requestEntry: BundleEntry = {
-      resource: task,
-      fullUrl: ""
-    }
-
-    const dataItems = buildDataItems([requestEntry], "", "")
+    const dataItems = buildDataItems([task], "", "")
 
     expect(dataItems[0].RepeatNo).toEqual(repeatNo)
   })

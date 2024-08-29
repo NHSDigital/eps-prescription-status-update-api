@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import {APIGatewayProxyEvent, APIGatewayProxyResult} from "aws-lambda"
+import {APIGatewayProxyResult} from "aws-lambda"
 import {Logger} from "@aws-lambda-powertools/logger"
 import {injectLambdaContext} from "@aws-lambda-powertools/logger/middleware"
 import middy, {MiddlewareObj} from "@middy/core"
@@ -8,10 +8,10 @@ import errorHandler from "@nhs/fhir-middy-error-handler"
 import httpHeaderNormalizer from "@middy/http-header-normalizer"
 import validator from "@middy/validator"
 import {transpileSchema} from "@middy/validator/transpile"
-import {Bundle, BundleEntry, Task} from "fhir/r4"
+import {BundleEntry} from "fhir/r4"
 import {persistDataItems} from "./utils/databaseClient"
 import {jobWithTimeout, hasTimedOut} from "./utils/timeoutUtils"
-import {transactionBundle, validateEntry} from "./validation/content"
+import {validateEntry} from "./validation/content"
 import {
   accepted,
   badRequest,
@@ -23,7 +23,12 @@ import {
   timeoutResponse
 } from "./utils/responses"
 import {TransactionCanceledException} from "@aws-sdk/client-dynamodb"
-import {updatePrescriptionStatusBundleSchema} from "./schema/request"
+import {
+  eventSchema,
+  bundleEntryType,
+  bundleType,
+  taskType
+} from "./schema/request"
 
 const LAMBDA_TIMEOUT_MS = 9500
 const logger = new Logger({serviceName: "updatePrescriptionStatus"})
@@ -42,7 +47,19 @@ export interface DataItem {
   ApplicationName: string
 }
 
-const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
+export type EventWithHeaders = {
+  headers: {
+    "nhsd-correlation-id"?: string
+    "nhsd-request-id"?: string
+    "x-correlation-id"?: string
+    "x-request-id"?: string
+    "apigw-request-id"?: string
+    "attribute-name"?: string
+  }
+  body: bundleType
+}
+
+const lambdaHandler = async (event: EventWithHeaders): Promise<APIGatewayProxyResult> => {
   logger.appendKeys({
     "nhsd-correlation-id": event.headers["nhsd-correlation-id"],
     "nhsd-request-id": event.headers["nhsd-request-id"],
@@ -61,13 +78,10 @@ const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPro
     "x-request-id": xRequestID
   })
 
-  const requestBody = event.body
-  const requestBundle = castEventBody(requestBody, responseEntries)
-  if (!requestBundle) {
-    return response(400, responseEntries)
-  }
+  const requestBundle = event.body
 
-  const requestEntries: Array<BundleEntry> = requestBundle.entry || []
+  const requestEntries = requestBundle.entry || []
+  const requestTasks = requestEntries.map((entry) => entry.resource)
 
   if (requestEntries.length === 0) {
     logger.info("No entries to process.")
@@ -78,7 +92,7 @@ const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPro
     return response(400, responseEntries)
   }
 
-  const dataItems = buildDataItems(requestEntries, xRequestID, applicationName)
+  const dataItems = buildDataItems(requestTasks, xRequestID, applicationName)
 
   try {
     const persistSuccess = persistDataItems(dataItems, logger)
@@ -107,51 +121,35 @@ const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPro
   return response(201, responseEntries)
 }
 
-export function getXRequestID(event: APIGatewayProxyEvent, responseEntries: Array<BundleEntry>): string | undefined {
+export function getXRequestID(event: EventWithHeaders, responseEntries: Array<BundleEntry>): string | undefined {
   const xRequestID = event.headers["x-request-id"]
   if (!xRequestID) {
     const errorMessage = "Missing or empty x-request-id header."
     logger.error(errorMessage)
-    const entry: BundleEntry = badRequest(errorMessage)
+    const entry: BundleEntry = badRequest([errorMessage])
     responseEntries.push(entry)
     return undefined
   }
   return xRequestID
 }
 
-export function castEventBody(body: any, responseEntries: Array<BundleEntry>): Bundle | undefined {
-  if (transactionBundle(body)) {
-    return body as Bundle
-  } else {
-    const errorMessage = "Request body does not have resourceType of 'Bundle' and type of 'transaction'."
-    logger.error(errorMessage)
-    const entry: BundleEntry = badRequest(errorMessage)
-    responseEntries.push(entry)
-  }
-}
-
-export function validateEntries(requestEntries: Array<BundleEntry>, responseEntries: Array<BundleEntry>): boolean {
-  logger.info("Validating entries.")
+export function validateEntries(
+  requestEntries: Array<bundleEntryType>,
+  responseEntries: Array<BundleEntry>
+): boolean {
   let valid = true
   for (const entry of requestEntries) {
-    const fullUrl = entry.fullUrl!
-    logger.info("Validating entry.", {entry: entry, id: entry.fullUrl})
-
     const validationOutcome = validateEntry(entry)
-
-    let responseEntry: BundleEntry
     if (validationOutcome.valid) {
       logger.info("Entry validated successfully.", {entry: entry, id: entry.fullUrl})
-      responseEntry = accepted(fullUrl)
+      responseEntries.push(accepted(entry.fullUrl))
     } else {
-      const errorMessage = validationOutcome.issues!
-      logger.info(`Entry failed validation. ${errorMessage}`, {entry: entry, id: entry.fullUrl})
+      const errorMessages = validationOutcome.issues
+      logger.info(`Entry failed validation. ${errorMessages.join(", ")}`, {entry: entry, id: entry.fullUrl})
       valid = false
-      responseEntry = badRequest(errorMessage, fullUrl)
+      responseEntries.push(badRequest(errorMessages, entry.fullUrl))
     }
-    responseEntries.push(responseEntry)
   }
-  logger.info("Entries validated.")
   return valid
 }
 
@@ -188,28 +186,27 @@ export function handleTransactionCancelledException(
 }
 
 export function buildDataItems(
-  requestEntries: Array<BundleEntry>,
+  requestTasks: Array<taskType>,
   xRequestID: string,
   applicationName: string
 ): Array<DataItem> {
   const dataItems: Array<DataItem> = []
 
-  for (const requestEntry of requestEntries) {
-    const task = requestEntry.resource as Task
+  for (const task of requestTasks) {
     logger.info("Building data item for task.", {task: task, id: task.id})
 
     const repeatNo = task.input?.[0]?.valueInteger
 
     const dataItem: DataItem = {
-      LastModified: task.lastModified!,
-      LineItemID: task.focus!.identifier!.value!.toUpperCase(),
-      PatientNHSNumber: task.for!.identifier!.value!,
-      PharmacyODSCode: task.owner!.identifier!.value!.toUpperCase(),
-      PrescriptionID: task.basedOn![0].identifier!.value!.toUpperCase(),
+      LastModified: task.lastModified,
+      LineItemID: task.focus.identifier.value.toUpperCase(),
+      PatientNHSNumber: task.for.identifier.value,
+      PharmacyODSCode: task.owner.identifier.value.toUpperCase(),
+      PrescriptionID: task.basedOn[0].identifier.value.toUpperCase(),
       ...(repeatNo !== undefined && {RepeatNo: repeatNo}),
       RequestID: xRequestID,
-      Status: task.businessStatus!.coding![0].code!,
-      TaskID: task.id!,
+      Status: task.businessStatus.coding[0].code,
+      TaskID: task.id,
       TerminalStatus: task.status,
       ApplicationName: applicationName
     }
@@ -246,7 +243,7 @@ type ValidationError = {
 }
 
 function isValidationErrorCause(cause: any): cause is ValidationErrorCause {
-  return cause.package === '@middy/validator' && Array.isArray(cause?.data)
+  return cause.package === "@middy/validator" && Array.isArray(cause?.data)
 }
 
 function validationErrorHandler({
@@ -261,7 +258,7 @@ function validationErrorHandler({
         return // let the default error handler deal with this
       }
 
-      const errors = error.cause.data.map((error) => `${error.message} at ${error.instancePath}`)
+      const errors = error.cause.data.map((error) => `${error.instancePath}: ${error.message}`)
 
       logger[level]("Validation errors", error)
 
@@ -277,7 +274,7 @@ function validationErrorHandler({
 
 export const handler = middy(lambdaHandler)
   .use(injectLambdaContext(logger, {clearState: true}))
-  .use(validator({eventSchema: transpileSchema(updatePrescriptionStatusBundleSchema)}))
+  .use(validator({eventSchema: transpileSchema(eventSchema)}))
   .use(validationErrorHandler({logger: logger}))
   .use(httpHeaderNormalizer())
   .use(

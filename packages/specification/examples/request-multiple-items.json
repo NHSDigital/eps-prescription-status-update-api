@@ -68,7 +68,7 @@
           "coding": [
             {
               "system": "https://fhir.nhs.uk/CodeSystem/task-businessStatus-nppt",
-              "code": "Ready to collect"
+              "code": "Ready to Collect"
             }
           ]
         },

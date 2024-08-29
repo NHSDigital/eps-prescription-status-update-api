@@ -18,7 +18,6 @@ import {
 } from "../utils/testUtils"
 import {ONE_DAY_IN_MS} from "../../src/validation/content"
 
-import requestSingleItem from "../../../specification/examples/request-dispatched.json"
 import requestMultipleItems from "../../../specification/examples/request-multiple-items.json"
 import {accepted, badRequest, bundleWrap} from "../../src/utils/responses"
 
@@ -34,7 +33,7 @@ describe("Integration tests for validation via updatePrescriptionStatus handler"
 
     const event: APIGatewayProxyEvent = generateMockEvent(body)
 
-    const expected = bundleWrap([badRequest("Invalid last modified value provided.", FULL_URL_0), accepted(FULL_URL_1)])
+    const expected = bundleWrap([badRequest(["Last modified value was more than one day in the future."], FULL_URL_0), accepted(FULL_URL_1)])
 
     const response: APIGatewayProxyResult = await handler(event, {})
 
@@ -44,30 +43,15 @@ describe("Integration tests for validation via updatePrescriptionStatus handler"
 
   it("when multiple items all have validation issues, expect 400 status code and messages indicating validation issues", async () => {
     const body: any = deepCopy(requestMultipleItems)
-    body.entry[0].resource.lastModified = new Date(DEFAULT_DATE.valueOf() + ONE_DAY_IN_MS + 1000).toISOString()
-    delete body.entry[1].fullUrl
-    delete body.entry[1].resource.basedOn
+    body.entry[0].resource.for.identifier.value = "invalidNhsNumber"
+    body.entry[1].resource.lastModified = new Date(DEFAULT_DATE.valueOf() + ONE_DAY_IN_MS + 1000).toISOString()
 
     const event: APIGatewayProxyEvent = generateMockEvent(body)
 
     const expected = bundleWrap([
-      badRequest("Invalid last modified value provided.", FULL_URL_0),
-      badRequest("Missing required field(s) - FullUrl, PrescriptionID.")
+      badRequest(["NHS number is invalid.", "NHS number is not in a known, valid range."], FULL_URL_0),
+      badRequest(["Last modified value was more than one day in the future."], FULL_URL_1)
     ])
-
-    const response: APIGatewayProxyResult = await handler(event, {})
-
-    expect(response.statusCode).toBe(400)
-    expect(JSON.parse(response.body)).toEqual(expected)
-  })
-
-  it("when id in entry fullUrl doesn't match that in task, expect 400 status code and messages indicating the issue", async () => {
-    const body: any = deepCopy(requestSingleItem)
-    body.entry[0].fullUrl = "invalid"
-
-    const event: APIGatewayProxyEvent = generateMockEvent(body)
-
-    const expected = bundleWrap([badRequest("Invalid entry fullUrl or task id.", "invalid")])
 
     const response: APIGatewayProxyResult = await handler(event, {})
 

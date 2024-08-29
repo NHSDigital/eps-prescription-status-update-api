@@ -1,4 +1,5 @@
 import {Bundle, BundleEntry, OperationOutcome} from "fhir/r4"
+import {bundleEntryType} from "../schema/request"
 
 export function bundleWrap(entries: Array<BundleEntry>): Bundle {
   return {
@@ -8,11 +9,11 @@ export function bundleWrap(entries: Array<BundleEntry>): Bundle {
   }
 }
 
-export function badRequest(diagnostics: string, fullUrl: string | undefined = undefined): BundleEntry {
+export function badRequest(diagnostics: Array<string>, fullUrl: string | undefined = undefined): BundleEntry {
   const bundleEntry: BundleEntry = {
     response: {
       status: "400 Bad Request",
-      outcome: badRequestOutcome([diagnostics])
+      outcome: badRequestOutcome(diagnostics)
     }
   }
   if (fullUrl) {
@@ -156,6 +157,6 @@ export function conflictDuplicate(taskId: string): BundleEntry {
   }
 }
 
-export function createSuccessResponseEntries(entries: Array<BundleEntry>) {
-  return entries.map((e) => created(e.fullUrl!))
+export function createSuccessResponseEntries(entries: Array<bundleEntryType>) {
+  return entries.map((e) => created(e.fullUrl))
 }

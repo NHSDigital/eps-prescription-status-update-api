@@ -9,8 +9,6 @@ import {
 
 import {
   DEFAULT_DATE,
-  FULL_URL_0,
-  FULL_URL_1,
   generateBody,
   generateExpectedItems,
   generateMockEvent,
@@ -27,6 +25,7 @@ import responseSingleItem from "../../specification/examples/response-single-ite
 import responseMultipleItems from "../../specification/examples/response-multiple-items.json"
 import {
   badRequest,
+  badRequestOutcome,
   bundleWrap,
   serverError,
   timeoutResponse
@@ -47,14 +46,19 @@ describe("Integration tests for updatePrescriptionStatus handler", () => {
   })
 
   it("when request doesn't have correct resourceType and type, expect 400 status code and appropriate message", async () => {
-    const body = {resourceType: "NotBundle", type: "not_transaction"}
+    const body = generateBody()
+    body.resourceType = "NotBundle"
+    body.type = "not_transaction"
     const event: APIGatewayProxyEvent = generateMockEvent(body)
 
     const response: APIGatewayProxyResult = await handler(event, {})
 
     expect(response.statusCode).toEqual(400)
     expect(JSON.parse(response.body)).toEqual(
-      bundleWrap([badRequest("Request body does not have resourceType of 'Bundle' and type of 'transaction'.")])
+      badRequestOutcome([
+        "/body/resourceType: must be equal to one of the allowed values",
+        "/body/type: must be equal to one of the allowed values"
+      ])
     )
   })
 
@@ -103,7 +107,7 @@ describe("Integration tests for updatePrescriptionStatus handler", () => {
     const body = generateBody()
     const entryResource: any = body.entry?.[0]?.resource
     if (!entryResource.input) {
-      entryResource.input = [{valueInteger: 1}]
+      entryResource.input = [{type: {text: "Repeat Number"}, valueInteger: 1}]
     }
 
     const event: APIGatewayProxyEvent = generateMockEvent(body)
@@ -116,6 +120,7 @@ describe("Integration tests for updatePrescriptionStatus handler", () => {
 
     const response: APIGatewayProxyResult = await handler(event, {})
 
+    expect(JSON.parse(response.body)).toEqual(responseSingleItem)
     expect(response.statusCode).toEqual(201)
     expect(JSON.parse(response.body)).toEqual(responseSingleItem)
 
@@ -132,6 +137,7 @@ describe("Integration tests for updatePrescriptionStatus handler", () => {
 
     const response: APIGatewayProxyResult = await handler(event, {})
 
+    expect(JSON.parse(response.body)).toEqual(responseMultipleItems)
     expect(response.statusCode).toEqual(201)
     expect(JSON.parse(response.body)).toEqual(responseMultipleItems)
 
@@ -173,7 +179,10 @@ describe("Integration tests for updatePrescriptionStatus handler", () => {
 
     expect(response.statusCode).toBe(400)
     expect(JSON.parse(response.body)).toEqual(
-      bundleWrap([badRequest("Missing required field(s) - PharmacyODSCode, TaskID.", FULL_URL_0)])
+      badRequestOutcome([
+        "/body/entry/0/resource: must have required property 'id'",
+        "/body/entry/0/resource: must have required property 'owner'"
+      ])
     )
   })
 
@@ -208,9 +217,10 @@ describe("Integration tests for updatePrescriptionStatus handler", () => {
 
     expect(response.statusCode).toEqual(400)
     expect(JSON.parse(response.body)).toEqual(
-      bundleWrap([
-        badRequest("Missing required field(s) - PharmacyODSCode, TaskID.", FULL_URL_0),
-        badRequest("Missing required field(s) - PharmacyODSCode.", FULL_URL_1)
+      badRequestOutcome([
+        "/body/entry/0/resource: must have required property 'id'",
+        "/body/entry/0/resource: must have required property 'owner'",
+        "/body/entry/1/resource: must have required property 'owner'"
       ])
     )
   })
@@ -223,7 +233,7 @@ describe("Integration tests for updatePrescriptionStatus handler", () => {
     const response: APIGatewayProxyResult = await handler(event, {})
 
     expect(response.statusCode).toEqual(400)
-    expect(JSON.parse(response.body)).toEqual(bundleWrap([badRequest("Missing or empty x-request-id header.")]))
+    expect(JSON.parse(response.body)).toEqual(bundleWrap([badRequest(["Missing or empty x-request-id header."])]))
   })
 
   it("when x-request-id header is missing, expect 400 status code and relevant error message", async () => {
@@ -234,7 +244,7 @@ describe("Integration tests for updatePrescriptionStatus handler", () => {
     const response: APIGatewayProxyResult = await handler(event, {})
 
     expect(response.statusCode).toEqual(400)
-    expect(JSON.parse(response.body)).toEqual(bundleWrap([badRequest("Missing or empty x-request-id header.")]))
+    expect(JSON.parse(response.body)).toEqual(bundleWrap([badRequest(["Missing or empty x-request-id header."])]))
   })
 
   it("when x-request-id header is mixed case, expect it to work", async () => {

@@ -1,6 +1,6 @@
-import {FromSchema} from "json-schema-to-ts"
+import {FromSchema, JSONSchema} from "json-schema-to-ts"
 
-export const updatePrescriptionStatusTaskSchema = {
+export const taskSchema = {
   "type": "object",
   "required": [
     "id",
@@ -24,11 +24,13 @@ export const updatePrescriptionStatusTaskSchema = {
     "id": {
       "type": "string",
       "description": "The unique identifier for the Task resource.",
-      "example": "4d70678c-81e4-4ff4-8c67-17596fd0aa46"
+      "examples": ["4d70678c-81e4-4ff4-8c67-17596fd0aa46"]
     },
     "basedOn": {
       "type": "array",
       "description": "Short-form Prescription ID for the parent prescription. Should only contain one item.",
+      "minItems": 1,
+      "maxItems": 1,
       "items": {
         "type": "object",
         "required": [
@@ -50,7 +52,7 @@ export const updatePrescriptionStatusTaskSchema = {
               },
               "value": {
                 "type": "string",
-                "example": "24F5DA-A83008-7EFE6Z"
+                "examples": ["24F5DA-A83008-7EFE6Z"]
               }
             }
           }
@@ -83,6 +85,8 @@ export const updatePrescriptionStatusTaskSchema = {
       "properties": {
         "coding": {
           "type": "array",
+          "minItems": 1,
+          "maxItems": 1,
           "items": {
             "type": "object",
             "required": [
@@ -144,7 +148,7 @@ export const updatePrescriptionStatusTaskSchema = {
             },
             "value": {
               "type": "string",
-              "example": "6989b7bd-8db6-428c-a593-4022e3044c00"
+              "examples": ["6989b7bd-8db6-428c-a593-4022e3044c00"]
             }
           }
         }
@@ -173,7 +177,7 @@ export const updatePrescriptionStatusTaskSchema = {
             },
             "value": {
               "type": "string",
-              "example": "9449304130"
+              "examples": ["9449304130"]
             }
           }
         }
@@ -185,7 +189,7 @@ export const updatePrescriptionStatusTaskSchema = {
         "Only the latest last modified date will be displayed to users of the NHS App. " +
         "This mechanism will be implemented to resolve updates received out of sequence.",
       "format": "date-time",
-      "example": "2024-01-30T12:01:24.000Z"
+      "examples": ["2024-01-30T12:01:24.000Z"]
     },
     "owner": {
       "type": "object",
@@ -209,7 +213,7 @@ export const updatePrescriptionStatusTaskSchema = {
             },
             "value": {
               "type": "string",
-              "example": "C9Z1O"
+              "examples": ["C9Z1O"]
             }
           }
         }
@@ -219,14 +223,16 @@ export const updatePrescriptionStatusTaskSchema = {
       "type": "array",
       "description": "The eRD Repeat Number, with the prescription tracking status updates for eRD prescriptions. " +
         "This is optional and only required for eRD type prescriptions.",
+      "minItems": 1,
+      "maxItems": 1,
       "items": {
         "type": "object",
         "required": [
-          "_type",
+          "type",
           "valueInteger"
         ],
         "properties": {
-          "_type": {
+          "type": {
             "type": "object",
             "required": [
               "text"
@@ -242,16 +248,53 @@ export const updatePrescriptionStatusTaskSchema = {
           },
           "valueInteger": {
             "type": "integer",
-            "minimum": 1,
-            "maximum": 6
+            "minimum": 1
           }
         }
       }
     }
   }
-} as const
+} as const satisfies JSONSchema
 
-export const updatePrescriptionStatusBundleSchema = {
+export const bundleEntrySchema = {
+  "type": "object",
+  "required": [
+    "fullUrl",
+    "resource",
+    "request"
+  ],
+  "description": "A FHIR collection Bundle.",
+  "properties": {
+    "fullUrl": {
+      "type": "string",
+      "examples": ["urn:uuid:4d70678c-81e4-4ff4-8c67-17596fd0aa46"]
+    },
+    "resource": taskSchema,
+    "request": {
+      "type": "object",
+      "required": [
+        "method",
+        "url"
+      ],
+      "properties": {
+        "method": {
+          "type": "string",
+          "enum": [
+            "POST"
+          ]
+        },
+        "url": {
+          "type": "string",
+          "enum": [
+            "Task"
+          ]
+        }
+      }
+    }
+  }
+} as const satisfies JSONSchema
+
+export const bundleSchema = {
   "type": "object",
   "required": [
     "entry",
@@ -277,45 +320,22 @@ export const updatePrescriptionStatusBundleSchema = {
     "entry": {
       "type": "array",
       "description": "A collection of resources contained within the Bundle.\n",
-      "items": {
-        "type": "object",
-        "required": [
-          "fullUrl",
-          "resource",
-          "request"
-        ],
-        "description": "A FHIR collection Bundle.",
-        "properties": {
-          "fullUrl": {
-            "type": "string",
-            "example": "urn:uuid:4d70678c-81e4-4ff4-8c67-17596fd0aa46"
-          },
-          "resource": updatePrescriptionStatusTaskSchema,
-          "request": {
-            "type": "object",
-            "required": [
-              "method",
-              "url"
-            ],
-            "properties": {
-              "method": {
-                "type": "string",
-                "enum": [
-                  "POST"
-                ]
-              },
-              "url": {
-                "type": "string",
-                "enum": [
-                  "Task"
-                ]
-              }
-            }
-          }
-        }
-      }
+      "items": bundleEntrySchema
     }
   }
-} as const
+} as const satisfies JSONSchema
 
-export type updatePrescriptionStatusBundleType = FromSchema<typeof updatePrescriptionStatusBundleSchema>
+export const eventSchema = {
+  type: "object",
+  required: ["body", "headers"],
+  properties: {
+    body: bundleSchema,
+    headers: {
+      type: "object"
+    }
+  }
+} as const satisfies JSONSchema
+
+export type taskType = FromSchema<typeof taskSchema>
+export type bundleEntryType = FromSchema<typeof bundleEntrySchema>
+export type bundleType = FromSchema<typeof bundleSchema>
