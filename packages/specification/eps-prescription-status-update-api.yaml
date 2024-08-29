@@ -13,9 +13,9 @@ info:
   description: |
     ## Overview
     Use this API to enable dispensing suppliers to push status information about electronic prescriptions to patients on a national scale via the NHS App (and potential other third parties in the future).
-    
+
     The overall aim of the service is to reduce burden to frontline NHS services by reducing the number of routine patient queries about their prescriptions.
-   
+
     You can:
     * enable patients to know when their prescription is ready
     * enable dispensing suppliers to push status information about electronic prescriptions
@@ -58,7 +58,7 @@ info:
     * 200 to 299 if it succeeded, including code 202 if it was accepted by an API that needs to wait for further action
     * 400 to 499 if it failed because of a client error by your application
     * 500 to 599 if it failed because of an error on our server
-    
+
     Errors specific to each API are shown in the Endpoints section, under Response. See our [reference guide](https://digital.nhs.uk/developer/guides-and-documentation/reference-guide#http-status-codes) for more on errors.
     ## Open source
     You might find the following [open source](https://digital.nhs.uk/developer/guides-and-documentation/reference-guide#open-source) resources useful:
@@ -119,7 +119,7 @@ paths:
         content:
           application/fhir+json:
             schema:
-              $ref: "#/components/schemas/UpdatePrescriptionStatusBundle"
+              $ref: schemas/resources/UpdatePrescriptionStatusBundle.json
             examples:
               ready-to-dispatch:
                 summary: ready-to-dispatch
@@ -327,58 +327,6 @@ components:
         type: string
         example: 11C46F5F-CDEF-4865-94B2-0EE0EDCC26DA
   schemas:
-    UpdatePrescriptionStatusBundle:
-      type: object
-      required:
-        - entry
-        - resourceType
-        - type
-      description: A FHIR transaction Bundle.
-      properties:
-        resourceType:
-          type: string
-          description: FHIR resource type.
-          enum:
-            - Bundle
-        type:
-          type: string
-          description: Denotes that the bundle is a list of status updates to be performed
-            as one transaction.
-          enum:
-            - transaction
-        entry:
-          type: array
-          description: |
-            A collection of resources contained within the Bundle.
-          items:
-            type: object
-            required:
-              - fullUrl
-              - resource
-              - request
-            description: A FHIR collection Bundle.
-            properties:
-              fullUrl:
-                type: string
-                example: urn:uuid:4d70678c-81e4-4ff4-8c67-17596fd0aa46
-              resource:
-                $ref: "#/components/schemas/UpdatePrescriptionStatusTask"
-              request:
-                type: object
-                required:
-                  - method
-                  - url
-                properties:
-                  method:
-                    type: string
-                    enum:
-                      - POST
-                  url:
-                    type: string
-                    enum:
-                      - Task
-    UpdatePrescriptionStatusTask:
-      $ref: schemas/resources/UpdatePrescriptionStatusTask.yaml
     ResponseBundle:
       $ref: schemas/components/ResponseBundle.yaml
     OperationOutcome:

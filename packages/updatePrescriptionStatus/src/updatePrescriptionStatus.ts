@@ -25,6 +25,7 @@ import {
 import {TransactionCanceledException} from "@aws-sdk/client-dynamodb"
 import {
   eventSchema,
+  bundleSchema,
   bundleEntryType,
   bundleType,
   taskType
@@ -285,3 +286,5 @@ export const handler = middy(lambdaHandler)
     })
   )
   .use(errorHandler({logger: logger}))
+
+export {bundleSchema}

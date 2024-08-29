@@ -1,10 +1,14 @@
 {
-    "extends": "../../tsconfig.defaults.json",
-    "compilerOptions": {
-      "rootDir": ".",
-      "outDir": "lib"
-    },
-    "references": [],
-    "include": ["src/**/*", "tests/**/*"],
-    "exclude": ["node_modules"]
-  }
+  "extends": "../../tsconfig.defaults.json",
+  "compilerOptions": {
+    "rootDir": ".",
+    "outDir": "lib"
+  },
+  "references": [
+    {
+      "path": "../updatePrescriptionStatus"
+    }
+  ],
+  "include": ["scripts/**/*"],
+  "exclude": ["node_modules"]
+}
