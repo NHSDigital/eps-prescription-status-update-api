@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
 
-# generic script for removing cloudformation stacks and proxygen deployed apis where the pull request is closed
+# generic script for removing proxygen deployed apis where the pull request is closed
 
 # set the repo name to be the name of the repo this is running in
 REPO_NAME=eps-prescription-status-update-api
 
-# this should be customised to delete cloudformation stacks and proxygen deployments if they are used
+# this should be customised to delete relevant proxygen deployments if they are used
 main() {
   echo "Checking prescripton status update deployments"
   PULL_REQUEST_PROXYGEN_REGEX=prescription-status-update-pr-
