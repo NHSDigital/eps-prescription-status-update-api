@@ -170,17 +170,24 @@ fi
 
 if [[ "${APIGEE_ENVIRONMENT}" == "int" ]]; then
     echo
-    echo "Deploy the API spec if in the int environment"
+    echo "Deploy the API spec to prod catalogue as it is int environment"
     if [[ "${DRY_RUN}" == "false" ]]; then
         jq -n --argfile spec "${SPEC_PATH}" \
             --arg apiName "${apigee_api}" \
-            --arg environment "uat" \
+            --arg environment "prod" \
             --arg instance "${instance}" \
             --arg kid "${PROXYGEN_KID}" \
             --arg proxygenSecretName "${proxygen_private_key_arn}" \
             '{apiName: $apiName, environment: $environment, specDefinition: $spec, instance: $instance, kid: $kid, proxygenSecretName: $proxygenSecretName}' > payload.json
 
         aws lambda invoke --function-name "${spec_publish_lambda}" --cli-binary-format raw-in-base64-out --payload file://payload.json out.txt > response.json
+
+        if eval "cat response.json | jq -e '.FunctionError' >/dev/null"; then
+            echo 'Error calling lambda'
+            cat out.txt
+            exit 1
+        fi
+        echo "Spec deployed"
     else
         echo "Would call ${spec_publish_lambda}"
     fi
@@ -188,7 +195,7 @@ fi
 
 if [[ "${APIGEE_ENVIRONMENT}" == "internal-dev" && "${is_pull_request}" == "false" ]]; then
     echo
-    echo "Deploy the API spec to uat if in the internal-dev environment"
+    echo "Deploy the API spec to uat catalogue as it is internal-dev environment"
     if [[ "${DRY_RUN}" == "false" ]]; then
         jq -n --argfile spec "${SPEC_PATH}" \
             --arg apiName "${apigee_api}" \
@@ -199,6 +206,13 @@ if [[ "${APIGEE_ENVIRONMENT}" == "internal-dev" && "${is_pull_request}" == "fals
             '{apiName: $apiName, environment: $environment, specDefinition: $spec, instance: $instance, kid: $kid, proxygenSecretName: $proxygenSecretName}' > payload.json
 
         aws lambda invoke --function-name "${spec_publish_lambda}" --cli-binary-format raw-in-base64-out --payload file://payload.json out.txt > response.json
+
+        if eval "cat response.json | jq -e '.FunctionError' >/dev/null"; then
+            echo 'Error calling lambda'
+            cat out.txt
+            exit 1
+        fi
+        echo "Spec deployed"
     else
         echo "Would call ${spec_publish_lambda}"
     fi
