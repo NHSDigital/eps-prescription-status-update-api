@@ -1,0 +1,68 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: AWS::Serverless-2016-10-31
+Description: |
+  PSU Cloudwatch alarms and related resources
+
+Parameters:
+  StackName:
+    Type: String
+    Default: none
+
+  GetStatusUpdatesFunctionName:
+    Type: String
+    Default: none
+
+Resources:
+  GetStatusUpdatesErrorsLogsMetricFilter:
+    Type: AWS::Logs::MetricFilter
+    Properties:
+      FilterName: GetStatusUpdatesErrors
+      FilterPatter: { $.level = "ERROR" }
+      LogGroupName: !Sub ${StackName}:functions:${GetStatusUpdatesFunctionName}:LambdaLogGroupName
+      MetricTransformations:
+        - MetricNamespace: LambdaLogFilterMetrics
+          MetricName: ErrorCount
+          Dimensions:
+            - FunctionName: !Ref GetStatusUpdatesFunctionName
+          MetricValue: 1
+          Unit: Count
+
+  GetStatusUpdatesErrorsAlarm:
+    Type: AWS::Cloudwatch::Alarm
+    Properties:
+      AlarmDescription: Get Status Updates Errors
+      AlarmName: !Sub ${StackName} - GetStatusUpdates Errors
+      Namespace: LambdaLogFilterMetrics
+      MetricName: ErrorCount
+      Dimensions:
+        - FunctionName: !Ref GetStatusUpdatesFunctionName
+      Period: 60 #seconds
+      EvaluationPeriods: 1
+      Statistic: Sum
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      Threshold: 1
+      Unit: Count
+      ActionsEnabled: true
+      AlarmActions: !ImportValue lambda-resources:SlackAlertsSnsTopicArn
+      InsufficientDataActions: !ImportValue lambda-resources:SlackAlertsSnsTopicArn
+      OKActions: !ImportValue lambda-resources:SlackAlertsSnsTopicArn
+
+  GetStatusUpdatesUnhandledErrorsAlarm:
+    Type: AWS::Cloudwatch::Alarm
+    Properties:
+      AlarmDescription: Get Status Updates Unhandled Errors
+      AlarmName: !Sub ${StackName} - GetStatusUpdates Unhandled Errors
+      Namespace: Lambda
+      MetricName: Errors
+      Dimensions:
+        - FunctionName: !Ref GetStatusUpdatesFunctionName
+      Period: 60 #seconds
+      EvaluationPeriods: 1
+      Statistic: Sum
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      Threshold: 1
+      Unit: Count
+      ActionsEnabled: true
+      AlarmActions: !ImportValue lambda-resources:SlackAlertsSnsTopicArn
+      InsufficientDataActions: !ImportValue lambda-resources:SlackAlertsSnsTopicArn
+      OKActions: !ImportValue lambda-resources:SlackAlertsSnsTopicArn
