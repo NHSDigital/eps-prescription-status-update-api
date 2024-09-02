@@ -41,6 +41,12 @@ jobs:
       contents: read
 
     steps:
+      - name: Checkout local code
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ env.BRANCH_NAME }}
+          fetch-depth: 0
+  
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
