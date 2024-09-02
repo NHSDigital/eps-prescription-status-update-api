@@ -195,7 +195,7 @@ fi
 
 if [[ "${APIGEE_ENVIRONMENT}" == "internal-dev" && "${is_pull_request}" == "false" ]]; then
     echo
-    echo "Deploy the API spec to uat catalogue as it is the internal-dev environment"
+    echo "Deploy the API spec to uat catalogue as it is internal-dev environment"
     if [[ "${DRY_RUN}" == "false" ]]; then
         jq -n --argfile spec "${SPEC_PATH}" \
             --arg apiName "${apigee_api}" \
