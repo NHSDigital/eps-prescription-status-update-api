@@ -19,7 +19,7 @@
     "@middy/core": "^5.4.7",
     "@middy/input-output-logger": "^5.4.7",
     "@nhs/fhir-middy-error-handler": "^2.1.0",
-    "axios": "^1.7.5"
+    "axios": "^1.7.7"
   },
   "devDependencies": {
     "@PrescriptionStatusUpdate_common/testing": "^1.0.0",
