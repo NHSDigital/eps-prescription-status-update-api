@@ -18,7 +18,7 @@
     "@aws-lambda-powertools/parameters": "^2.7.0",
     "@aws-sdk/client-dynamodb": "^3.637.0",
     "@aws-sdk/lib-dynamodb": "^3.637.0",
-    "@middy/core": "^5.4.6",
+    "@middy/core": "^5.4.7",
     "@middy/http-header-normalizer": "^5.4.6",
     "@middy/input-output-logger": "^5.4.6",
     "@PrescriptionStatusUpdate_common/middyErrorHandler": "^1.0.0"
