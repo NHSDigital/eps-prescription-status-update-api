@@ -18,7 +18,8 @@ Resources:
     Properties:
       FilterName: GetStatusUpdatesErrors
       FilterPattern: "{ $.level = 'ERROR' }"
-      LogGroupName: !Sub ${StackName}:functions:${GetStatusUpdatesFunctionName}:LambdaLogGroupName
+      LogGroupName:
+        Fn::ImportValue: !Sub ${StackName}:functions:${GetStatusUpdatesFunctionName}:LambdaLogGroupName
       MetricTransformations:
         - MetricNamespace: LambdaLogFilterMetrics
           MetricName: ErrorCount
