@@ -28,7 +28,7 @@ Resources:
           Unit: Count
 
   GetStatusUpdatesErrorsAlarm:
-    Type: AWS::Cloudwatch::Alarm
+    Type: AWS::CloudWatch::Alarm
     Properties:
       AlarmDescription: Get Status Updates Errors
       AlarmName: !Sub ${StackName} - GetStatusUpdates Errors
@@ -48,7 +48,7 @@ Resources:
       OKActions: !ImportValue lambda-resources:SlackAlertsSnsTopicArn
 
   GetStatusUpdatesUnhandledErrorsAlarm:
-    Type: AWS::Cloudwatch::Alarm
+    Type: AWS::CloudWatch::Alarm
     Properties:
       AlarmDescription: Get Status Updates Unhandled Errors
       AlarmName: !Sub ${StackName} - GetStatusUpdates Unhandled Errors
