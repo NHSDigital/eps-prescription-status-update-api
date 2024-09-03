@@ -17,7 +17,7 @@ Resources:
     Type: AWS::Logs::MetricFilter
     Properties:
       FilterName: GetStatusUpdatesErrors
-      FilterPattern: "{ $.level = 'ERROR' }"
+      FilterPattern: '{ $.level = "ERROR" }'
       LogGroupName:
         Fn::ImportValue: !Sub ${StackName}:functions:${GetStatusUpdatesFunctionName}:LambdaLogGroupName
       MetricTransformations:
