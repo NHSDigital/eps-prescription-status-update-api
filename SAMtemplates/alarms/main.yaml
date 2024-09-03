@@ -17,13 +17,14 @@ Resources:
     Type: AWS::Logs::MetricFilter
     Properties:
       FilterName: GetStatusUpdatesErrors
-      FilterPatter: "{ $.level = 'ERROR' }"
+      FilterPattern: "{ $.level = 'ERROR' }"
       LogGroupName: !Sub ${StackName}:functions:${GetStatusUpdatesFunctionName}:LambdaLogGroupName
       MetricTransformations:
         - MetricNamespace: LambdaLogFilterMetrics
           MetricName: ErrorCount
           Dimensions:
-            - FunctionName: !Ref GetStatusUpdatesFunctionName
+            - Key: FunctionName
+              Value: !Ref GetStatusUpdatesFunctionName
           MetricValue: 1
           Unit: Count
 
@@ -35,7 +36,8 @@ Resources:
       Namespace: LambdaLogFilterMetrics
       MetricName: ErrorCount
       Dimensions:
-        - FunctionName: !Ref GetStatusUpdatesFunctionName
+        - Name: FunctionName
+          Value: !Ref GetStatusUpdatesFunctionName
       Period: 60 #seconds
       EvaluationPeriods: 1
       Statistic: Sum
@@ -43,9 +45,12 @@ Resources:
       Threshold: 1
       Unit: Count
       ActionsEnabled: true
-      AlarmActions: !ImportValue lambda-resources:SlackAlertsSnsTopicArn
-      InsufficientDataActions: !ImportValue lambda-resources:SlackAlertsSnsTopicArn
-      OKActions: !ImportValue lambda-resources:SlackAlertsSnsTopicArn
+      AlarmActions:
+        - !ImportValue lambda-resources:SlackAlertsSnsTopicArn
+      InsufficientDataActions:
+        - !ImportValue lambda-resources:SlackAlertsSnsTopicArn
+      OKActions:
+        - !ImportValue lambda-resources:SlackAlertsSnsTopicArn
 
   GetStatusUpdatesUnhandledErrorsAlarm:
     Type: AWS::CloudWatch::Alarm
@@ -55,7 +60,8 @@ Resources:
       Namespace: Lambda
       MetricName: Errors
       Dimensions:
-        - FunctionName: !Ref GetStatusUpdatesFunctionName
+        - Name: FunctionName
+          Value: !Ref GetStatusUpdatesFunctionName
       Period: 60 #seconds
       EvaluationPeriods: 1
       Statistic: Sum
@@ -63,6 +69,9 @@ Resources:
       Threshold: 1
       Unit: Count
       ActionsEnabled: true
-      AlarmActions: !ImportValue lambda-resources:SlackAlertsSnsTopicArn
-      InsufficientDataActions: !ImportValue lambda-resources:SlackAlertsSnsTopicArn
-      OKActions: !ImportValue lambda-resources:SlackAlertsSnsTopicArn
+      AlarmActions:
+        - !ImportValue lambda-resources:SlackAlertsSnsTopicArn
+      InsufficientDataActions:
+        - !ImportValue lambda-resources:SlackAlertsSnsTopicArn
+      OKActions:
+        - !ImportValue lambda-resources:SlackAlertsSnsTopicArn
