@@ -32,8 +32,8 @@ Resources:
   GetStatusUpdatesErrorsAlarm:
     Type: AWS::CloudWatch::Alarm
     Properties:
-      AlarmDescription: Get Status Updates Errors
-      AlarmName: !Sub ${StackName} - GetStatusUpdates Errors
+      AlarmDescription: Get Status Updates Lambda Errors
+      AlarmName: !Sub ${StackName}-GetStatusUpdates_Errors
       Namespace: LambdaLogFilterMetrics
       MetricName: ErrorCount
       Dimensions:
@@ -56,8 +56,8 @@ Resources:
   GetStatusUpdatesUnhandledErrorsAlarm:
     Type: AWS::CloudWatch::Alarm
     Properties:
-      AlarmDescription: Get Status Updates Unhandled Errors
-      AlarmName: !Sub ${StackName} - GetStatusUpdates Unhandled Errors
+      AlarmDescription: Get Status Updates lambda Unhandled Errors
+      AlarmName: !Sub ${StackName}-GetStatusUpdates_UnhandledErrors
       Namespace: Lambda
       MetricName: Errors
       Dimensions:
