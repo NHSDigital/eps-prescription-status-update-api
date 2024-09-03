@@ -22,10 +22,7 @@ Resources:
         Fn::ImportValue: !Sub ${StackName}:functions:${GetStatusUpdatesFunctionName}:LambdaLogGroupName
       MetricTransformations:
         - MetricNamespace: LambdaLogFilterMetrics
-          MetricName: ErrorCount
-          Dimensions:
-            - Key: FunctionName
-              Value: !Ref GetStatusUpdatesFunctionName
+          MetricName: GetStatusUpdatesErrorCount
           MetricValue: 1
           Unit: Count
 
@@ -35,10 +32,7 @@ Resources:
       AlarmDescription: Get Status Updates Lambda Errors
       AlarmName: !Sub ${StackName}-GetStatusUpdates_Errors
       Namespace: LambdaLogFilterMetrics
-      MetricName: ErrorCount
-      Dimensions:
-        - Name: FunctionName
-          Value: !Ref GetStatusUpdatesFunctionName
+      MetricName: GetStatusUpdatesErrorCount
       Period: 60 #seconds
       EvaluationPeriods: 1
       Statistic: Sum
