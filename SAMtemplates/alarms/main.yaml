@@ -26,8 +26,8 @@ Resources:
           MetricValue: 1
           Unit: Count
           Dimensions:
-            - Key: function_name
-              Value: !Ref GetStatusUpdatesFunctionName
+            - Key: FunctionName
+              Value: $.function_name
 
   GetStatusUpdatesErrorsAlarm:
     Type: AWS::CloudWatch::Alarm
@@ -35,7 +35,10 @@ Resources:
       AlarmDescription: Get Status Updates Lambda Errors
       AlarmName: !Sub ${StackName}_GetStatusUpdatesErrors
       Namespace: LambdaLogFilterMetrics
-      MetricName: GetStatusUpdatesErrorCount
+      MetricName: ErrorCount
+      Dimensions:
+        - Name: FunctionName
+          Value: !Ref GetStatusUpdatesFunctionName
       Period: 60 #seconds
       EvaluationPeriods: 1
       Statistic: Sum
