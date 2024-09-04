@@ -49,7 +49,7 @@ Resources:
               - kms:Decrypt
             Resource: "*"
             Condition:
-              ArnLike": !Sub "arn:aws:iam::${AWS::AccountId}:role/aws-reserved/sso.amazonaws.com/${AWS::Region}/AWSReservedSSO_ReadOnly*"
+              ArnLike: !Sub "arn:aws:iam::${AWS::AccountId}:role/aws-reserved/sso.amazonaws.com/${AWS::Region}/AWSReservedSSO_ReadOnly*"
 
   PrescriptionStatusUpdatesKMSKeyAlias:
     Type: AWS::KMS::Alias
