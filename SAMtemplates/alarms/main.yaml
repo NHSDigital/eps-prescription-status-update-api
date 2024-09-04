@@ -25,7 +25,7 @@ Resources:
           MetricName: ErrorCount
           MetricValue: 1
           Unit: Count
-          Dimensions: # dimensions for filter metrics can only be field/value from filter pattern
+          Dimensions: # dimensions for a logs filter metric can only be a field/value from the filter pattern
             - Key: FunctionName
               Value: $.function_name
 
