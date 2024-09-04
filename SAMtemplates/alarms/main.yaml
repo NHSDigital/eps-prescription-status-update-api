@@ -17,20 +17,23 @@ Resources:
     Type: AWS::Logs::MetricFilter
     Properties:
       FilterName: GetStatusUpdatesErrors
-      FilterPattern: '{ $.level = "ERROR" }'
+      FilterPattern: !Sub '{ ($.level = "ERROR") && ($.function_name = "${GetStatusUpdatesFunctionName}") }'
       LogGroupName:
         Fn::ImportValue: !Sub ${StackName}:functions:${GetStatusUpdatesFunctionName}:LambdaLogGroupName
       MetricTransformations:
         - MetricNamespace: LambdaLogFilterMetrics
-          MetricName: GetStatusUpdatesErrorCount
+          MetricName: ErrorCount
           MetricValue: 1
           Unit: Count
+          Dimensions:
+            - Key: function_name
+              Value: !Ref GetStatusUpdatesFunctionName
 
   GetStatusUpdatesErrorsAlarm:
     Type: AWS::CloudWatch::Alarm
     Properties:
       AlarmDescription: Get Status Updates Lambda Errors
-      AlarmName: !Sub ${StackName}-GetStatusUpdates_Errors
+      AlarmName: !Sub ${StackName}_GetStatusUpdatesErrors
       Namespace: LambdaLogFilterMetrics
       MetricName: GetStatusUpdatesErrorCount
       Period: 60 #seconds
@@ -51,7 +54,7 @@ Resources:
     Type: AWS::CloudWatch::Alarm
     Properties:
       AlarmDescription: Get Status Updates lambda Unhandled Errors
-      AlarmName: !Sub ${StackName}-GetStatusUpdates_UnhandledErrors
+      AlarmName: !Sub ${StackName}_GetStatusUpdatesUnhandledErrors
       Namespace: Lambda
       MetricName: Errors
       Dimensions:
