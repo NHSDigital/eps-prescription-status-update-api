@@ -8,7 +8,6 @@ import errorHandler from "@nhs/fhir-middy-error-handler"
 import httpHeaderNormalizer from "@middy/http-header-normalizer"
 import validator from "@middy/validator"
 import {transpileSchema} from "@middy/validator/transpile"
-import {BundleEntry} from "fhir/r4"
 import {persistDataItems} from "./utils/databaseClient"
 import {jobWithTimeout, hasTimedOut} from "./utils/timeoutUtils"
 import {validateEntry} from "./validation/content"
@@ -30,6 +29,7 @@ import {
   bundleType,
   taskType
 } from "./schema/request"
+import {bundleEntryType as responseBundleEntryType} from "./schema/response"
 
 const LAMBDA_TIMEOUT_MS = 9500
 const logger = new Logger({serviceName: "updatePrescriptionStatus"})
@@ -67,7 +67,7 @@ const lambdaHandler = async (event: EventWithHeaders): Promise<APIGatewayProxyRe
     "x-correlation-id": event.headers["x-correlation-id"],
     "apigw-request-id": event.headers["apigw-request-id"]
   })
-  let responseEntries: Array<BundleEntry> = []
+  let responseEntries: Array<responseBundleEntryType> = []
 
   const xRequestID = getXRequestID(event, responseEntries)
   const applicationName = event.headers["attribute-name"] ?? "unknown"
@@ -122,12 +122,15 @@ const lambdaHandler = async (event: EventWithHeaders): Promise<APIGatewayProxyRe
   return response(201, responseEntries)
 }
 
-export function getXRequestID(event: EventWithHeaders, responseEntries: Array<BundleEntry>): string | undefined {
+export function getXRequestID(
+  event: EventWithHeaders,
+  responseEntries: Array<responseBundleEntryType>
+): string | undefined {
   const xRequestID = event.headers["x-request-id"]
   if (!xRequestID) {
     const errorMessage = "Missing or empty x-request-id header."
     logger.error(errorMessage)
-    const entry: BundleEntry = badRequest([errorMessage])
+    const entry = badRequest([errorMessage])
     responseEntries.push(entry)
     return undefined
   }
@@ -136,7 +139,7 @@ export function getXRequestID(event: EventWithHeaders, responseEntries: Array<Bu
 
 export function validateEntries(
   requestEntries: Array<bundleEntryType>,
-  responseEntries: Array<BundleEntry>
+  responseEntries: Array<responseBundleEntryType>
 ): boolean {
   let valid = true
   for (const entry of requestEntries) {
@@ -156,7 +159,7 @@ export function validateEntries(
 
 export function handleTransactionCancelledException(
   e: TransactionCanceledException,
-  responseEntries: Array<BundleEntry>
+  responseEntries: Array<responseBundleEntryType>
 ): void {
   const taskIdSet = new Set<string>()
 
@@ -217,7 +220,7 @@ export function buildDataItems(
   return dataItems
 }
 
-function response(statusCode: number, responseEntries: Array<BundleEntry>) {
+function response(statusCode: number, responseEntries: Array<responseBundleEntryType>) {
   return {
     statusCode: statusCode,
     body: JSON.stringify(bundleWrap(responseEntries)),

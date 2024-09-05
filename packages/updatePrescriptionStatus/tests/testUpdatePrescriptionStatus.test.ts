@@ -6,7 +6,6 @@ import {
   jest
 } from "@jest/globals"
 
-import {BundleEntry} from "fhir/r4"
 import {v4} from "uuid"
 
 import {badRequest, conflictDuplicate} from "../src/utils/responses"
@@ -21,6 +20,7 @@ import * as content from "../src/validation/content"
 import {TransactionCanceledException} from "@aws-sdk/client-dynamodb"
 import {EventWithHeaders} from "../src/updatePrescriptionStatus"
 import {bundleEntryType} from "../src/schema/request"
+import {bundleEntryType as responseBundleEntryType} from "../src/schema/response"
 const mockValidateEntry = mockInternalDependency("../src/validation/content", content, "validateEntry")
 const {getXRequestID, validateEntries, handleTransactionCancelledException, buildDataItems} =
   await import("../src/updatePrescriptionStatus")
@@ -32,7 +32,7 @@ describe("Unit test getXRequestID", () => {
 
   it("when event has x-request-id, return it and no response entry", async () => {
     const event: unknown = {headers: {"x-request-id": X_REQUEST_ID}}
-    const responseEntries: Array<BundleEntry> = []
+    const responseEntries: Array<responseBundleEntryType> = []
 
     const result = getXRequestID(event as EventWithHeaders, responseEntries)
 
@@ -50,7 +50,7 @@ describe("Unit test getXRequestID", () => {
       scenarioDescription: "when event has a missing x-request-id, return undefined and a response entry"
     }
   ])("$scenarioDescription", async ({event}) => {
-    const responseEntries: Array<BundleEntry> = []
+    const responseEntries: Array<responseBundleEntryType> = []
 
     const result = getXRequestID(event as EventWithHeaders, responseEntries)
 
@@ -65,7 +65,7 @@ describe("Unit test validateEntries", () => {
     mockValidateEntry.mockReturnValue({valid: true, issues: []})
 
     const requestEntries = [{resource: {}, fullUrl: "valid"}] as Array<bundleEntryType>
-    const responseEntries: Array<BundleEntry> = []
+    const responseEntries: Array<responseBundleEntryType> = []
 
     const result = validateEntries(requestEntries, responseEntries)
 
@@ -89,7 +89,7 @@ describe("Unit test validateEntries", () => {
       {resource: {}, fullUrl: "valid"},
       {resource: {}, fullUrl: "invalid"}
     ] as Array<bundleEntryType>
-    const responseEntries: Array<BundleEntry> = []
+    const responseEntries: Array<responseBundleEntryType> = []
 
     const result = validateEntries(requestEntries, responseEntries)
 

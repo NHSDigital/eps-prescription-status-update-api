@@ -1,7 +1,7 @@
-import {Bundle, BundleEntry, OperationOutcome} from "fhir/r4"
-import {bundleEntryType} from "../schema/request"
+import {bundleEntryType as requestBundleEntryType} from "../schema/request"
+import {bundleEntryType, bundleType, outcomeType} from "../schema/response"
 
-export function bundleWrap(entries: Array<BundleEntry>): Bundle {
+export function bundleWrap(entries: Array<bundleEntryType>): bundleType {
   return {
     resourceType: "Bundle",
     type: "transaction-response",
@@ -9,8 +9,8 @@ export function bundleWrap(entries: Array<BundleEntry>): Bundle {
   }
 }
 
-export function badRequest(diagnostics: Array<string>, fullUrl: string | undefined = undefined): BundleEntry {
-  const bundleEntry: BundleEntry = {
+export function badRequest(diagnostics: Array<string>, fullUrl: string | undefined = undefined): bundleEntryType {
+  const bundleEntry: bundleEntryType = {
     response: {
       status: "400 Bad Request",
       outcome: badRequestOutcome(diagnostics)
@@ -22,7 +22,7 @@ export function badRequest(diagnostics: Array<string>, fullUrl: string | undefin
   return bundleEntry
 }
 
-export function badRequestOutcome(diagnostics: Array<string>): OperationOutcome {
+export function badRequestOutcome(diagnostics: Array<string>): outcomeType {
   return {
     resourceType: "OperationOutcome",
     meta: {
@@ -38,7 +38,7 @@ export function badRequestOutcome(diagnostics: Array<string>): OperationOutcome 
   }
 }
 
-export function timeoutResponse(): BundleEntry {
+export function timeoutResponse(): bundleEntryType {
   return {
     response: {
       status: "504 The request timed out",
@@ -59,7 +59,7 @@ export function timeoutResponse(): BundleEntry {
   }
 }
 
-export function accepted(fullUrl: string): BundleEntry {
+export function accepted(fullUrl: string): bundleEntryType {
   return {
     fullUrl: fullUrl,
     response: {
@@ -81,7 +81,7 @@ export function accepted(fullUrl: string): BundleEntry {
   }
 }
 
-function created(fullUrl: string): BundleEntry {
+function created(fullUrl: string): bundleEntryType {
   return {
     fullUrl: fullUrl,
     response: {
@@ -93,7 +93,7 @@ function created(fullUrl: string): BundleEntry {
         },
         issue: [
           {
-            code: "success",
+            code: "informational",
             severity: "information",
             diagnostics: "No issues detected during validation."
           }
@@ -103,7 +103,7 @@ function created(fullUrl: string): BundleEntry {
   }
 }
 
-export function serverError(): BundleEntry {
+export function serverError(): bundleEntryType {
   return {
     response: {
       status: "500 Internal Server Error",
@@ -124,7 +124,7 @@ export function serverError(): BundleEntry {
   }
 }
 
-export function conflictDuplicate(taskId: string): BundleEntry {
+export function conflictDuplicate(taskId: string): bundleEntryType {
   return {
     response: {
       status: "409 Conflict",
@@ -139,15 +139,6 @@ export function conflictDuplicate(taskId: string): BundleEntry {
           {
             code: "duplicate",
             severity: "error",
-            details: {
-              coding: [
-                {
-                  system: "https://fhir.nhs.uk/CodeSystem/http-error-codes",
-                  code: "REC_CONFLICT",
-                  display: "409: The Receiver identified a conflict."
-                }
-              ]
-            },
             diagnostics:
               "Request contains a task id and prescription id identical to a record already in the data store."
           }
@@ -157,6 +148,6 @@ export function conflictDuplicate(taskId: string): BundleEntry {
   }
 }
 
-export function createSuccessResponseEntries(entries: Array<bundleEntryType>) {
+export function createSuccessResponseEntries(entries: Array<requestBundleEntryType>) {
   return entries.map((e) => created(e.fullUrl))
 }

@@ -14,7 +14,7 @@
           "issue": [
             {
               "severity": "information",
-              "code": "success",
+              "code": "informational",
               "diagnostics": "No issues detected during validation."
             }
           ]
@@ -33,7 +33,7 @@
           "issue": [
             {
               "severity": "information",
-              "code": "success",
+              "code": "informational",
               "diagnostics": "No issues detected during validation."
             }
           ]
