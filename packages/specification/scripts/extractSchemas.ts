@@ -1,9 +1,13 @@
 import fs from "fs"
 import path from "path"
-import {bundleSchema as UpdatePrescriptionStatusBundle} from "updatePrescriptionStatus"
+import {
+  bundleSchema as UpdatePrescriptionStatusBundle,
+  responseBundleSchema as ResponseBundle,
+  outcomeSchema as OperationOutcome
+} from "updatePrescriptionStatus"
 import {JSONSchema} from "json-schema-to-ts"
 
-const schemas = {UpdatePrescriptionStatusBundle}
+const schemas = {UpdatePrescriptionStatusBundle, ResponseBundle, OperationOutcome}
 
 const outputFolder = path.join(".", "schemas", "resources")
 

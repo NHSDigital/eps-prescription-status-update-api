@@ -29,7 +29,11 @@ import {
   bundleType,
   taskType
 } from "./schema/request"
-import {bundleEntryType as responseBundleEntryType} from "./schema/response"
+import {
+  bundleEntryType as responseBundleEntryType,
+  bundleSchema as responseBundleSchema,
+  outcomeSchema
+} from "./schema/response"
 
 const LAMBDA_TIMEOUT_MS = 9500
 const logger = new Logger({serviceName: "updatePrescriptionStatus"})
@@ -290,4 +294,4 @@ export const handler = middy(lambdaHandler)
   )
   .use(errorHandler({logger: logger}))
 
-export {bundleSchema}
+export {bundleSchema, responseBundleSchema, outcomeSchema}
