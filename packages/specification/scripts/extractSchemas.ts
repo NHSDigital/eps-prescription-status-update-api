@@ -7,7 +7,7 @@ import {
 } from "updatePrescriptionStatus"
 import {JSONSchema} from "json-schema-to-ts"
 
-const schemas = {UpdatePrescriptionStatusBundle, ResponseBundle, OperationOutcome}
+const schemas: Record<string, JSONSchema> = {UpdatePrescriptionStatusBundle, ResponseBundle, OperationOutcome}
 
 const outputFolder = path.join(".", "schemas", "resources")
 
