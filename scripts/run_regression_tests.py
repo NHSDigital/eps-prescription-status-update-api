@@ -60,8 +60,7 @@ def trigger_test_run():
 def get_workflow_runs():
     print(f"Getting workflow runs after date: {run_date_filter}")
     response = requests.get(
-        f"{GITHUB_API_URL}/runs?created=%3E{run_date_filter}",
-        headers=get_headers()
+        f"{GITHUB_API_URL}/runs?created=%3E{run_date_filter}", headers=get_headers()
     )
     assert (
         response.status_code == 200
@@ -115,10 +114,7 @@ def find_workflow():
 
 def get_job():
     job_request_url = f"{GITHUB_API_URL}/runs/{workflow_id}/jobs"
-    job_response = requests.get(
-        job_request_url,
-        headers=get_headers()
-    )
+    job_response = requests.get(job_request_url, headers=get_headers())
 
     return job_response.json()["jobs"][0]
 

@@ -61,6 +61,9 @@ on:
       DEPLOY_CHECK_PRESCRIPTION_STATUS_UPDATE:
         type: boolean
         default: false
+      REGRESSION_TESTS_PEM:
+        type: string
+        default: false
     secrets:
       CLOUD_FORMATION_DEPLOY_ROLE:
         required: true
@@ -74,7 +77,8 @@ on:
         required: false
       PROXYGEN_ROLE:
         required: false
-
+      REGRESSION_TESTS_PEM:
+        required: true
 jobs:
   release_code_and_api:
     runs-on: ubuntu-latest
@@ -205,18 +209,6 @@ jobs:
           owner: "NHSDigital"
           repositories: "electronic-prescription-service-api-regression-tests"
 
-      - name: Run Regression Testing
-        env:
-          TARGET_ENVIRONMENT: ${{ inputs.APIGEE_ENVIRONMENT }}
-          VERSION_NUMBER: ${{ inputs.VERSION_NUMBER }}
-          GITHUB-TOKEN: ${{ steps.generate-token.outputs.token }}
-        run: |
-              if [[ "$TARGET_ENVIRONMENT" != "prod" && "$TARGET_ENVIRONMENT" != "ref" ]]; then
-                make install-python
-                echo Running regression tests in the "$TARGET_ENVIRONMENT" environment
-                poetry run scripts/run_regression_tests.py --env="$TARGET_ENVIRONMENT" --pr_label="$VERSION_NUMBER" --token="$GITHUB-TOKEN"
-              fi
-
       - name: create_int_release_notes
         uses: ./.github/actions/update_confluence_jira
         if: ${{ inputs.CREATE_INT_RELEASE_NOTES == true && always() && !failure() && !cancelled() }}
@@ -266,3 +258,13 @@ jobs:
           git add _data/${{ inputs.APIGEE_ENVIRONMENT }}_deployments.csv
           git commit -m 'update releases for ${{ inputs.APIGEE_ENVIRONMENT }}'
           parallel --retries 10 --delay 3 ::: "git pull --rebase && git push"
+
+  regression_tests:
+    name: Regression Tests
+    uses: ./.github/workflows/run_regression_tests.yml
+    needs: release_code_and_api
+    with:
+      ENVIRONMENT: ${{ inputs.AWS_ENVIRONMENT }}
+      VERSION_NUMBER: ${{ inputs.VERSION_NUMBER }}
+    secrets:
+      REGRESSION_TESTS_PEM: ${{ secrets.REGRESSION_TESTS_PEM }}
