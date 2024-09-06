@@ -34,7 +34,7 @@ def generate_timestamp():
 
 
 def trigger_test_run():
-    env="INTERNAL-DEV" if arguments.env == "dev-pr" else arguments.env
+    env = "INTERNAL-DEV" if arguments.env == "dev-pr" else arguments.env
     body = {
         "ref": "main",
         "inputs": {
@@ -72,7 +72,10 @@ def get_workflow_runs():
 
 def get_jobs_for_workflow(jobs_url):
     print("Getting jobs for workflow...")
-    response = requests.get(jobs_url, headers=get_headers(),)
+    response = requests.get(
+        jobs_url,
+        headers=get_headers(),
+    )
     assert (
         response.status_code == 200
     ), f"Unable to get workflow jobs. Expected 200, got {response.status_code}"
@@ -117,10 +120,7 @@ def is_correct_job(list_of_jobs):
 
 def get_job():
     job_request_url = f"{GITHUB_API_URL}/runs/{workflow_id}/jobs"
-    job_response = requests.get(
-        job_request_url,
-        headers=get_headers()
-    )
+    job_response = requests.get(job_request_url, headers=get_headers())
 
     return job_response.json()["jobs"][0]
 
