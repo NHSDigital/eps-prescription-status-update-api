@@ -1,22 +1,18 @@
 name: "Delete old cloudformation stacks"
 
-# Controls when the action will run - in this case triggered manually
+# Controls when the action will run - in this case triggered manually and on schedule
 on:
   workflow_dispatch:
   schedule:
     - cron: "0 1,13 * * *"
 
-# A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
-  # This workflow contains a single job called "combine-prs"
   delete-old-cloudformation-stacks:
-    # The type of runner that the job will run on
     runs-on: ubuntu-latest
     permissions:
       id-token: write
       contents: read
 
-    # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
       - name: Checkout local code
         uses: actions/checkout@v4
@@ -38,6 +34,19 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+  delete-old-proxygen-deployments:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+
+    steps:
+      - name: Checkout local code
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ env.BRANCH_NAME }}
+          fetch-depth: 0
+  
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
@@ -45,7 +54,7 @@ jobs:
           role-to-assume: ${{ secrets.PROXYGEN_PTL_ROLE }}
           role-session-name: delete-old-proxygen
 
-      - name: delete stacks
+      - name: delete proxygen deployments
         shell: bash
         working-directory: .github/scripts
         run: ./delete_proxygen_deployments.sh
