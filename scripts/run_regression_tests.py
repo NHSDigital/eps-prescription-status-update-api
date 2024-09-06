@@ -5,7 +5,7 @@
   check the status of the regression test run to be reported to the CI.
 """
 import argparse
-import datetime
+from datetime import datetime, timedelta, timezone
 import random
 import string
 import requests
@@ -27,19 +27,20 @@ def generate_unique_run_id(length=15):
 
 
 def generate_timestamp():
-    delta_time = datetime.timedelta(minutes=2)
-    date_time = (datetime.datetime.utcnow() - delta_time).strftime("%Y-%m-%dT%H:%M")
+    delta_time = timedelta(minutes=2)
+    date_time = (datetime.now(timezone.utc) - delta_time).strftime("%Y-%m-%dT%H:%M")
     print(f"Generated Date as: {date_time}")
     return date_time
 
 
 def trigger_test_run():
+    env="INTERNAL-DEV" if arguments.env == "dev-pr" else arguments.env
     body = {
         "ref": "main",
         "inputs": {
             "id": run_id,
             "tags": "@regression",
-            "environment": arguments.env,
+            "environment": env,
             "pull_request_id": arguments.pr_label,
             "product": "PSU",
         },
@@ -54,13 +55,14 @@ def trigger_test_run():
     print(f"Dispatch workflow. Unique workflow identifier: {run_id}")
     assert (
         response.status_code == 204
-    ), f"Failed to trigger test run. Expected 204, got {response.status_code}"
+    ), f"Failed to trigger test run. Expected 204, got {response.status_code}. Response: {response.text}"
 
 
 def get_workflow_runs():
     print(f"Getting workflow runs after date: {run_date_filter}")
     response = requests.get(
-        f"{GITHUB_API_URL}/runs?created=%3E{run_date_filter}", headers=get_headers()
+        f"{GITHUB_API_URL}/runs?created=%3E{run_date_filter}",
+        headers=get_headers(),
     )
     assert (
         response.status_code == 200
@@ -70,7 +72,7 @@ def get_workflow_runs():
 
 def get_jobs_for_workflow(jobs_url):
     print("Getting jobs for workflow...")
-    response = requests.get(jobs_url, headers=get_headers())
+    response = requests.get(jobs_url, headers=get_headers(),)
     assert (
         response.status_code == 200
     ), f"Unable to get workflow jobs. Expected 200, got {response.status_code}"
@@ -93,28 +95,32 @@ def find_workflow():
             jobs_url = workflow["jobs_url"]
 
             list_of_jobs = get_jobs_for_workflow(jobs_url)
-
-            if list_of_jobs:
-                job = list_of_jobs[0]
-                steps = job["steps"]
-
-                if len(steps) >= 2:
-                    third_step = steps[2]
-                    if third_step["name"] == run_id:
-                        print(f"Workflow Job found! Using ID: {current_workflow_id}")
-                        return current_workflow_id
-                else:
-                    print("Not enough steps have been executed for this run yet...")
-            else:
-                print("Jobs for this workflow run haven't populated yet...")
+            if is_correct_job(list_of_jobs) is True:
+                print(f"Workflow Job found! Using ID: {current_workflow_id}")
+                return current_workflow_id
         print(
             "Processed all available workflows but no jobs were matching the Unique ID were found!"
         )
 
 
+def is_correct_job(list_of_jobs):
+    job = list_of_jobs[0]
+    steps = job["steps"]
+
+    if len(steps) >= 2:
+        third_step = steps[2]
+        if third_step["name"] == run_id:
+            return True
+    else:
+        print("Jobs for this workflow run haven't populated yet...")
+
+
 def get_job():
     job_request_url = f"{GITHUB_API_URL}/runs/{workflow_id}/jobs"
-    job_response = requests.get(job_request_url, headers=get_headers())
+    job_response = requests.get(
+        job_request_url,
+        headers=get_headers()
+    )
 
     return job_response.json()["jobs"][0]
 
@@ -153,7 +159,6 @@ if __name__ == "__main__":
         "--token", required=True, help="Please provide the authentication token."
     )
     arguments = parser.parse_args()
-
     run_id = generate_unique_run_id()
     run_date_filter = generate_timestamp()
 
