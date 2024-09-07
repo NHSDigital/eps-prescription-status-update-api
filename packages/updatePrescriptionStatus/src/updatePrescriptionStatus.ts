@@ -31,10 +31,10 @@ export const LAMBDA_TIMEOUT_MS = 9500
 export const TTL_DELTA = 60 * 60 * 24 * 365 * 2 // Keep records for 2 years
 export const logger = new Logger({serviceName: "updatePrescriptionStatus"})
 
-// AEA-4317 - Env vars for INT test prescriptions
+// AEA-4317 (AEA-4362) - Env vars for INT test prescriptions
 const INT_ENVIRONMENT = process.env.ENVIRONMENT === "int"
-export const TEST_PRESCRIPTION_1 = process.env.TEST_PRESCRIPTION_1 ?? ""
-export const TEST_PRESCRIPTION_2 = process.env.TEST_PRESCRIPTION_2 ?? ""
+export const TEST_PRESCRIPTIONS_1 = (process.env.TEST_PRESCRIPTIONS_1 ?? "").split(",") || []
+export const TEST_PRESCRIPTIONS_2 = (process.env.TEST_PRESCRIPTIONS_2 ?? "").split(",") || []
 
 export interface DataItem {
   LastModified: string
@@ -89,7 +89,7 @@ const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPro
 
   const dataItems = buildDataItems(requestEntries, xRequestID, applicationName)
 
-  // AEA-4317 - Intercept INT test prescriptions
+  // AEA-4317 (AEA-4362) - Intercept INT test prescriptions
   let testPrescription1Forced201 = false
   let testPrescriptionForcedError = false
   if (INT_ENVIRONMENT) {
@@ -97,18 +97,22 @@ const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPro
     const prescriptionIDs = dataItems.map((item) => item.PrescriptionID)
     const taskIDs = dataItems.map((item) => item.TaskID)
 
-    const testPrescription1Index = prescriptionIDs.indexOf(TEST_PRESCRIPTION_1)
+    const matchingPrescription1IDs = prescriptionIDs.filter((id) => TEST_PRESCRIPTIONS_1.includes(id))
+    const testPrescription1Index = prescriptionIDs.findIndex((id) => TEST_PRESCRIPTIONS_1.includes(id))
     const isTestPrescription1 = testPrescription1Index !== -1
     if (isTestPrescription1) {
       const taskID = taskIDs[testPrescription1Index]
-      interceptionResponse = await testPrescription1Intercept(logger, taskID)
+      const matchingPrescription1ID = matchingPrescription1IDs[testPrescription1Index]
+      interceptionResponse = await testPrescription1Intercept(logger, matchingPrescription1ID, taskID)
     }
 
-    const testPrescription2Index = prescriptionIDs.indexOf(TEST_PRESCRIPTION_2)
+    const matchingPrescription2IDs = prescriptionIDs.filter((id) => TEST_PRESCRIPTIONS_2.includes(id))
+    const testPrescription2Index = prescriptionIDs.findIndex((id) => TEST_PRESCRIPTIONS_2.includes(id))
     const isTestPrescription2 = testPrescription2Index !== -1
     if (isTestPrescription2) {
       const taskID = taskIDs[testPrescription2Index]
-      interceptionResponse = await testPrescription2Intercept(logger, taskID)
+      const matchingPrescription2ID = matchingPrescription2IDs[testPrescription2Index]
+      interceptionResponse = await testPrescription2Intercept(logger, matchingPrescription2ID, taskID)
     }
 
     testPrescription1Forced201 = !!interceptionResponse.testPrescription1Forced201
