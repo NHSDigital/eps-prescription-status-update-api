@@ -49,16 +49,6 @@ export const TASK_VALUES = [
     status: "in-progress",
     businessStatus: "Ready to collect",
     lastModified: "2023-09-11T10:11:12Z"
-  },
-  {
-    prescriptionID: "680F41-A83008-DF25EZ",
-    nhsNumber: "9449304130",
-    odsCode: "C9Z1O",
-    lineItemID: "e3843418-1900-44a1-8f6a-bff8601893b8",
-    id: TASK_ID_1,
-    status: "in-progress",
-    businessStatus: "Ready to collect",
-    lastModified: "2023-09-11T10:11:12Z"
   }
 ]
 

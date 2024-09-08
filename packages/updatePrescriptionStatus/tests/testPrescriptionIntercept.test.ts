@@ -19,7 +19,7 @@ import {TransactionCanceledException} from "@aws-sdk/client-dynamodb"
 const {mockSend, mockTransact, mockGetItem} = mockDynamoDBClient()
 process.env.ENVIRONMENT = "int"
 process.env.TEST_PRESCRIPTIONS_1 = [TASK_VALUES[0].prescriptionID, TASK_VALUES[0].prescriptionID].join(",")
-process.env.TEST_PRESCRIPTIONS_2 = [TASK_VALUES[1].prescriptionID, TASK_VALUES[2].prescriptionID].join(",")
+process.env.TEST_PRESCRIPTIONS_2 = [TASK_VALUES[1].prescriptionID, TASK_VALUES[1].prescriptionID].join(",")
 
 describe("testPrescription1Intercept", () => {
   beforeEach(() => {
