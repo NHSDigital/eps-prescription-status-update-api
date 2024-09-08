@@ -130,7 +130,8 @@ paths:
                   $ref: examples/request-ready-to-dispatch.json
               ready-to-dispatch-partial:
                 summary: ready-to-dispatch-partial
-                description: A request message contains tracking status `Ready to Dispatch -
+                description:
+                  A request message contains tracking status `Ready to Dispatch -
                   Partial`.
                 value:
                   $ref: examples/request-ready-to-dispatch-partial.json
@@ -168,12 +169,14 @@ paths:
                 $ref: "#/components/schemas/ResponseBundle"
               examples:
                 single-item:
-                  description: A successful response to a UpdatePrescriptionStatus request,
+                  description:
+                    A successful response to a UpdatePrescriptionStatus request,
                     contains a single item.
                   value:
                     $ref: examples/response-single-item.json
                 multiple-items:
-                  description: A successful response to a UpdatePrescriptionStatus request,
+                  description:
+                    A successful response to a UpdatePrescriptionStatus request,
                     contains multiple items.
                   value:
                     $ref: examples/response-multiple-items.json
@@ -344,7 +347,8 @@ components:
             - Bundle
         type:
           type: string
-          description: Denotes that the bundle is a list of status updates to be performed
+          description:
+            Denotes that the bundle is a list of status updates to be performed
             as one transaction.
           enum:
             - transaction
@@ -411,5 +415,8 @@ x-nhsd-apim:
       header: show-all-suppliers
   ratelimiting:
     proxy:
-      timeunit: second
-      limit: 60
+      limit: 20000
+      timeunit: minute
+    app-default:
+      limit: 20000
+      timeunit: minute

@@ -3,13 +3,14 @@ import {MiddlewareObj} from "@middy/core"
 import {Logger} from "@aws-lambda-powertools/logger"
 
 type MockLogger = {
-  error: (error: Error, message: string) => void
-}
-type HandlerLogger = Console | MockLogger | Logger
+  error: (error: Error, message: string) => void;
+};
+// eslint-disable-next-line no-undef
+type HandlerLogger = Console | MockLogger | Logger;
 type LoggerAndLevel = {
-  logger?: HandlerLogger
-  level?: string
-}
+  logger?: HandlerLogger;
+  level?: string;
+};
 
 class MiddyErrorHandler {
   handlerResponse: object

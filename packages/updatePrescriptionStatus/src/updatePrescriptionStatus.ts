@@ -20,9 +20,21 @@ import {
   timeoutResponse
 } from "./utils/responses"
 import {TransactionCanceledException} from "@aws-sdk/client-dynamodb"
+import {
+  InterceptionResult,
+  testPrescription1Intercept,
+  testPrescription2Intercept
+} from "./utils/testPrescriptionIntercept"
 
-const LAMBDA_TIMEOUT_MS = 9500
-const logger = new Logger({serviceName: "updatePrescriptionStatus"})
+export const LAMBDA_TIMEOUT_MS = 9500
+// this is length of time from now when records in dynamodb will automatically be expired
+export const TTL_DELTA = 60 * 60 * 24 * 365 * 2 // Keep records for 2 years
+export const logger = new Logger({serviceName: "updatePrescriptionStatus"})
+
+// AEA-4317 - Env vars for INT test prescriptions
+const INT_ENVIRONMENT = process.env.ENVIRONMENT === "int"
+export const TEST_PRESCRIPTION_1 = process.env.TEST_PRESCRIPTION_1 ?? ""
+export const TEST_PRESCRIPTION_2 = process.env.TEST_PRESCRIPTION_2 ?? ""
 
 export interface DataItem {
   LastModified: string
@@ -36,6 +48,7 @@ export interface DataItem {
   TaskID: string
   TerminalStatus: string
   ApplicationName: string
+  ExpiryTime: number
 }
 
 const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
@@ -76,6 +89,32 @@ const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPro
 
   const dataItems = buildDataItems(requestEntries, xRequestID, applicationName)
 
+  // AEA-4317 - Intercept INT test prescriptions
+  let testPrescription1Forced201 = false
+  let testPrescriptionForcedError = false
+  if (INT_ENVIRONMENT) {
+    let interceptionResponse: InterceptionResult = {}
+    const prescriptionIDs = dataItems.map((item) => item.PrescriptionID)
+    const taskIDs = dataItems.map((item) => item.TaskID)
+
+    const testPrescription1Index = prescriptionIDs.indexOf(TEST_PRESCRIPTION_1)
+    const isTestPrescription1 = testPrescription1Index !== -1
+    if (isTestPrescription1) {
+      const taskID = taskIDs[testPrescription1Index]
+      interceptionResponse = await testPrescription1Intercept(logger, taskID)
+    }
+
+    const testPrescription2Index = prescriptionIDs.indexOf(TEST_PRESCRIPTION_2)
+    const isTestPrescription2 = testPrescription2Index !== -1
+    if (isTestPrescription2) {
+      const taskID = taskIDs[testPrescription2Index]
+      interceptionResponse = await testPrescription2Intercept(logger, taskID)
+    }
+
+    testPrescription1Forced201 = !!interceptionResponse.testPrescription1Forced201
+    testPrescriptionForcedError = !!interceptionResponse.testPrescriptionForcedError
+  }
+
   try {
     const persistSuccess = persistDataItems(dataItems, logger)
     const persistResponse = await jobWithTimeout(LAMBDA_TIMEOUT_MS, persistSuccess)
@@ -95,11 +134,25 @@ const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPro
     logger.info("Event processed successfully.")
   } catch (e) {
     if (e instanceof TransactionCanceledException) {
-      handleTransactionCancelledException(e, responseEntries)
+      // AEA-4317 - Forcing 201 response for INT test prescription 1
+      if (testPrescription1Forced201) {
+        logger.info("Forcing 201 response for INT test prescription 1")
+        responseEntries = createSuccessResponseEntries(requestEntries)
+        return response(201, responseEntries)
+      }
 
+      handleTransactionCancelledException(e, responseEntries)
       return response(409, responseEntries)
     }
   }
+
+  // AEA-4317 - Forcing error for INT test prescription
+  if (testPrescriptionForcedError) {
+    logger.info("Forcing error for INT test prescription")
+    responseEntries = [serverError()]
+    return response(500, responseEntries)
+  }
+
   return response(201, responseEntries)
 }
 
@@ -207,7 +260,8 @@ export function buildDataItems(
       Status: task.businessStatus!.coding![0].code!,
       TaskID: task.id!,
       TerminalStatus: task.status,
-      ApplicationName: applicationName
+      ApplicationName: applicationName,
+      ExpiryTime: (Math.floor(+new Date() / 1000) + TTL_DELTA)
     }
 
     dataItems.push(dataItem)

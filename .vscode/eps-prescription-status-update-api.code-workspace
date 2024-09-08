@@ -133,7 +133,10 @@
     "jest.jestCommandLine": "NODE_OPTIONS=--experimental-vm-modules node_modules/.bin/jest --no-cache",
     "jest.nodeEnv": {
       "POWERTOOLS_DEV": true
-    }
+    },
+    "typescript.tsdk": "eps-prescription-status-update-monorepo/node_modules/typescript/lib",
+    "eslint.useFlatConfig": true,
+    "eslint.format.enable": true
   },
   "extensions": {
     "recommendations": [
@@ -146,7 +149,6 @@
       "orta.vscode-jest",
       "42crunch.vscode-openapi",
       "mermade.openapi-lint",
-      "rvest.vs-code-prettier-eslint",
       "redhat.vscode-yaml",
       "christian-kohler.npm-intellisense",
       "dbaeumer.vscode-eslint",

@@ -1,6 +1,8 @@
 import {Logger} from "@aws-lambda-powertools/logger"
 import {
   DynamoDBClient,
+  GetItemCommand,
+  GetItemCommandInput,
   TransactWriteItem,
   TransactWriteItemsCommand,
   TransactionCanceledException
@@ -41,6 +43,29 @@ export async function persistDataItems(dataItems: Array<DataItem>, logger: Logge
       throw e
     }
     logger.error("Error sending TransactWriteItemsCommand to DynamoDB.", {error: e})
+    return false
+  }
+}
+
+export async function checkPrescriptionRecordExistence(
+  prescriptionID: string,
+  taskID: string,
+  logger: Logger
+): Promise<boolean> {
+  logger.info("Checking if prescription record exists in DynamoDB.", {prescriptionID}, {taskID})
+  const query: GetItemCommandInput = {
+    TableName: tableName,
+    Key: {
+      PrescriptionID: {S: prescriptionID},
+      TaskID: {S: taskID}
+    }
+  }
+  try {
+    const result = await client.send(new GetItemCommand(query))
+    logger.info("Query successful.", {result})
+    return !!result?.Item
+  } catch (e) {
+    logger.error("Error querying DynamoDB.", {error: e})
     return false
   }
 }

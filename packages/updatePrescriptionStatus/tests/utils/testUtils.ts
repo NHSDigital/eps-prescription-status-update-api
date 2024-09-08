@@ -29,7 +29,7 @@ export const DEFAULT_DATE = new Date("2023-09-11T10:11:12Z")
 const DEFAULT_HEADERS = {"x-request-id": X_REQUEST_ID, "attribute-name": APPLICATION_NAME}
 const TABLE_NAME = "PrescriptionStatusUpdates"
 
-const TASK_VALUES = [
+export const TASK_VALUES = [
   {
     prescriptionID: "07A66F-A83008-1EEEA0",
     nhsNumber: "9449304130",
@@ -145,14 +145,16 @@ export function mockInternalDependency(modulePath: string, module: object, depen
 export function mockDynamoDBClient() {
   const mockSend = jest.fn()
   const mockTransact = jest.fn()
+  const mockGetItem = jest.fn()
   jest.unstable_mockModule("@aws-sdk/client-dynamodb", () => {
     return {
       ...dynamo,
       DynamoDBClient: jest.fn().mockImplementation(() => ({
         send: mockSend
       })),
-      TransactWriteItemsCommand: mockTransact
+      TransactWriteItemsCommand: mockTransact,
+      GetItemCommand: mockGetItem
     }
   })
-  return {mockSend, mockTransact}
+  return {mockSend, mockTransact, mockGetItem}
 }

@@ -43,6 +43,9 @@ Parameters:
   DeployCheckPrescriptionStatusUpdate:
     Type: String
 
+  Environment:
+    Type: String
+
 Conditions:
   ShouldDeployCheckPrescriptionStatusUpdate: !Equals
     - true
@@ -60,8 +63,16 @@ Resources:
         Variables:
           TABLE_NAME: !Ref PrescriptionStatusUpdatesTableName
           LOG_LEVEL: !Ref LogLevel
+          ENVIRONMENT: !Ref Environment
+          TEST_PRESCRIPTION_1: "None"
+          TEST_PRESCRIPTION_2: "None"
     Metadata:
       BuildMethod: esbuild
+      guard:
+        SuppressedRules:
+          - LAMBDA_DLQ_CHECK
+          - LAMBDA_INSIDE_VPC
+          - LAMBDA_CONCURRENCY_CHECK
       BuildProperties:
         Minify: true
         Target: es2020
@@ -83,6 +94,8 @@ Resources:
         AdditionalPolicies: !Join
           - ","
           - - Fn::ImportValue: !Sub ${StackName}:tables:${PrescriptionStatusUpdatesTableName}:TableWritePolicyArn
+            - Fn::ImportValue: !Sub ${StackName}:tables:${PrescriptionStatusUpdatesTableName}:TableReadPolicyArn
+            - Fn::ImportValue: !Sub ${StackName}:tables:UsePrescriptionStatusUpdatesKMSKeyPolicyArn
         LogRetentionInDays: !Ref LogRetentionInDays
         CloudWatchKMSKeyId: !ImportValue account-resources:CloudwatchLogsKmsKeyArn
         EnableSplunk: !Ref EnableSplunk
@@ -101,6 +114,11 @@ Resources:
           LOG_LEVEL: !Ref LogLevel
     Metadata:
       BuildMethod: esbuild
+      guard:
+        SuppressedRules:
+          - LAMBDA_DLQ_CHECK
+          - LAMBDA_INSIDE_VPC
+          - LAMBDA_CONCURRENCY_CHECK
       BuildProperties:
         Minify: true
         Target: es2020
@@ -138,6 +156,11 @@ Resources:
           LOG_LEVEL: !Ref LogLevel
     Metadata:
       BuildMethod: esbuild
+      guard:
+        SuppressedRules:
+          - LAMBDA_DLQ_CHECK
+          - LAMBDA_INSIDE_VPC
+          - LAMBDA_CONCURRENCY_CHECK
       BuildProperties:
         Minify: true
         Target: es2020
@@ -159,6 +182,7 @@ Resources:
         AdditionalPolicies: !Join
           - ","
           - - Fn::ImportValue: !Sub ${StackName}:tables:${PrescriptionStatusUpdatesTableName}:TableReadPolicyArn
+            - Fn::ImportValue: !Sub ${StackName}:tables:UsePrescriptionStatusUpdatesKMSKeyPolicyArn
         LogRetentionInDays: !Ref LogRetentionInDays
         CloudWatchKMSKeyId: !ImportValue account-resources:CloudwatchLogsKmsKeyArn
         EnableSplunk: !Ref EnableSplunk
@@ -178,6 +202,11 @@ Resources:
           COMMIT_ID: !Ref CommitId
     Metadata:
       BuildMethod: esbuild
+      guard:
+        SuppressedRules:
+          - LAMBDA_DLQ_CHECK
+          - LAMBDA_INSIDE_VPC
+          - LAMBDA_CONCURRENCY_CHECK
       BuildProperties:
         Minify: true
         Target: es2020
@@ -214,6 +243,11 @@ Resources:
       Role: !GetAtt CapabilityStatementResources.Outputs.LambdaRoleArn
     Metadata:
       BuildMethod: esbuild
+      guard:
+        SuppressedRules:
+          - LAMBDA_DLQ_CHECK
+          - LAMBDA_INSIDE_VPC
+          - LAMBDA_CONCURRENCY_CHECK
       BuildProperties:
         Minify: true
         Target: es2020
@@ -253,6 +287,11 @@ Resources:
           MAX_RESULTS_RETURNED: 15
     Metadata:
       BuildMethod: esbuild
+      guard:
+        SuppressedRules:
+          - LAMBDA_DLQ_CHECK
+          - LAMBDA_INSIDE_VPC
+          - LAMBDA_CONCURRENCY_CHECK
       BuildProperties:
         Minify: true
         Target: es2020
@@ -274,6 +313,7 @@ Resources:
         AdditionalPolicies: !Join
           - ","
           - - Fn::ImportValue: !Sub ${StackName}:tables:${PrescriptionStatusUpdatesTableName}:TableReadPolicyArn
+            - Fn::ImportValue: !Sub ${StackName}:tables:UsePrescriptionStatusUpdatesKMSKeyPolicyArn
         LogRetentionInDays: !Ref LogRetentionInDays
         CloudWatchKMSKeyId: !ImportValue account-resources:CloudwatchLogsKmsKeyArn
         EnableSplunk: !Ref EnableSplunk

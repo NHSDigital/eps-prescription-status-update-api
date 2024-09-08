@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any, max-len */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import {
   expect,
   describe,
@@ -21,7 +21,7 @@ import {APIGatewayProxyEvent} from "aws-lambda"
 import * as content from "../src/validation/content"
 import {TransactionCanceledException} from "@aws-sdk/client-dynamodb"
 const mockValidateEntry = mockInternalDependency("../src/validation/content", content, "validateEntry")
-const {castEventBody, getXRequestID, validateEntries, handleTransactionCancelledException, buildDataItems} =
+const {castEventBody, getXRequestID, validateEntries, handleTransactionCancelledException, buildDataItems, TTL_DELTA} =
   await import("../src/updatePrescriptionStatus")
 
 describe("Unit test getXRequestID", () => {
@@ -255,5 +255,19 @@ describe("buildDataItems", () => {
     const dataItems = buildDataItems([requestEntry], "", "")
 
     expect(dataItems[0].RepeatNo).toEqual(repeatNo)
+  })
+
+  it("should add a future dated ExpiryTime", () => {
+    const task = validTask()
+    // set expected expiry time to be 100 milliseconds in the past
+    const expectedExpiryTime = (Math.floor(+new Date() / 1000) + TTL_DELTA) - 100
+    const requestEntry: BundleEntry = {
+      resource: task,
+      fullUrl: ""
+    }
+
+    const dataItems = buildDataItems([requestEntry], "", "")
+
+    expect(dataItems[0].ExpiryTime).toBeGreaterThan(expectedExpiryTime)
   })
 })
