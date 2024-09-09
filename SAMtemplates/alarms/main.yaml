@@ -1,0 +1,80 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: AWS::Serverless-2016-10-31
+Description: |
+  PSU Cloudwatch alarms and related resources
+
+Parameters:
+  StackName:
+    Type: String
+    Default: none
+
+  GetStatusUpdatesFunctionName:
+    Type: String
+    Default: none
+
+Resources:
+  GetStatusUpdatesErrorsLogsMetricFilter:
+    Type: AWS::Logs::MetricFilter
+    Properties:
+      FilterName: GetStatusUpdatesErrors
+      FilterPattern: !Sub '{ ($.level = "ERROR") && ($.function_name = "${GetStatusUpdatesFunctionName}") }' # function_name included to allow it to be set as a dimension on the metric
+      LogGroupName:
+        Fn::ImportValue: !Sub ${StackName}:functions:${GetStatusUpdatesFunctionName}:LambdaLogGroupName
+      MetricTransformations:
+        - MetricNamespace: LambdaLogFilterMetrics
+          MetricName: ErrorCount
+          MetricValue: 1
+          Unit: Count
+          Dimensions: # dimensions for a logs filter metric can only be a field/value from the filter pattern
+            - Key: FunctionName
+              Value: $.function_name
+
+  GetStatusUpdatesErrorsAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmDescription: Count of GetStatusUpdates errors
+      AlarmName: !Sub ${StackName}_GetStatusUpdates_Errors
+      Namespace: LambdaLogFilterMetrics
+      MetricName: ErrorCount
+      Dimensions:
+        - Name: FunctionName
+          Value: !Ref GetStatusUpdatesFunctionName
+      Period: 60 #seconds
+      EvaluationPeriods: 1
+      Statistic: Sum
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      Threshold: 1
+      Unit: Count
+      TreatMissingData: notBreaching
+      ActionsEnabled: true
+      AlarmActions:
+        - !ImportValue lambda-resources:SlackAlertsSnsTopicArn
+      InsufficientDataActions:
+        - !ImportValue lambda-resources:SlackAlertsSnsTopicArn
+      OKActions:
+        - !ImportValue lambda-resources:SlackAlertsSnsTopicArn
+
+  GetStatusUpdatesUnhandledErrorsAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmDescription: Count of GetStatusUpdates unhandled errors
+      AlarmName: !Sub ${StackName}_GetStatusUpdates_UnhandledErrors
+      Namespace: Lambda
+      MetricName: Errors
+      Dimensions:
+        - Name: FunctionName
+          Value: !Ref GetStatusUpdatesFunctionName
+      Period: 60 #seconds
+      EvaluationPeriods: 1
+      Statistic: Sum
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      Threshold: 1
+      Unit: Count
+      TreatMissingData: notBreaching
+      ActionsEnabled: true
+      AlarmActions:
+        - !ImportValue lambda-resources:SlackAlertsSnsTopicArn
+      InsufficientDataActions:
+        - !ImportValue lambda-resources:SlackAlertsSnsTopicArn
+      OKActions:
+        - !ImportValue lambda-resources:SlackAlertsSnsTopicArn

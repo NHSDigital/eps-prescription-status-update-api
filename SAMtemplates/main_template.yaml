@@ -132,3 +132,11 @@ Resources:
         ConvertRequestToFhirFormatFunctionArn: !GetAtt Functions.Outputs.ConvertRequestToFhirFormatFunctionArn
         LogRetentionInDays: !Ref LogRetentionInDays
         EnableSplunk: !Ref EnableSplunk
+
+  Alarms:
+    Type: AWS::Serverless::Application
+    Properties:
+      Location: alarms/main.yaml
+      Parameters:
+        StackName: !Ref AWS::StackName
+        GetStatusUpdatesFunctionName: !GetAtt Functions.Outputs.GetStatusUpdatesFunctionName
