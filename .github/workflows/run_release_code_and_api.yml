@@ -257,3 +257,5 @@ jobs:
     with:
       ENVIRONMENT: ${{ inputs.APIGEE_ENVIRONMENT }}
       VERSION_NUMBER: ${{ inputs.VERSION_NUMBER }}
+    secrets:
+      REGRESSION_TESTS_PEM: ${{ secrets.REGRESSION_TESTS_PEM }}

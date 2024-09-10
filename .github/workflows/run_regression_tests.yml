@@ -9,7 +9,12 @@ on:
       VERSION_NUMBER:
         required: true
         type: string
-
+      REGRESSION_TESTS_PEM:
+        type: string
+        default: false
+    secrets:
+      REGRESSION_TESTS_PEM:
+        required: true
 
 jobs:
   run_regression_tests:
