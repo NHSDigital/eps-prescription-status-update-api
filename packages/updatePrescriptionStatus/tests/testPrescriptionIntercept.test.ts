@@ -18,8 +18,8 @@ import {TransactionCanceledException} from "@aws-sdk/client-dynamodb"
 
 const {mockSend, mockTransact, mockGetItem} = mockDynamoDBClient()
 process.env.ENVIRONMENT = "int"
-process.env.TEST_PRESCRIPTIONS_1 = [TASK_VALUES[0].prescriptionID, TASK_VALUES[0].prescriptionID].join(",")
-process.env.TEST_PRESCRIPTIONS_2 = [TASK_VALUES[1].prescriptionID, TASK_VALUES[1].prescriptionID].join(",")
+process.env.TEST_PRESCRIPTIONS_1 = [TASK_VALUES[0].prescriptionID, TASK_VALUES[1].prescriptionID].join(",")
+process.env.TEST_PRESCRIPTIONS_2 = [TASK_VALUES[2].prescriptionID, TASK_VALUES[3].prescriptionID].join(",")
 
 describe("testPrescription1Intercept", () => {
   beforeEach(() => {
@@ -107,10 +107,10 @@ describe("testPrescription1Intercept", () => {
 
 describe("testPrescription2Intercept", () => {
   it("Return 500 and write to DynamoDB when test prescription 2 is submitted for the first time", async () => {
-    const body = generateBody(2)
-    body.entry = [body.entry[1]]
+    const body = generateBody(3)
+    body.entry = [body.entry[2]]
     const event: APIGatewayProxyEvent = generateMockEvent(body)
-    const expectedItems = generateExpectedItems()
+    const expectedItems = generateExpectedItems(3)
     mockTransact.mockReturnValue(expectedItems)
 
     const {handler, logger} = await import("../src/updatePrescriptionStatus")
@@ -126,8 +126,8 @@ describe("testPrescription2Intercept", () => {
     expect(mockGetItem).toHaveBeenCalledTimes(1)
     expect(mockGetItem).toHaveBeenCalledWith({
       Key: {
-        PrescriptionID: {S: TASK_VALUES[1].prescriptionID},
-        TaskID: {S: TASK_VALUES[1].id}
+        PrescriptionID: {S: TASK_VALUES[2].prescriptionID},
+        TaskID: {S: TASK_VALUES[2].id}
       },
       TableName: "PrescriptionStatusUpdates"
     })
@@ -139,8 +139,8 @@ describe("testPrescription2Intercept", () => {
   })
 
   it("Return 409 when test prescription 2 is submitted for a second time", async () => {
-    const body = generateBody(2)
-    body.entry = [body.entry[1]]
+    const body = generateBody(4)
+    body.entry = [body.entry[3]]
     const event: APIGatewayProxyEvent = generateMockEvent(body)
     const expectedItems = generateExpectedItems()
     mockTransact.mockReturnValue(expectedItems)
@@ -184,8 +184,8 @@ describe("testPrescription2Intercept", () => {
     expect(mockGetItem).toHaveBeenCalledTimes(1)
     expect(mockGetItem).toHaveBeenCalledWith({
       Key: {
-        PrescriptionID: {S: TASK_VALUES[1].prescriptionID},
-        TaskID: {S: TASK_VALUES[1].id}
+        PrescriptionID: {S: TASK_VALUES[3].prescriptionID},
+        TaskID: {S: TASK_VALUES[3].id}
       },
       TableName: "PrescriptionStatusUpdates"
     })

@@ -17,10 +17,14 @@ import valid from "../tasks/valid.json"
 
 export const TASK_ID_0 = "4d70678c-81e4-4ff4-8c67-17596fd0aa46"
 export const TASK_ID_1 = "0ae4daf3-f24b-479d-b8fa-b69e2d873b60"
+export const TASK_ID_2 = "7fa03335-7adf-4090-a9d3-1d20230286cf"
+export const TASK_ID_3 = "55f8c42b-26fc-4970-9352-95caf24f0d7e"
 
 const FULL_URL_PREFIX = "urn:uuid:"
 export const FULL_URL_0 = FULL_URL_PREFIX + TASK_ID_0
 export const FULL_URL_1 = FULL_URL_PREFIX + TASK_ID_1
+export const FULL_URL_2 = FULL_URL_PREFIX + TASK_ID_2
+export const FULL_URL_3 = FULL_URL_PREFIX + TASK_ID_3
 
 export const X_REQUEST_ID = "43313002-debb-49e3-85fa-34812c150242"
 export const APPLICATION_NAME = "test-app"
@@ -46,6 +50,26 @@ export const TASK_VALUES = [
     odsCode: "C9Z1O",
     lineItemID: "e3843418-1900-44a1-8f6a-bff8601893b8",
     id: TASK_ID_1,
+    status: "in-progress",
+    businessStatus: "Ready to collect",
+    lastModified: "2023-09-11T10:11:12Z"
+  },
+  {
+    prescriptionID: "EF0871-A83008-A5797M",
+    nhsNumber: "9449304130",
+    odsCode: "C9Z1O",
+    lineItemID: "9681ae97-f7e4-44d8-a818-898e9e60ebfc",
+    id: TASK_ID_2,
+    status: "completed",
+    businessStatus: "Dispatched",
+    lastModified: "2023-09-11T10:11:12Z"
+  },
+  {
+    prescriptionID: "01F864-A83008-B373F0",
+    nhsNumber: "9449304130",
+    odsCode: "C9Z1O",
+    lineItemID: "e15cedb6-ebd2-481b-a3a2-bcaeff3940e9",
+    id: TASK_ID_3,
     status: "in-progress",
     businessStatus: "Ready to collect",
     lastModified: "2023-09-11T10:11:12Z"
