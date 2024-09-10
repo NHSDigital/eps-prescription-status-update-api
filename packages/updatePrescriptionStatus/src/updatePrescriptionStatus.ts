@@ -31,7 +31,7 @@ export const LAMBDA_TIMEOUT_MS = 9500
 export const TTL_DELTA = 60 * 60 * 24 * 365 * 2 // Keep records for 2 years
 export const logger = new Logger({serviceName: "updatePrescriptionStatus"})
 
-// AEA-4317 (AEA-4362) - Env vars for INT test prescriptions
+// AEA-4317 (AEA-4365) - Env vars for INT test prescriptions
 const INT_ENVIRONMENT = process.env.ENVIRONMENT === "int"
 export const TEST_PRESCRIPTIONS_1 = (process.env.TEST_PRESCRIPTIONS_1 ?? "").split(",") || []
 export const TEST_PRESCRIPTIONS_2 = (process.env.TEST_PRESCRIPTIONS_2 ?? "").split(",") || []
@@ -89,7 +89,7 @@ const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPro
 
   const dataItems = buildDataItems(requestEntries, xRequestID, applicationName)
 
-  // AEA-4317 (AEA-4362) - Intercept INT test prescriptions
+  // AEA-4317 (AEA-4365) - Intercept INT test prescriptions
   let testPrescription1Forced201 = false
   let testPrescriptionForcedError = false
   if (INT_ENVIRONMENT) {
