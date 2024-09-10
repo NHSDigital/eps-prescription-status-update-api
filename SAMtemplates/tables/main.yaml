@@ -40,6 +40,17 @@ Resources:
             Action:
               - kms:*
             Resource: "*"
+          - Sid: Enable read only decrypt
+            Effect: Allow
+            Principal:
+              AWS: "*"
+            Action:
+              - kms:DescribeKey
+              - kms:Decrypt
+            Resource: "*"
+            Condition:
+              ArnLike:
+                aws:PrincipalArn: !Sub "arn:aws:iam::${AWS::AccountId}:role/aws-reserved/sso.amazonaws.com/${AWS::Region}/AWSReservedSSO_ReadOnly*"
 
   PrescriptionStatusUpdatesKMSKeyAlias:
     Type: AWS::KMS::Alias
