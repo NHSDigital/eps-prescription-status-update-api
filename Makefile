@@ -64,6 +64,7 @@ sam-validate:
 	sam validate --template-file SAMtemplates/tables/dynamodb_resources.yaml --region eu-west-2
 	sam validate --template-file SAMtemplates/state_machines/main.yaml --region eu-west-2
 	sam validate --template-file SAMtemplates/state_machines/state_machine_resources.yaml --region eu-west-2
+	sam validate --template-file SAMtemplates/alarms/main.yaml --region eu-west-2
 
 sam-validate-sandbox:
 	sam validate --template-file SAMtemplates/sandbox_template.yaml --region eu-west-2
