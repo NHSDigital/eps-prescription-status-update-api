@@ -13,9 +13,7 @@ info:
   description: |
     ## Overview
     Use this API to enable dispensing suppliers to push status information about electronic prescriptions to patients on a national scale via the NHS App (and potential other third parties in the future).
-
     The overall aim of the service is to reduce burden to frontline NHS services by reducing the number of routine patient queries about their prescriptions.
-
     You can:
     * enable patients to know when their prescription is ready
     * enable dispensing suppliers to push status information about electronic prescriptions
@@ -58,7 +56,6 @@ info:
     * 200 to 299 if it succeeded, including code 202 if it was accepted by an API that needs to wait for further action
     * 400 to 499 if it failed because of a client error by your application
     * 500 to 599 if it failed because of an error on our server
-
     Errors specific to each API are shown in the Endpoints section, under Response. See our [reference guide](https://digital.nhs.uk/developer/guides-and-documentation/reference-guide#http-status-codes) for more on errors.
     ## Open source
     You might find the following [open source](https://digital.nhs.uk/developer/guides-and-documentation/reference-guide#open-source) resources useful:
@@ -102,6 +99,13 @@ servers:
   - url: https://api.service.nhs.uk/prescription-status-update
     description: Production
 
+components:
+  commonDescriptions:
+    urlEncodingInfo: &urlEncodingInfo |
+      Please ensure that any non-ASCII characters, including symbols like '+', in URL query string parameters are properly URL encoded.
+      URL encoding replaces unsafe characters with a "%" followed by two hexadecimal digits, and spaces are typically replaced with a plus (+) sign or "%20".
+
+
 paths:
   /:
     post:
@@ -111,26 +115,30 @@ paths:
         ## Overview
         Status updates to be provided on prescription items to allow users of the NHS App and third-party app consumers to track the progress of their prescriptions and when ready to collect.
       parameters:
-        - $ref: "#/components/parameters/BearerAuthorisation"
-        - $ref: "#/components/parameters/RequestID"
-        - $ref: "#/components/parameters/CorrelationID"
+        - $ref: '#/components/parameters/BearerAuthorisation'
+        - $ref: '#/components/parameters/RequestID'
+        - $ref: '#/components/parameters/CorrelationID'
+
       requestBody:
         required: true
         content:
           application/fhir+json:
             schema:
-              $ref: "#/components/schemas/UpdatePrescriptionStatusBundle"
+              $ref: '#/components/schemas/UpdatePrescriptionStatusBundle'
             examples:
               ready-to-dispatch:
-                summary: ready-to-dispatch
-                description: A request message contains tracking status `Ready to Dispatch`.
+                summary: ready-to-dispatch 
+                description: |
+                  A request message contains tracking status `Ready to Dispatch`.      
+  
+                  Please ensure that any non-ASCII characters, including symbols like ' +', in URL query string parameters are properly URL encoded.
+  
+                  URL encoding replaces unsafe characters with a "%" followed by two  hexadecimal digits, and spaces are typically replaced with a plus (+)  sign or "%20".     
                 value:
                   $ref: examples/request-ready-to-dispatch.json
               ready-to-dispatch-partial:
                 summary: ready-to-dispatch-partial
-                description:
-                  A request message contains tracking status `Ready to Dispatch -
-                  Partial`.
+                description: A request message contains tracking status `Ready to Dispatch - Partial`.
                 value:
                   $ref: examples/request-ready-to-dispatch-partial.json
               dispatched:
@@ -154,7 +162,7 @@ paths:
                 value:
                   $ref: examples/request-multiple-items.json
       responses:
-        "2XX":
+        2XX:
           description: |
             The request was processed successfully. Below are the possible status codes within the 2XX range that may be returned:
             | HTTP status | Status code     | Description                                                                                                                            |
@@ -164,21 +172,19 @@ paths:
           content:
             application/fhir+json:
               schema:
-                $ref: "#/components/schemas/ResponseBundle"
+                $ref: '#/components/schemas/ResponseBundle'
               examples:
                 single-item:
-                  description:
-                    A successful response to a UpdatePrescriptionStatus request,
+                  description: A successful response to a UpdatePrescriptionStatus request,
                     contains a single item.
                   value:
                     $ref: examples/response-single-item.json
                 multiple-items:
-                  description:
-                    A successful response to a UpdatePrescriptionStatus request,
+                  description: A successful response to a UpdatePrescriptionStatus request,
                     contains multiple items.
                   value:
                     $ref: examples/response-multiple-items.json
-        "4XX":
+        4XX:
           description: |
             An error occurred as follows:
             | HTTP status | Error code          | Description                                                                                                                               |
@@ -188,15 +194,14 @@ paths:
             | 408         | `timeout`           | Request timed out.                                                                                                                        |
             | 409         | `duplicate`         | Request contains a task ID and prescription ID identical to a record already in the data store.                                           |
             | 429         | `throttled`         | You have exceeded your application's [rate limit](https://digital.nhs.uk/developer/guides-and-documentation/reference-guide#rate-limits). |
-
             The error code will be included in the returned OperationOutcome (below).
           content:
             application/fhir+json:
               schema:
-                $ref: "#/components/schemas/OperationOutcome"
+                $ref: '#/components/schemas/OperationOutcome'
               example:
                 $ref: examples/error-invalid-prescriptionid.json
-        "5XX":
+        5XX:
           description: |
             An error occurred due to a server-side issue. Below are the possible status codes within the 5XX range that may be returned:
             | HTTP status | Error code      | Description                                                                                                 |
@@ -210,7 +215,7 @@ paths:
       operationId: prescription-status-update-metadata
       summary: Prescription status update metadata
       responses:
-        "200":
+        '200':
           description: Successful retrieval of metadata.
       security:
         - app-level3: []
@@ -221,10 +226,8 @@ paths:
       description: |
         ## This endpoint is only available in PTL environments
         ## Overview
-        This returns prescription status updates created by the authorized application. The result can be filtered by a combination of odscode, nhsnumber or prescription id.   
-
+        This returns prescription status updates created by the authorized application. The result can be filtered by a combination of odscode, nhsnumber or prescription id.
         A maximum of 15 results is returned. If more results are available, then headers LastEvaluatedKey-PrescriptionID and LastEvaluatedKey-TaskID are returned in the result. These values should be used in a subsequent request in the headers ExclusiveStartKey-PrescriptionID and ExclusiveStartKey-TaskID.
-
         It is possible that less than 15 results are returned even when more are available. This is a feature of the database and filtering methods being used. At least 5 results will be returned, if available.
       parameters:
         - in: query
@@ -260,12 +263,12 @@ paths:
             available, this should be set to the value of this value of
             LastEvaluatedKey-TaskID returned in the header of a previous request
       responses:
-        "200":
+        '200':
           description: Successful retrieval of prescription-status-updates.
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/CheckPrescriptionStatusUpdates"
+                $ref: '#/components/schemas/CheckPrescriptionStatusUpdates'
               examples:
                 single-item:
                   description: A successful response to a checkprescriptionstatusupdates request.
@@ -273,11 +276,15 @@ paths:
                     $ref: examples/response-checkprescriptionstatusupdates.json
           headers:
             LastEvaluatedKey-PrescriptionID:
-              description: The value of this header should be used in subsequent requests in the header ExclusiveStartKey-PrescriptionID. If not present, there are no more results available.
+              description: The value of this header should be used in subsequent requests in
+                the header ExclusiveStartKey-PrescriptionID. If not present,
+                there are no more results available.
               schema:
                 type: string
             LastEvaluatedKey-TaskID:
-              description: The value of this header should be used in subsequent requests in the header ExclusiveStartKey-TaskID. If not present, there are no more results available.
+              description: The value of this header should be used in subsequent requests in
+                the header ExclusiveStartKey-TaskID. If not present, there are
+                no more results available.
               schema:
                 type: string
         4XX:
@@ -345,8 +352,7 @@ components:
             - Bundle
         type:
           type: string
-          description:
-            Denotes that the bundle is a list of status updates to be performed
+          description: Denotes that the bundle is a list of status updates to be performed
             as one transaction.
           enum:
             - transaction
@@ -366,7 +372,7 @@ components:
                 type: string
                 example: urn:uuid:4d70678c-81e4-4ff4-8c67-17596fd0aa46
               resource:
-                $ref: "#/components/schemas/UpdatePrescriptionStatusTask"
+                $ref: '#/components/schemas/UpdatePrescriptionStatusTask'
               request:
                 type: object
                 required:
