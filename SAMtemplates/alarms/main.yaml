@@ -12,6 +12,14 @@ Parameters:
     Type: String
     Default: none
 
+  EnableAlerts:
+    Type: String
+
+Conditions:
+  EnableActions: !Equals
+    - true
+    - !Ref EnableAlerts
+
 Resources:
   GetStatusUpdatesErrorsLogsMetricFilter:
     Type: AWS::Logs::MetricFilter
