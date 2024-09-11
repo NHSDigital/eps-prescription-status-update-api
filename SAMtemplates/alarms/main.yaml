@@ -54,7 +54,7 @@ Resources:
       Threshold: 1
       Unit: Count
       TreatMissingData: notBreaching
-      ActionsEnabled: true
+      ActionsEnabled: !Ref EnableActions
       AlarmActions:
         - !ImportValue lambda-resources:SlackAlertsSnsTopicArn
       InsufficientDataActions:
@@ -79,7 +79,7 @@ Resources:
       Threshold: 1
       Unit: Count
       TreatMissingData: notBreaching
-      ActionsEnabled: true
+      ActionsEnabled: !Ref EnableActions
       AlarmActions:
         - !ImportValue lambda-resources:SlackAlertsSnsTopicArn
       InsufficientDataActions:

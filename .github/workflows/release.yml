@@ -189,7 +189,6 @@ jobs:
       DEPLOY_APIGEE_CPSU: true
       DEPLOY_CHECK_PRESCRIPTION_STATUS_UPDATE: true
       ENABLE_ALERTS: true
-      
     secrets:
       CLOUD_FORMATION_DEPLOY_ROLE: ${{ secrets.REF_CLOUD_FORMATION_DEPLOY_ROLE }}
       PROXYGEN_ROLE: ${{ secrets.PROXYGEN_PTL_ROLE }}
