@@ -99,13 +99,6 @@ servers:
   - url: https://api.service.nhs.uk/prescription-status-update
     description: Production
 
-components:
-  commonDescriptions:
-    urlEncodingInfo: &urlEncodingInfo |
-      Please ensure that any non-ASCII characters, including symbols like '+', in URL query string parameters are properly URL encoded.
-      URL encoding replaces unsafe characters with a "%" followed by two hexadecimal digits, and spaces are typically replaced with a plus (+) sign or "%20".
-
-
 paths:
   /:
     post:
@@ -130,9 +123,9 @@ paths:
                 summary: ready-to-dispatch 
                 description: |
                   A request message contains tracking status `Ready to Dispatch`.      
-  
+
                   Please ensure that any non-ASCII characters, including symbols like ' +', in URL query string parameters are properly URL encoded.
-  
+
                   URL encoding replaces unsafe characters with a "%" followed by two  hexadecimal digits, and spaces are typically replaced with a plus (+)  sign or "%20".     
                 value:
                   $ref: examples/request-ready-to-dispatch.json
