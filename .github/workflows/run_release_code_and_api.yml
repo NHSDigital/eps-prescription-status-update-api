@@ -61,6 +61,9 @@ on:
       DEPLOY_CHECK_PRESCRIPTION_STATUS_UPDATE:
         type: boolean
         default: false
+      ENABLE_ALERTS:
+        type: boolean
+        default: true
     secrets:
       CLOUD_FORMATION_DEPLOY_ROLE:
         required: true
@@ -142,6 +145,7 @@ jobs:
           VERSION_NUMBER: ${{ inputs.VERSION_NUMBER }}
           DYNAMODB_AUTOSCALE: ${{ inputs.DYNAMODB_AUTOSCALE }}
           DEPLOY_CHECK_PRESCRIPTION_STATUS_UPDATE: ${{ inputs.DEPLOY_CHECK_PRESCRIPTION_STATUS_UPDATE }}
+          ENABLE_ALERTS: ${{ inputs.ENABLE_ALERTS }}
         run: ./release_code.sh
 
       - name: get mtls secrets
