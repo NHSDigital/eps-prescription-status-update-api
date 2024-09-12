@@ -123,62 +123,38 @@ paths:
               
               ready-to-dispatch:
                 summary: ready-to-dispatch 
-                description: |
-                  A request message contains tracking status `Ready to Dispatch`.      
-
-                  Please ensure that any non-ASCII characters, including symbols like ' +', in URL query string parameters are properly URL encoded.
-
-                  URL encoding replaces unsafe characters with a "%" followed by two  hexadecimal digits, and spaces are typically replaced with a plus (+)  sign or "%20".     
+                description: A request message contains tracking status `Ready to Dispatch`.      
+  
                 value:
                   $ref: examples/request-ready-to-dispatch.json
               ready-to-dispatch-partial:
                 summary: ready-to-dispatch-partial
-                description: |
-                  A request message contains tracking status `Ready to Dispatch - Partial`.
+                description:  A request message contains tracking status `Ready to Dispatch - Partial`.
 
-                  Please ensure that any non-ASCII characters, including symbols like ' +', in URL query string parameters are properly URL encoded.
-
-                  URL encoding replaces unsafe characters with a "%" followed by two  hexadecimal digits, and spaces are typically replaced with a plus (+)  sign or "%20".     
                 value:
                   $ref: examples/request-ready-to-dispatch-partial.json
               dispatched:
                 summary: dispatched
-                description: |
-                  A request message contains tracking status `Dispatched`.
+                description: A request message contains tracking status `Dispatched`.
 
-                  Please ensure that any non-ASCII characters, including symbols like ' +', in URL query string parameters are properly URL encoded.
-
-                  URL encoding replaces unsafe characters with a "%" followed by two  hexadecimal digits, and spaces are typically replaced with a plus (+)  sign or "%20".     
                 value:
                   $ref: examples/request-dispatched.json
               ready-to-collect:
                 summary: ready-to-collect
-                description: |
-                  A request message contains tracking status `Ready to  collect`.
-
-                  Please ensure that any non-ASCII characters, including symbols like ' +', in URL query string parameters are properly URL encoded.
-
-                  URL encoding replaces unsafe characters with a "%" followed by two hexadecimal digits, and spaces are typically replaced with a plus (+)  sign or "%20".     
+                description: A request message contains tracking status `Ready to  collect`.
+   
                 value:
                   $ref: examples/request-ready-to-collect.json
               collected:
                 summary: collected
-                description: |
-                  A request message contains tracking status `Collected`.
-
-                  Please ensure that any non-ASCII characters, including symbols like ' +', in URL query string parameters are properly URL encoded.
-
-                  URL encoding replaces unsafe characters with a "%" followed by two  hexadecimal digits, and spaces are typically replaced with a plus (+)  sign or "%20".     
+                description: A request message contains tracking status `Collected`.
+   
                 value:
                   $ref: examples/request-collected.json
               multiple-items:
                 summary: multiple-items
-                description: |
-                  A request message contains multiple items.
-
-                  Please ensure that any non-ASCII characters, including symbols like ' +', in URL query string parameters are properly URL encoded.
-
-                  URL encoding replaces unsafe characters with a "%" followed by two  hexadecimal digits, and spaces are typically replaced with a plus (+)  sign or "%20".     
+                description:  A request message contains multiple items.
+   
                 value:
                   $ref: examples/request-multiple-items.json
       responses:
@@ -195,21 +171,13 @@ paths:
                 $ref: '#/components/schemas/ResponseBundle'
               examples:
                 single-item:
-                  description: |
-                    A successful response to a UpdatePrescriptionStatus request, contains a single item.
-
-                    Please ensure that any non-ASCII characters, including symbols like ' +', in URL query string parameters are properly URL encoded.
-
-                    URL encoding replaces unsafe characters with a "%" followed by two  hexadecimal digits, and spaces are typically replaced with a plus (+)  sign or "%20".     
+                  description: A successful response to a UpdatePrescriptionStatus request, contains a single item.
+    
                   value:
                     $ref: examples/response-single-item.json
                 multiple-items:
-                  description: |
-                    A successful response to a UpdatePrescriptionStatus request, contains multiple items.
-
-                    Please ensure that any non-ASCII characters, including symbols like ' +', in URL query string parameters are properly URL encoded.
-
-                    URL encoding replaces unsafe characters with a "%" followed by two  hexadecimal digits, and spaces are typically replaced with a plus (+)  sign or "%20".     
+                  description: A successful response to a UpdatePrescriptionStatus request, contains multiple items.
+   
                   value:
                     $ref: examples/response-multiple-items.json
         4XX:
@@ -272,7 +240,13 @@ paths:
           name: prescriptionid
           schema:
             type: string
-          description: The prescription id to return prescription status updates for
+          description: |
+            The prescription id to return prescription status updates for
+
+            Please ensure that any non-ASCII characters, including symbols like ' +', in URL query string parameters are properly URL encoded.
+
+            URL encoding replaces unsafe characters with a "%" followed by two  hexadecimal digits, and spaces are typically replaced with a plus (+)  sign or "%20".  
+
         - in: header
           name: ExclusiveStartKey-PrescriptionID
           schema:
@@ -299,12 +273,8 @@ paths:
                 $ref: '#/components/schemas/CheckPrescriptionStatusUpdates'
               examples:
                 single-item:
-                  description: |
-                    A successful response to a checkprescriptionstatusupdates request.
-
-                    Please ensure that any non-ASCII characters, including symbols like ' +', in URL query string parameters are properly URL encoded.
-
-                    URL encoding replaces unsafe characters with a "%" followed by two  hexadecimal digits, and spaces are typically replaced with a plus (+)  sign or "%20".     
+                  description: A successful response to a checkprescriptionstatusupdates request.
+   
                   value:
                     $ref: examples/response-checkprescriptionstatusupdates.json
           headers:
