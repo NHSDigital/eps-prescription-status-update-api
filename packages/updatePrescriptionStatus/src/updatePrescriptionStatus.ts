@@ -99,21 +99,19 @@ const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPro
     const prescriptionIDs = dataItems.map((item) => item.PrescriptionID)
     const taskIDs = dataItems.map((item) => item.TaskID)
 
-    const matchingPrescription1IDs = prescriptionIDs.filter((id) => TEST_PRESCRIPTIONS_1.includes(id))
     const testPrescription1Index = prescriptionIDs.findIndex((id) => TEST_PRESCRIPTIONS_1.includes(id))
     const isTestPrescription1 = testPrescription1Index !== -1
     if (isTestPrescription1) {
       const taskID = taskIDs[testPrescription1Index]
-      const matchingPrescription1ID = matchingPrescription1IDs[testPrescription1Index]
+      const matchingPrescription1ID = prescriptionIDs[testPrescription1Index]
       interceptionResponse = await testPrescription1Intercept(logger, matchingPrescription1ID, taskID)
     }
 
-    const matchingPrescription2IDs = prescriptionIDs.filter((id) => TEST_PRESCRIPTIONS_2.includes(id))
     const testPrescription2Index = prescriptionIDs.findIndex((id) => TEST_PRESCRIPTIONS_2.includes(id))
     const isTestPrescription2 = testPrescription2Index !== -1
     if (isTestPrescription2) {
       const taskID = taskIDs[testPrescription2Index]
-      const matchingPrescription2ID = matchingPrescription2IDs[testPrescription2Index]
+      const matchingPrescription2ID = prescriptionIDs[testPrescription2Index]
       interceptionResponse = await testPrescription2Intercept(logger, matchingPrescription2ID, taskID)
     }
 
