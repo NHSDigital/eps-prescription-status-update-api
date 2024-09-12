@@ -33,8 +33,10 @@ export const logger = new Logger({serviceName: "updatePrescriptionStatus"})
 
 // AEA-4317 (AEA-4365) - Env vars for INT test prescriptions
 const INT_ENVIRONMENT = process.env.ENVIRONMENT === "int"
-export const TEST_PRESCRIPTIONS_1 = (process.env.TEST_PRESCRIPTIONS_1 ?? "").split(",") || []
-export const TEST_PRESCRIPTIONS_2 = (process.env.TEST_PRESCRIPTIONS_2 ?? "").split(",") || []
+export const TEST_PRESCRIPTIONS_1 = (process.env.TEST_PRESCRIPTIONS_1 ?? "")
+  .split(",").map(item => item.trim()) || []
+export const TEST_PRESCRIPTIONS_2 = (process.env.TEST_PRESCRIPTIONS_2 ?? "")
+  .split(",").map(item => item.trim()) || []
 
 export interface DataItem {
   LastModified: string
