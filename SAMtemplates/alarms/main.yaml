@@ -12,6 +12,9 @@ Parameters:
     Type: String
     Default: none
 
+  EnableAlerts:
+    Type: String
+
 Resources:
   GetStatusUpdatesErrorsLogsMetricFilter:
     Type: AWS::Logs::MetricFilter
@@ -46,7 +49,7 @@ Resources:
       Threshold: 1
       Unit: Count
       TreatMissingData: notBreaching
-      ActionsEnabled: true
+      ActionsEnabled: !Ref EnableAlerts
       AlarmActions:
         - !ImportValue lambda-resources:SlackAlertsSnsTopicArn
       InsufficientDataActions:
@@ -71,7 +74,7 @@ Resources:
       Threshold: 1
       Unit: Count
       TreatMissingData: notBreaching
-      ActionsEnabled: true
+      ActionsEnabled: !Ref EnableAlerts
       AlarmActions:
         - !ImportValue lambda-resources:SlackAlertsSnsTopicArn
       InsufficientDataActions:
