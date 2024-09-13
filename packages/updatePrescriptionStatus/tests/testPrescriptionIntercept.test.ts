@@ -18,12 +18,8 @@ import {TransactionCanceledException} from "@aws-sdk/client-dynamodb"
 
 const {mockSend, mockTransact, mockGetItem} = mockDynamoDBClient()
 process.env.ENVIRONMENT = "int"
-/*
-  Using task values 1 and 3 (Instead of 0 and 2) to test the interception when the test prescription
-  is not the first in the bundle.
-*/
-process.env.TEST_PRESCRIPTIONS_1 = ["abc", TASK_VALUES[1].prescriptionID, "def"].join(",")
-process.env.TEST_PRESCRIPTIONS_2 = ["abc", TASK_VALUES[3].prescriptionID, "def"].join(",")
+process.env.TEST_PRESCRIPTION_1 = TASK_VALUES[0].prescriptionID
+process.env.TEST_PRESCRIPTION_2 = TASK_VALUES[1].prescriptionID
 
 describe("testPrescription1Intercept", () => {
   beforeEach(() => {
@@ -31,7 +27,7 @@ describe("testPrescription1Intercept", () => {
   })
 
   it("Return 500 and write to DynamoDB when test prescription 1 is submitted for the first time", async () => {
-    const body = generateBody(2)
+    const body = generateBody()
     const event: APIGatewayProxyEvent = generateMockEvent(body)
     const expectedItems = generateExpectedItems()
     mockTransact.mockReturnValue(expectedItems)
@@ -47,8 +43,8 @@ describe("testPrescription1Intercept", () => {
     expect(mockGetItem).toHaveBeenCalledTimes(1)
     expect(mockGetItem).toHaveBeenCalledWith({
       Key: {
-        PrescriptionID: {S: TASK_VALUES[1].prescriptionID},
-        TaskID: {S: TASK_VALUES[1].id}
+        PrescriptionID: {S: TASK_VALUES[0].prescriptionID},
+        TaskID: {S: TASK_VALUES[0].id}
       },
       TableName: "PrescriptionStatusUpdates"
     })
@@ -60,7 +56,7 @@ describe("testPrescription1Intercept", () => {
   })
 
   it("Return 201 and doesn't write to DynamoDB when test prescription 1 is submitted for a second time", async () => {
-    const body = generateBody(2)
+    const body = generateBody()
     const event: APIGatewayProxyEvent = generateMockEvent(body)
     const expectedItems = generateExpectedItems()
     mockTransact.mockReturnValue(expectedItems)
@@ -83,7 +79,7 @@ describe("testPrescription1Intercept", () => {
           {
             Code: "ConditionalCheckFailed",
             Item: {
-              TaskID: {S: "0ae4daf3-f24b-479d-b8fa-b69e2d873b60"}
+              TaskID: {S: "d70678c-81e4-6665-8c67-17596fd0aa87"}
             },
             Message: "The conditional request failed"
           }
@@ -96,13 +92,13 @@ describe("testPrescription1Intercept", () => {
     expect(response.statusCode).toEqual(201)
     expect(loggerInfo).toHaveBeenCalledWith("Not first submission of INT test prescription 1, forcing 201")
     expect(loggerInfo).toHaveBeenCalledWith("Forcing 201 response for INT test prescription 1")
-    expect(JSON.parse(response.body).entry[0]).toEqual(responseSingleItem.entry[0])
+    expect(JSON.parse(response.body)).toEqual(responseSingleItem)
 
     expect(mockGetItem).toHaveBeenCalledTimes(1)
     expect(mockGetItem).toHaveBeenCalledWith({
       Key: {
-        PrescriptionID: {S: TASK_VALUES[1].prescriptionID},
-        TaskID: {S: TASK_VALUES[1].id}
+        PrescriptionID: {S: TASK_VALUES[0].prescriptionID},
+        TaskID: {S: TASK_VALUES[0].id}
       },
       TableName: "PrescriptionStatusUpdates"
     })
@@ -111,10 +107,10 @@ describe("testPrescription1Intercept", () => {
 
 describe("testPrescription2Intercept", () => {
   it("Return 500 and write to DynamoDB when test prescription 2 is submitted for the first time", async () => {
-    const body = generateBody(4)
-    body.entry = [body.entry[0], body.entry[3]]
+    const body = generateBody(2)
+    body.entry = [body.entry[1]]
     const event: APIGatewayProxyEvent = generateMockEvent(body)
-    const expectedItems = generateExpectedItems(3)
+    const expectedItems = generateExpectedItems()
     mockTransact.mockReturnValue(expectedItems)
 
     const {handler, logger} = await import("../src/updatePrescriptionStatus")
@@ -130,8 +126,8 @@ describe("testPrescription2Intercept", () => {
     expect(mockGetItem).toHaveBeenCalledTimes(1)
     expect(mockGetItem).toHaveBeenCalledWith({
       Key: {
-        PrescriptionID: {S: TASK_VALUES[3].prescriptionID},
-        TaskID: {S: TASK_VALUES[3].id}
+        PrescriptionID: {S: TASK_VALUES[1].prescriptionID},
+        TaskID: {S: TASK_VALUES[1].id}
       },
       TableName: "PrescriptionStatusUpdates"
     })
@@ -143,8 +139,8 @@ describe("testPrescription2Intercept", () => {
   })
 
   it("Return 409 when test prescription 2 is submitted for a second time", async () => {
-    const body = generateBody(4)
-    body.entry = [body.entry[0], body.entry[3]]
+    const body = generateBody(2)
+    body.entry = [body.entry[1]]
     const event: APIGatewayProxyEvent = generateMockEvent(body)
     const expectedItems = generateExpectedItems()
     mockTransact.mockReturnValue(expectedItems)
@@ -181,15 +177,15 @@ describe("testPrescription2Intercept", () => {
 
     expect(response.statusCode).toEqual(409)
     expect(loggerInfo).toHaveBeenCalledWith("Not first submission of INT test prescription 2, continuing")
-    expect(JSON.parse(response.body).entry[2].response.outcome.issue[0].diagnostics).toEqual(
+    expect(JSON.parse(response.body).entry[1].response.outcome.issue[0].diagnostics).toEqual(
       "Request contains a task id and prescription id identical to a record already in the data store."
     )
 
     expect(mockGetItem).toHaveBeenCalledTimes(1)
     expect(mockGetItem).toHaveBeenCalledWith({
       Key: {
-        PrescriptionID: {S: TASK_VALUES[3].prescriptionID},
-        TaskID: {S: TASK_VALUES[3].id}
+        PrescriptionID: {S: TASK_VALUES[1].prescriptionID},
+        TaskID: {S: TASK_VALUES[1].id}
       },
       TableName: "PrescriptionStatusUpdates"
     })
