@@ -17,7 +17,7 @@ GITHUB_API_URL = "https://api.github.com/repos/NHSDigital/electronic-prescriptio
 def get_headers():
     return {
         "Accept": "application/vnd.github+json",
-        "X-GitHub-Api-Version": "2022-11-28",
+        "X-GitHub-Api-Version": "2022-11-2",
         "Authorization": f"Bearer {arguments.token}",
     }
 
