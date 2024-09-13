@@ -117,44 +117,36 @@ paths:
         content:
           application/fhir+json:
             schema:
-              $ref: '#/components/schemas/UpdatePrescriptionStatusBundle'
-              
-            examples:
-              
+              $ref: '#/components/schemas/UpdatePrescriptionStatusBundle'              
+            examples:          
               ready-to-dispatch:
                 summary: ready-to-dispatch 
-                description: A request message contains tracking status `Ready to Dispatch`.      
-  
+                description: A request message contains tracking status `Ready to Dispatch`.       
                 value:
                   $ref: examples/request-ready-to-dispatch.json
               ready-to-dispatch-partial:
                 summary: ready-to-dispatch-partial
                 description:  A request message contains tracking status `Ready to Dispatch - Partial`.
-
                 value:
                   $ref: examples/request-ready-to-dispatch-partial.json
               dispatched:
                 summary: dispatched
                 description: A request message contains tracking status `Dispatched`.
-
                 value:
                   $ref: examples/request-dispatched.json
               ready-to-collect:
                 summary: ready-to-collect
                 description: A request message contains tracking status `Ready to  collect`.
-   
                 value:
                   $ref: examples/request-ready-to-collect.json
               collected:
                 summary: collected
                 description: A request message contains tracking status `Collected`.
-   
                 value:
                   $ref: examples/request-collected.json
               multiple-items:
                 summary: multiple-items
-                description:  A request message contains multiple items.
-   
+                description:  A request message contains multiple items.  
                 value:
                   $ref: examples/request-multiple-items.json
       responses:
