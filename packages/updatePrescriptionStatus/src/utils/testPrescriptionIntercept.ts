@@ -1,19 +1,22 @@
 import {Logger} from "@aws-lambda-powertools/logger"
-import {LAMBDA_TIMEOUT_MS, TEST_PRESCRIPTION_1, TEST_PRESCRIPTION_2} from "../updatePrescriptionStatus"
+import {LAMBDA_TIMEOUT_MS} from "../updatePrescriptionStatus"
 import {checkPrescriptionRecordExistence} from "./databaseClient"
 import {hasTimedOut, jobWithTimeout} from "./timeoutUtils"
-
 export interface InterceptionResult {
   testPrescriptionForcedError?: boolean
   testPrescription1Forced201?: boolean
 }
 
-export async function testPrescription1Intercept(logger: Logger, taskID: string): Promise<InterceptionResult> {
+export async function testPrescription1Intercept(
+  logger: Logger,
+  matchingPrescriptionID: string,
+  taskID: string
+): Promise<InterceptionResult> {
   logger.info("Intercepted INT test prescription 1. Checking for existing records.")
 
   const prescription1RecordsExist = await jobWithTimeout(
     LAMBDA_TIMEOUT_MS,
-    checkPrescriptionRecordExistence(TEST_PRESCRIPTION_1, taskID, logger)
+    checkPrescriptionRecordExistence(matchingPrescriptionID, taskID, logger)
   )
   if (hasTimedOut(prescription1RecordsExist)) {
     logger.info("Querying dynamo for INT test prescription 1 timed out. Continuing.")
@@ -33,12 +36,16 @@ export async function testPrescription1Intercept(logger: Logger, taskID: string)
   return {testPrescriptionForcedError, testPrescription1Forced201}
 }
 
-export async function testPrescription2Intercept(logger: Logger, taskID: string): Promise<InterceptionResult> {
+export async function testPrescription2Intercept(
+  logger: Logger,
+  matchingPrescriptionID: string,
+  taskID: string
+): Promise<InterceptionResult> {
   logger.info("Intercepted INT test prescription 2. Checking for existing records.")
 
   const prescription2RecordsExist = await jobWithTimeout(
     LAMBDA_TIMEOUT_MS,
-    checkPrescriptionRecordExistence(TEST_PRESCRIPTION_2, taskID, logger)
+    checkPrescriptionRecordExistence(matchingPrescriptionID, taskID, logger)
   )
   if (hasTimedOut(prescription2RecordsExist)) {
     logger.info("Querying dynamo for INT test prescription 2 timed out. Continuing.")
