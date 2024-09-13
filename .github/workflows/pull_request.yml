@@ -75,10 +75,10 @@ jobs:
       DYNAMODB_AUTOSCALE: false
       DEPLOY_APIGEE_CPSU: true
       DEPLOY_CHECK_PRESCRIPTION_STATUS_UPDATE: true
-      ENABLE_ALERTS: false
     secrets:
       CLOUD_FORMATION_DEPLOY_ROLE: ${{ secrets.DEV_CLOUD_FORMATION_DEPLOY_ROLE }}
       PROXYGEN_ROLE: ${{ secrets.PROXYGEN_PTL_ROLE }}
+      REGRESSION_TESTS_PEM: ${{ secrets.REGRESSION_TESTS_PEM }}
 
   release_sandbox_code:
     needs: [get_issue_number, package_code, get_commit_id]
@@ -101,3 +101,4 @@ jobs:
     secrets:
       CLOUD_FORMATION_DEPLOY_ROLE: ${{ secrets.DEV_CLOUD_FORMATION_DEPLOY_ROLE }}
       PROXYGEN_ROLE: ${{ secrets.PROXYGEN_PTL_ROLE }}
+      REGRESSION_TESTS_PEM: ${{ secrets.REGRESSION_TESTS_PEM }}
