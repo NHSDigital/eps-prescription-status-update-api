@@ -74,13 +74,6 @@ Parameters:
   Environment:
     Type: String
 
-  EnableAlerts:
-    Type: String
-    Default: true
-    AllowedValues:
-      - true
-      - false
-
 Resources:
   Tables:
     Type: AWS::Serverless::Application
@@ -147,4 +140,3 @@ Resources:
       Parameters:
         StackName: !Ref AWS::StackName
         GetStatusUpdatesFunctionName: !GetAtt Functions.Outputs.GetStatusUpdatesFunctionName
-        EnableAlerts: !Ref EnableAlerts

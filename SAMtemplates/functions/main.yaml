@@ -64,8 +64,8 @@ Resources:
           TABLE_NAME: !Ref PrescriptionStatusUpdatesTableName
           LOG_LEVEL: !Ref LogLevel
           ENVIRONMENT: !Ref Environment
-          TEST_PRESCRIPTIONS_1: "None"
-          TEST_PRESCRIPTIONS_2: "None"
+          TEST_PRESCRIPTION_1: "None"
+          TEST_PRESCRIPTION_2: "None"
     Metadata:
       BuildMethod: esbuild
       guard:

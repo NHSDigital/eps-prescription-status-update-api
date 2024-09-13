@@ -61,6 +61,9 @@ on:
       DEPLOY_CHECK_PRESCRIPTION_STATUS_UPDATE:
         type: boolean
         default: false
+      REGRESSION_TESTS_PEM:
+        type: string
+        default: false
       ENABLE_ALERTS:
         type: boolean
         default: true
@@ -77,7 +80,8 @@ on:
         required: false
       PROXYGEN_ROLE:
         required: false
-
+      REGRESSION_TESTS_PEM:
+        required: true
 jobs:
   release_code_and_api:
     runs-on: ubuntu-latest
@@ -249,3 +253,13 @@ jobs:
           git add _data/${{ inputs.APIGEE_ENVIRONMENT }}_deployments.csv
           git commit -m 'update releases for ${{ inputs.APIGEE_ENVIRONMENT }}'
           parallel --retries 10 --delay 3 ::: "git pull --rebase && git push"
+
+  regression_tests:
+    name: Regression Tests
+    uses: ./.github/workflows/run_regression_tests.yml
+    needs: release_code_and_api
+    with:
+      ENVIRONMENT: ${{ inputs.APIGEE_ENVIRONMENT }}
+      VERSION_NUMBER: ${{ inputs.VERSION_NUMBER }}
+    secrets:
+      REGRESSION_TESTS_PEM: ${{ secrets.REGRESSION_TESTS_PEM }}

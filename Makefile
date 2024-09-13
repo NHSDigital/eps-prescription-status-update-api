@@ -33,16 +33,14 @@ sam-sync: guard-AWS_DEFAULT_PROFILE guard-stack_name compile
 		--template-file SAMtemplates/main_template.yaml \
 		--parameter-overrides \
 			  EnableSplunk=false \
-			  DeployCheckPrescriptionStatusUpdate=true \
-			  EnableAlerts=false
+			  DeployCheckPrescriptionStatusUpdate=true 
 
 sam-deploy: guard-AWS_DEFAULT_PROFILE guard-stack_name
 	sam deploy \
 		--stack-name $$stack_name \
 		--parameter-overrides \
 			  EnableSplunk=false \
-			  DeployCheckPrescriptionStatusUpdate=true \
-			  EnableAlerts=false
+			  DeployCheckPrescriptionStatusUpdate=true 
 
 sam-delete: guard-AWS_DEFAULT_PROFILE guard-stack_name
 	sam delete --stack-name $$stack_name
@@ -95,8 +93,7 @@ sam-deploy-package: guard-artifact_bucket guard-artifact_bucket_prefix guard-sta
 			  LogLevel=$$LOG_LEVEL \
 			  LogRetentionInDays=$$LOG_RETENTION_DAYS \
 			  Environment=$$TARGET_ENVIRONMENT \
-			  DeployCheckPrescriptionStatusUpdate=$$DEPLOY_CHECK_PRESCRIPTION_STATUS_UPDATE \
-			  EnableAlerts=$$ENABLE_ALERTS
+			  DeployCheckPrescriptionStatusUpdate=$$DEPLOY_CHECK_PRESCRIPTION_STATUS_UPDATE 
 
 compile-node:
 	npx tsc --build tsconfig.build.json
