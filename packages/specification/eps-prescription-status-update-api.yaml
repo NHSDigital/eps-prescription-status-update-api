@@ -114,6 +114,7 @@ paths:
         - $ref: "#/components/parameters/BearerAuthorisation"
         - $ref: "#/components/parameters/RequestID"
         - $ref: "#/components/parameters/CorrelationID"
+
       requestBody:
         required: true
         content:
@@ -128,14 +129,12 @@ paths:
                   $ref: examples/request-ready-to-dispatch.json
               ready-to-dispatch-partial:
                 summary: ready-to-dispatch-partial
-                description:
-                  A request message contains tracking status `Ready to Dispatch -
-                  Partial`.
+                description:  A request message contains tracking status `Ready to Dispatch - Partial`.
                 value:
                   $ref: examples/request-ready-to-dispatch-partial.json
               dispatched:
                 summary: dispatched
-                description: A request message contains tracking status `Dispatched``.
+                description: A request message contains tracking status `Dispatched`.
                 value:
                   $ref: examples/request-dispatched.json
               ready-to-collect:
@@ -167,15 +166,11 @@ paths:
                 $ref: "#/components/schemas/ResponseBundle"
               examples:
                 single-item:
-                  description:
-                    A successful response to a UpdatePrescriptionStatus request,
-                    contains a single item.
+                  description: A successful response to a UpdatePrescriptionStatus request, contains a single item.
                   value:
                     $ref: examples/response-single-item.json
                 multiple-items:
-                  description:
-                    A successful response to a UpdatePrescriptionStatus request,
-                    contains multiple items.
+                  description: A successful response to a UpdatePrescriptionStatus request, contains multiple items. 
                   value:
                     $ref: examples/response-multiple-items.json
         "4XX":
@@ -221,10 +216,8 @@ paths:
       description: |
         ## This endpoint is only available in PTL environments
         ## Overview
-        This returns prescription status updates created by the authorized application. The result can be filtered by a combination of odscode, nhsnumber or prescription id.   
-
+        This returns prescription status updates created by the authorized application. The result can be filtered by a combination of odscode, nhsnumber or prescription id.
         A maximum of 15 results is returned. If more results are available, then headers LastEvaluatedKey-PrescriptionID and LastEvaluatedKey-TaskID are returned in the result. These values should be used in a subsequent request in the headers ExclusiveStartKey-PrescriptionID and ExclusiveStartKey-TaskID.
-
         It is possible that less than 15 results are returned even when more are available. This is a feature of the database and filtering methods being used. At least 5 results will be returned, if available.
       parameters:
         - in: query
@@ -241,7 +234,12 @@ paths:
           name: prescriptionid
           schema:
             type: string
-          description: The prescription id to return prescription status updates for
+          description: |
+            Please ensure that any non-ASCII characters, including symbols like '+', in URL query string parameters are properly URL encoded.
+
+            URL encoding replaces unsafe characters with a "%" followed by two hexadecimal digits, and spaces are typically replaced with a plus (+) sign or "%20".  
+
+            The prescription id to return prescription status updates for
         - in: header
           name: ExclusiveStartKey-PrescriptionID
           schema:
@@ -345,9 +343,7 @@ components:
             - Bundle
         type:
           type: string
-          description:
-            Denotes that the bundle is a list of status updates to be performed
-            as one transaction.
+          description: Denotes that the bundle is a list of status updates to be performed as one transaction.
           enum:
             - transaction
         entry:
