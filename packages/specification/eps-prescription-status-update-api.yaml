@@ -139,7 +139,7 @@ paths:
                   $ref: examples/request-dispatched.json
               ready-to-collect:
                 summary: ready-to-collect
-                description: A request message contains tracking status `Ready to  collect`.
+                description: A request message contains tracking status `Ready to collect`.
                 value:
                   $ref: examples/request-ready-to-collect.json
               collected:
