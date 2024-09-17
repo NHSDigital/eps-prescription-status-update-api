@@ -107,17 +107,17 @@ uvloop = ["uvloop (>=0.15.2)"]
 
 [[package]]
 name = "boto3"
-version = "1.35.15"
+version = "1.35.19"
 description = "The AWS SDK for Python"
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "boto3-1.35.15-py3-none-any.whl", hash = "sha256:c8e3567a843bee89b826b71916748088386ccd48014f0f55f56288215a686048"},
-    {file = "boto3-1.35.15.tar.gz", hash = "sha256:5e286daa84f945e4c57b133fc96bd2abbcf4066e5d4e63c591ce5e949913d6fd"},
+    {file = "boto3-1.35.19-py3-none-any.whl", hash = "sha256:84b3fe1727945bc3cada832d969ddb3dc0d08fce1677064ca8bdc13a89c1a143"},
+    {file = "boto3-1.35.19.tar.gz", hash = "sha256:9979fe674780a0b7100eae9156d74ee374cd1638a9f61c77277e3ce712f3e496"},
 ]
 
 [package.dependencies]
-botocore = ">=1.35.15,<1.36.0"
+botocore = ">=1.35.19,<1.36.0"
 jmespath = ">=0.7.1,<2.0.0"
 s3transfer = ">=0.10.0,<0.11.0"
 
@@ -126,13 +126,13 @@ crt = ["botocore[crt] (>=1.21.0,<2.0a0)"]
 
 [[package]]
 name = "botocore"
-version = "1.35.15"
+version = "1.35.19"
 description = "Low-level, data-driven core of boto 3."
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "botocore-1.35.15-py3-none-any.whl", hash = "sha256:a01a7668941c9276ca7697fb0b09a47ab1f13e585c5ca6551270528f4e086de8"},
-    {file = "botocore-1.35.15.tar.gz", hash = "sha256:bbfe4f6cd417d1d097900db062f1017e5185775acdeccd0eff1ec0f499633242"},
+    {file = "botocore-1.35.19-py3-none-any.whl", hash = "sha256:c83f7f0cacfe7c19b109b363ebfa8736e570d24922f16ed371681f58ebab44a9"},
+    {file = "botocore-1.35.19.tar.gz", hash = "sha256:42d6d8db7250cbd7899f786f9861e02cab17dc238f64d6acb976098ed9809625"},
 ]
 
 [package.dependencies]
@@ -141,7 +141,7 @@ python-dateutil = ">=2.1,<3.0.0"
 urllib3 = {version = ">=1.25.4,<2.2.0 || >2.2.0,<3", markers = "python_version >= \"3.10\""}
 
 [package.extras]
-crt = ["awscrt (==0.21.2)"]
+crt = ["awscrt (==0.21.5)"]
 
 [[package]]
 name = "certifi"
@@ -246,13 +246,13 @@ files = [
 
 [[package]]
 name = "cfn-lint"
-version = "1.12.4"
+version = "1.13.0"
 description = "Checks CloudFormation templates for practices and behaviour that could potentially be improved"
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "cfn_lint-1.12.4-py3-none-any.whl", hash = "sha256:14c2faa79b421c0ceeb09e201f225ff984efea39b1dd34ba98979e4107b709d9"},
-    {file = "cfn_lint-1.12.4.tar.gz", hash = "sha256:30fac1eec8acb1fb5f66300c8f2e17aaffad9788ccb7dc7f12bd0aee571300d1"},
+    {file = "cfn_lint-1.13.0-py3-none-any.whl", hash = "sha256:f7823eac55168af8edde7c05076c79d27423f3748b39c759c22339f34d637306"},
+    {file = "cfn_lint-1.13.0.tar.gz", hash = "sha256:5d193bc27403f3acbfcb941582596412905a13694d2bbf6d400764c6e4658341"},
 ]
 
 [package.dependencies]
@@ -1379,13 +1379,13 @@ use-chardet-on-py3 = ["chardet (>=3.0.2,<6)"]
 
 [[package]]
 name = "rich"
-version = "13.8.0"
+version = "13.8.1"
 description = "Render rich text, tables, progress bars, syntax highlighting, markdown and more to the terminal"
 optional = false
 python-versions = ">=3.7.0"
 files = [
-    {file = "rich-13.8.0-py3-none-any.whl", hash = "sha256:2e85306a063b9492dffc86278197a60cbece75bcb766022f3436f567cae11bdc"},
-    {file = "rich-13.8.0.tar.gz", hash = "sha256:a5ac1f1cd448ade0d59cc3356f7db7a7ccda2c8cbae9c7a90c28ff463d3e91f4"},
+    {file = "rich-13.8.1-py3-none-any.whl", hash = "sha256:1760a3c0848469b97b558fc61c85233e3dafb69c7a071b4d60c38099d3cd4c06"},
+    {file = "rich-13.8.1.tar.gz", hash = "sha256:8260cda28e3db6bf04d2d1ef4dbc03ba80a824c88b0e7668a0f23126a424844a"},
 ]
 
 [package.dependencies]
@@ -1647,4 +1647,4 @@ files = [
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.12"
-content-hash = "8e7a49b2196ff9298882e2c9d3dce93039acbf7f285c88ab546ab3fc6a767440"
+content-hash = "f36777a05a4aaec626662a8aab6989476441195dd1906c9de5de6240bb7acf2d"
