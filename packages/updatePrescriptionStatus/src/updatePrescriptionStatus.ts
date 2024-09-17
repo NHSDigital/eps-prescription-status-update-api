@@ -7,7 +7,7 @@ import inputOutputLogger from "@middy/input-output-logger"
 import errorHandler from "@nhs/fhir-middy-error-handler"
 import httpHeaderNormalizer from "@middy/http-header-normalizer"
 import {Bundle, BundleEntry, Task} from "fhir/r4"
-import {persistDataItems} from "./utils/databaseClient"
+import {getPreviousItem, persistDataItems} from "./utils/databaseClient"
 import {jobWithTimeout, hasTimedOut} from "./utils/timeoutUtils"
 import {transactionBundle, validateEntry} from "./validation/content"
 import {
@@ -118,6 +118,8 @@ const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPro
     testPrescription1Forced201 = !!interceptionResponse.testPrescription1Forced201
     testPrescriptionForcedError = !!interceptionResponse.testPrescriptionForcedError
   }
+
+  await logTransitions(dataItems, logger)
 
   try {
     const persistSuccess = persistDataItems(dataItems, logger)
@@ -280,6 +282,29 @@ function response(statusCode: number, responseEntries: Array<BundleEntry>) {
     headers: {
       "Content-Type": "application/fhir+json",
       "Cache-Control": "no-cache"
+    }
+  }
+}
+
+async function logTransitions(dataItems: Array<DataItem>, logger: Logger): Promise<void> {
+  for (const dataItem of dataItems) {
+    try {
+      const previousItem = await getPreviousItem(dataItem)
+      if (previousItem) {
+        logger.info("Transitioning item status.", {
+          prescriptionID: dataItem.PrescriptionID,
+          lineItemID: dataItem.LineItemID,
+          nhsNumber: dataItem.PatientNHSNumber,
+          pharmacyODSCode: dataItem.PharmacyODSCode,
+          applicationName: dataItem.ApplicationName,
+          when: dataItem.LastModified,
+          interval: (new Date(dataItem.LastModified).valueOf() - new Date(previousItem.LastModified).valueOf()) / 1000,
+          newStatus: dataItem.Status,
+          previousStatus: previousItem.Status
+        })
+      }
+    } catch (e) {
+      logger.error("Error logging transition.", {taskID: dataItem.TaskID, error: e})
     }
   }
 }

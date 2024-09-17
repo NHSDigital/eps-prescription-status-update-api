@@ -3,11 +3,13 @@ import {
   DynamoDBClient,
   GetItemCommand,
   GetItemCommandInput,
+  QueryCommand,
+  QueryCommandInput,
   TransactWriteItem,
   TransactWriteItemsCommand,
   TransactionCanceledException
 } from "@aws-sdk/client-dynamodb"
-import {marshall} from "@aws-sdk/util-dynamodb"
+import {marshall, unmarshall} from "@aws-sdk/util-dynamodb"
 
 import {DataItem} from "../updatePrescriptionStatus"
 import {Timeout} from "./timeoutUtils"
@@ -68,4 +70,41 @@ export async function checkPrescriptionRecordExistence(
     logger.error("Error querying DynamoDB.", {error: e})
     return false
   }
+}
+
+export async function getPreviousItem(currentItem: DataItem): Promise<DataItem | undefined> {
+  const query: QueryCommandInput = {
+    TableName: tableName,
+    KeyConditions: {
+      PrescriptionID: {
+        ComparisonOperator: "EQ",
+        AttributeValueList: [marshall(currentItem.PrescriptionID)]
+      },
+      TaskID: {
+        ComparisonOperator: "NE",
+        AttributeValueList: [marshall(currentItem.TaskID)]
+      }
+    },
+    QueryFilter: {
+      LineItemID: {
+        ComparisonOperator: "EQ",
+        AttributeValueList: [marshall(currentItem.LineItemID)]
+      }
+    }
+  }
+
+  let lastEvaluatedKey
+  let items: Array<DataItem> = []
+  do {
+    if (lastEvaluatedKey) {
+      query.ExclusiveStartKey = lastEvaluatedKey
+    }
+    const result = await client.send(new QueryCommand(query))
+    if (result.Items) {
+      items = items.concat(result.Items.map((item) => unmarshall(item) as DataItem))
+    }
+    lastEvaluatedKey = result.LastEvaluatedKey
+  } while (lastEvaluatedKey)
+
+  return items.sort((a, b) => new Date(a.LastModified).valueOf() - new Date(b.LastModified).valueOf()).pop()
 }

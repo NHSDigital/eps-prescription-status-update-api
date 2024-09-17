@@ -14,7 +14,7 @@ import {
   TASK_VALUES
 } from "./utils/testUtils"
 import responseSingleItem from "../../specification/examples/response-single-item.json"
-import {TransactionCanceledException} from "@aws-sdk/client-dynamodb"
+import {GetItemCommand, TransactionCanceledException, TransactWriteItemsCommand} from "@aws-sdk/client-dynamodb"
 
 const {mockSend, mockTransact, mockGetItem} = mockDynamoDBClient()
 process.env.ENVIRONMENT = "int"
@@ -55,8 +55,6 @@ describe("testPrescription1Intercept", () => {
 
     expect(mockTransact).toHaveBeenCalledTimes(1)
     expect(mockSend).toHaveBeenCalledWith(expect.objectContaining(expectedItems))
-
-    expect(mockSend).toHaveBeenCalledTimes(2)
   })
 
   it("Return 201 and doesn't write to DynamoDB when test prescription 1 is submitted for a second time", async () => {
@@ -74,22 +72,25 @@ describe("testPrescription1Intercept", () => {
     expect(loggerInfo).toHaveBeenCalledWith("Forcing error for INT test prescription")
 
     mockGetItem.mockReset()
-    mockSend.mockResolvedValueOnce(new Object({Item: "Some item"}) as never)
-    mockSend.mockRejectedValueOnce(
-      new TransactionCanceledException({
-        message: "DynamoDB transaction cancelled due to conditional check failure.",
-        $metadata: {},
-        CancellationReasons: [
-          {
-            Code: "ConditionalCheckFailed",
-            Item: {
-              TaskID: {S: "0ae4daf3-f24b-479d-b8fa-b69e2d873b60"}
-            },
-            Message: "The conditional request failed"
-          }
-        ]
-      }) as never
-    )
+    mockSend.mockImplementation(async (command) => {
+      if (command instanceof GetItemCommand) {
+        return new Object({Item: "Some item"})
+      } else if (command instanceof TransactWriteItemsCommand) {
+        throw new TransactionCanceledException({
+          message: "DynamoDB transaction cancelled due to conditional check failure.",
+          $metadata: {},
+          CancellationReasons: [
+            {
+              Code: "ConditionalCheckFailed",
+              Item: {
+                TaskID: {S: "0ae4daf3-f24b-479d-b8fa-b69e2d873b60"}
+              },
+              Message: "The conditional request failed"
+            }
+          ]
+        })
+      }
+    })
 
     const response: APIGatewayProxyResult = await handler(event, {})
 
@@ -138,8 +139,6 @@ describe("testPrescription2Intercept", () => {
 
     expect(mockTransact).toHaveBeenCalledTimes(1)
     expect(mockSend).toHaveBeenCalledWith(expect.objectContaining(expectedItems))
-
-    expect(mockSend).toHaveBeenCalledTimes(2)
   })
 
   it("Return 409 when test prescription 2 is submitted for a second time", async () => {
@@ -160,22 +159,25 @@ describe("testPrescription2Intercept", () => {
     expect(loggerInfo).toHaveBeenCalledWith("Forcing error for INT test prescription")
 
     mockGetItem.mockReset()
-    mockSend.mockResolvedValueOnce(new Object({Item: "Some item"}) as never)
-    mockSend.mockRejectedValueOnce(
-      new TransactionCanceledException({
-        message: "DynamoDB transaction cancelled due to conditional check failure.",
-        $metadata: {},
-        CancellationReasons: [
-          {
-            Code: "ConditionalCheckFailed",
-            Item: {
-              TaskID: {S: "d70678c-81e4-6665-8c67-17596fd0aa87"}
-            },
-            Message: "The conditional request failed"
-          }
-        ]
-      }) as never
-    )
+    mockSend.mockImplementation(async (command) => {
+      if (command instanceof GetItemCommand) {
+        return new Object({Item: "Some item"})
+      } else if (command instanceof TransactWriteItemsCommand) {
+        throw new TransactionCanceledException({
+          message: "DynamoDB transaction cancelled due to conditional check failure.",
+          $metadata: {},
+          CancellationReasons: [
+            {
+              Code: "ConditionalCheckFailed",
+              Item: {
+                TaskID: {S: "0ae4daf3-f24b-479d-b8fa-b69e2d873b60"}
+              },
+              Message: "The conditional request failed"
+            }
+          ]
+        })
+      }
+    })
 
     const response: APIGatewayProxyResult = await handler(event, {})
 

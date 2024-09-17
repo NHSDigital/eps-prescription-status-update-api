@@ -74,7 +74,6 @@ describe("Integration tests for updatePrescriptionStatus handler", () => {
     expect(response.statusCode).toEqual(201)
     expect(JSON.parse(response.body)).toEqual(responseSingleItem)
 
-    expect(mockSend).toHaveBeenCalledTimes(1)
     expect(mockSend).toHaveBeenCalledWith(
       expect.objectContaining(expectedItems)
     )
@@ -105,7 +104,6 @@ describe("Integration tests for updatePrescriptionStatus handler", () => {
     expect(
       (expectedItems.input.TransactItems[0].Put.Item as any).RepeatNo
     ).toEqual(undefined)
-    expect(mockSend).toHaveBeenCalledTimes(1)
     expect(mockSend).toHaveBeenCalledWith(
       expect.objectContaining(expectedItems)
     )
@@ -135,7 +133,6 @@ describe("Integration tests for updatePrescriptionStatus handler", () => {
     expect(
       (expectedItems.input.TransactItems[0].Put.Item as any).RepeatNo
     ).toEqual(1)
-    expect(mockSend).toHaveBeenCalledTimes(1)
     expect(mockSend).toHaveBeenCalledWith(
       expect.objectContaining(expectedItems)
     )
@@ -152,7 +149,6 @@ describe("Integration tests for updatePrescriptionStatus handler", () => {
     expect(response.statusCode).toEqual(201)
     expect(JSON.parse(response.body)).toEqual(responseMultipleItems)
 
-    expect(mockSend).toHaveBeenCalledTimes(1)
     expect(mockSend).toHaveBeenCalledWith(
       expect.objectContaining(expectedItems)
     )
