@@ -111,16 +111,16 @@ paths:
         ## Overview
         Status updates to be provided on prescription items to allow users of the NHS App and third-party app consumers to track the progress of their prescriptions and when ready to collect.
       parameters:
-        - $ref: '#/components/parameters/BearerAuthorisation'
-        - $ref: '#/components/parameters/RequestID'
-        - $ref: '#/components/parameters/CorrelationID'
+        - $ref: "#/components/parameters/BearerAuthorisation"
+        - $ref: "#/components/parameters/RequestID"
+        - $ref: "#/components/parameters/CorrelationID"
 
       requestBody:
         required: true
         content:
           application/fhir+json:
             schema:
-              $ref: '#/components/schemas/UpdatePrescriptionStatusBundle'
+              $ref: "#/components/schemas/UpdatePrescriptionStatusBundle"
             examples:
               ready-to-dispatch:
                 summary: ready-to-dispatch
@@ -153,7 +153,7 @@ paths:
                 value:
                   $ref: examples/request-multiple-items.json
       responses:
-        2XX:
+        "2XX":
           description: |
             The request was processed successfully. Below are the possible status codes within the 2XX range that may be returned:
             | HTTP status | Status code     | Description                                                                                                                            |
@@ -163,7 +163,7 @@ paths:
           content:
             application/fhir+json:
               schema:
-                $ref: '#/components/schemas/ResponseBundle'
+                $ref: "#/components/schemas/ResponseBundle"
               examples:
                 single-item:
                   description: A successful response to a UpdatePrescriptionStatus request, contains a single item.
@@ -173,7 +173,7 @@ paths:
                   description: A successful response to a UpdatePrescriptionStatus request, contains multiple items. 
                   value:
                     $ref: examples/response-multiple-items.json
-        4XX:
+        "4XX":
           description: |
             An error occurred as follows:
             | HTTP status | Error code          | Description                                                                                                                               |
@@ -187,10 +187,10 @@ paths:
           content:
             application/fhir+json:
               schema:
-                $ref: '#/components/schemas/OperationOutcome'
+                $ref: "#/components/schemas/OperationOutcome"
               example:
                 $ref: examples/error-invalid-prescriptionid.json
-        5XX:
+        "5XX":
           description: |
             An error occurred due to a server-side issue. Below are the possible status codes within the 5XX range that may be returned:
             | HTTP status | Error code      | Description                                                                                                 |
@@ -204,7 +204,7 @@ paths:
       operationId: prescription-status-update-metadata
       summary: Prescription status update metadata
       responses:
-        '200':
+        "200":
           description: Successful retrieval of metadata.
       security:
         - app-level3: []
@@ -234,7 +234,7 @@ paths:
           schema:
             type: string
           description: |
-            Please ensure that any non-ASCII characters, including symbols like ' +', in URL query string parameters are properly URL encoded.
+            Please ensure that any non-ASCII characters, including symbols like '+', in URL query string parameters are properly URL encoded.
 
             URL encoding replaces unsafe characters with a "%" followed by two hexadecimal digits, and spaces are typically replaced with a plus (+) sign or "%20".  
 
@@ -257,7 +257,7 @@ paths:
             available, this should be set to the value of this value of
             LastEvaluatedKey-TaskID returned in the header of a previous request
       responses:
-        '200':
+        "200":
           description: Successful retrieval of prescription-status-updates.
           content:
             application/json:
@@ -362,7 +362,7 @@ components:
                 type: string
                 example: urn:uuid:4d70678c-81e4-4ff4-8c67-17596fd0aa46
               resource:
-                $ref: '#/components/schemas/UpdatePrescriptionStatusTask'
+                $ref: "#/components/schemas/UpdatePrescriptionStatusTask"
               request:
                 type: object
                 required:
