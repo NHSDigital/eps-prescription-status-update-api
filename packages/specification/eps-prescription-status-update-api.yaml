@@ -121,9 +121,9 @@ paths:
           application/fhir+json:
             schema:
               $ref: '#/components/schemas/UpdatePrescriptionStatusBundle'
-            examples:          
+            examples:
               ready-to-dispatch:
-                summary: ready-to-dispatch 
+                summary: ready-to-dispatch
                 description: A request message contains tracking status `Ready to Dispatch`.
                 value:
                   $ref: examples/request-ready-to-dispatch.json
@@ -149,7 +149,7 @@ paths:
                   $ref: examples/request-collected.json
               multiple-items:
                 summary: multiple-items
-                description:  A request message contains multiple items.
+                description: A request message contains multiple items.
                 value:
                   $ref: examples/request-multiple-items.json
       responses:
@@ -236,7 +236,7 @@ paths:
           description: |
             Please ensure that any non-ASCII characters, including symbols like ' +', in URL query string parameters are properly URL encoded.
 
-            URL encoding replaces unsafe characters with a "%" followed by two  hexadecimal digits, and spaces are typically replaced with a plus (+)  sign or "%20".  
+            URL encoding replaces unsafe characters with a "%" followed by two hexadecimal digits, and spaces are typically replaced with a plus (+) sign or "%20".  
 
             The prescription id to return prescription status updates for
         - in: header
