@@ -131,11 +131,6 @@ const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPro
       return response(504, responseEntries)
     }
 
-    if (!persistResponse) {
-      responseEntries = [serverError()]
-      return response(500, responseEntries)
-    }
-
     responseEntries = createSuccessResponseEntries(requestEntries)
     logger.info("Event processed successfully.")
   } catch (e) {
@@ -150,6 +145,8 @@ const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPro
       handleTransactionCancelledException(e, responseEntries)
       return response(409, responseEntries)
     }
+
+    throw e
   }
 
   // AEA-4317 - Forcing error for INT test prescription

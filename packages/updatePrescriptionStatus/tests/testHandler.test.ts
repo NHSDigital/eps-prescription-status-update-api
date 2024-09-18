@@ -34,7 +34,7 @@ import {
 } from "../src/utils/responses"
 import {TransactionCanceledException} from "@aws-sdk/client-dynamodb"
 
-const {mockSend, mockTransact} = mockDynamoDBClient()
+const {mockSend} = mockDynamoDBClient()
 const {handler} = await import("../src/updatePrescriptionStatus")
 const LAMBDA_TIMEOUT_MS = 9500 // 9.5 sec
 
@@ -67,7 +67,6 @@ describe("Integration tests for updatePrescriptionStatus handler", () => {
     const body = generateBody()
     const event: APIGatewayProxyEvent = generateMockEvent(body)
     const expectedItems = generateExpectedItems()
-    mockTransact.mockReturnValue(expectedItems)
 
     const response: APIGatewayProxyResult = await handler(event, {})
 
@@ -93,8 +92,6 @@ describe("Integration tests for updatePrescriptionStatus handler", () => {
     if (transactItem?.RepeatNo) {
       delete transactItem.RepeatNo
     }
-
-    mockTransact.mockReturnValue(expectedItems)
 
     const response: APIGatewayProxyResult = await handler(event, {})
 
@@ -123,8 +120,6 @@ describe("Integration tests for updatePrescriptionStatus handler", () => {
       expectedItems.input?.TransactItems?.[0]?.Put?.Item
     transactItem.RepeatNo = 1
 
-    mockTransact.mockReturnValue(expectedItems)
-
     const response: APIGatewayProxyResult = await handler(event, {})
 
     expect(response.statusCode).toEqual(201)
@@ -142,7 +137,6 @@ describe("Integration tests for updatePrescriptionStatus handler", () => {
     const body = generateBody(2)
     const event: APIGatewayProxyEvent = generateMockEvent(body)
     const expectedItems = generateExpectedItems(2)
-    mockTransact.mockReturnValue(expectedItems)
 
     const response: APIGatewayProxyResult = await handler(event, {})
 
@@ -207,7 +201,7 @@ describe("Integration tests for updatePrescriptionStatus handler", () => {
     const response: APIGatewayProxyResult = await handler(event, {})
 
     expect(response.statusCode).toEqual(500)
-    expect(JSON.parse(response.body)).toEqual(bundleWrap([serverError()]))
+    expect(JSON.parse(response.body)).toEqual(serverError().response!.outcome)
   })
 
   it("when data store update times out, expect 504 status code and relevant error message", async () => {
@@ -272,9 +266,6 @@ describe("Integration tests for updatePrescriptionStatus handler", () => {
     const event: APIGatewayProxyEvent = generateMockEvent(body)
     delete event.headers["x-request-id"]
     event.headers["X-Request-id"] = "43313002-debb-49e3-85fa-34812c150242"
-
-    const expectedItems = generateExpectedItems()
-    mockTransact.mockReturnValue(expectedItems)
 
     const response: APIGatewayProxyResult = await handler(event, {})
 
