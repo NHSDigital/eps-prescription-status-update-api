@@ -9,13 +9,15 @@ import {
 } from "@jest/globals"
 
 import {
+  APPLICATION_NAME,
   DEFAULT_DATE,
   FULL_URL_0,
   FULL_URL_1,
   generateBody,
   generateExpectedItems,
   generateMockEvent,
-  mockDynamoDBClient
+  mockDynamoDBClient,
+  TASK_VALUES
 } from "./utils/testUtils"
 
 import requestDispatched from "../../specification/examples/request-dispatched.json"
@@ -32,10 +34,10 @@ import {
   serverError,
   timeoutResponse
 } from "../src/utils/responses"
-import {TransactionCanceledException, TransactWriteItemsCommand} from "@aws-sdk/client-dynamodb"
+import {QueryCommand, TransactionCanceledException, TransactWriteItemsCommand} from "@aws-sdk/client-dynamodb"
 
 const {mockSend} = mockDynamoDBClient()
-const {handler} = await import("../src/updatePrescriptionStatus")
+const {handler, logger} = await import("../src/updatePrescriptionStatus")
 const LAMBDA_TIMEOUT_MS = 9500 // 9.5 sec
 
 describe("Integration tests for updatePrescriptionStatus handler", () => {
@@ -357,5 +359,48 @@ describe("Integration tests for updatePrescriptionStatus handler", () => {
       "Request contains a task id and prescription id identical to a record already in the data store."
     )
     expect(responseBody.entry[0].response.status).not.toEqual("200 OK")
+  })
+
+  it("when updates already exist for an item, logs transitions", async () => {
+    const body = generateBody()
+    const mockEvent: APIGatewayProxyEvent = generateMockEvent(body)
+    const loggerSpy = jest.spyOn(logger, "info")
+
+    mockSend.mockImplementation(
+      async (command) => {
+        if (command instanceof QueryCommand) {
+          return new Object({Items: [{
+            PrescriptionID: {S: TASK_VALUES[0].prescriptionID},
+            PatientNHSNumber: {S: TASK_VALUES[0].nhsNumber},
+            PharmacyODSCode: {S: TASK_VALUES[0].odsCode},
+            LineItemID: {S: TASK_VALUES[0].lineItemID},
+            TaskID: {S: "c523a80a-5346-46b3-81d2-a7420959c26b"},
+            TerminalStatus: {S: "in-progress"},
+            Status: {S: "Ready to Dispatch"},
+            LastModified: {S: "2023-09-11T10:10:12Z"}
+          }]})
+        }
+      }
+    )
+
+    const response: APIGatewayProxyResult = await handler(mockEvent, {})
+
+    expect(response.statusCode).toBe(201)
+    expect(loggerSpy).toHaveBeenCalledWith(
+      "Transitioning item status.",
+      {
+        prescriptionID: TASK_VALUES[0].prescriptionID,
+        lineItemID: TASK_VALUES[0].lineItemID,
+        nhsNumber: TASK_VALUES[0].nhsNumber,
+        pharmacyODSCode: TASK_VALUES[0].odsCode,
+        applicationName: APPLICATION_NAME,
+        when: "2023-09-11T10:11:12Z",
+        interval: 60,
+        newStatus: TASK_VALUES[0].businessStatus,
+        previousStatus: "Ready to Dispatch",
+        newTerminalStatus: TASK_VALUES[0].status,
+        previousTerminalStatus: "in-progress"
+      }
+    )
   })
 })

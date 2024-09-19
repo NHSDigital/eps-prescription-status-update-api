@@ -291,6 +291,8 @@ async function logTransitions(dataItems: Array<DataItem>, logger: Logger): Promi
     try {
       const previousItem = await getPreviousItem(dataItem)
       if (previousItem) {
+        const newDate = new Date(dataItem.LastModified)
+        const previousDate = new Date(previousItem.LastModified)
         logger.info("Transitioning item status.", {
           prescriptionID: dataItem.PrescriptionID,
           lineItemID: dataItem.LineItemID,
@@ -298,9 +300,11 @@ async function logTransitions(dataItems: Array<DataItem>, logger: Logger): Promi
           pharmacyODSCode: dataItem.PharmacyODSCode,
           applicationName: dataItem.ApplicationName,
           when: dataItem.LastModified,
-          interval: (new Date(dataItem.LastModified).valueOf() - new Date(previousItem.LastModified).valueOf()) / 1000,
+          interval: (newDate.valueOf() - previousDate.valueOf()) / 1000,
           newStatus: dataItem.Status,
-          previousStatus: previousItem.Status
+          previousStatus: previousItem.Status,
+          newTerminalStatus: dataItem.TerminalStatus,
+          previousTerminalStatus: previousItem.TerminalStatus
         })
       }
     } catch (e) {
