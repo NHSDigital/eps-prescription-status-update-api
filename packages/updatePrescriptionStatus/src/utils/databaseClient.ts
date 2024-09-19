@@ -5,12 +5,14 @@ import {
   GetItemCommandInput,
   QueryCommand,
   QueryCommandInput,
+  TransactionCanceledException,
   TransactWriteItem,
   TransactWriteItemsCommand
 } from "@aws-sdk/client-dynamodb"
 import {marshall, unmarshall} from "@aws-sdk/util-dynamodb"
 
 import {DataItem} from "../updatePrescriptionStatus"
+import {Timeout} from "./timeoutUtils"
 
 const client = new DynamoDBClient()
 const tableName = process.env.TABLE_NAME ?? "PrescriptionStatusUpdates"
@@ -30,13 +32,22 @@ function createTransactionCommand(dataItems: Array<DataItem>, logger: Logger): T
   return new TransactWriteItemsCommand({TransactItems: transactItems})
 }
 
-export async function persistDataItems(dataItems: Array<DataItem>, logger: Logger): Promise<void> {
+export async function persistDataItems(dataItems: Array<DataItem>, logger: Logger): Promise<boolean | Timeout> {
   const transactionCommand = createTransactionCommand(dataItems, logger)
-  logger.info("Sending TransactWriteItemsCommand to DynamoDB.", {command: transactionCommand})
-  await client.send(transactionCommand)
-  logger.info("TransactWriteItemsCommand sent to DynamoDB successfully.", {command: transactionCommand})
+  try {
+    logger.info("Sending TransactWriteItemsCommand to DynamoDB.", {command: transactionCommand})
+    await client.send(transactionCommand)
+    logger.info("TransactWriteItemsCommand sent to DynamoDB successfully.", {command: transactionCommand})
+    return true
+  } catch (e) {
+    if (e instanceof TransactionCanceledException) {
+      logger.error("DynamoDB transaction cancelled due to conditional check failure.", {reasons: e.CancellationReasons})
+      throw e
+    }
+    logger.error("Error sending TransactWriteItemsCommand to DynamoDB.", {error: e})
+    return false
+  }
 }
-
 export async function checkPrescriptionRecordExistence(
   prescriptionID: string,
   taskID: string,

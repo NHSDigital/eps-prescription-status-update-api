@@ -201,7 +201,7 @@ describe("Integration tests for updatePrescriptionStatus handler", () => {
     const response: APIGatewayProxyResult = await handler(event, {})
 
     expect(response.statusCode).toEqual(500)
-    expect(JSON.parse(response.body)).toEqual(serverError().response!.outcome)
+    expect(JSON.parse(response.body)).toEqual(bundleWrap([serverError()]))
   })
 
   it("when data store update times out, expect 504 status code and relevant error message", async () => {

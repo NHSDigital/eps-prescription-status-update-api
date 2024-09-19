@@ -28,12 +28,13 @@ process.env.TEST_PRESCRIPTIONS_2 = ["abc", TASK_VALUES[3].prescriptionID, "def"]
 describe("testPrescription1Intercept", () => {
   beforeEach(() => {
     jest.useFakeTimers().setSystemTime(DEFAULT_DATE)
+    jest.resetAllMocks()
   })
 
   it("Return 500 and write to DynamoDB when test prescription 1 is submitted for the first time", async () => {
     const body = generateBody(2)
     const event: APIGatewayProxyEvent = generateMockEvent(body)
-    const expectedItems = generateExpectedItems()
+    const expectedItems = generateExpectedItems(2)
 
     const {handler, logger} = await import("../src/updatePrescriptionStatus")
     const loggerInfo = jest.spyOn(logger, "info")
@@ -107,11 +108,17 @@ describe("testPrescription1Intercept", () => {
 })
 
 describe("testPrescription2Intercept", () => {
+  beforeEach(() => {
+    jest.useFakeTimers().setSystemTime(DEFAULT_DATE)
+    jest.resetAllMocks()
+  })
+
   it("Return 500 and write to DynamoDB when test prescription 2 is submitted for the first time", async () => {
     const body = generateBody(4)
     body.entry = [body.entry[0], body.entry[3]]
     const event: APIGatewayProxyEvent = generateMockEvent(body)
-    const expectedItems = generateExpectedItems(3)
+    let expectedItems = generateExpectedItems(4)
+    expectedItems.input.TransactItems = [expectedItems.input.TransactItems[0], expectedItems.input.TransactItems[3]]
 
     const {handler, logger} = await import("../src/updatePrescriptionStatus")
     const loggerInfo = jest.spyOn(logger, "info")
