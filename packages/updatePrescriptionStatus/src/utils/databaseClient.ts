@@ -106,5 +106,6 @@ export async function getPreviousItem(currentItem: DataItem): Promise<DataItem |
     lastEvaluatedKey = result.LastEvaluatedKey
   } while (lastEvaluatedKey)
 
-  return items.sort((a, b) => new Date(a.LastModified).valueOf() - new Date(b.LastModified).valueOf()).pop()
+  items.sort((a, b) => new Date(a.LastModified).valueOf() - new Date(b.LastModified).valueOf())
+  return items.pop()
 }
