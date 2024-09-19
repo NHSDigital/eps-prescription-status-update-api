@@ -119,7 +119,7 @@ const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPro
     testPrescriptionForcedError = !!interceptionResponse.testPrescriptionForcedError
   }
 
-  await logTransitions(dataItems, logger)
+  await logTransitions(dataItems)
 
   try {
     const persistSuccess = persistDataItems(dataItems, logger)
@@ -286,7 +286,7 @@ function response(statusCode: number, responseEntries: Array<BundleEntry>) {
   }
 }
 
-async function logTransitions(dataItems: Array<DataItem>, logger: Logger): Promise<void> {
+async function logTransitions(dataItems: Array<DataItem>): Promise<void> {
   for (const dataItem of dataItems) {
     try {
       const previousItem = await getPreviousItem(dataItem)
