@@ -25,6 +25,40 @@ process.env.ENVIRONMENT = "int"
 process.env.TEST_PRESCRIPTIONS_1 = ["abc", TASK_VALUES[1].prescriptionID, "def"].join(",")
 process.env.TEST_PRESCRIPTIONS_2 = ["abc", TASK_VALUES[3].prescriptionID, "def"].join(",")
 
+function setupExistingDynamoEntry() {
+  mockSend.mockImplementation(async (command) => {
+    if (command instanceof GetItemCommand) {
+      return new Object({Item: "Some item"})
+    } else if (command instanceof TransactWriteItemsCommand) {
+      throw new TransactionCanceledException({
+        message: "DynamoDB transaction cancelled due to conditional check failure.",
+        $metadata: {},
+        CancellationReasons: [
+          {
+            Code: "ConditionalCheckFailed",
+            Item: {
+              TaskID: {S: "0ae4daf3-f24b-479d-b8fa-b69e2d873b60"}
+            },
+            Message: "The conditional request failed"
+          }
+        ]
+      })
+    }
+  })
+}
+
+function expectGetItemCommand(prescriptionID: string, taskID: string) {
+  expect(mockSend).toHaveBeenCalledWith(expect.objectContaining({
+    input: {
+      Key: {
+        PrescriptionID: {S: prescriptionID},
+        TaskID: {S: taskID}
+      },
+      TableName: "PrescriptionStatusUpdates"
+    }
+  }))
+}
+
 describe("testPrescription1Intercept", () => {
   beforeEach(() => {
     jest.useFakeTimers().setSystemTime(DEFAULT_DATE)
@@ -44,15 +78,7 @@ describe("testPrescription1Intercept", () => {
     expect(loggerInfo).toHaveBeenCalledWith("First submission of INT test prescription 1, returning 500")
     expect(loggerInfo).toHaveBeenCalledWith("Forcing error for INT test prescription")
 
-    expect(mockSend).toHaveBeenCalledWith(expect.objectContaining({
-      input: {
-        Key: {
-          PrescriptionID: {S: TASK_VALUES[1].prescriptionID},
-          TaskID: {S: TASK_VALUES[1].id}
-        },
-        TableName: "PrescriptionStatusUpdates"
-      }
-    }))
+    expectGetItemCommand(TASK_VALUES[1].prescriptionID, TASK_VALUES[1].id)
     expect(mockSend).toHaveBeenCalledWith(expect.objectContaining(expectedItems))
   })
 
@@ -68,25 +94,7 @@ describe("testPrescription1Intercept", () => {
     expect(loggerInfo).toHaveBeenCalledWith("First submission of INT test prescription 1, returning 500")
     expect(loggerInfo).toHaveBeenCalledWith("Forcing error for INT test prescription")
 
-    mockSend.mockImplementation(async (command) => {
-      if (command instanceof GetItemCommand) {
-        return new Object({Item: "Some item"})
-      } else if (command instanceof TransactWriteItemsCommand) {
-        throw new TransactionCanceledException({
-          message: "DynamoDB transaction cancelled due to conditional check failure.",
-          $metadata: {},
-          CancellationReasons: [
-            {
-              Code: "ConditionalCheckFailed",
-              Item: {
-                TaskID: {S: "0ae4daf3-f24b-479d-b8fa-b69e2d873b60"}
-              },
-              Message: "The conditional request failed"
-            }
-          ]
-        })
-      }
-    })
+    setupExistingDynamoEntry()
 
     const response: APIGatewayProxyResult = await handler(event, {})
 
@@ -95,15 +103,7 @@ describe("testPrescription1Intercept", () => {
     expect(loggerInfo).toHaveBeenCalledWith("Forcing 201 response for INT test prescription 1")
     expect(JSON.parse(response.body).entry[0]).toEqual(responseSingleItem.entry[0])
 
-    expect(mockSend).toHaveBeenCalledWith(expect.objectContaining({
-      input: {
-        Key: {
-          PrescriptionID: {S: TASK_VALUES[1].prescriptionID},
-          TaskID: {S: TASK_VALUES[1].id}
-        },
-        TableName: "PrescriptionStatusUpdates"
-      }
-    }))
+    expectGetItemCommand(TASK_VALUES[1].prescriptionID, TASK_VALUES[1].id)
   })
 })
 
@@ -130,15 +130,7 @@ describe("testPrescription2Intercept", () => {
     )
     expect(loggerInfo).toHaveBeenCalledWith("Forcing error for INT test prescription")
 
-    expect(mockSend).toHaveBeenCalledWith(expect.objectContaining({
-      input: {
-        Key: {
-          PrescriptionID: {S: TASK_VALUES[3].prescriptionID},
-          TaskID: {S: TASK_VALUES[3].id}
-        },
-        TableName: "PrescriptionStatusUpdates"
-      }
-    }))
+    expectGetItemCommand(TASK_VALUES[3].prescriptionID, TASK_VALUES[3].id)
     expect(mockSend).toHaveBeenCalledWith(expect.objectContaining(expectedItems))
   })
 
@@ -157,25 +149,7 @@ describe("testPrescription2Intercept", () => {
     )
     expect(loggerInfo).toHaveBeenCalledWith("Forcing error for INT test prescription")
 
-    mockSend.mockImplementation(async (command) => {
-      if (command instanceof GetItemCommand) {
-        return new Object({Item: "Some item"})
-      } else if (command instanceof TransactWriteItemsCommand) {
-        throw new TransactionCanceledException({
-          message: "DynamoDB transaction cancelled due to conditional check failure.",
-          $metadata: {},
-          CancellationReasons: [
-            {
-              Code: "ConditionalCheckFailed",
-              Item: {
-                TaskID: {S: "0ae4daf3-f24b-479d-b8fa-b69e2d873b60"}
-              },
-              Message: "The conditional request failed"
-            }
-          ]
-        })
-      }
-    })
+    setupExistingDynamoEntry()
 
     const response: APIGatewayProxyResult = await handler(event, {})
 
@@ -185,14 +159,6 @@ describe("testPrescription2Intercept", () => {
       "Request contains a task id and prescription id identical to a record already in the data store."
     )
 
-    expect(mockSend).toHaveBeenCalledWith(expect.objectContaining({
-      input: {
-        Key: {
-          PrescriptionID: {S: TASK_VALUES[3].prescriptionID},
-          TaskID: {S: TASK_VALUES[3].id}
-        },
-        TableName: "PrescriptionStatusUpdates"
-      }
-    }))
+    expectGetItemCommand(TASK_VALUES[3].prescriptionID, TASK_VALUES[3].id)
   })
 })
