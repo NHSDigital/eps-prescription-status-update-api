@@ -48,6 +48,7 @@ export async function persistDataItems(dataItems: Array<DataItem>, logger: Logge
     return false
   }
 }
+
 export async function checkPrescriptionRecordExistence(
   prescriptionID: string,
   taskID: string,

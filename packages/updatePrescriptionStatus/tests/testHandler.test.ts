@@ -32,7 +32,7 @@ import {
   serverError,
   timeoutResponse
 } from "../src/utils/responses"
-import {TransactionCanceledException} from "@aws-sdk/client-dynamodb"
+import {TransactionCanceledException, TransactWriteItemsCommand} from "@aws-sdk/client-dynamodb"
 
 const {mockSend} = mockDynamoDBClient()
 const {handler} = await import("../src/updatePrescriptionStatus")
@@ -205,7 +205,12 @@ describe("Integration tests for updatePrescriptionStatus handler", () => {
   })
 
   it("when data store update times out, expect 504 status code and relevant error message", async () => {
-    mockSend.mockImplementation(() => new Promise(() => {}))
+    mockSend.mockImplementation((command) => new Promise((resolve) => {
+      if (!(command instanceof TransactWriteItemsCommand)) {
+        resolve(false)
+      }
+      // else leave the promise unresolved to simulate a timeout
+    }))
 
     const event: APIGatewayProxyEvent = generateMockEvent(requestDispatched)
     const eventHandler: Promise<APIGatewayProxyResult> = handler(event, {})
