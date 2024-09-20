@@ -11,6 +11,9 @@ import string
 import requests
 import time
 
+# This should be set to a known good version of regression test repo
+REGRESSION_TESTS_REPO_TAG = "e3fca65a0a66b32a38b6b577b37e4d0b6d17bc5c"
+
 GITHUB_API_URL = "https://api.github.com/repos/NHSDigital/electronic-prescription-service-api-regression-tests/actions"
 
 
@@ -44,6 +47,7 @@ def trigger_test_run():
             "environment": env,
             "pull_request_id": pr_label,
             "product": "PSU",
+            "github_tag": REGRESSION_TESTS_REPO_TAG
         },
     }
 
