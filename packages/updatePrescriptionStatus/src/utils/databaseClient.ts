@@ -79,10 +79,6 @@ export async function getPreviousItem(currentItem: DataItem): Promise<DataItem |
       PrescriptionID: {
         ComparisonOperator: "EQ",
         AttributeValueList: [marshall(currentItem.PrescriptionID)]
-      },
-      TaskID: {
-        ComparisonOperator: "NE",
-        AttributeValueList: [marshall(currentItem.TaskID)]
       }
     },
     QueryFilter: {
@@ -101,7 +97,11 @@ export async function getPreviousItem(currentItem: DataItem): Promise<DataItem |
     }
     const result = await client.send(new QueryCommand(query))
     if (result.Items) {
-      items = items.concat(result.Items.map((item) => unmarshall(item) as DataItem))
+      items = items.concat(
+        result.Items
+              .map((item) => unmarshall(item) as DataItem)
+              .filter((item) => item.TaskID !== currentItem.TaskID) // Can't do NE in the query so filter here
+      )
     }
     lastEvaluatedKey = result.LastEvaluatedKey
   } while (lastEvaluatedKey)
