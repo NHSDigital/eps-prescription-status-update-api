@@ -89,7 +89,8 @@ sam-deploy-package: guard-artifact_bucket guard-artifact_bucket_prefix guard-sta
 		--role-arn $$cloud_formation_execution_role \
 		--no-confirm-changeset \
 		--force-upload \
-		--tags "version=$$VERSION_NUMBER" \
+		--tags 	Key=version,Value=$$VERSION_NUMBER \
+				Key=deployment_colour,Value=$$deployment_colour \
 		--parameter-overrides \
 			  TruststoreVersion=$$LATEST_TRUSTSTORE_VERSION \
 			  EnableMutualTLS=$$enable_mutual_tls \
