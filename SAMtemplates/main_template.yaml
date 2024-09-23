@@ -97,7 +97,6 @@ Resources:
       Parameters:
         StackName: !Ref AWS::StackName
         EnableMutualTLS: !Ref EnableMutualTLS
-        TruststoreVersion: !Ref TruststoreVersion
         UpdatePrescriptionStatusStateMachineName: !GetAtt StateMachines.Outputs.UpdatePrescriptionStatusStateMachineName
         UpdatePrescriptionStatusStateMachineArn: !GetAtt StateMachines.Outputs.UpdatePrescriptionStatusStateMachineArn
         Format1UpdatePrescriptionsStatusStateMachineName: !GetAtt StateMachines.Outputs.Format1UpdatePrescriptionsStatusStateMachineName

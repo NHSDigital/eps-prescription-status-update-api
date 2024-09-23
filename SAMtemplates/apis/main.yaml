@@ -11,9 +11,6 @@ Parameters:
   EnableMutualTLS:
     Type: String
 
-  TruststoreVersion:
-    Type: String
-
   UpdatePrescriptionStatusStateMachineName:
     Type: String
     Default: none
@@ -72,21 +69,6 @@ Conditions:
     - !Ref DeployCheckPrescriptionStatusUpdate
 
 Resources:
-  GenerateCertificate:
-    Type: AWS::CertificateManager::Certificate
-    Properties:
-      ValidationMethod: DNS
-      DomainName: !Join
-        - .
-        - - !Ref StackName
-          - !ImportValue eps-route53-resources:EPS-domain
-      DomainValidationOptions:
-        - DomainName: !Join
-            - .
-            - - !Ref StackName
-              - !ImportValue eps-route53-resources:EPS-domain
-          HostedZoneId: !ImportValue eps-route53-resources:EPS-ZoneID
-
   RestApiGateway:
     Type: AWS::ApiGateway::RestApi
     Properties:
@@ -98,49 +80,6 @@ Resources:
       EndpointConfiguration:
         Types:
           - REGIONAL
-
-  RestApiDomain:
-    Type: AWS::ApiGateway::DomainName
-    Properties:
-      DomainName: !Join
-        - .
-        - - !Ref StackName
-          - !ImportValue eps-route53-resources:EPS-domain
-      RegionalCertificateArn: !Ref GenerateCertificate
-      EndpointConfiguration:
-        Types:
-          - REGIONAL
-      SecurityPolicy: TLS_1_2
-      MutualTlsAuthentication:
-        TruststoreUri: !If
-          - ShouldUseMutualTLS
-          - !Join
-            - /
-            - - s3:/
-              - !Select
-                - 5
-                - !Split
-                  - ":"
-                  - !ImportValue account-resources:TrustStoreBucket
-              - psu-truststore.pem
-          - !Ref AWS::NoValue
-        TruststoreVersion: !If
-          - ShouldUseMutualTLS
-          - !Ref TruststoreVersion
-          - !Ref AWS::NoValue
-
-  RestApiRecordSet:
-    Type: AWS::Route53::RecordSet
-    Properties:
-      Name: !Join
-        - .
-        - - !Ref StackName
-          - !ImportValue eps-route53-resources:EPS-domain
-      Type: A
-      HostedZoneId: !ImportValue eps-route53-resources:EPS-ZoneID
-      AliasTarget:
-        DNSName: !GetAtt RestApiDomain.RegionalDomainName
-        HostedZoneId: !GetAtt RestApiDomain.RegionalHostedZoneId
 
   UpdatePrescriptionStatusMethod:
     Type: AWS::ApiGateway::Method
@@ -507,7 +446,7 @@ Resources:
         !If [
           ShouldDeployCheckPrescriptionStatusUpdate,
           !Ref CheckPrescriptionStatusUpdatesHandle,
-          !Ref CheckPrescriptionStatusUpdatesWaitHandle
+          !Ref CheckPrescriptionStatusUpdatesWaitHandle,
         ]
       Timeout: "1"
       Count: 0
@@ -540,13 +479,6 @@ Resources:
         DestinationArn: !GetAtt RestApiGatewayResources.Outputs.ApiGwAccessLogsArn
         Format: '{ "requestTime": "$context.requestTime", "apiId": "$context.apiId", "accountId": "$context.accountId", "resourcePath": "$context.resourcePath", "stage": "$context.stage", "requestId": "$context.requestId", "extendedRequestId": "$context.extendedRequestId", "status": "$context.status", "httpMethod": "$context.httpMethod", "protocol": "$context.protocol", "path": "$context.path", "responseLatency": "$context.responseLatency", "responseLength": "$context.responseLength", "domainName": "$context.domainName", "identity": { "sourceIp": "$context.identity.sourceIp", "userAgent": "$context.identity.userAgent", "clientCert":{ "subjectDN": "$context.identity.clientCert.subjectDN", "issuerDN": "$context.identity.clientCert.issuerDN", "serialNumber": "$context.identity.clientCert.serialNumber", "validityNotBefore": "$context.identity.clientCert.validity.notBefore", "validityNotAfter": "$context.identity.clientCert.validity.notAfter" }}, "integration":{ "error": "$context.integration.error", "integrationStatus": "$context.integration.integrationStatus", "latency": "$context.integration.latency", "requestId": "$context.integration.requestId", "status": "$context.integration.status" }}'
 
-  RestApiDomainMapping:
-    Type: AWS::ApiGateway::BasePathMapping
-    Properties:
-      DomainName: !Ref RestApiDomain
-      RestApiId: !Ref RestApiGateway
-      Stage: !Ref RestApiGatewayStage
-
   RestApiGatewayResources:
     Type: AWS::Serverless::Application
     Properties:
@@ -566,3 +498,16 @@ Resources:
         ApiName: !Sub ${StackName}-apigw
         LogRetentionInDays: !Ref LogRetentionInDays
         EnableSplunk: !Ref EnableSplunk
+
+Outputs:
+  RestApiGateway:
+    Description: The Rest API gateway
+    Value: !Ref RestApiGateway
+    Export:
+      Name: !Sub ${StackName}:RestApi:Gateway
+
+  RestApiGatewayStage:
+    Description: The Rest API gateway stage
+    Value: !Ref RestApiGatewayStage
+    Export:
+      Name: !Sub ${StackName}:RestApi:Gateway:Stage

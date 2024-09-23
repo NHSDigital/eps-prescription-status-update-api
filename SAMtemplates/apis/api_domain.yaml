@@ -1,0 +1,92 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: AWS::Serverless-2016-10-31
+Description: |
+  PSU API's and related resources
+
+Parameters:
+  StackName:
+    Type: String
+    Default: none
+
+  EnableMutualTLS:
+    Type: String
+
+  TruststoreVersion:
+    Type: String
+
+  RestApiGateway:
+    Type: String
+
+  RestApiGatewayStage:
+    Type: String
+
+Conditions:
+  ShouldUseMutualTLS: !Equals
+    - true
+    - !Ref EnableMutualTLS
+
+Resources:
+  GenerateCertificate:
+    Type: AWS::CertificateManager::Certificate
+    Properties:
+      ValidationMethod: DNS
+      DomainName: !Join
+        - .
+        - - !Ref StackName
+          - !ImportValue eps-route53-resources:EPS-domain
+      DomainValidationOptions:
+        - DomainName: !Join
+            - .
+            - - !Ref StackName
+              - !ImportValue eps-route53-resources:EPS-domain
+          HostedZoneId: !ImportValue eps-route53-resources:EPS-ZoneID
+
+  RestApiDomain:
+    Type: AWS::ApiGateway::DomainName
+    Properties:
+      DomainName: !Join
+        - .
+        - - !Ref StackName
+          - !ImportValue eps-route53-resources:EPS-domain
+      RegionalCertificateArn: !Ref GenerateCertificate
+      EndpointConfiguration:
+        Types:
+          - REGIONAL
+      SecurityPolicy: TLS_1_2
+      MutualTlsAuthentication:
+        TruststoreUri: !If
+          - ShouldUseMutualTLS
+          - !Join
+            - /
+            - - s3:/
+              - !Select
+                - 5
+                - !Split
+                  - ":"
+                  - !ImportValue account-resources:TrustStoreBucket
+              - psu-truststore.pem
+          - !Ref AWS::NoValue
+        TruststoreVersion: !If
+          - ShouldUseMutualTLS
+          - !Ref TruststoreVersion
+          - !Ref AWS::NoValue
+
+  RestApiRecordSet:
+    Type: AWS::Route53::RecordSet
+    Properties:
+      Name: !Join
+        - .
+        - - !Ref StackName
+          - !ImportValue eps-route53-resources:EPS-domain
+      Type: A
+      HostedZoneId: !ImportValue eps-route53-resources:EPS-ZoneID
+      AliasTarget:
+        DNSName: !GetAtt RestApiDomain.RegionalDomainName
+        HostedZoneId: !GetAtt RestApiDomain.RegionalHostedZoneId
+
+  RestApiDomainMapping:
+    Type: AWS::ApiGateway::BasePathMapping
+    Properties:
+      DomainName: !Ref RestApiDomain
+      RestApiId: !Ref RestApiGateway
+      Stage: !Ref RestApiGatewayStage
