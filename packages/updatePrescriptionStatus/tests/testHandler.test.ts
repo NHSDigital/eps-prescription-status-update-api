@@ -357,6 +357,19 @@ describe("Integration tests for updatePrescriptionStatus handler", () => {
     expect(responseBody.entry[0].response.status).not.toEqual("200 OK")
   })
 
+  function itemQueryResult(taskID: string, status: string, businessStatus: string, lastModified: string) {
+    return {
+      PrescriptionID: {S: TASK_VALUES[0].prescriptionID},
+      PatientNHSNumber: {S: TASK_VALUES[0].nhsNumber},
+      PharmacyODSCode: {S: TASK_VALUES[0].odsCode},
+      LineItemID: {S: TASK_VALUES[0].lineItemID},
+      TaskID: {S: taskID},
+      TerminalStatus: {S: status},
+      Status: {S: businessStatus},
+      LastModified: {S: lastModified}
+    }
+  }
+
   it("when updates already exist for an item, logs transitions", async () => {
     const body = generateBody()
     const mockEvent: APIGatewayProxyEvent = generateMockEvent(body)
@@ -365,34 +378,11 @@ describe("Integration tests for updatePrescriptionStatus handler", () => {
     mockSend.mockImplementation(
       async (command) => {
         if (command instanceof QueryCommand) {
-          return new Object({Items: [{
-            PrescriptionID: {S: TASK_VALUES[0].prescriptionID},
-            PatientNHSNumber: {S: TASK_VALUES[0].nhsNumber},
-            PharmacyODSCode: {S: TASK_VALUES[0].odsCode},
-            LineItemID: {S: TASK_VALUES[0].lineItemID},
-            TaskID: {S: "71a3cf0d-c096-4b72-be0c-b1dd5f94ab0b"},
-            TerminalStatus: {S: "in-progress"},
-            Status: {S: "With Pharmacy"},
-            LastModified: {S: "2023-09-11T10:09:12Z"}
-          }, {
-            PrescriptionID: {S: TASK_VALUES[0].prescriptionID},
-            PatientNHSNumber: {S: TASK_VALUES[0].nhsNumber},
-            PharmacyODSCode: {S: TASK_VALUES[0].odsCode},
-            LineItemID: {S: TASK_VALUES[0].lineItemID},
-            TaskID: {S: "c523a80a-5346-46b3-81d2-a7420959c26b"},
-            TerminalStatus: {S: "in-progress"},
-            Status: {S: "Ready to Dispatch"},
-            LastModified: {S: "2023-09-11T10:10:12Z"}
-          }, {
-            PrescriptionID: {S: TASK_VALUES[0].prescriptionID},
-            PatientNHSNumber: {S: TASK_VALUES[0].nhsNumber},
-            PharmacyODSCode: {S: TASK_VALUES[0].odsCode},
-            LineItemID: {S: TASK_VALUES[0].lineItemID},
-            TaskID: {S: TASK_VALUES[0].id},
-            TerminalStatus: {S: TASK_VALUES[0].status},
-            Status: {S: TASK_VALUES[0].businessStatus},
-            LastModified: {S: TASK_VALUES[0].lastModified}
-          }]})
+          return new Object({Items: [
+            itemQueryResult("71a3cf0d-c096-4b72-be0c-b1dd5f94ab0b", "in-progress", "With Pharmacy", "2023-09-11T10:09:12Z"), 
+            itemQueryResult("c523a80a-5346-46b3-81d2-a7420959c26b", "in-progress", "Ready to Dispatch", "2023-09-11T10:10:12Z"), 
+            itemQueryResult(TASK_VALUES[0].id, TASK_VALUES[0].status, TASK_VALUES[0].businessStatus, TASK_VALUES[0].lastModified)
+          ]})
         }
       }
     )
