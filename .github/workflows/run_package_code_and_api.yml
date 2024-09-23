@@ -59,6 +59,8 @@ jobs:
           name: packaged_code
           path: |
             .aws-sam/build
+            .aws-sam/build.main
+            .aws-sam/build.api_domain
             SAMtemplates/state_machines/UpdatePrescriptionStatusStateMachine.asl.json
             SAMtemplates/state_machines/Format1UpdatePrescriptionsStatusStateMachine.asl.json
 
