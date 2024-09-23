@@ -51,23 +51,7 @@ jobs:
 
       - shell: bash
         name: Package code
-        run: |
-          cp .tool-versions ~/
-          rm -rf .aws-sam
-          export PATH=$PATH:$PWD/node_modules/.bin
-          make compile-specification
-          make sam-build
-          cp Makefile .aws-sam/build/
-          cp samconfig_package_and_deploy.toml .aws-sam/build/
-          mv .aws-sam/build .aws-sam/build.main
-          rm -rf .aws-sam
-          make sam-build-api-domain
-          cp Makefile .aws-sam/build/
-          cp samconfig_package_and_deploy.toml .aws-sam/build/
-          mv .aws-sam/build .aws-sam/build.api_domain
-          mkdir -p .aws-sam/build/specification
-          cp packages/specification/dist/eps-prescription-status-update-api.resolved.json .aws-sam/build/specification/
-          cp packages/specification/dist/eps-custom-prescription-status-update-api.resolved.json .aws-sam/build/specification/
+        run: .github/scripts/package_code.sh
 
       - uses: actions/upload-artifact@v4
         name: Upload build artifact
