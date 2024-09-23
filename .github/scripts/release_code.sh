@@ -1,6 +1,5 @@
 #!/usr/bin/env bash
-
-echo "$COMMIT_ID"
+set -e
 
 artifact_bucket=$(aws cloudformation list-exports --output json | jq -r '.Exports[] | select(.Name == "account-resources:ArtifactsBucket") | .Value' | grep -o '[^:]*$')
 export artifact_bucket
