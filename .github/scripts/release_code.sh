@@ -26,7 +26,12 @@ function get_exports() {
 }
 
 function deploy_sandbox_stack() {
-    echo "About to sandbox stack"
+    echo "********************************************"
+    echo
+    echo "Deploying sandbox stack"
+    echo
+    echo "********************************************"
+    echo
     local stack_name=$1
     check_required_vars "GITHUB_WORKSPACE \
         stack_name \
@@ -62,10 +67,15 @@ function deploy_sandbox_stack() {
 }
 
 function deploy_main_stack() {
-    echo "About to main stack"
     local stack_name=$1
     local deployment_colour=$2
     local TablesStackName=$3
+    echo "********************************************"
+    echo
+    echo "Deploying main stack pointing to stack ${stack_name}"
+    echo
+    echo "********************************************"
+    echo
     check_required_vars "GITHUB_WORKSPACE \
         stack_name \
         artifact_bucket \
@@ -113,7 +123,12 @@ function deploy_main_stack() {
 }
 
 function deploy_api_domain_stack() {
-    echo "About to api domain stack"
+    echo "********************************************"
+    echo
+    echo "Deploying api_domain stack pointing to ${deployment_colour}"
+    echo
+    echo "********************************************"
+    echo
     local stack_name=$1
     local deployment_colour=$2
     check_required_vars "GITHUB_WORKSPACE \
@@ -152,11 +167,16 @@ function deploy_api_domain_stack() {
 				LogRetentionInDays="${LOG_RETENTION_DAYS}" \
    				RestApiGateway="${RestApiGateway}" \
 				RestApiGatewayStage="${RestApiGatewayStage}" \
-                GSUL_ARN="${GSUL_ARN}"
+                GSUL_ARN="'""${GSUL_ARN}""'"
 }
 
 function deploy_table_stack() {
-    echo "About to table stack"
+    echo "********************************************"
+    echo
+    echo "Deploying table stack"
+    echo
+    echo "********************************************"
+    echo
     local stack_name=$1
     check_required_vars "GITHUB_WORKSPACE \
         stack_name \
@@ -202,11 +222,21 @@ deploy_table_stack "${stack_name}-tables"
 PrescriptionStatusUpdatesTableName=$(aws cloudformation list-exports --query "Exports[?Name=='${stack_name}-tables:tables:PrescriptionStatusUpdatesTableName'].Value" --output text)
 
 if [ "$current_coluor" == "blue" ]; then
+    echo "********************************************"
+    echo
+    echo "Current live stack is blue - going to deploy green first"
+    echo
+    echo "********************************************"
     undeployed_colour="green"
     deployed_colour="blue"
     undeployed_stack_name="${stack_name}-green"
     deployed_stack_name="${stack_name}-blue"
 else
+    echo "********************************************"
+    echo
+    echo "Current live stack is green - going to deploy blue first"
+    echo
+    echo "********************************************"
     undeployed_colour="blue"
     deployed_colour="green"
     undeployed_stack_name="${stack_name}-blue"
