@@ -4,10 +4,6 @@ Description: |
   PSU API's and related resources
 
 Parameters:
-  StackName:
-    Type: String
-    Default: none
-
   EnableMutualTLS:
     Type: String
 
