@@ -201,7 +201,7 @@ PrescriptionStatusUpdatesTableName=$(aws cloudformation list-exports --query "Ex
 if [ "$current_coluor" == "blue" ]; then
     undeployed_colour="green"
     deployed_colour="blue"
-    undeployed_stack_name="${stack_name}-grenn"
+    undeployed_stack_name="${stack_name}-green"
     deployed_stack_name="${stack_name}-blue"
 else
     undeployed_colour="blue"
