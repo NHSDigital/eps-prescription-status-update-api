@@ -129,7 +129,7 @@ Resources:
       Parameters:
         StackName: !Ref AWS::StackName
         LambdaName: !Sub ${AWS::StackName}-GetGSULArn
-        LambdaArn: !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:${AWS::StackName}-UpdatePrescriptionStatus
+        LambdaArn: !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:${AWS::StackName}-GetGSULArn
         IncludeAdditionalPolicies: false
         LogRetentionInDays: !Ref LogRetentionInDays
         CloudWatchKMSKeyId: !ImportValue account-resources:CloudwatchLogsKmsKeyArn
