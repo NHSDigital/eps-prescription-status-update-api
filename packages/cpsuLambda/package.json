@@ -31,6 +31,6 @@
     "@faker-js/faker": "^9.0.2",
     "@types/fhir": "^0.0.41",
     "@types/uuid": "^10.0.0",
-    "aws-sdk-client-mock": "^4.0.0"
+    "aws-sdk-client-mock": "^4.0.2"
   }
 }
