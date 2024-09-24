@@ -123,14 +123,14 @@ function deploy_main_stack() {
 }
 
 function deploy_api_domain_stack() {
+    local stack_name=$1
+    local deployment_colour=$2
     echo "********************************************"
     echo
     echo "Deploying api_domain stack pointing to ${deployment_colour}"
     echo
     echo "********************************************"
     echo
-    local stack_name=$1
-    local deployment_colour=$2
     check_required_vars "GITHUB_WORKSPACE \
         stack_name \
         artifact_bucket \
