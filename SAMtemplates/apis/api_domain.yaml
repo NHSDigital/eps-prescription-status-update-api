@@ -16,6 +16,9 @@ Parameters:
   RestApiGatewayStage:
     Type: String
 
+  GSUL_ARN:
+    Type: String
+
 Conditions:
   ShouldUseMutualTLS: !Equals
     - true
@@ -86,3 +89,39 @@ Resources:
       DomainName: !Ref RestApiDomain
       RestApiId: !Ref RestApiGateway
       Stage: !Ref RestApiGatewayStage
+
+  GetGSULArn:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub ${AWS::StackName}-GetGSULArn
+      InlineCode: |
+        const GSUL_ARN = process.env["GSUL_ARN"]
+        exports.handler = async function(event) {
+          return GSUL_ARN
+        };
+      Handler: index.handler
+      Role: !GetAtt GetGSULArnResources.Outputs.LambdaRoleArn
+      Environment:
+        Variables:
+          GSUL_ARN: !Ref GSUL_ARN
+    Metadata:
+      guard:
+        SuppressedRules:
+          - LAMBDA_DLQ_CHECK
+          - LAMBDA_INSIDE_VPC
+          - LAMBDA_CONCURRENCY_CHECK
+
+  GetGSULArnResources:
+    Type: AWS::Serverless::Application
+    Properties:
+      Location: ../functions/lambda_resources.yaml
+      Parameters:
+        StackName: !Ref AWS::StackName
+        LambdaName: !Sub ${AWS::StackName}-GetGSULArn
+        LambdaArn: !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:${AWS::StackName}-UpdatePrescriptionStatus
+        IncludeAdditionalPolicies: false
+        LogRetentionInDays: !Ref LogRetentionInDays
+        CloudWatchKMSKeyId: !ImportValue account-resources:CloudwatchLogsKmsKeyArn
+        EnableSplunk: !Ref EnableSplunk
+        SplunkSubscriptionFilterRole: !ImportValue lambda-resources:SplunkSubscriptionFilterRole
+        SplunkDeliveryStreamArn: !ImportValue lambda-resources:SplunkDeliveryStream

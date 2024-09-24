@@ -148,7 +148,8 @@ function deploy_api_domain_stack() {
 				LogLevel="${LOG_LEVEL}" \
 				LogRetentionInDays="${LOG_RETENTION_DAYS}" \
    				RestApiGateway="${RestApiGateway}" \
-				RestApiGatewayStage="${RestApiGatewayStage}"
+				RestApiGatewayStage="${RestApiGatewayStage}" \
+                GSUL_ARN="${GSUL_ARN}"
 }
 
 function deploy_table_stack() {
@@ -212,10 +213,9 @@ fi
 deploy_main_stack "${undeployed_stack_name}" "${undeployed_colour}"
 
 # get blue stack exports
-RestApiGateway=$(aws cloudformation list-exports --query "Exports[?Name=='${stack_name}:RestApi:Gateway'].Value" --output text)
-export RestApiGateway
-RestApiGatewayStage=$(aws cloudformation list-exports --query "Exports[?Name=='${stack_name}:RestApi:Gateway:Stage'].Value" --output text)
-export RestApiGatewayStage
+RestApiGateway=$(aws cloudformation list-exports --query "Exports[?Name=='${undeployed_stack_name}:RestApi:Gateway'].Value" --output text)
+RestApiGatewayStage=$(aws cloudformation list-exports --query "Exports[?Name=='${undeployed_stack_name}:RestApi:Gateway:Stage'].Value" --output text)
+GSUL_ARN=$(aws cloudformation list-exports --query "Exports[?Name=='${undeployed_stack_name}:functions:psu-GetStatusUpdates:FunctionArn'].Value" --output text)
 deploy_api_domain_stack "${stack_name}" "${undeployed_colour}"
 
 deploy_main_stack "${deployed_stack_name}" "${deployed_colour}"
