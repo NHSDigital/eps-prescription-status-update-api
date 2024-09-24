@@ -23,9 +23,6 @@ function get_exports() {
     TRUSTSTORE_BUCKET_ARN=$(aws cloudformation describe-stacks --stack-name account-resources --query "Stacks[0].Outputs[?OutputKey=='TrustStoreBucket'].OutputValue" --output text)
     TRUSTSTORE_BUCKET_NAME=$(echo "${TRUSTSTORE_BUCKET_ARN}" | cut -d ":" -f 6)
     LATEST_TRUSTSTORE_VERSION=$(aws s3api list-object-versions --bucket "${TRUSTSTORE_BUCKET_NAME}" --prefix "${TRUSTSTORE_FILE}" --query 'Versions[?IsLatest].[VersionId]' --output text)
-
-    # get current deployed colour
-    current_coluor=$(aws cloudformation  describe-stacks --stack-name "${stack_name}" --query "Stacks[].Tags[?Key=='deployment_colour'].Value" --output text)
 }
 
 function deploy_sandbox_stack() {
@@ -34,7 +31,7 @@ function deploy_sandbox_stack() {
     check_required_vars "GITHUB_WORKSPACE \
         stack_name \
         artifact_bucket \
-        artifact_bucket_prefix \
+        ARTIFACT_BUCKET_PREFIX \
         cloud_formation_execution_role \
         VERSION_NUMBER \
         ENABLE_MUTUAL_TLS \
@@ -71,7 +68,7 @@ function deploy_main_stack() {
     check_required_vars "GITHUB_WORKSPACE \
         stack_name \
         artifact_bucket \
-        artifact_bucket_prefix \
+        ARTIFACT_BUCKET_PREFIX \
         cloud_formation_execution_role \
         VERSION_NUMBER \
         deployment_colour \
@@ -108,7 +105,8 @@ function deploy_main_stack() {
 				LogRetentionInDays="${LOG_RETENTION_DAYS}" \
 				Environment="${TARGET_ENVIRONMENT}" \
 				DeployCheckPrescriptionStatusUpdate="${DEPLOY_CHECK_PRESCRIPTION_STATUS_UPDATE}" \
-				EnableAlerts="${ENABLE_ALERTS}" 
+				EnableAlerts="${ENABLE_ALERTS}" \
+                PrescriptionStatusUpdatesTableName="${PrescriptionStatusUpdatesTableName}"
 }
 
 function deploy_api_domain_stack() {
@@ -118,7 +116,7 @@ function deploy_api_domain_stack() {
     check_required_vars "GITHUB_WORKSPACE \
         stack_name \
         artifact_bucket \
-        artifact_bucket_prefix \
+        ARTIFACT_BUCKET_PREFIX \
         cloud_formation_execution_role \
         VERSION_NUMBER \
         deployment_colour \
@@ -153,6 +151,38 @@ function deploy_api_domain_stack() {
 				RestApiGatewayStage="${RestApiGatewayStage}"
 }
 
+function deploy_table_stack() {
+    echo "About to table stack"
+    local stack_name=$1
+    check_required_vars "GITHUB_WORKSPACE \
+        stack_name \
+        artifact_bucket \
+        ARTIFACT_BUCKET_PREFIX \
+        cloud_formation_execution_role \
+        VERSION_NUMBER \
+        DYNAMODB_AUTOSCALE \
+        COMMIT_ID"
+    sam deploy \
+		--template-file "${GITHUB_WORKSPACE}/.aws-sam/build.tables/template.yaml" \
+		--stack-name "${stack_name}" \
+		--capabilities CAPABILITY_NAMED_IAM CAPABILITY_AUTO_EXPAND \
+		--region eu-west-2 \
+		--s3-bucket "${artifact_bucket}" \
+		--s3-prefix "${ARTIFACT_BUCKET_PREFIX}" \
+		--config-file "${GITHUB_WORKSPACE}/.aws-sam/build.tables/samconfig_package_and_deploy.toml" \
+		--no-fail-on-empty-changeset \
+		--role-arn "${cloud_formation_execution_role}" \
+		--no-confirm-changeset \
+		--force-upload \
+		--tags \
+				version="${VERSION_NUMBER}" \
+		--parameter-overrides \
+				EnableMutualTLS="${ENABLE_MUTUAL_TLS}" \
+				EnableSplunk=true \
+				EnableDynamoDBAutoScaling="${DYNAMODB_AUTOSCALE}" \
+				VersionNumber="${VERSION_NUMBER}" 
+}
+
 get_exports
 
 if [ "$DEPLOY_SANDBOX" == "true" ]; then
@@ -160,6 +190,12 @@ if [ "$DEPLOY_SANDBOX" == "true" ]; then
     exit 0
 fi
 
+# get current deployed colour
+current_coluor=$(aws cloudformation  describe-stacks --stack-name "${stack_name}" --query "Stacks[].Tags[?Key=='deployment_colour'].Value" --output text)
+
+deploy_table_stack "${stack_name}-tables"
+
+PrescriptionStatusUpdatesTableName=$(aws cloudformation list-exports --query "Exports[?Name=='${stack_name}-tables:tables:PrescriptionStatusUpdatesTableName'].Value" --output text)
 
 if [ "$current_coluor" == "blue" ]; then
     undeployed_colour="green"

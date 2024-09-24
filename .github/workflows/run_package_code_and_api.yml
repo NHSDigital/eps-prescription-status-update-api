@@ -61,6 +61,7 @@ jobs:
             .aws-sam/build
             .aws-sam/build.main
             .aws-sam/build.api_domain
+            .aws-sam/build.tables
             SAMtemplates/state_machines/UpdatePrescriptionStatusStateMachine.asl.json
             SAMtemplates/state_machines/Format1UpdatePrescriptionsStatusStateMachine.asl.json
 

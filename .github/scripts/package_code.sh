@@ -25,6 +25,14 @@ cp Makefile .aws-sam/build/
 cp samconfig_package_and_deploy.toml .aws-sam/build/
 mv .aws-sam/build .aws-sam/build.api_domain
 
+# build api domain sam stack
+make sam-build-tables
+
+# copy files needed into target directory and rename it
+cp Makefile .aws-sam/build/
+cp samconfig_package_and_deploy.toml .aws-sam/build/
+mv .aws-sam/build .aws-sam/build.tables
+
 # copy api spec
 mkdir -p .aws-sam/build/specification
 cp packages/specification/dist/eps-prescription-status-update-api.resolved.json .aws-sam/build/specification/

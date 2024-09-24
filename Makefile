@@ -23,6 +23,9 @@ sam-build: sam-validate compile
 sam-build-api-domain: sam-validate compile
 	sam build --template-file SAMtemplates/apis/api_domain.yaml --region eu-west-2
 
+sam-build-tables: sam-validate compile
+	sam build --template-file SAMtemplates/tables/main.yaml --region eu-west-2
+
 sam-build-sandbox: sam-validate-sandbox compile
 	sam build --template-file SAMtemplates/sandbox_template.yaml --region eu-west-2
 

@@ -77,15 +77,10 @@ Parameters:
       - true
       - false
 
-Resources:
-  Tables:
-    Type: AWS::Serverless::Application
-    Properties:
-      Location: tables/main.yaml
-      Parameters:
-        StackName: !Ref AWS::StackName
-        EnableDynamoDBAutoScaling: !Ref EnableDynamoDBAutoScaling
+  PrescriptionStatusUpdatesTableName:
+    Type: String
 
+Resources:
   Apis:
     Type: AWS::Serverless::Application
     Properties:
@@ -113,7 +108,7 @@ Resources:
       Location: functions/main.yaml
       Parameters:
         StackName: !Ref AWS::StackName
-        PrescriptionStatusUpdatesTableName: !GetAtt Tables.Outputs.PrescriptionStatusUpdatesTableName
+        PrescriptionStatusUpdatesTableName: !Ref PrescriptionStatusUpdatesTableName
         LogLevel: !Ref LogLevel
         LogRetentionInDays: !Ref LogRetentionInDays
         EnableSplunk: !Ref EnableSplunk
