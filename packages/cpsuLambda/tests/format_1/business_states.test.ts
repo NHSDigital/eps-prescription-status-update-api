@@ -173,4 +173,41 @@ describe("populateTemplate function", () => {
       })
     }
   )
+
+  test("Date conversion", async () => {
+    const template: string = generateTemplate({
+      MessageType: "ExampleMessageType",
+      items: [{itemID: "item1", status: "ReadyForCollection", completedStatus: undefined}],
+      prescriptionUUID: "123456789",
+      nHSCHI: "123456",
+      messageDate: "2024-09-24 10:38:51",
+      oDSCode: "XYZ",
+      deliveryType: "Robot Collection",
+      repeatNo: 1
+    })
+
+    const prescriptionItem: itemType = {
+      itemID: "item1",
+      status: "ReadyForCollection",
+      completedStatus: undefined
+    }
+
+    const prescriptionDetails: requestType = {
+      MessageType: "ExampleMessageType",
+      items: [{itemID: "item1", status: "ReadyForCollection", completedStatus: undefined}],
+      prescriptionUUID: "123456789",
+      nHSCHI: "123456",
+      messageDate: "2024-09-24 10:38:51",
+      oDSCode: "XYZ",
+      deliveryType: "Robot Collection",
+      repeatNo: 1
+    }
+
+    const logger = new Logger()
+    const result = populateTemplate(template, prescriptionItem, prescriptionDetails, logger)
+    const entry: BundleEntry<Task> = result.value() as BundleEntry<Task>
+    expect(entry.resource!.lastModified).toEqual("2024-09-24T10:38:51.000Z")
+
+  })
+
 })
