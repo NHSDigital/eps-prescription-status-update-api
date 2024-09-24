@@ -103,7 +103,6 @@ Resources:
         LogRetentionInDays: !Ref LogRetentionInDays
         EnableSplunk: !Ref EnableSplunk
         DeployCheckPrescriptionStatusUpdate: !Ref DeployCheckPrescriptionStatusUpdate
-        TablesStackName: !Ref TablesStackName
 
   Functions:
     Type: AWS::Serverless::Application
@@ -119,6 +118,7 @@ Resources:
         CommitId: !Ref CommitId
         DeployCheckPrescriptionStatusUpdate: !Ref DeployCheckPrescriptionStatusUpdate
         Environment: !Ref Environment
+        TablesStackName: !Ref TablesStackName
 
   StateMachines:
     Type: AWS::Serverless::Application
