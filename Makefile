@@ -93,19 +93,19 @@ sam-deploy-package: guard-artifact_bucket guard-artifact_bucket_prefix guard-sta
 				version=$$VERSION_NUMBER \
 				deployment_colour=$$deployment_colour \
 		--parameter-overrides \
-			  TruststoreVersion=$$LATEST_TRUSTSTORE_VERSION \
-			  EnableMutualTLS=$$enable_mutual_tls \
-			  EnableSplunk=true \
-			  EnableDynamoDBAutoScaling=$$DYNAMODB_AUTOSCALE \
-			  VersionNumber=$$VERSION_NUMBER \
-			  CommitId=$$COMMIT_ID \
-			  LogLevel=$$LOG_LEVEL \
-			  LogRetentionInDays=$$LOG_RETENTION_DAYS \
-			  Environment=$$TARGET_ENVIRONMENT \
-			  DeployCheckPrescriptionStatusUpdate=$$DEPLOY_CHECK_PRESCRIPTION_STATUS_UPDATE \
-			  EnableAlerts=$$ENABLE_ALERTS \
-			  RestApiGateway=$$RestApiGateway \
-			  RestApiGatewayStage=$$RestApiGatewayStage
+				TruststoreVersion=$$LATEST_TRUSTSTORE_VERSION \
+				EnableMutualTLS=$$enable_mutual_tls \
+				EnableSplunk=true \
+				EnableDynamoDBAutoScaling=$$DYNAMODB_AUTOSCALE \
+				VersionNumber=$$VERSION_NUMBER \
+				CommitId=$$COMMIT_ID \
+				LogLevel=$$LOG_LEVEL \
+				LogRetentionInDays=$$LOG_RETENTION_DAYS \
+				Environment=$$TARGET_ENVIRONMENT \
+				DeployCheckPrescriptionStatusUpdate=$$DEPLOY_CHECK_PRESCRIPTION_STATUS_UPDATE \
+				EnableAlerts=$$ENABLE_ALERTS \
+				RestApiGateway=$$RestApiGateway \
+				RestApiGatewayStage=$$RestApiGatewayStage
 
 compile-node:
 	npx tsc --build tsconfig.build.json

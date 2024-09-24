@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+set -e
 
 # make sure asdf will work
 cp .tool-versions ~/
@@ -28,3 +29,7 @@ mv .aws-sam/build .aws-sam/build.api_domain
 mkdir -p .aws-sam/build/specification
 cp packages/specification/dist/eps-prescription-status-update-api.resolved.json .aws-sam/build/specification/
 cp packages/specification/dist/eps-custom-prescription-status-update-api.resolved.json .aws-sam/build/specification/
+
+# copy deployment scripts
+cp .github/scripts/release_code.sh .aws-sam/build/
+cp .github/scripts/deploy_api.sh .aws-sam/build/
