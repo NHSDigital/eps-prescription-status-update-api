@@ -218,7 +218,7 @@ deploy_main_stack "${undeployed_stack_name}" "${undeployed_colour}" "${stack_nam
 # get blue stack exports
 RestApiGateway=$(aws cloudformation list-exports --query "Exports[?Name=='${undeployed_stack_name}:RestApi:Gateway'].Value" --output text)
 RestApiGatewayStage=$(aws cloudformation list-exports --query "Exports[?Name=='${undeployed_stack_name}:RestApi:Gateway:Stage'].Value" --output text)
-GSUL_ARN=$(aws cloudformation list-exports --query "Exports[?Name=='${undeployed_stack_name}:functions:psu-GetStatusUpdates:FunctionArn'].Value" --output text)
+GSUL_ARN=$(aws cloudformation list-exports --query "Exports[?Name=='${undeployed_stack_name}:functions:GetStatusUpdates:FunctionArn'].Value" --output text)
 deploy_api_domain_stack "${stack_name}" "${undeployed_colour}"
 
 deploy_main_stack "${deployed_stack_name}" "${deployed_colour}" "${stack_name}-tables"
