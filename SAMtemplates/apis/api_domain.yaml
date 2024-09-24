@@ -136,3 +136,10 @@ Resources:
         EnableSplunk: !Ref EnableSplunk
         SplunkSubscriptionFilterRole: !ImportValue lambda-resources:SplunkSubscriptionFilterRole
         SplunkDeliveryStreamArn: !ImportValue lambda-resources:SplunkDeliveryStream
+
+Outputs:
+  GetGSULArn:
+    Description: The ARN of the GetGSUL lambda
+    Value: !GetAtt GetGSULArn.Arn
+    Export:
+      Name: !Sub ${AWS::StackName}:functions:GetGSULArn:FunctionArn
