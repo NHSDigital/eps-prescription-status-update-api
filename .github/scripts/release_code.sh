@@ -165,6 +165,7 @@ function deploy_api_domain_stack() {
 				TruststoreVersion="${LATEST_TRUSTSTORE_VERSION}" \
 				EnableMutualTLS="${ENABLE_MUTUAL_TLS}" \
 				LogLevel="${LOG_LEVEL}" \
+   				EnableSplunk=true \
 				LogRetentionInDays="${LOG_RETENTION_DAYS}" \
    				RestApiGateway="${RestApiGateway}" \
 				RestApiGatewayStage="${RestApiGatewayStage}" \

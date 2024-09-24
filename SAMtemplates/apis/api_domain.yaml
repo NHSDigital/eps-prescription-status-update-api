@@ -19,6 +19,12 @@ Parameters:
   GSULARN:
     Type: String
 
+  LogRetentionInDays:
+    Type: String
+
+  EnableSplunk:
+    Type: String
+
 Conditions:
   ShouldUseMutualTLS: !Equals
     - true
