@@ -25,7 +25,7 @@ cp Makefile .aws-sam/build/
 cp samconfig_package_and_deploy.toml .aws-sam/build/
 mv .aws-sam/build .aws-sam/build.api_domain
 
-# build api domain sam stack
+# build table sam stack
 make sam-build-tables
 
 # copy files needed into target directory and rename it
