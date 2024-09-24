@@ -13,8 +13,7 @@ LATEST_TRUSTSTORE_VERSION=$(aws s3api list-object-versions --bucket "${TRUSTSTOR
 export LATEST_TRUSTSTORE_VERSION
 
 # get current deployed colour
-a
-#ws cloudformation  describe-stacks --stack-name "${stack_name}"
+# aws cloudformation  describe-stacks --stack-name "${stack_name}"
 
 # deploy blue stack
 original_stack_name=${stack_name}
@@ -27,9 +26,9 @@ cd ../../.aws-sam/build.main || exit
 make sam-deploy-package
 
 # get blue stack exports
-RestApiGateway=$(aws cloudformation list-exports --output json | jq -r '.Exports[] | select(.Name == "${stack_name}:RestApi:Gateway") | .Value' | grep -o '[^:]*$')
+RestApiGateway=$(aws cloudformation list-exports --query "Exports[?Name=='${stack_name}:RestApi:Gateway'].Value" --output text)
 export RestApiGateway
-RestApiGatewayStage=$(aws cloudformation list-exports --output json | jq -r '.Exports[] | select(.Name == "${stack_name}:RestApi:Gateway:Stage") | .Value' | grep -o '[^:]*$')
+RestApiGatewayStage=$(aws cloudformation list-exports --query "Exports[?Name=='${stack_name}:RestApi:Gateway:Stage'].Value" --output text)
 export RestApiGatewayStage
 
 # deploy api-domain stack
