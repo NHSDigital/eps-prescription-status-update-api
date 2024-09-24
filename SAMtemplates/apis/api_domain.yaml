@@ -16,7 +16,7 @@ Parameters:
   RestApiGatewayStage:
     Type: String
 
-  GSUL_ARN:
+  GSULARN:
     Type: String
 
 Conditions:
@@ -108,7 +108,7 @@ Resources:
       Role: !GetAtt GetGSULArnResources.Outputs.LambdaRoleArn
       Environment:
         Variables:
-          GSUL_ARN: !Ref GSUL_ARN
+          GSUL_ARN: !Ref GSULARN
     Metadata:
       guard:
         SuppressedRules:

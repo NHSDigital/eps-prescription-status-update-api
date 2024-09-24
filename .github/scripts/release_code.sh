@@ -72,7 +72,7 @@ function deploy_main_stack() {
     local TablesStackName=$3
     echo "********************************************"
     echo
-    echo "Deploying main stack pointing to stack ${stack_name}"
+    echo "Deploying main stack with stack name ${stack_name}"
     echo
     echo "********************************************"
     echo
@@ -144,7 +144,8 @@ function deploy_api_domain_stack() {
         LOG_LEVEL \
         LOG_RETENTION_DAYS \
         RestApiGateway \
-        RestApiGatewayStage"
+        RestApiGatewayStage \
+        GSUL_ARN"
     sam deploy \
 		--template-file "${GITHUB_WORKSPACE}/.aws-sam/build.api_domain/template.yaml" \
 		--stack-name "${stack_name}" \
@@ -167,7 +168,7 @@ function deploy_api_domain_stack() {
 				LogRetentionInDays="${LOG_RETENTION_DAYS}" \
    				RestApiGateway="${RestApiGateway}" \
 				RestApiGatewayStage="${RestApiGatewayStage}" \
-                GSUL_ARN="'""${GSUL_ARN}""'"
+                GSULARN="${GSUL_ARN}"
 }
 
 function deploy_table_stack() {
