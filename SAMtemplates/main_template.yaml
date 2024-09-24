@@ -80,6 +80,8 @@ Parameters:
   PrescriptionStatusUpdatesTableName:
     Type: String
 
+  TablesStackName:
+    Type: String
 Resources:
   Apis:
     Type: AWS::Serverless::Application
@@ -101,6 +103,7 @@ Resources:
         LogRetentionInDays: !Ref LogRetentionInDays
         EnableSplunk: !Ref EnableSplunk
         DeployCheckPrescriptionStatusUpdate: !Ref DeployCheckPrescriptionStatusUpdate
+        TablesStackName: !Ref TablesStackName
 
   Functions:
     Type: AWS::Serverless::Application

@@ -65,6 +65,7 @@ function deploy_main_stack() {
     echo "About to main stack"
     local stack_name=$1
     local deployment_colour=$2
+    local TablesStackName=$3
     check_required_vars "GITHUB_WORKSPACE \
         stack_name \
         artifact_bucket \
@@ -79,7 +80,8 @@ function deploy_main_stack() {
         LOG_RETENTION_DAYS \
         TARGET_ENVIRONMENT \
         DEPLOY_CHECK_PRESCRIPTION_STATUS_UPDATE \
-        ENABLE_ALERTS"
+        ENABLE_ALERTS \
+        TablesStackName"
     sam deploy \
 		--template-file "${GITHUB_WORKSPACE}/.aws-sam/build.main/template.yaml" \
 		--stack-name "${stack_name}" \
@@ -106,7 +108,8 @@ function deploy_main_stack() {
 				Environment="${TARGET_ENVIRONMENT}" \
 				DeployCheckPrescriptionStatusUpdate="${DEPLOY_CHECK_PRESCRIPTION_STATUS_UPDATE}" \
 				EnableAlerts="${ENABLE_ALERTS}" \
-                PrescriptionStatusUpdatesTableName="${PrescriptionStatusUpdatesTableName}"
+                PrescriptionStatusUpdatesTableName="${PrescriptionStatusUpdatesTableName}" \
+                TablesStackName="${TablesStackName}"
 }
 
 function deploy_api_domain_stack() {
@@ -210,7 +213,7 @@ else
     deployed_stack_name="${stack_name}-green"
 fi
 
-deploy_main_stack "${undeployed_stack_name}" "${undeployed_colour}"
+deploy_main_stack "${undeployed_stack_name}" "${undeployed_colour}" "${stack_name}-tables"
 
 # get blue stack exports
 RestApiGateway=$(aws cloudformation list-exports --query "Exports[?Name=='${undeployed_stack_name}:RestApi:Gateway'].Value" --output text)
@@ -218,4 +221,4 @@ RestApiGatewayStage=$(aws cloudformation list-exports --query "Exports[?Name=='$
 GSUL_ARN=$(aws cloudformation list-exports --query "Exports[?Name=='${undeployed_stack_name}:functions:psu-GetStatusUpdates:FunctionArn'].Value" --output text)
 deploy_api_domain_stack "${stack_name}" "${undeployed_colour}"
 
-deploy_main_stack "${deployed_stack_name}" "${deployed_colour}"
+deploy_main_stack "${deployed_stack_name}" "${deployed_colour}" "${stack_name}-tables"
