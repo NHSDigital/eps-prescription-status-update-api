@@ -28,12 +28,12 @@ Resources:
       ValidationMethod: DNS
       DomainName: !Join
         - .
-        - - !Ref StackName
+        - - !Ref AWS::StackName
           - !ImportValue eps-route53-resources:EPS-domain
       DomainValidationOptions:
         - DomainName: !Join
             - .
-            - - !Ref StackName
+            - - !Ref AWS::StackName
               - !ImportValue eps-route53-resources:EPS-domain
           HostedZoneId: !ImportValue eps-route53-resources:EPS-ZoneID
 
@@ -42,7 +42,7 @@ Resources:
     Properties:
       DomainName: !Join
         - .
-        - - !Ref StackName
+        - - !Ref AWS::StackName
           - !ImportValue eps-route53-resources:EPS-domain
       RegionalCertificateArn: !Ref GenerateCertificate
       EndpointConfiguration:
@@ -72,7 +72,7 @@ Resources:
     Properties:
       Name: !Join
         - .
-        - - !Ref StackName
+        - - !Ref AWS::StackName
           - !ImportValue eps-route53-resources:EPS-domain
       Type: A
       HostedZoneId: !ImportValue eps-route53-resources:EPS-ZoneID
