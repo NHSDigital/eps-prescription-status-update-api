@@ -80,6 +80,25 @@ Resources:
         Type: LINEAR
         Interval: 2
         Percentage: 20
+        Alarms:
+          - !Ref UpdatePrescriptionStatusStateMachineAlarm
+
+  UpdatePrescriptionStatusStateMachineAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: "StepFunctionFailureAlarm"
+      AlarmDescription: "Alarm when UpdatePrescriptionStatus Step Function executions fail"
+      Namespace: "AWS/States"
+      MetricName: "ExecutionsFailed"
+      Dimensions:
+        - Name: "StateMachineArn"
+          Value: !Ref UpdatePrescriptionStatusStateMachine
+      Statistic: "Sum"
+      Period: 60 # Evaluate every minute
+      EvaluationPeriods: 1
+      Threshold: 1
+      ComparisonOperator: "GreaterThanOrEqualToThreshold"
+      TreatMissingData: "notBreaching"
 
   UpdatePrescriptionStatusStateMachineResources:
     Type: AWS::Serverless::Application
@@ -133,6 +152,25 @@ Resources:
         Type: LINEAR
         Interval: 2
         Percentage: 20
+        Alarms:
+          - !Ref Format1UpdatePrescriptionsStatusStateMachineAlarm
+
+  Format1UpdatePrescriptionsStatusStateMachineAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: "StepFunctionFailureAlarm"
+      AlarmDescription: "Alarm when Format1UpdatePrescriptions Step Function executions fail"
+      Namespace: "AWS/States"
+      MetricName: "ExecutionsFailed"
+      Dimensions:
+        - Name: "StateMachineArn"
+          Value: !Ref Format1UpdatePrescriptionsStatusStateMachine
+      Statistic: "Sum"
+      Period: 60 # Evaluate every minute
+      EvaluationPeriods: 1
+      Threshold: 1
+      ComparisonOperator: "GreaterThanOrEqualToThreshold"
+      TreatMissingData: "notBreaching"
 
   Format1UpdatePrescriptionsStatusStateMachineResources:
     Type: AWS::Serverless::Application
