@@ -82,6 +82,11 @@ Resources:
         EntryPoints:
           - updatePrescriptionStatus/src/updatePrescriptionStatus.ts
 
+  UpdatePrescriptionStatusVersion:
+    Type: AWS::Lambda::Version
+    Properties:
+      FunctionName: !Ref UpdatePrescriptionStatus
+
   UpdatePrescriptionStatusResources:
     Type: AWS::Serverless::Application
     Properties:
@@ -101,6 +106,11 @@ Resources:
         EnableSplunk: !Ref EnableSplunk
         SplunkSubscriptionFilterRole: !ImportValue lambda-resources:SplunkSubscriptionFilterRole
         SplunkDeliveryStreamArn: !ImportValue lambda-resources:SplunkDeliveryStream
+
+  ConvertRequestToFhirFormatVersion:
+    Type: AWS::Lambda::Version
+    Properties:
+      FunctionName: !Ref ConvertRequestToFhirFormat
 
   ConvertRequestToFhirFormat:
     Type: AWS::Serverless::Function
@@ -142,6 +152,11 @@ Resources:
         EnableSplunk: !Ref EnableSplunk
         SplunkSubscriptionFilterRole: !ImportValue lambda-resources:SplunkSubscriptionFilterRole
         SplunkDeliveryStreamArn: !ImportValue lambda-resources:SplunkDeliveryStream
+
+  GetStatusUpdatesVersion:
+    Type: AWS::Lambda::Version
+    Properties:
+      FunctionName: !Ref GetStatusUpdates
 
   GetStatusUpdates:
     Type: AWS::Serverless::Function
@@ -189,6 +204,11 @@ Resources:
         SplunkSubscriptionFilterRole: !ImportValue lambda-resources:SplunkSubscriptionFilterRole
         SplunkDeliveryStreamArn: !ImportValue lambda-resources:SplunkDeliveryStream
 
+  StatusVersion:
+    Type: AWS::Lambda::Version
+    Properties:
+      FunctionName: !Ref Status
+
   Status:
     Type: AWS::Serverless::Function
     Properties:
@@ -234,6 +254,11 @@ Resources:
         SplunkSubscriptionFilterRole: !ImportValue lambda-resources:SplunkSubscriptionFilterRole
         SplunkDeliveryStreamArn: !ImportValue lambda-resources:SplunkDeliveryStream
 
+  CapabilityStatementVersion:
+    Type: AWS::Lambda::Version
+    Properties:
+      FunctionName: !Ref CapabilityStatement
+
   CapabilityStatement:
     Type: AWS::Serverless::Function
     Properties:
@@ -270,6 +295,11 @@ Resources:
         EnableSplunk: !Ref EnableSplunk
         SplunkSubscriptionFilterRole: !ImportValue lambda-resources:SplunkSubscriptionFilterRole
         SplunkDeliveryStreamArn: !ImportValue lambda-resources:SplunkDeliveryStream
+
+  CheckPrescriptionStatusUpdatesVersion:
+    Type: AWS::Lambda::Version
+    Properties:
+      FunctionName: !Ref CheckPrescriptionStatusUpdates
 
   CheckPrescriptionStatusUpdates:
     Condition: ShouldDeployCheckPrescriptionStatusUpdate
@@ -329,6 +359,10 @@ Outputs:
     Description: The function ARN of the UpdatePrescriptionStatus lambda
     Value: !GetAtt UpdatePrescriptionStatus.Arn
 
+  UpdatePrescriptionStatusFunctionVersion:
+    Description: The full ARN including version of the UpdatePrescriptionStatus lambda
+    Value: !Ref UpdatePrescriptionStatusVersion
+
   GetStatusUpdatesFunctionName:
     Description: The function name of the GetStatusUpdates lambda
     Value: !Ref GetStatusUpdates
@@ -338,6 +372,10 @@ Outputs:
     Value: !GetAtt GetStatusUpdates.Arn
     Export:
       Name: !Sub ${StackName}:functions:GetStatusUpdates:FunctionArn
+
+  GetStatusUpdatesFunctionVersion:
+    Description: The full ARN including version of the GetStatusUpdates lambda
+    Value: !Ref GetStatusUpdatesVersion
 
   ConvertRequestToFhirFormatFunctionName:
     Description: The function name of the Convert Request to Fhir Format lambda
@@ -349,6 +387,10 @@ Outputs:
     Export:
       Name: !Sub ${StackName}:functions:ConvertRequestToFhirFormat:FunctionArn
 
+  ConvertRequestToFhirFormatFunctionVersion:
+    Description: The full ARN including version of the ConvertRequestToFhirFormat lambda
+    Value: !Ref ConvertRequestToFhirFormatVersion
+
   StatusFunctionName:
     Description: The function name of the Status lambda
     Value: !Ref Status
@@ -357,6 +399,10 @@ Outputs:
     Description: The function ARN of the Status lambda
     Value: !GetAtt Status.Arn
 
+  StatusFunctionVersion:
+    Description: The full ARN including version of the StatusFunction lambda
+    Value: !Ref StatusFunctionVersion
+
   CapabilityStatementFunctionName:
     Description: The function name of the CapabilityStatement lambda
     Value: !Ref CapabilityStatement
@@ -364,6 +410,10 @@ Outputs:
   CapabilityStatementFunctionArn:
     Description: The function ARN of the CapabilityStatement lambda
     Value: !GetAtt CapabilityStatement.Arn
+
+  CapabilityStatementFunctionVersion:
+    Description: The full ARN including version of the CapabilityStatement lambda
+    Value: !Ref CapabilityStatementVersion
 
   CheckPrescriptionStatusUpdatesFunctionName:
     Description: The function name of the CheckPrescriptionStatusUpdates lambda
@@ -377,4 +427,11 @@ Outputs:
     Value: !If
       - ShouldDeployCheckPrescriptionStatusUpdate
       - !GetAtt CheckPrescriptionStatusUpdates.Arn
+      - ""
+
+  CheckPrescriptionStatusUpdatesFunctionVersion:
+    Description: The full ARN including version of the CheckPrescriptionStatusUpdates lambda
+    Value: !If
+      - ShouldDeployCheckPrescriptionStatusUpdate
+      - !Ref CheckPrescriptionStatusUpdatesVersion
       - ""

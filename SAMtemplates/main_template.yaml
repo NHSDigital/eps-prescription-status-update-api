@@ -135,8 +135,10 @@ Resources:
         StackName: !Ref AWS::StackName
         UpdatePrescriptionStatusFunctionName: !GetAtt Functions.Outputs.UpdatePrescriptionStatusFunctionName
         UpdatePrescriptionStatusFunctionArn: !GetAtt Functions.Outputs.UpdatePrescriptionStatusFunctionArn
+        UpdatePrescriptionStatusFunctionVersion: !GetAtt Functions.Outputs.UpdatePrescriptionStatusFunctionVersion
         ConvertRequestToFhirFormatFunctionName: !GetAtt Functions.Outputs.ConvertRequestToFhirFormatFunctionName
         ConvertRequestToFhirFormatFunctionArn: !GetAtt Functions.Outputs.ConvertRequestToFhirFormatFunctionArn
+        ConvertRequestToFhirFormatFunctionVersion: !GetAtt Functions.Outputs.ConvertRequestToFhirFormatFunctionVersion
         LogRetentionInDays: !Ref LogRetentionInDays
         EnableSplunk: !Ref EnableSplunk
 

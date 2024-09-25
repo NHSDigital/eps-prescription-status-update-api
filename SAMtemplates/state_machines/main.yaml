@@ -16,11 +16,19 @@ Parameters:
     Type: String
     Default: none
 
+  UpdatePrescriptionStatusFunctionVersion:
+    Type: String
+    Default: none
+
   ConvertRequestToFhirFormatFunctionName:
     Type: String
     Default: none
 
   ConvertRequestToFhirFormatFunctionArn:
+    Type: String
+    Default: none
+
+  ConvertRequestToFhirFormatFunctionVersion:
     Type: String
     Default: none
 
@@ -47,7 +55,7 @@ Resources:
           - ":"
           - - Fn::ImportValue: !Sub ${FihrValidatorStackName}:FHIRValidatorUKCoreLambdaArn
             - snap
-        UpdatePrescriptionStatusFunctionArn: !Sub ${UpdatePrescriptionStatusFunctionArn}:$LATEST
+        UpdatePrescriptionStatusFunctionArn: !Sub ${UpdatePrescriptionStatusFunctionVersion}
       Logging:
         Destinations:
           - CloudWatchLogsLogGroup:
@@ -83,8 +91,8 @@ Resources:
       Role: !GetAtt Format1UpdatePrescriptionsStatusStateMachineResources.Outputs.StateMachineRoleArn
       DefinitionUri: Format1UpdatePrescriptionsStatusStateMachine.asl.json
       DefinitionSubstitutions:
-        ConvertRequestToFhirFormatFunctionArn: !Sub ${ConvertRequestToFhirFormatFunctionArn}:$LATEST
-        UpdatePrescriptionStatusFunctionArn: !Sub ${UpdatePrescriptionStatusFunctionArn}:$LATEST
+        ConvertRequestToFhirFormatFunctionArn: !Sub ${ConvertRequestToFhirFormatFunctionVersion}
+        UpdatePrescriptionStatusFunctionArn: !Sub ${UpdatePrescriptionStatusFunctionVersion}
       Logging:
         Destinations:
           - CloudWatchLogsLogGroup:
