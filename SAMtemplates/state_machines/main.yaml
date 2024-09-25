@@ -86,8 +86,8 @@ Resources:
   UpdatePrescriptionStatusStateMachineAlarm:
     Type: AWS::CloudWatch::Alarm
     Properties:
-      AlarmName: "StepFunctionFailureAlarm"
-      AlarmDescription: "Alarm when UpdatePrescriptionStatus Step Function executions fail"
+      AlarmName: !Sub "${StackName}-UpdatePrescriptionStatusStateMachineAlarm"
+      AlarmDescription: !Sub "Alarm when ${StackName}-UpdatePrescriptionStatus Step Function executions fail"
       Namespace: "AWS/States"
       MetricName: "ExecutionsFailed"
       Dimensions:
@@ -162,8 +162,8 @@ Resources:
   Format1UpdatePrescriptionsStatusStateMachineAlarm:
     Type: AWS::CloudWatch::Alarm
     Properties:
-      AlarmName: "StepFunctionFailureAlarm"
-      AlarmDescription: "Alarm when Format1UpdatePrescriptions Step Function executions fail"
+      AlarmName: !Sub "${StackName}-Format1UpdatePrescriptionsStatusStateMachineAlarm"
+      AlarmDescription: !Sub "Alarm when ${StackName}-Format1UpdatePrescriptions Step Function executions fail"
       Namespace: "AWS/States"
       MetricName: "ExecutionsFailed"
       Dimensions:
