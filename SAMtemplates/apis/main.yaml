@@ -22,11 +22,19 @@ Parameters:
     Type: String
     Default: none
 
+  UpdatePrescriptionStatusStateMachineAlias:
+    Type: String
+    Default: none
+
   Format1UpdatePrescriptionsStatusStateMachineName:
     Type: String
     Default: none
 
   Format1UpdatePrescriptionsStatusStateMachineArn:
+    Type: String
+    Default: none
+
+  Format1UpdatePrescriptionsStatusStateMachineAlias:
     Type: String
     Default: none
 
@@ -219,7 +227,7 @@ Resources:
                   #set($len = $inputString.length() - 1)
                   "input": "{$util.escapeJavaScript($inputString.substring(1,$len))}"
               }
-            - stateMachineArn: !Ref UpdatePrescriptionStatusStateMachineArn
+            - stateMachineArn: !Ref UpdatePrescriptionStatusStateMachineAlias
           application/fhir+json: !Sub
             - |-
               ## Velocity Template used for API Gateway request mapping template
@@ -397,7 +405,7 @@ Resources:
                   #set($len = $inputString.length() - 1)
                   "input": "{$util.escapeJavaScript($inputString.substring(1,$len))}"
               }
-            - stateMachineArn: !Ref Format1UpdatePrescriptionsStatusStateMachineArn
+            - stateMachineArn: !Ref Format1UpdatePrescriptionsStatusStateMachineAlias
         IntegrationResponses:
           - StatusCode: 200
             ResponseTemplates:
@@ -507,7 +515,7 @@ Resources:
         !If [
           ShouldDeployCheckPrescriptionStatusUpdate,
           !Ref CheckPrescriptionStatusUpdatesHandle,
-          !Ref CheckPrescriptionStatusUpdatesWaitHandle
+          !Ref CheckPrescriptionStatusUpdatesWaitHandle,
         ]
       Timeout: "1"
       Count: 0

@@ -401,7 +401,7 @@ Outputs:
 
   StatusFunctionVersion:
     Description: The full ARN including version of the StatusFunction lambda
-    Value: !Ref StatusFunctionVersion
+    Value: !Ref StatusVersion
 
   CapabilityStatementFunctionName:
     Description: The function name of the CapabilityStatement lambda

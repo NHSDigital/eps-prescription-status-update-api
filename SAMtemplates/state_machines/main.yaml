@@ -65,6 +65,22 @@ Resources:
       Tracing:
         Enabled: true
 
+  UpdatePrescriptionStatusStateMachineVersion:
+    Type: "AWS::StepFunctions::StateMachineVersion"
+    Properties:
+      StateMachineArn: !Ref UpdatePrescriptionStatusStateMachine
+      StateMachineRevisionId: !GetAtt UpdatePrescriptionStatusStateMachine.StateMachineRevisionId
+
+  UpdatePrescriptionStatusStateMachineAlias:
+    Type: "AWS::StepFunctions::StateMachineAlias"
+    Properties:
+      Name: prod
+      DeploymentPreference:
+        StateMachineVersionArn: !Ref UpdatePrescriptionStatusStateMachineVersion
+        Type: LINEAR
+        Interval: 2
+        Percentage: 20
+
   UpdatePrescriptionStatusStateMachineResources:
     Type: AWS::Serverless::Application
     Properties:
@@ -102,6 +118,22 @@ Resources:
       Tracing:
         Enabled: true
 
+  Format1UpdatePrescriptionsStatusStateMachineVersion:
+    Type: "AWS::StepFunctions::StateMachineVersion"
+    Properties:
+      StateMachineArn: !Ref Format1UpdatePrescriptionsStatusStateMachine
+      StateMachineRevisionId: !GetAtt Format1UpdatePrescriptionsStatusStateMachine.StateMachineRevisionId
+
+  Format1UpdatePrescriptionsStatusStateMachineAlias:
+    Type: "AWS::StepFunctions::StateMachineAlias"
+    Properties:
+      Name: prod
+      DeploymentPreference:
+        StateMachineVersionArn: !Ref Format1UpdatePrescriptionsStatusStateMachineVersion
+        Type: LINEAR
+        Interval: 2
+        Percentage: 20
+
   Format1UpdatePrescriptionsStatusStateMachineResources:
     Type: AWS::Serverless::Application
     Properties:
@@ -129,6 +161,10 @@ Outputs:
     Description: UpdatePrescriptionStatus state machine name
     Value: !GetAtt UpdatePrescriptionStatusStateMachine.Name
 
+  UpdatePrescriptionStatusStateMachineAlias:
+    Description: UpdatePrescriptionStatus state machine alias
+    Value: !Ref UpdatePrescriptionStatusStateMachineAlias
+
   Format1UpdatePrescriptionsStatusStateMachineArn:
     Description: Format1UpdatePrescriptionsStatus state machine arn
     Value: !Ref Format1UpdatePrescriptionsStatusStateMachine
@@ -136,3 +172,7 @@ Outputs:
   Format1UpdatePrescriptionsStatusStateMachineName:
     Description: Format1UpdatePrescriptionsStatus state machine name
     Value: !GetAtt Format1UpdatePrescriptionsStatusStateMachine.Name
+
+  Format1UpdatePrescriptionsStatusStateMachineAlias:
+    Description: Format1UpdatePrescriptionsStatus state machine name
+    Value: !Ref Format1UpdatePrescriptionsStatusStateMachineAlias
