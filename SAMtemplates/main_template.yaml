@@ -100,8 +100,10 @@ Resources:
         TruststoreVersion: !Ref TruststoreVersion
         UpdatePrescriptionStatusStateMachineName: !GetAtt StateMachines.Outputs.UpdatePrescriptionStatusStateMachineName
         UpdatePrescriptionStatusStateMachineArn: !GetAtt StateMachines.Outputs.UpdatePrescriptionStatusStateMachineArn
+        UpdatePrescriptionStatusStateMachineAlias: !GetAtt StateMachines.Outputs.UpdatePrescriptionStatusStateMachineAlias
         Format1UpdatePrescriptionsStatusStateMachineName: !GetAtt StateMachines.Outputs.Format1UpdatePrescriptionsStatusStateMachineName
         Format1UpdatePrescriptionsStatusStateMachineArn: !GetAtt StateMachines.Outputs.Format1UpdatePrescriptionsStatusStateMachineArn
+        Format1UpdatePrescriptionsStatusStateMachineAlias: !GetAtt StateMachines.Outputs.Format1UpdatePrescriptionsStatusStateMachineAlias
         StatusFunctionName: !GetAtt Functions.Outputs.StatusFunctionName
         StatusFunctionArn: !GetAtt Functions.Outputs.StatusFunctionArn
         CapabilityStatementFunctionName: !GetAtt Functions.Outputs.CapabilityStatementFunctionName
@@ -135,10 +137,10 @@ Resources:
         StackName: !Ref AWS::StackName
         UpdatePrescriptionStatusFunctionName: !GetAtt Functions.Outputs.UpdatePrescriptionStatusFunctionName
         UpdatePrescriptionStatusFunctionArn: !GetAtt Functions.Outputs.UpdatePrescriptionStatusFunctionArn
-        UpdatePrescriptionStatusStateMachineAlias: !GetAtt Functions.Outputs.UpdatePrescriptionStatusStateMachineAlias
+        UpdatePrescriptionStatusFunctionVersion: !GetAtt Functions.Outputs.UpdatePrescriptionStatusFunctionVersion
         ConvertRequestToFhirFormatFunctionName: !GetAtt Functions.Outputs.ConvertRequestToFhirFormatFunctionName
         ConvertRequestToFhirFormatFunctionArn: !GetAtt Functions.Outputs.ConvertRequestToFhirFormatFunctionArn
-        Format1UpdatePrescriptionsStatusStateMachineAlias: !GetAtt Functions.Outputs.Format1UpdatePrescriptionsStatusStateMachineAlias
+        ConvertRequestToFhirFormatFunctionVersion: !GetAtt Functions.Outputs.ConvertRequestToFhirFormatFunctionVersion
         LogRetentionInDays: !Ref LogRetentionInDays
         EnableSplunk: !Ref EnableSplunk
 
