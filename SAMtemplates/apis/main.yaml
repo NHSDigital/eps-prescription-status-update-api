@@ -364,6 +364,7 @@ Resources:
 
                   #end
 
+
                   #if ($includeQueryString)
                       #set($inputString = "$inputString, @@querystring@@:{")
                       #foreach($paramName in $allParams.querystring.keySet())
@@ -507,7 +508,7 @@ Resources:
         !If [
           ShouldDeployCheckPrescriptionStatusUpdate,
           !Ref CheckPrescriptionStatusUpdatesHandle,
-          !Ref CheckPrescriptionStatusUpdatesWaitHandle
+          !Ref CheckPrescriptionStatusUpdatesWaitHandle,
         ]
       Timeout: "1"
       Count: 0
