@@ -60,6 +60,7 @@ const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPro
     "x-correlation-id": event.headers["x-correlation-id"],
     "apigw-request-id": event.headers["apigw-request-id"]
   })
+  logger.info("hello world")
   let responseEntries: Array<BundleEntry> = []
 
   const xRequestID = getXRequestID(event, responseEntries)
