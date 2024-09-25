@@ -349,8 +349,8 @@ Resources:
               #set($allParams.header.apigw-request-id = $context.requestId)
               {
                   "stateMachineArn": "${stateMachineArn}",
-
-                  #set($inputString = "$inputString,@@body@@: $input.body")
+                  #set($cleanBody = $input.json('$').replace("'",""))
+                  #set($inputString = "$inputString,@@body@@: $cleanBody")
 
                   #if ($includeHeaders)
                       #set($inputString = "$inputString, @@headers@@:{")
