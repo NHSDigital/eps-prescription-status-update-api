@@ -99,6 +99,10 @@ Resources:
       Threshold: 1
       ComparisonOperator: "GreaterThanOrEqualToThreshold"
       TreatMissingData: "notBreaching"
+    Metadata:
+      guard:
+        SuppressedRules:
+          - CLOUDWATCH_ALARM_ACTION_CHECK
 
   UpdatePrescriptionStatusStateMachineResources:
     Type: AWS::Serverless::Application
@@ -171,6 +175,10 @@ Resources:
       Threshold: 1
       ComparisonOperator: "GreaterThanOrEqualToThreshold"
       TreatMissingData: "notBreaching"
+    Metadata:
+      guard:
+        SuppressedRules:
+          - CLOUDWATCH_ALARM_ACTION_CHECK
 
   Format1UpdatePrescriptionsStatusStateMachineResources:
     Type: AWS::Serverless::Application
