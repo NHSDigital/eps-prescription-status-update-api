@@ -364,7 +364,6 @@ Resources:
 
                   #end
 
-
                   #if ($includeQueryString)
                       #set($inputString = "$inputString, @@querystring@@:{")
                       #foreach($paramName in $allParams.querystring.keySet())
