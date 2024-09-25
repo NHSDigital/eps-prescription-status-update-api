@@ -135,10 +135,10 @@ Resources:
         StackName: !Ref AWS::StackName
         UpdatePrescriptionStatusFunctionName: !GetAtt Functions.Outputs.UpdatePrescriptionStatusFunctionName
         UpdatePrescriptionStatusFunctionArn: !GetAtt Functions.Outputs.UpdatePrescriptionStatusFunctionArn
-        UpdatePrescriptionStatusFunctionVersion: !GetAtt Functions.Outputs.UpdatePrescriptionStatusFunctionVersion
+        UpdatePrescriptionStatusStateMachineAlias: !GetAtt Functions.Outputs.UpdatePrescriptionStatusStateMachineAlias
         ConvertRequestToFhirFormatFunctionName: !GetAtt Functions.Outputs.ConvertRequestToFhirFormatFunctionName
         ConvertRequestToFhirFormatFunctionArn: !GetAtt Functions.Outputs.ConvertRequestToFhirFormatFunctionArn
-        ConvertRequestToFhirFormatFunctionVersion: !GetAtt Functions.Outputs.ConvertRequestToFhirFormatFunctionVersion
+        Format1UpdatePrescriptionsStatusStateMachineAlias: !GetAtt Functions.Outputs.Format1UpdatePrescriptionsStatusStateMachineAlias
         LogRetentionInDays: !Ref LogRetentionInDays
         EnableSplunk: !Ref EnableSplunk
 
