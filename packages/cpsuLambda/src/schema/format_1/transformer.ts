@@ -110,7 +110,7 @@ export function populateTemplate(
   entry.resource!.businessStatus!.coding![0].code = businessStatus
   entry.resource!.status = TASK_STATUS_MAP[prescriptionItem.status]
   entry.resource!.focus!.identifier!.value = prescriptionItem.itemID
-  entry.resource!.lastModified = prescriptionDetails.messageDate
+  entry.resource!.lastModified = new Date(prescriptionDetails.messageDate).toISOString()
 
   if (prescriptionDetails.repeatNo) {
     entry.resource!.input = [

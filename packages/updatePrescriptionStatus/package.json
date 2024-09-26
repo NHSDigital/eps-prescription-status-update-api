@@ -21,12 +21,12 @@
     "@middy/core": "^5.5.0",
     "@middy/http-header-normalizer": "^5.5.0",
     "@middy/input-output-logger": "^5.5.0",
-    "@nhs/fhir-middy-error-handler": "^2.1.4"
+    "@nhs/fhir-middy-error-handler": "^2.1.5"
   },
   "devDependencies": {
-    "@faker-js/faker": "^9.0.1",
+    "@faker-js/faker": "^9.0.2",
     "@types/fhir": "^0.0.41",
     "@types/uuid": "^10.0.0",
-    "aws-sdk-client-mock": "^4.0.1"
+    "aws-sdk-client-mock": "^4.0.2"
   }
 }
