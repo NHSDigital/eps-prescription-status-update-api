@@ -38,7 +38,7 @@ export const TASK_VALUES = [
     prescriptionID: "07A66F-A83008-1EEEA0",
     nhsNumber: "9449304130",
     odsCode: "C9Z1O",
-    lineItemID: "6989b7bd-8db6-428c-a593-4022e3044c00",
+    lineItemID: "6989B7BD-8DB6-428C-A593-4022E3044C00",
     id: TASK_ID_0,
     status: "completed",
     businessStatus: "Dispatched",
@@ -48,7 +48,7 @@ export const TASK_VALUES = [
     prescriptionID: "480720-A83008-57FF06",
     nhsNumber: "9449304130",
     odsCode: "C9Z1O",
-    lineItemID: "e3843418-1900-44a1-8f6a-bff8601893b8",
+    lineItemID: "E3843418-1900-44A1-8F6A-BFF8601893B8",
     id: TASK_ID_1,
     status: "in-progress",
     businessStatus: "Ready to collect",
@@ -58,7 +58,7 @@ export const TASK_VALUES = [
     prescriptionID: "EF0871-A83008-A5797M",
     nhsNumber: "9449304130",
     odsCode: "C9Z1O",
-    lineItemID: "9681ae97-f7e4-44d8-a818-898e9e60ebfc",
+    lineItemID: "9681AE97-F7E4-44D8-A818-898E9E60EBFC",
     id: TASK_ID_2,
     status: "completed",
     businessStatus: "Dispatched",
@@ -68,7 +68,7 @@ export const TASK_VALUES = [
     prescriptionID: "01F864-A83008-B373F0",
     nhsNumber: "9449304130",
     odsCode: "C9Z1O",
-    lineItemID: "e15cedb6-ebd2-481b-a3a2-bcaeff3940e9",
+    lineItemID: "E15CEDB6-EBD2-481B-A3A2-BCAEFF3940E9",
     id: TASK_ID_3,
     status: "in-progress",
     businessStatus: "Ready to collect",
@@ -137,7 +137,9 @@ export function generateExpectedItems(itemCount: number = 1) {
     items.push({
       Put: {
         TableName: TABLE_NAME,
-        Item: {
+        ConditionExpression: "attribute_not_exists(TaskID) AND attribute_not_exists(PrescriptionID)",
+        ReturnValuesOnConditionCheckFailure: "ALL_OLD",
+        Item: expect.objectContaining({
           LastModified: {S: values.lastModified},
           LineItemID: {S: values.lineItemID},
           PatientNHSNumber: {S: values.nhsNumber},
@@ -148,7 +150,7 @@ export function generateExpectedItems(itemCount: number = 1) {
           TerminalStatus: {S: values.status},
           RequestID: {S: X_REQUEST_ID},
           ApplicationName: {S: APPLICATION_NAME}
-        }
+        })
       }
     })
   }
@@ -168,17 +170,13 @@ export function mockInternalDependency(modulePath: string, module: object, depen
 // Uses unstable jest method to enable mocking while using ESM. To be replaced in future.
 export function mockDynamoDBClient() {
   const mockSend = jest.fn()
-  const mockTransact = jest.fn()
-  const mockGetItem = jest.fn()
   jest.unstable_mockModule("@aws-sdk/client-dynamodb", () => {
     return {
       ...dynamo,
       DynamoDBClient: jest.fn().mockImplementation(() => ({
         send: mockSend
-      })),
-      TransactWriteItemsCommand: mockTransact,
-      GetItemCommand: mockGetItem
+      }))
     }
   })
-  return {mockSend, mockTransact, mockGetItem}
+  return {mockSend}
 }

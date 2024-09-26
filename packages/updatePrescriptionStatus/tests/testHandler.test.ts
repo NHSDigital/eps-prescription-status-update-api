@@ -9,13 +9,15 @@ import {
 } from "@jest/globals"
 
 import {
+  APPLICATION_NAME,
   DEFAULT_DATE,
   FULL_URL_0,
   FULL_URL_1,
   generateBody,
   generateExpectedItems,
   generateMockEvent,
-  mockDynamoDBClient
+  mockDynamoDBClient,
+  TASK_VALUES
 } from "./utils/testUtils"
 
 import requestDispatched from "../../specification/examples/request-dispatched.json"
@@ -32,10 +34,10 @@ import {
   serverError,
   timeoutResponse
 } from "../src/utils/responses"
-import {TransactionCanceledException} from "@aws-sdk/client-dynamodb"
+import {QueryCommand, TransactionCanceledException, TransactWriteItemsCommand} from "@aws-sdk/client-dynamodb"
 
-const {mockSend, mockTransact} = mockDynamoDBClient()
-const {handler} = await import("../src/updatePrescriptionStatus")
+const {mockSend} = mockDynamoDBClient()
+const {handler, logger} = await import("../src/updatePrescriptionStatus")
 const LAMBDA_TIMEOUT_MS = 9500 // 9.5 sec
 
 describe("Integration tests for updatePrescriptionStatus handler", () => {
@@ -67,14 +69,12 @@ describe("Integration tests for updatePrescriptionStatus handler", () => {
     const body = generateBody()
     const event: APIGatewayProxyEvent = generateMockEvent(body)
     const expectedItems = generateExpectedItems()
-    mockTransact.mockReturnValue(expectedItems)
 
     const response: APIGatewayProxyResult = await handler(event, {})
 
     expect(response.statusCode).toEqual(201)
     expect(JSON.parse(response.body)).toEqual(responseSingleItem)
 
-    expect(mockSend).toHaveBeenCalledTimes(1)
     expect(mockSend).toHaveBeenCalledWith(
       expect.objectContaining(expectedItems)
     )
@@ -95,17 +95,12 @@ describe("Integration tests for updatePrescriptionStatus handler", () => {
       delete transactItem.RepeatNo
     }
 
-    mockTransact.mockReturnValue(expectedItems)
-
     const response: APIGatewayProxyResult = await handler(event, {})
 
     expect(response.statusCode).toEqual(201)
     expect(JSON.parse(response.body)).toEqual(responseSingleItem)
 
-    expect(
-      (expectedItems.input.TransactItems[0].Put.Item as any).RepeatNo
-    ).toEqual(undefined)
-    expect(mockSend).toHaveBeenCalledTimes(1)
+    expect(expectedItems.input.TransactItems[0].Put.Item.RepeatNo).toEqual(undefined)
     expect(mockSend).toHaveBeenCalledWith(
       expect.objectContaining(expectedItems)
     )
@@ -125,17 +120,12 @@ describe("Integration tests for updatePrescriptionStatus handler", () => {
       expectedItems.input?.TransactItems?.[0]?.Put?.Item
     transactItem.RepeatNo = 1
 
-    mockTransact.mockReturnValue(expectedItems)
-
     const response: APIGatewayProxyResult = await handler(event, {})
 
     expect(response.statusCode).toEqual(201)
     expect(JSON.parse(response.body)).toEqual(responseSingleItem)
 
-    expect(
-      (expectedItems.input.TransactItems[0].Put.Item as any).RepeatNo
-    ).toEqual(1)
-    expect(mockSend).toHaveBeenCalledTimes(1)
+    expect(expectedItems.input.TransactItems[0].Put.Item.RepeatNo).toEqual(1)
     expect(mockSend).toHaveBeenCalledWith(
       expect.objectContaining(expectedItems)
     )
@@ -145,14 +135,12 @@ describe("Integration tests for updatePrescriptionStatus handler", () => {
     const body = generateBody(2)
     const event: APIGatewayProxyEvent = generateMockEvent(body)
     const expectedItems = generateExpectedItems(2)
-    mockTransact.mockReturnValue(expectedItems)
 
     const response: APIGatewayProxyResult = await handler(event, {})
 
     expect(response.statusCode).toEqual(201)
     expect(JSON.parse(response.body)).toEqual(responseMultipleItems)
 
-    expect(mockSend).toHaveBeenCalledTimes(1)
     expect(mockSend).toHaveBeenCalledWith(
       expect.objectContaining(expectedItems)
     )
@@ -215,7 +203,12 @@ describe("Integration tests for updatePrescriptionStatus handler", () => {
   })
 
   it("when data store update times out, expect 504 status code and relevant error message", async () => {
-    mockSend.mockImplementation(() => new Promise(() => {}))
+    mockSend.mockImplementation((command) => new Promise((resolve) => {
+      if (!(command instanceof TransactWriteItemsCommand)) {
+        resolve(false)
+      }
+      // else leave the promise unresolved to simulate a timeout
+    }))
 
     const event: APIGatewayProxyEvent = generateMockEvent(requestDispatched)
     const eventHandler: Promise<APIGatewayProxyResult> = handler(event, {})
@@ -276,9 +269,6 @@ describe("Integration tests for updatePrescriptionStatus handler", () => {
     const event: APIGatewayProxyEvent = generateMockEvent(body)
     delete event.headers["x-request-id"]
     event.headers["X-Request-id"] = "43313002-debb-49e3-85fa-34812c150242"
-
-    const expectedItems = generateExpectedItems()
-    mockTransact.mockReturnValue(expectedItems)
 
     const response: APIGatewayProxyResult = await handler(event, {})
 
@@ -365,5 +355,56 @@ describe("Integration tests for updatePrescriptionStatus handler", () => {
       "Request contains a task id and prescription id identical to a record already in the data store."
     )
     expect(responseBody.entry[0].response.status).not.toEqual("200 OK")
+  })
+
+  function itemQueryResult(taskID: string, status: string, businessStatus: string, lastModified: string) {
+    return {
+      PrescriptionID: {S: TASK_VALUES[0].prescriptionID},
+      PatientNHSNumber: {S: TASK_VALUES[0].nhsNumber},
+      PharmacyODSCode: {S: TASK_VALUES[0].odsCode},
+      LineItemID: {S: TASK_VALUES[0].lineItemID},
+      TaskID: {S: taskID},
+      TerminalStatus: {S: status},
+      Status: {S: businessStatus},
+      LastModified: {S: lastModified}
+    }
+  }
+
+  it("when updates already exist for an item, logs transitions", async () => {
+    const body = generateBody()
+    const mockEvent: APIGatewayProxyEvent = generateMockEvent(body)
+    const loggerSpy = jest.spyOn(logger, "info")
+
+    mockSend.mockImplementation(
+      async (command) => {
+        if (command instanceof QueryCommand) {
+          return new Object({Items: [
+            itemQueryResult("71a3cf0d-c096-4b72-be0c-b1dd5f94ab0b", "in-progress", "With Pharmacy", "2023-09-11T10:09:12Z"), 
+            itemQueryResult("c523a80a-5346-46b3-81d2-a7420959c26b", "in-progress", "Ready to Dispatch", "2023-09-11T10:10:12Z"), 
+            itemQueryResult(TASK_VALUES[0].id, TASK_VALUES[0].status, TASK_VALUES[0].businessStatus, TASK_VALUES[0].lastModified)
+          ]})
+        }
+      }
+    )
+
+    const response: APIGatewayProxyResult = await handler(mockEvent, {})
+
+    expect(response.statusCode).toBe(201)
+    expect(loggerSpy).toHaveBeenCalledWith(
+      "Transitioning item status.",
+      {
+        prescriptionID: TASK_VALUES[0].prescriptionID,
+        lineItemID: TASK_VALUES[0].lineItemID,
+        nhsNumber: TASK_VALUES[0].nhsNumber,
+        pharmacyODSCode: TASK_VALUES[0].odsCode,
+        applicationName: APPLICATION_NAME,
+        when: "2023-09-11T10:11:12Z",
+        interval: 60,
+        newStatus: TASK_VALUES[0].businessStatus,
+        previousStatus: "Ready to Dispatch",
+        newTerminalStatus: TASK_VALUES[0].status,
+        previousTerminalStatus: "in-progress"
+      }
+    )
   })
 })
