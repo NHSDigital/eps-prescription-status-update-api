@@ -12,6 +12,14 @@ Parameters:
     Type: String
     Default: none
 
+  PrescriptionStatusUpdateFunctionName:
+    Type: String
+    Default: none
+
+  DynamoDBTableName:
+    Type: String
+    Default: none
+
   EnableAlerts:
     Type: String
 
@@ -122,7 +130,6 @@ Resources:
       AlarmName: !Sub ${StackName}_PrescriptionStatusUpdate_Errors
       Namespace: LambdaLogFilterMetrics
       Metrics:
-      # True errors = errors - forced errors
         - Id: errors
           Label: All 500 errors
           ReturnData: false
@@ -181,6 +188,31 @@ Resources:
       Dimensions:
         - Name: FunctionName
           Value: !Ref PrescriptionStatusUpdateFunctionName
+      Period: 60 #seconds
+      EvaluationPeriods: 1
+      Statistic: Sum
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      Threshold: 1
+      Unit: Count
+      TreatMissingData: notBreaching
+      ActionsEnabled: !Ref EnableAlerts
+      AlarmActions:
+        - !ImportValue lambda-resources:SlackAlertsSnsTopicArn
+      InsufficientDataActions:
+        - !ImportValue lambda-resources:SlackAlertsSnsTopicArn
+      OKActions:
+        - !ImportValue lambda-resources:SlackAlertsSnsTopicArn
+
+  DynamoDBSystemErrorsAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmDescription: Count of DynamoDB system errors
+      AlarmName: !Sub ${StackName}_DynamoDB_SystemErrors
+      Namespace: DynamoDB
+      MetricName: SystemErrors
+      Dimensions:
+        - Name: TableName
+          Value: !Ref DynamoDBTableName
       Period: 60 #seconds
       EvaluationPeriods: 1
       Statistic: Sum
