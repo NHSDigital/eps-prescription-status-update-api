@@ -379,8 +379,8 @@ describe("Integration tests for updatePrescriptionStatus handler", () => {
       async (command) => {
         if (command instanceof QueryCommand) {
           return new Object({Items: [
-            itemQueryResult("71a3cf0d-c096-4b72-be0c-b1dd5f94ab0b", "in-progress", "With Pharmacy", "2023-09-11T10:09:12Z"), 
-            itemQueryResult("c523a80a-5346-46b3-81d2-a7420959c26b", "in-progress", "Ready to Dispatch", "2023-09-11T10:10:12Z"), 
+            itemQueryResult("71a3cf0d-c096-4b72-be0c-b1dd5f94ab0b", "in-progress", "With Pharmacy", "2023-09-11T10:09:12Z"),
+            itemQueryResult("c523a80a-5346-46b3-81d2-a7420959c26b", "in-progress", "Ready to Dispatch", "2023-09-11T10:10:12Z"),
             itemQueryResult(TASK_VALUES[0].id, TASK_VALUES[0].status, TASK_VALUES[0].businessStatus, TASK_VALUES[0].lastModified)
           ]})
         }

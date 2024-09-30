@@ -99,8 +99,8 @@ export async function getPreviousItem(currentItem: DataItem): Promise<DataItem |
     if (result.Items) {
       items = items.concat(
         result.Items
-              .map((item) => unmarshall(item) as DataItem)
-              .filter((item) => item.TaskID !== currentItem.TaskID) // Can't do NE in the query so filter here
+          .map((item) => unmarshall(item) as DataItem)
+          .filter((item) => item.TaskID !== currentItem.TaskID) // Can't do NE in the query so filter here
       )
     }
     lastEvaluatedKey = result.LastEvaluatedKey
