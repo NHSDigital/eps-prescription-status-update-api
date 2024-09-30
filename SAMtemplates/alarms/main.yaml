@@ -12,11 +12,11 @@ Parameters:
     Type: String
     Default: none
 
-  PrescriptionStatusUpdateFunctionName:
+  UpdatePrescriptionStatusFunctionName:
     Type: String
     Default: none
 
-  DynamoDBTableName:
+  PrescriptionStatusUpdatesTableName:
     Type: String
     Default: none
 
@@ -94,9 +94,9 @@ Resources:
     Type: AWS::Logs::MetricFilter
     Properties:
       FilterName: PrescriptionStatusUpdateErrors
-      FilterPattern: !Sub '{ ($.level = "ERROR") && ($.function_name = "${PrescriptionStatusUpdateFunctionName}") }'
+      FilterPattern: !Sub '{ ($.level = "ERROR") && ($.function_name = "${UpdatePrescriptionStatusFunctionName}") }'
       LogGroupName:
-        Fn::ImportValue: !Sub ${StackName}:functions:${PrescriptionStatusUpdateFunctionName}:LambdaLogGroupName
+        Fn::ImportValue: !Sub ${StackName}:functions:${UpdatePrescriptionStatusFunctionName}:LambdaLogGroupName
       MetricTransformations:
         - MetricNamespace: LambdaLogFilterMetrics
           MetricName: ErrorCount
@@ -111,9 +111,9 @@ Resources:
     Type: AWS::Logs::MetricFilter
     Properties:
       FilterName: PrescriptionStatusUpdateErrors
-      FilterPattern: !Sub '{ ($.level = "INFO") && ($.function_name = "${PrescriptionStatusUpdateFunctionName}") && ($.message = %Forcing error for INT test prescription%) }'
+      FilterPattern: !Sub '{ ($.level = "INFO") && ($.function_name = "${UpdatePrescriptionStatusFunctionName}") && ($.message = %Forcing error for INT test prescription%) }'
       LogGroupName:
-        Fn::ImportValue: !Sub ${StackName}:functions:${PrescriptionStatusUpdateFunctionName}:LambdaLogGroupName
+        Fn::ImportValue: !Sub ${StackName}:functions:${UpdatePrescriptionStatusFunctionName}:LambdaLogGroupName
       MetricTransformations:
         - MetricNamespace: LambdaLogFilterMetrics
           MetricName: ForcedErrorCount
@@ -139,7 +139,7 @@ Resources:
               Namespace: LambdaLogFilterMetrics
               Dimensions:
                 - Name: FunctionName
-                  Value: !Ref PrescriptionStatusUpdateFunctionName
+                  Value: !Ref UpdatePrescriptionStatusFunctionName
             Period: 60
             Stat: Sum
             Unit: Count
@@ -152,7 +152,7 @@ Resources:
               Namespace: LambdaLogFilterMetrics
               Dimensions:
                 - Name: FunctionName
-                  Value: !Ref PrescriptionStatusUpdateFunctionName
+                  Value: !Ref UpdatePrescriptionStatusFunctionName
             Period: 60
             Stat: Sum
             Unit: Count
@@ -162,7 +162,7 @@ Resources:
           ReturnData: true
       Dimensions:
         - Name: FunctionName
-          Value: !Ref PrescriptionStatusUpdateFunctionName
+          Value: !Ref UpdatePrescriptionStatusFunctionName
       Period: 60 #seconds
       EvaluationPeriods: 1
       Statistic: Sum
@@ -187,7 +187,7 @@ Resources:
       MetricName: Errors
       Dimensions:
         - Name: FunctionName
-          Value: !Ref PrescriptionStatusUpdateFunctionName
+          Value: !Ref UpdatePrescriptionStatusFunctionName
       Period: 60 #seconds
       EvaluationPeriods: 1
       Statistic: Sum
@@ -212,7 +212,7 @@ Resources:
       MetricName: SystemErrors
       Dimensions:
         - Name: TableName
-          Value: !Ref DynamoDBTableName
+          Value: !Ref PrescriptionStatusUpdatesTableName
       Period: 60 #seconds
       EvaluationPeriods: 1
       Statistic: Sum
