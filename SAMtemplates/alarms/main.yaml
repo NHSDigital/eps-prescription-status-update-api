@@ -15,6 +15,10 @@ Parameters:
   EnableAlerts:
     Type: String
 
+  GetStatusUpdatesConcurrencyThreshold:
+    Type: Number
+    Default: 5 #FIXME: Set to something realistic!!! DON'T FORGET!
+  
 Resources:
   GetStatusUpdatesErrorsLogsMetricFilter:
     Type: AWS::Logs::MetricFilter
@@ -80,4 +84,24 @@ Resources:
       InsufficientDataActions:
         - !ImportValue lambda-resources:SlackAlertsSnsTopicArn
       OKActions:
+        - !ImportValue lambda-resources:SlackAlertsSnsTopicArn
+
+  GetStatusUpdatesConcurrencyAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmDescription: !Sub 'Lambda Concurrency Alarm for ${GetStatusUpdatesFunctionName}'
+      AlarmName: !Sub '${StackName}-${GetStatusUpdatesFunctionName}-ConcurrencyAlarm'
+      Namespace: AWS/Lambda
+      MetricName: ConcurrentExecutions
+      Dimensions:
+        - Name: FunctionName
+          Value: !Ref GetStatusUpdatesFunctionName
+      Period: 60  # seconds
+      EvaluationPeriods: 1
+      Statistic: Maximum
+      ComparisonOperator: GreaterThanThreshold
+      Threshold: !Ref GetStatusUpdatesConcurrencyThreshold
+      TreatMissingData: notBreaching
+      ActionsEnabled: !Ref EnableAlerts
+      AlarmActions:
         - !ImportValue lambda-resources:SlackAlertsSnsTopicArn
