@@ -186,6 +186,7 @@ Resources:
         - Name: FunctionName
           Value: !Ref StatusFunctionName
       Period: 60  # seconds
+      EvaluationPeriods: 1
       Statistic: Maximum
       ComparisonOperator: GreaterThanOrEqualToThreshold
       Threshold: !Ref StatusConcurrencyThreshold
