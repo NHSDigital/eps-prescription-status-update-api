@@ -94,7 +94,7 @@ Resources:
     Type: AWS::Logs::MetricFilter
     Properties:
       FilterName: PrescriptionStatusUpdateErrors
-      FilterPattern: !Sub '{ ($.level = "ERROR") && ($.function_name = "${UpdatePrescriptionStatusFunctionName}") }'
+      FilterPattern: !Sub '{ ($.level = "ERROR") && ($.function_name = "${UpdatePrescriptionStatusFunctionName}") && ($.response.statusCode != 400) }'
       LogGroupName:
         Fn::ImportValue: !Sub ${StackName}:functions:${UpdatePrescriptionStatusFunctionName}:LambdaLogGroupName
       MetricTransformations:
