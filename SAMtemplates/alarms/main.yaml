@@ -18,7 +18,7 @@ Parameters:
   GetStatusUpdatesConcurrencyThreshold:
     Type: Number
     Default: 5 #FIXME: Set to something realistic!!! DON'T FORGET!
-  
+
 Resources:
   GetStatusUpdatesErrorsLogsMetricFilter:
     Type: AWS::Logs::MetricFilter
@@ -89,8 +89,8 @@ Resources:
   GetStatusUpdatesConcurrencyAlarm:
     Type: AWS::CloudWatch::Alarm
     Properties:
-      AlarmDescription: !Sub 'Lambda Concurrency Alarm for ${GetStatusUpdatesFunctionName}'
-      AlarmName: !Sub '${StackName}-${GetStatusUpdatesFunctionName}-ConcurrencyAlarm'
+      AlarmDescription: !Sub 'Lambda Concurrency Alarm for ${StackName}'
+      AlarmName: !Sub '${StackName}-ConcurrencyAlarm'
       Namespace: AWS/Lambda
       MetricName: ConcurrentExecutions
       Dimensions:
