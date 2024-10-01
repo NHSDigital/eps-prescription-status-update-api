@@ -128,7 +128,6 @@ Resources:
     Properties:
       AlarmDescription: Count of PrescriptionStatusUpdate errors
       AlarmName: !Sub ${StackName}_PrescriptionStatusUpdate_Errors
-      Namespace: LambdaLogFilterMetrics
       Metrics:
         - Id: errors
           Label: All 500 errors
@@ -160,15 +159,9 @@ Resources:
           Label: True 500 errors
           Expression: errors - forcedErrors
           ReturnData: true
-      Dimensions:
-        - Name: FunctionName
-          Value: !Ref UpdatePrescriptionStatusFunctionName
-      Period: 60 #seconds
       EvaluationPeriods: 1
-      Statistic: Sum
       ComparisonOperator: GreaterThanOrEqualToThreshold
       Threshold: 1
-      Unit: Count
       TreatMissingData: notBreaching
       ActionsEnabled: !Ref EnableAlerts
       AlarmActions:
