@@ -110,7 +110,7 @@ Resources:
   PrescriptionStatusUpdateForcedErrorsLogsMetricFilter:
     Type: AWS::Logs::MetricFilter
     Properties:
-      FilterName: PrescriptionStatusUpdateErrors
+      FilterName: PrescriptionStatusUpdateForcedErrors
       FilterPattern: !Sub '{ ($.level = "INFO") && ($.function_name = "${UpdatePrescriptionStatusFunctionName}") && ($.message = %Forcing error for INT test prescription%) }'
       LogGroupName:
         Fn::ImportValue: !Sub ${StackName}:functions:${UpdatePrescriptionStatusFunctionName}:LambdaLogGroupName
