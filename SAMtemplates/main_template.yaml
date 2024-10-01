@@ -147,4 +147,5 @@ Resources:
       Parameters:
         StackName: !Ref AWS::StackName
         GetStatusUpdatesFunctionName: !GetAtt Functions.Outputs.GetStatusUpdatesFunctionName
+        UpdatePrescriptionStatusFunctionName: !GetAtt Functions.Outputs.UpdatePrescriptionStatusFunctionName
         EnableAlerts: !Ref EnableAlerts

@@ -8,14 +8,22 @@ Parameters:
     Type: String
     Default: none
 
+  EnableAlerts:
+    Type: String
+
   GetStatusUpdatesFunctionName:
     Type: String
     Default: none
 
-  EnableAlerts:
-    Type: String
-
   GetStatusUpdatesConcurrencyThreshold:
+    Type: Number
+    Default: 5 #FIXME: Set to something realistic!!! DON'T FORGET!
+
+  UpdatePrescriptionStatusFunctionName:
+    Type: String
+    Default: none
+
+  UpdatePrescriptionStatusConcurrencyThreshold:
     Type: Number
     Default: 5 #FIXME: Set to something realistic!!! DON'T FORGET!
 
@@ -89,8 +97,8 @@ Resources:
   GetStatusUpdatesConcurrencyAlarm:
     Type: AWS::CloudWatch::Alarm
     Properties:
-      AlarmDescription: !Sub 'Lambda Concurrency Alarm for ${StackName}'
-      AlarmName: !Sub '${StackName}-ConcurrencyAlarm'
+      AlarmDescription: "Concurrency of GetStatusUpdates exceeds threshold"
+      AlarmName: !Sub "${StackName}_GetStatusUpdates_Concurrency"
       Namespace: AWS/Lambda
       MetricName: ConcurrentExecutions
       Dimensions:
@@ -99,9 +107,35 @@ Resources:
       Period: 60  # seconds
       EvaluationPeriods: 1
       Statistic: Maximum
-      ComparisonOperator: GreaterThanThreshold
+      ComparisonOperator: GreaterThanOrEqualToThreshold
       Threshold: !Ref GetStatusUpdatesConcurrencyThreshold
+      Unit: Count
       TreatMissingData: notBreaching
       ActionsEnabled: !Ref EnableAlerts
       AlarmActions:
+        - !ImportValue lambda-resources:SlackAlertsSnsTopicArn
+      OKActions:
+        - !ImportValue lambda-resources:SlackAlertsSnsTopicArn
+
+  UpdatePrescriptionStatusConcurrencyAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmDescription: "Concurrency of UpdatePrescriptionStatus exceeds threshold"
+      AlarmName: !Sub "${StackName}_UpdatePrescriptionStatus_Concurrency"
+      Namespace: AWS/Lambda
+      MetricName: ConcurrentExecutions
+      Dimensions:
+        - Name: FunctionName
+          Value: !Ref UpdatePrescriptionStatusFunctionName
+      Period: 60  # seconds
+      EvaluationPeriods: 1
+      Statistic: Maximum
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      Threshold: !Ref UpdatePrescriptionStatusConcurrencyThreshold
+      Unit: Count
+      TreatMissingData: notBreaching
+      ActionsEnabled: !Ref EnableAlerts
+      AlarmActions:
+        - !ImportValue lambda-resources:SlackAlertsSnsTopicArn
+      OKActions:
         - !ImportValue lambda-resources:SlackAlertsSnsTopicArn
