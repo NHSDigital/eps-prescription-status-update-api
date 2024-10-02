@@ -6,28 +6,23 @@ Description: |
 Parameters:
   StackName:
     Type: String
-    Default: none
 
   GetStatusUpdatesFunctionName:
     Type: String
-    Default: none
-
+    
   UpdatePrescriptionStatusFunctionName:
     Type: String
-    Default: none
 
   PrescriptionStatusUpdatesTableName:
     Type: String
-    Default: none
-
+    
   FhirValidatorStackName:
     Type: String
     Default: fhir-validator
 
   ConvertRequestToFhirFormatFunctionName:
     Type: String
-    Default: none
-
+    
   EnableAlerts:
     Type: String
 
