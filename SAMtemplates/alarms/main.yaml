@@ -89,11 +89,11 @@ Resources:
   PSUConcurrencyAlarm:
     Type: AWS::CloudWatch::Alarm
     Properties: 
-      AlarmName: !Sub "${StackName}-Concurrency-Alarm"
+      AlarmName: !Sub "${StackName}_Concurrency_Alarm"
       AlarmDescription: "Monitors the concurrency of the PSU as a whole and triggers when concurrency exceeds the threshold."
       Namespace: "AWS/Lambda"
       MetricName: "ConcurrentExecutions"
-      Statistic: Sum
+      Statistic: Maximum
       Period: 60 # seconds
       EvaluationPeriods: 1
       Threshold: !Ref ConcurrencyThreshold
