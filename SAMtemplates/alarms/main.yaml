@@ -24,6 +24,10 @@ Parameters:
     Type: String
     Default: fhir-validator
 
+  ConvertRequestToFhirFormatFunctionName:
+    Type: String
+    Default: none
+
   EnableAlerts:
     Type: String
 
@@ -262,6 +266,53 @@ Resources:
       ComparisonOperator: GreaterThanOrEqualToThreshold
       Threshold: 1
       Unit: Count
+      TreatMissingData: notBreaching
+      ActionsEnabled: !Ref EnableAlerts
+      AlarmActions:
+        - !ImportValue lambda-resources:SlackAlertsSnsTopicArn
+      InsufficientDataActions:
+        - !ImportValue lambda-resources:SlackAlertsSnsTopicArn
+      OKActions:
+        - !ImportValue lambda-resources:SlackAlertsSnsTopicArn
+
+  CPSUFhirConverterErrorLogsMetricFilter:
+    Type: AWS::Logs::MetricFilter
+    Properties:
+      FilterName: CPSUFhirConverterErrors
+      FilterPattern: !Sub '{ ($.function_name = "${ConvertRequestToFhirFormatFunctionName}") && ($.response.statusCode = 500) }'
+      LogGroupName:
+        Fn::ImportValue: !Sub ${StackName}:functions:${ConvertRequestToFhirFormatFunctionName}:LambdaLogGroupName
+      MetricTransformations:
+        - MetricNamespace: LambdaLogFilterMetrics
+          MetricName: ErrorCount
+          MetricValue: 1
+          Unit: Count
+          Dimensions:
+            - Key: FunctionName
+              Value: $.function_name
+
+  CPSUFhirConverterErrorsAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmDescription: Count of CPSU FHIR Converter errors
+      AlarmName: !Sub ${StackName}_CPSU_FHIR_Converter_Errors
+      Metrics:
+        - Id: errors
+          Label: All 500 errors
+          ReturnData: false
+          MetricStat:
+            Metric:
+              MetricName: ErrorCount
+              Namespace: LambdaLogFilterMetrics
+              Dimensions:
+                - Name: FunctionName
+                  Value: !Ref ConvertRequestToFhirFormatFunctionName
+            Period: 60
+            Stat: Sum
+            Unit: Count
+      EvaluationPeriods: 1
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      Threshold: 1
       TreatMissingData: notBreaching
       ActionsEnabled: !Ref EnableAlerts
       AlarmActions:
