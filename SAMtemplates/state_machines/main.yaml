@@ -30,7 +30,7 @@ Parameters:
   EnableSplunk:
     Type: String
 
-  FihrValidatorStackName:
+  FhirValidatorStackName:
     Type: String
     Default: fhir-validator
 
@@ -45,7 +45,7 @@ Resources:
       DefinitionSubstitutions:
         FhirValidationFunctionArn: !Join
           - ":"
-          - - Fn::ImportValue: !Sub ${FihrValidatorStackName}:FHIRValidatorUKCoreLambdaArn
+          - - Fn::ImportValue: !Sub ${FhirValidatorStackName}:FHIRValidatorUKCoreLambdaArn
             - snap
         UpdatePrescriptionStatusFunctionArn: !Sub ${UpdatePrescriptionStatusFunctionArn}:$LATEST
       Logging:
@@ -68,7 +68,7 @@ Resources:
         AdditionalPolicies: !Join
           - ","
           - - Fn::ImportValue: !Sub ${StackName}:functions:${UpdatePrescriptionStatusFunctionName}:ExecuteLambdaPolicyArn
-            - Fn::ImportValue: !Sub ${FihrValidatorStackName}:FHIRValidatorUKCoreExecuteLambdaPolicyArn
+            - Fn::ImportValue: !Sub ${FhirValidatorStackName}:FHIRValidatorUKCoreExecuteLambdaPolicyArn
         LogRetentionInDays: !Ref LogRetentionInDays
         CloudWatchKMSKeyId: !ImportValue account-resources:CloudwatchLogsKmsKeyArn
         EnableSplunk: !Ref EnableSplunk
