@@ -149,4 +149,5 @@ Resources:
         GetStatusUpdatesFunctionName: !GetAtt Functions.Outputs.GetStatusUpdatesFunctionName
         UpdatePrescriptionStatusFunctionName: !GetAtt Functions.Outputs.UpdatePrescriptionStatusFunctionName
         PrescriptionStatusUpdatesTableName: !GetAtt Tables.Outputs.PrescriptionStatusUpdatesTableName
+        ConvertRequestToFhirFormatFunctionName: !GetAtt Functions.Outputs.ConvertRequestToFhirFormatFunctionName
         EnableAlerts: !Ref EnableAlerts
