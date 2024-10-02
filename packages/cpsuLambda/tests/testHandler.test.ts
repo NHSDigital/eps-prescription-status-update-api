@@ -125,20 +125,18 @@ describe("format_1 handler", () => {
     expect(logger_warn).toHaveBeenCalledWith("Message of type 'NOTPrescriptionStatusChanged' Ignored")
   })
 
-  test("Messages with non NHSEngland number are ignored", async () => {
+  test("Messages with non NHSEngland number are not ignored", async () => {
     const body = format_1_request()
     body.nHSCHI = "1996344668"
 
-    const {handler, logger_warn} = mockedWarnHandler()
+    const {handler} = mockedWarnHandler()
     const event = {
       headers: {},
       body
     }
 
     const response = await handler(event as format_1.eventType, dummyContext)
-    expect(response.statusCode).toEqual(202)
-    expect(JSON.parse(response.body)).toEqual("Message Ignored")
-    expect(logger_warn).toHaveBeenCalledWith("Message with nHSCHI number '1996344668' Ignored")
+    expect(response.statusCode).toEqual(200)
   })
 
   // PSU will validate the NHS number so pass it through and let the PSU provide the error message
