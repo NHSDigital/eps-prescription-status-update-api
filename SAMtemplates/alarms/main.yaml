@@ -17,7 +17,7 @@ Parameters:
 
   ConcurrencyThreshold:
     Type: Number
-    Default: 5 #FIXME: We need to know a sensible default!
+    Default: 100000
 
 Resources:
   GetStatusUpdatesErrorsLogsMetricFilter:
