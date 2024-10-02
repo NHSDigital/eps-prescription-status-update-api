@@ -125,7 +125,7 @@ describe("format_1 handler", () => {
     expect(logger_warn).toHaveBeenCalledWith("Message of type 'NOTPrescriptionStatusChanged' Ignored")
   })
 
-  test("Messages with non NHSEngland number are not ignored", async () => {
+  test("Messages with non NHSEngland number are accepted", async () => {
     const body = format_1_request()
     body.nHSCHI = "1996344668"
 
