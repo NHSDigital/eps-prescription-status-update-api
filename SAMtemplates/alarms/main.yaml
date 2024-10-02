@@ -19,9 +19,6 @@ Parameters:
     Type: Number
     Default: 5 #FIXME: We need to know a sensible default!
 
-Conditions:
-  ShouldCreateCheckPrescriptionStatusUpdatesAlarm: !Not [!Equals [!Ref CheckPrescriptionStatusUpdatesFunctionName, ""]]
-
 Resources:
   GetStatusUpdatesErrorsLogsMetricFilter:
     Type: AWS::Logs::MetricFilter
