@@ -229,7 +229,7 @@ Resources:
     Properties:
       FilterName: FHIRValidatorErrors
       # Catch any messages that are strings that contain line breaks (Java stack traces)
-      FilterPattern: "{ ($=%\n%) }"
+      FilterPattern: "{ ($.message = %\n%) }"
       LogGroupName: !Join
         - ""
         - - /aws/lambda/
