@@ -98,7 +98,7 @@ Resources:
       EvaluationPeriods: 1
       Threshold: !Ref ConcurrencyThreshold
       ComparisonOperator: GreaterThanOrEqualToThreshold
-      TreatMissingData: notBreaching
+      TreatMissingData: breaching
       ActionsEnabled: !Ref EnableAlerts
       AlarmActions:
         - !ImportValue lambda-resources:SlackAlertsSnsTopicArn
