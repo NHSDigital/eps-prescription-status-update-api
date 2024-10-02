@@ -291,23 +291,17 @@ Resources:
     Properties:
       AlarmDescription: Count of CPSU FHIR Converter errors
       AlarmName: !Sub ${StackName}_CPSU_FHIR_Converter_Errors
-      Metrics:
-        - Id: errors
-          Label: All 500 errors
-          ReturnData: false
-          MetricStat:
-            Metric:
-              MetricName: ErrorCount
-              Namespace: LambdaLogFilterMetrics
-              Dimensions:
-                - Name: FunctionName
-                  Value: !Ref ConvertRequestToFhirFormatFunctionName
-            Period: 60
-            Stat: Sum
-            Unit: Count
+      Namespace: Lambda
+      MetricName: Errors
+      Dimensions:
+        - Name: FunctionName
+          Value: !Ref ConvertRequestToFhirFormatFunctionName
+      Period: 60 #seconds
       EvaluationPeriods: 1
+      Statistic: Sum
       ComparisonOperator: GreaterThanOrEqualToThreshold
       Threshold: 1
+      Unit: Count
       TreatMissingData: notBreaching
       ActionsEnabled: !Ref EnableAlerts
       AlarmActions:
