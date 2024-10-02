@@ -93,9 +93,6 @@ Resources:
       AlarmDescription: "Monitors the concurrency of the PSU as a whole and triggers when concurrency exceeds the threshold."
       Namespace: "AWS/Lambda"
       MetricName: "ConcurrentExecutions"
-      Dimensions:
-        - Name: FunctionName
-          Value: !Sub "${StackName}-*" # All functions in the stack should match this pattern
       Statistic: Sum
       Period: 60 # seconds
       EvaluationPeriods: 1
