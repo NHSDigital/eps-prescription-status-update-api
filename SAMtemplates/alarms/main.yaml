@@ -15,49 +15,9 @@ Parameters:
     Type: String
     Default: none
 
-  GetStatusUpdatesConcurrencyThreshold:
+  ConcurrencyThreshold:
     Type: Number
-    Default: 5 #FIXME: Set to something realistic!!! DON'T FORGET!
-
-  UpdatePrescriptionStatusFunctionName:
-    Type: String
-    Default: none
-
-  UpdatePrescriptionStatusConcurrencyThreshold:
-    Type: Number
-    Default: 5 #FIXME: Set to something realistic!!! DON'T FORGET!
-
-  StatusFunctionName:
-    Type: String
-    Default: none
-  
-  StatusConcurrencyThreshold:
-    Type: Number
-    Default: 5 #FIXME: Set to something realistic!!! DON'T FORGET!
-
-  ConvertRequestToFhirFormatFunctionName:
-    Type: String
-    Default: none
-
-  ConvertRequestToFhirFormatConcurrencyThreshold:
-    Type: Number
-    Default: 5  #FIXME: Set to something realistic!!! DON'T FORGET!
-
-  CapabilityStatementFunctionName:
-    Type: String
-    Default: none
-
-  CapabilityStatementConcurrencyThreshold:
-    Type: Number
-    Default: 5  #FIXME: Set to something realistic!!! DON'T FORGET!
-
-  CheckPrescriptionStatusUpdatesFunctionName:
-    Type: String
-    Default: none
-
-  CheckPrescriptionStatusUpdatesConcurrencyThreshold:
-    Type: Number
-    Default: 5  #FIXME: Set to something realistic!!! DON'T FORGET!
+    Default: 5 #FIXME: We need to know a sensible default!
 
 Conditions:
   ShouldCreateCheckPrescriptionStatusUpdatesAlarm: !Not [!Equals [!Ref CheckPrescriptionStatusUpdatesFunctionName, ""]]
@@ -129,142 +89,26 @@ Resources:
       OKActions:
         - !ImportValue lambda-resources:SlackAlertsSnsTopicArn
 
-  GetStatusUpdatesConcurrencyAlarm:
+  PSUConcurrencyAlarm:
     Type: AWS::CloudWatch::Alarm
-    Properties:
-      AlarmDescription: "Concurrency of GetStatusUpdates exceeds threshold"
-      AlarmName: !Sub "${StackName}_GetStatusUpdates_Concurrency"
-      Namespace: AWS/Lambda
-      MetricName: ConcurrentExecutions
+    Properties: 
+      AlarmName: !Sub "${AWS::StackName}-Concurrency-Alarm"
+      AlarmDescription: "Monitors the concurrency of the PSU as a whole and triggers when concurrency exceeds the threshold."
+      Namespace: "AWS/Lambda"
+      MetricName: "ConcurrentExecutions"
       Dimensions:
         - Name: FunctionName
-          Value: !Ref GetStatusUpdatesFunctionName
-      Period: 60  # seconds
+          Value: !Sub "${AWS::StackName}-*" # All functions in the stack should match this pattern
+      Statistic: Sum
+      Period: 60 # seconds
       EvaluationPeriods: 1
-      Statistic: Maximum
+      Threshold: !Ref ConcurrencyThreshold
       ComparisonOperator: GreaterThanOrEqualToThreshold
-      Threshold: !Ref GetStatusUpdatesConcurrencyThreshold
-      Unit: Count
       TreatMissingData: notBreaching
       ActionsEnabled: !Ref EnableAlerts
       AlarmActions:
         - !ImportValue lambda-resources:SlackAlertsSnsTopicArn
-      OKActions:
-        - !ImportValue lambda-resources:SlackAlertsSnsTopicArn
-
-  UpdatePrescriptionStatusConcurrencyAlarm:
-    Type: AWS::CloudWatch::Alarm
-    Properties:
-      AlarmDescription: "Concurrency of UpdatePrescriptionStatus exceeds threshold"
-      AlarmName: !Sub "${StackName}_UpdatePrescriptionStatus_Concurrency"
-      Namespace: AWS/Lambda
-      MetricName: ConcurrentExecutions
-      Dimensions:
-        - Name: FunctionName
-          Value: !Ref UpdatePrescriptionStatusFunctionName
-      Period: 60  # seconds
-      EvaluationPeriods: 1
-      Statistic: Maximum
-      ComparisonOperator: GreaterThanOrEqualToThreshold
-      Threshold: !Ref UpdatePrescriptionStatusConcurrencyThreshold
-      Unit: Count
-      TreatMissingData: notBreaching
-      ActionsEnabled: !Ref EnableAlerts
-      AlarmActions:
-        - !ImportValue lambda-resources:SlackAlertsSnsTopicArn
-      OKActions:
-        - !ImportValue lambda-resources:SlackAlertsSnsTopicArn
-
-  PSUStatusConcurrencyAlarm:
-    Type: AWS::CloudWatch::Alarm
-    Properties:
-      AlarmDescription: "Concurrency of PSU /_status endpoint exceeds threshold"
-      AlarmName: !Sub "${StackName}_PSU_Status_Concurrency"
-      Namespace: AWS/Lambda
-      MetricName: ConcurrentExecutions
-      Dimensions:
-        - Name: FunctionName
-          Value: !Ref StatusFunctionName
-      Period: 60  # seconds
-      EvaluationPeriods: 1
-      Statistic: Maximum
-      ComparisonOperator: GreaterThanOrEqualToThreshold
-      Threshold: !Ref StatusConcurrencyThreshold
-      Unit: Count
-      TreatMissingData: notBreaching
-      ActionsEnabled: !Ref EnableAlerts
-      AlarmActions:
-        - !ImportValue lambda-resources:SlackAlertsSnsTopicArn
-      OKActions:
-        - !ImportValue lambda-resources:SlackAlertsSnsTopicArn
-
-        
-  ConvertRequestToFhirFormatConcurrencyAlarm:
-    Type: AWS::CloudWatch::Alarm
-    Properties:
-      AlarmDescription: "Concurrency of ConvertRequestToFhirFormat exceeds threshold"
-      AlarmName: !Sub "${StackName}_ConvertRequestToFhirFormat_Concurrency"
-      Namespace: AWS/Lambda
-      MetricName: ConcurrentExecutions
-      Dimensions:
-        - Name: FunctionName
-          Value: !Ref ConvertRequestToFhirFormatFunctionName
-      Period: 60  # seconds
-      EvaluationPeriods: 1
-      Statistic: Maximum
-      ComparisonOperator: GreaterThanOrEqualToThreshold
-      Threshold: !Ref ConvertRequestToFhirFormatConcurrencyThreshold
-      Unit: Count
-      TreatMissingData: notBreaching
-      ActionsEnabled: !Ref EnableAlerts
-      AlarmActions:
-        - !ImportValue lambda-resources:SlackAlertsSnsTopicArn
-      OKActions:
-        - !ImportValue lambda-resources:SlackAlertsSnsTopicArn
-
-  CapabilityStatementConcurrencyAlarm:
-    Type: AWS::CloudWatch::Alarm
-    Properties:
-      AlarmDescription: "Concurrency of CapabilityStatement exceeds threshold"
-      AlarmName: !Sub "${StackName}_CapabilityStatement_Concurrency"
-      Namespace: AWS/Lambda
-      MetricName: ConcurrentExecutions
-      Dimensions:
-        - Name: FunctionName
-          Value: !Ref CapabilityStatementFunctionName
-      Period: 60  # seconds
-      EvaluationPeriods: 1
-      Statistic: Maximum
-      ComparisonOperator: GreaterThanOrEqualToThreshold
-      Threshold: !Ref CapabilityStatementConcurrencyThreshold
-      Unit: Count
-      TreatMissingData: notBreaching
-      ActionsEnabled: !Ref EnableAlerts
-      AlarmActions:
-        - !ImportValue lambda-resources:SlackAlertsSnsTopicArn
-      OKActions:
-        - !ImportValue lambda-resources:SlackAlertsSnsTopicArn
-
-  CheckPrescriptionStatusUpdatesConcurrencyAlarm:
-    Type: AWS::CloudWatch::Alarm
-    Condition: ShouldCreateCheckPrescriptionStatusUpdatesAlarm
-    Properties:
-      AlarmDescription: "Concurrency of CheckPrescriptionStatusUpdates exceeds threshold"
-      AlarmName: !Sub "${StackName}_CheckPrescriptionStatusUpdates_Concurrency"
-      Namespace: AWS/Lambda
-      MetricName: ConcurrentExecutions
-      Dimensions:
-        - Name: FunctionName
-          Value: !Ref CheckPrescriptionStatusUpdatesFunctionName
-      Period: 60  # seconds
-      EvaluationPeriods: 1
-      Statistic: Maximum
-      ComparisonOperator: GreaterThanOrEqualToThreshold
-      Threshold: !Ref CheckPrescriptionStatusUpdatesConcurrencyThreshold
-      Unit: Count
-      TreatMissingData: notBreaching
-      ActionsEnabled: !Ref EnableAlerts
-      AlarmActions:
+      InsufficientDataActions:
         - !ImportValue lambda-resources:SlackAlertsSnsTopicArn
       OKActions:
         - !ImportValue lambda-resources:SlackAlertsSnsTopicArn
