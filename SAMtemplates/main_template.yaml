@@ -148,4 +148,4 @@ Resources:
         StackName: !Ref AWS::StackName
         GetStatusUpdatesFunctionName: !GetAtt Functions.Outputs.GetStatusUpdatesFunctionName
         EnableAlerts: !Ref EnableAlerts
-        ConcurrencyThreshold: 100000 #FIXME: Set appropriate threshold based on load tests.
+        ConcurrencyThreshold: 900
