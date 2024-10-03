@@ -16,11 +16,5 @@ export const validator: Validator<eventType, requestType> = (event, logger: Logg
     return Err(wrap_with_status(202, {})("Message Ignored"))
   }
 
-  const nhsNumber = parseInt(requestBody.nHSCHI)
-  if (nhsNumber >= 101000000 && nhsNumber < 3113000000) {
-    logger.warn(`Message with nHSCHI number '${nhsNumber}' Ignored`)
-    return Err(wrap_with_status(202, {})("Message Ignored"))
-  }
-
   return Ok(requestBody)
 }

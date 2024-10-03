@@ -58,8 +58,8 @@ info:
     | Prescription Status Update API | Source code for the EPS Prescription Status Update API | [GitHub](https://github.com/NHSDigital/eps-prescription-status-update-api) |
     | EPS FHIR Validator Lambda | An AWS Lambda function that validates FHIR R4 messages | [GitHub](https://github.com/NHSDigital/eps-FHIR-validator-lambda) |
     ## Environment and testing
-    | Environment      | Base URL                                                            |
-    |------------------|---------------------------------------------------------------------|
+    | Environment      | Base URL                                                                   |
+    |------------------|----------------------------------------------------------------------------|
     | Sandbox          | `https://sandbox.api.service.nhs.uk/custom-prescription-status-update`     |
     | Integration test | `https://int.api.service.nhs.uk/custom-prescription-status-update`         |
     | Production       | `https://api.service.nhs.uk/custom-prescription-status-update`             |
@@ -80,10 +80,12 @@ info:
     All dispenser suppliers are being asked to integrate with this new service.
 
 servers:
-  - url: "https://int.api.service.nhs.uk/custom-prescription-status-update"
-    description: "Integration"
-  - url: "https://api.service.nhs.uk/custom-prescription-status-update"
-    description: "Production"
+  - url: https://sandbox.api.service.nhs.uk/custom-prescription-status-update
+    description: Sandbox
+  - url: https://int.api.service.nhs.uk/custom-prescription-status-update
+    description: Integration
+  - url: https://api.service.nhs.uk/custom-prescription-status-update
+    description: Production
 
 paths:
   /format-1:
