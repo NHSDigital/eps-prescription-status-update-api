@@ -15,10 +15,6 @@ Parameters:
 
   PrescriptionStatusUpdatesTableName:
     Type: String
-    
-  FhirValidatorStackName:
-    Type: String
-    Default: fhir-validator
 
   ConvertRequestToFhirFormatFunctionName:
     Type: String
@@ -209,52 +205,6 @@ Resources:
       Dimensions:
         - Name: TableName
           Value: !Ref PrescriptionStatusUpdatesTableName
-      Period: 60 #seconds
-      EvaluationPeriods: 1
-      Statistic: Sum
-      ComparisonOperator: GreaterThanOrEqualToThreshold
-      Threshold: 1
-      Unit: Count
-      TreatMissingData: notBreaching
-      ActionsEnabled: !Ref EnableAlerts
-      AlarmActions:
-        - !ImportValue lambda-resources:SlackAlertsSnsTopicArn
-      InsufficientDataActions:
-        - !ImportValue lambda-resources:SlackAlertsSnsTopicArn
-      OKActions:
-        - !ImportValue lambda-resources:SlackAlertsSnsTopicArn
-
-  FHIRValidatorErrorLogsMetricFilter:
-    Type: AWS::Logs::MetricFilter
-    Properties:
-      FilterName: FHIRValidatorErrors
-      # Catch any messages that are strings that contain line breaks (Java stack traces)
-      FilterPattern: '{ ($.message = "error") }'
-      LogGroupName: !Join
-        - ""
-        - - /aws/lambda/
-          - Fn::ImportValue: !Sub ${FhirValidatorStackName}:FHIRValidatorUKCoreLambdaName
-      MetricTransformations:
-        - MetricNamespace: LambdaLogFilterMetrics
-          MetricName: ErrorCount
-          MetricValue: 1
-          Unit: Count
-          Dimensions:
-            - Key: FunctionName
-              Value:
-                Fn::ImportValue: !Sub ${FhirValidatorStackName}:FHIRValidatorUKCoreLambdaName
-
-  FHIRValidatorErrorsAlarm:
-    Type: AWS::CloudWatch::Alarm
-    Properties:
-      AlarmDescription: Count of FHIR Validator system errors
-      AlarmName: !Sub ${StackName}_FHIR_Validator_Errors
-      Namespace: LambdaLogFilterMetrics
-      MetricName: ErrorCount
-      Dimensions:
-        - Name: FunctionName
-          Value:
-            Fn::ImportValue: !Sub ${FhirValidatorStackName}:FHIRValidatorUKCoreLambdaName
       Period: 60 #seconds
       EvaluationPeriods: 1
       Statistic: Sum
