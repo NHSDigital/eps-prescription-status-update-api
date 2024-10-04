@@ -240,7 +240,7 @@ Resources:
     Type: AWS::CloudWatch::Alarm
     Properties:
       AlarmDescription: Count of CPSU FHIR Converter errors
-      AlarmName: !Sub ${StackName}_CPSU_FHIR_Converter_Errors
+      AlarmName: !Sub ${StackName}_CpsuFhirConverter_Errors
       Namespace: Lambda
       MetricName: Errors
       Dimensions:
