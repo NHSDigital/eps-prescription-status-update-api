@@ -6,12 +6,19 @@ Description: |
 Parameters:
   StackName:
     Type: String
-    Default: none
 
   GetStatusUpdatesFunctionName:
     Type: String
-    Default: none
+    
+  UpdatePrescriptionStatusFunctionName:
+    Type: String
 
+  PrescriptionStatusUpdatesTableName:
+    Type: String
+
+  ConvertRequestToFhirFormatFunctionName:
+    Type: String
+    
   EnableAlerts:
     Type: String
 
@@ -67,6 +74,178 @@ Resources:
       Dimensions:
         - Name: FunctionName
           Value: !Ref GetStatusUpdatesFunctionName
+      Period: 60 #seconds
+      EvaluationPeriods: 1
+      Statistic: Sum
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      Threshold: 1
+      Unit: Count
+      TreatMissingData: notBreaching
+      ActionsEnabled: !Ref EnableAlerts
+      AlarmActions:
+        - !ImportValue lambda-resources:SlackAlertsSnsTopicArn
+      InsufficientDataActions:
+        - !ImportValue lambda-resources:SlackAlertsSnsTopicArn
+      OKActions:
+        - !ImportValue lambda-resources:SlackAlertsSnsTopicArn
+
+  PrescriptionStatusUpdateErrorsLogsMetricFilter:
+    Type: AWS::Logs::MetricFilter
+    Properties:
+      FilterName: PrescriptionStatusUpdateErrors
+      FilterPattern: !Sub '{ ($.function_name = "${UpdatePrescriptionStatusFunctionName}") && ($.response.statusCode = 500) }'
+      LogGroupName:
+        Fn::ImportValue: !Sub ${StackName}:functions:${UpdatePrescriptionStatusFunctionName}:LambdaLogGroupName
+      MetricTransformations:
+        - MetricNamespace: LambdaLogFilterMetrics
+          MetricName: ErrorCount
+          MetricValue: 1
+          Unit: Count
+          Dimensions:
+            - Key: FunctionName
+              Value: $.function_name
+
+  # Count of errors forced by INT tests
+  PrescriptionStatusUpdateForcedErrorsLogsMetricFilter:
+    Type: AWS::Logs::MetricFilter
+    Properties:
+      FilterName: PrescriptionStatusUpdateForcedErrors
+      FilterPattern: !Sub '{ ($.level = "INFO") && ($.function_name = "${UpdatePrescriptionStatusFunctionName}") && ($.message = %Forcing error for INT test prescription%) }'
+      LogGroupName:
+        Fn::ImportValue: !Sub ${StackName}:functions:${UpdatePrescriptionStatusFunctionName}:LambdaLogGroupName
+      MetricTransformations:
+        - MetricNamespace: LambdaLogFilterMetrics
+          MetricName: ForcedErrorCount
+          MetricValue: 1
+          Unit: Count
+          Dimensions:
+            - Key: FunctionName
+              Value: $.function_name
+
+  PrescriptionStatusUpdateErrorsAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmDescription: Count of PrescriptionStatusUpdate errors
+      AlarmName: !Sub ${StackName}_PrescriptionStatusUpdate_Errors
+      Metrics:
+        - Id: errors
+          Label: All 500 errors
+          ReturnData: false
+          MetricStat:
+            Metric:
+              MetricName: ErrorCount
+              Namespace: LambdaLogFilterMetrics
+              Dimensions:
+                - Name: FunctionName
+                  Value: !Ref UpdatePrescriptionStatusFunctionName
+            Period: 60
+            Stat: Sum
+            Unit: Count
+        - Id: forcedErrors
+          Label: Forced 500 errors
+          ReturnData: false
+          MetricStat:
+            Metric:
+              MetricName: ForcedErrorCount
+              Namespace: LambdaLogFilterMetrics
+              Dimensions:
+                - Name: FunctionName
+                  Value: !Ref UpdatePrescriptionStatusFunctionName
+            Period: 60
+            Stat: Sum
+            Unit: Count
+        - Id: trueErrors
+          Label: True 500 errors
+          Expression: errors - forcedErrors
+          ReturnData: true
+      EvaluationPeriods: 1
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      Threshold: 1
+      TreatMissingData: notBreaching
+      ActionsEnabled: !Ref EnableAlerts
+      AlarmActions:
+        - !ImportValue lambda-resources:SlackAlertsSnsTopicArn
+      InsufficientDataActions:
+        - !ImportValue lambda-resources:SlackAlertsSnsTopicArn
+      OKActions:
+        - !ImportValue lambda-resources:SlackAlertsSnsTopicArn
+
+  PrescriptionStatusUpdateUnhandledErrorsAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmDescription: Count of PrescriptionStatusUpdate unhandled errors
+      AlarmName: !Sub ${StackName}_PrescriptionStatusUpdate_UnhandledErrors
+      Namespace: Lambda
+      MetricName: Errors
+      Dimensions:
+        - Name: FunctionName
+          Value: !Ref UpdatePrescriptionStatusFunctionName
+      Period: 60 #seconds
+      EvaluationPeriods: 1
+      Statistic: Sum
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      Threshold: 1
+      Unit: Count
+      TreatMissingData: notBreaching
+      ActionsEnabled: !Ref EnableAlerts
+      AlarmActions:
+        - !ImportValue lambda-resources:SlackAlertsSnsTopicArn
+      InsufficientDataActions:
+        - !ImportValue lambda-resources:SlackAlertsSnsTopicArn
+      OKActions:
+        - !ImportValue lambda-resources:SlackAlertsSnsTopicArn
+
+  DynamoDBSystemErrorsAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmDescription: Count of DynamoDB system errors
+      AlarmName: !Sub ${StackName}_DynamoDB_SystemErrors
+      Namespace: DynamoDB
+      MetricName: SystemErrors
+      Dimensions:
+        - Name: TableName
+          Value: !Ref PrescriptionStatusUpdatesTableName
+      Period: 60 #seconds
+      EvaluationPeriods: 1
+      Statistic: Sum
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      Threshold: 1
+      Unit: Count
+      TreatMissingData: notBreaching
+      ActionsEnabled: !Ref EnableAlerts
+      AlarmActions:
+        - !ImportValue lambda-resources:SlackAlertsSnsTopicArn
+      InsufficientDataActions:
+        - !ImportValue lambda-resources:SlackAlertsSnsTopicArn
+      OKActions:
+        - !ImportValue lambda-resources:SlackAlertsSnsTopicArn
+
+  CPSUFhirConverterErrorLogsMetricFilter:
+    Type: AWS::Logs::MetricFilter
+    Properties:
+      FilterName: CPSUFhirConverterErrors
+      FilterPattern: !Sub '{ ($.function_name = "${ConvertRequestToFhirFormatFunctionName}") && ($.response.statusCode = 500) }'
+      LogGroupName:
+        Fn::ImportValue: !Sub ${StackName}:functions:${ConvertRequestToFhirFormatFunctionName}:LambdaLogGroupName
+      MetricTransformations:
+        - MetricNamespace: LambdaLogFilterMetrics
+          MetricName: ErrorCount
+          MetricValue: 1
+          Unit: Count
+          Dimensions:
+            - Key: FunctionName
+              Value: $.function_name
+
+  CPSUFhirConverterErrorsAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmDescription: Count of CPSU FHIR Converter errors
+      AlarmName: !Sub ${StackName}_CpsuFhirConverter_Errors
+      Namespace: Lambda
+      MetricName: Errors
+      Dimensions:
+        - Name: FunctionName
+          Value: !Ref ConvertRequestToFhirFormatFunctionName
       Period: 60 #seconds
       EvaluationPeriods: 1
       Statistic: Sum
