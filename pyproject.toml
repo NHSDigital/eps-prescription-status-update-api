@@ -36,14 +36,14 @@ boto3 = "^1.35.32"
 argparse = "^1.4.0"
 pre-commit = "^3.8.0"
 pytest = "^8.3.3"
-cfn-lint = "^1.15.2"
+cfn-lint = "^1.16.0"
 pyjwt = {extras = ["crypto"], version = "^2.9.0"}
 
 [tool.poetry.scripts]
 
 [tool.poetry.group.dev.dependencies]
 pre-commit = "^3.8.0"
-cfn-lint = "^1.15.2"
+cfn-lint = "^1.16.0"
 black = "^24.8.0"
 flake8 = "^7.1.1"
 jinja2 = "^3.1.4"
