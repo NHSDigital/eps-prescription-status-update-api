@@ -14,7 +14,7 @@ Globals:
       Variables:
         NODE_OPTIONS: "--enable-source-maps"
     Layers:
-      - !Sub arn:aws:lambda:${AWS::Region}:580247275435:layer:LambdaInsightsExtension:49
+      - !Sub arn:aws:lambda:${AWS::Region}:580247275435:layer:LambdaInsightsExtension-Arm64:20
 
 Parameters:
   StackName:
