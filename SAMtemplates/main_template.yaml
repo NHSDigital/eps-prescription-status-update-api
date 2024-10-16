@@ -81,6 +81,12 @@ Parameters:
       - true
       - false
 
+  WriteCapacityAlertThreshold:
+    Type: Number
+    Description: Threshold for the average consumed write capacity units per minute to trigger an alarm
+    Default: 500
+
+
 Resources:
   Tables:
     Type: AWS::Serverless::Application
@@ -150,4 +156,5 @@ Resources:
         UpdatePrescriptionStatusFunctionName: !GetAtt Functions.Outputs.UpdatePrescriptionStatusFunctionName
         PrescriptionStatusUpdatesTableName: !GetAtt Tables.Outputs.PrescriptionStatusUpdatesTableName
         ConvertRequestToFhirFormatFunctionName: !GetAtt Functions.Outputs.ConvertRequestToFhirFormatFunctionName
+        WriteCapacityAlertThreshold: !Ref WriteCapacityAlertThreshold
         EnableAlerts: !Ref EnableAlerts

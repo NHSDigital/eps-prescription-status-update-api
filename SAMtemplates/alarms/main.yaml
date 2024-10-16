@@ -22,6 +22,11 @@ Parameters:
   EnableAlerts:
     Type: String
 
+  WriteCapacityAlertThreshold:
+    Type: Number
+    Description: Threshold for the average consumed write capacity units per minute to trigger an alarm
+    Default: 500
+
 Resources:
   GetStatusUpdatesErrorsLogsMetricFilter:
     Type: AWS::Logs::MetricFilter
