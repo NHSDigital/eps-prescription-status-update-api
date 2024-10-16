@@ -220,6 +220,38 @@ Resources:
       OKActions:
         - !ImportValue lambda-resources:SlackAlertsSnsTopicArn
 
+  DynamoDBWriteConsumptionAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: !Sub "${AWS::StackName}_DynamoDB_ConsumedWriteCapacity"
+      ActionsEnabled: !Ref EnableAlerts
+      AlarmActions:
+        - !GetAtt SlackAlertsSnsTopic.TopicArn
+      InsufficientDataActions:
+        - !GetAtt SlackAlertsSnsTopic.TopicArn
+      OKActions:
+        - !GetAtt SlackAlertsSnsTopic.TopicArn
+      EvaluationPeriods: 1
+      Threshold: !Ref WriteCapacityAlertThreshold
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      TreatMissingData: notBreaching
+      Metrics:
+        - Id: e1
+          Label: Consumed
+          ReturnData: true
+          Expression: m1/PERIOD(m1)
+        - Id: m1
+          ReturnData: false
+          MetricStat:
+            Metric:
+              Namespace: AWS/DynamoDB
+              MetricName: ConsumedWriteCapacityUnits
+              Dimensions:
+                - Name: TableName
+                  Value: psu-PrescriptionStatusUpdates
+            Period: 60
+            Stat: Sum
+
   CPSUFhirConverterErrorLogsMetricFilter:
     Type: AWS::Logs::MetricFilter
     Properties:
