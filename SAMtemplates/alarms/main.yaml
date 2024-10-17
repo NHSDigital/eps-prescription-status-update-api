@@ -253,7 +253,7 @@ Resources:
               MetricName: ConsumedWriteCapacityUnits
               Dimensions:
                 - Name: TableName
-                  Value: psu-PrescriptionStatusUpdates
+                  Value: !Ref PrescriptionStatusUpdatesTableName
             Period: 60
             Stat: Sum
 
