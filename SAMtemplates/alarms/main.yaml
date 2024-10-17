@@ -22,10 +22,10 @@ Parameters:
   EnableAlerts:
     Type: String
 
-  WriteCapacityAlertThreshold:
+  DynamoDBUtilizationPercentageThreshold:
     Type: Number
-    Description: Threshold for the average consumed write capacity units per minute to trigger an alarm
-    Default: 500
+    Description: When the database usage crosses this percentage of provisioned capacity, trigger an alarm
+    Default: 90
 
 Resources:
   GetStatusUpdatesErrorsLogsMetricFilter:
@@ -237,14 +237,14 @@ Resources:
       OKActions:
         - !ImportValue lambda-resources:SlackAlertsSnsTopicArn
       EvaluationPeriods: 1
-      Threshold: !Ref WriteCapacityAlertThreshold
+      Threshold: !Ref DynamoDBUtilizationPercentageThreshold
       ComparisonOperator: GreaterThanOrEqualToThreshold
       TreatMissingData: notBreaching
       Metrics:
         - Id: e1
-          Label: Consumed
+          Label: UtilizationPercentage
           ReturnData: true
-          Expression: m1/PERIOD(m1)
+          Expression: "(m1 / (m2 * 60)) * 100"
         - Id: m1
           ReturnData: false
           MetricStat:
@@ -256,6 +256,17 @@ Resources:
                   Value: !Ref PrescriptionStatusUpdatesTableName
             Period: 60
             Stat: Sum
+        - Id: m2
+          ReturnData: false
+          MetricStat:
+            Metric:
+              Namespace: AWS/DynamoDB
+              MetricName: ProvisionedWriteCapacityUnits
+              Dimensions:
+                - Name: TableName
+                  Value: !Ref PrescriptionStatusUpdatesTableName
+            Period: 60
+            Stat: Maximum
 
   CPSUFhirConverterErrorLogsMetricFilter:
     Type: AWS::Logs::MetricFilter
