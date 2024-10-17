@@ -32,7 +32,7 @@ Parameters:
 
   FhirValidatorStackName:
     Type: String
-    Default: fhir-validator
+    Default: fhir-validator-pr-197
 
 Resources:
   UpdatePrescriptionStatusStateMachine:
