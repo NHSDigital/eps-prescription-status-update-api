@@ -231,11 +231,11 @@ Resources:
       AlarmName: !Sub "${AWS::StackName}_DynamoDB_ConsumedWriteCapacity"
       ActionsEnabled: !Ref EnableAlerts
       AlarmActions:
-        - !GetAtt SlackAlertsSnsTopic.TopicArn
+        - !GetAtt lambda-resources:SlackAlertsSnsTopicArn
       InsufficientDataActions:
-        - !GetAtt SlackAlertsSnsTopic.TopicArn
+        - !GetAtt lambda-resources:SlackAlertsSnsTopicArn
       OKActions:
-        - !GetAtt SlackAlertsSnsTopic.TopicArn
+        - !GetAtt lambda-resources:SlackAlertsSnsTopicArn
       EvaluationPeriods: 1
       Threshold: !Ref WriteCapacityAlertThreshold
       ComparisonOperator: GreaterThanOrEqualToThreshold
