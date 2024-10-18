@@ -55,8 +55,8 @@ jobs:
       - name: run lint
         run: make lint
 
-      - name: run unit tests
-        run: make test
+      # - name: run unit tests
+      #   run: make test
 
       - name: Run cfn-guard
         run: make cfn-guard

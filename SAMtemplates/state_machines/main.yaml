@@ -16,11 +16,19 @@ Parameters:
     Type: String
     Default: none
 
+  UpdatePrescriptionStatusFunctionVersion:
+    Type: String
+    Default: none
+
   ConvertRequestToFhirFormatFunctionName:
     Type: String
     Default: none
 
   ConvertRequestToFhirFormatFunctionArn:
+    Type: String
+    Default: none
+
+  ConvertRequestToFhirFormatFunctionVersion:
     Type: String
     Default: none
 
@@ -47,7 +55,7 @@ Resources:
           - ":"
           - - Fn::ImportValue: !Sub ${FhirValidatorStackName}:FHIRValidatorUKCoreLambdaArn
             - snap
-        UpdatePrescriptionStatusFunctionArn: !Sub ${UpdatePrescriptionStatusFunctionArn}:$LATEST
+        UpdatePrescriptionStatusFunctionArn: !Sub ${UpdatePrescriptionStatusFunctionVersion}
       Logging:
         Destinations:
           - CloudWatchLogsLogGroup:
@@ -56,6 +64,45 @@ Resources:
         Level: ALL
       Tracing:
         Enabled: true
+
+  UpdatePrescriptionStatusStateMachineVersion:
+    Type: "AWS::StepFunctions::StateMachineVersion"
+    Properties:
+      StateMachineArn: !Ref UpdatePrescriptionStatusStateMachine
+      StateMachineRevisionId: !GetAtt UpdatePrescriptionStatusStateMachine.StateMachineRevisionId
+
+  UpdatePrescriptionStatusStateMachineAlias:
+    Type: "AWS::StepFunctions::StateMachineAlias"
+    Properties:
+      Name: prod
+      DeploymentPreference:
+        StateMachineVersionArn: !Ref UpdatePrescriptionStatusStateMachineVersion
+        Type: LINEAR
+        Interval: 2
+        Percentage: 20
+        Alarms:
+          - !Ref UpdatePrescriptionStatusStateMachineAlarm
+
+  UpdatePrescriptionStatusStateMachineAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: !Sub "${StackName}-UpdatePrescriptionStatusStateMachineAlarm"
+      AlarmDescription: !Sub "Alarm when ${StackName}-UpdatePrescriptionStatus Step Function executions fail"
+      Namespace: "AWS/States"
+      MetricName: "ExecutionsFailed"
+      Dimensions:
+        - Name: "StateMachineArn"
+          Value: !Ref UpdatePrescriptionStatusStateMachine
+      Statistic: "Sum"
+      Period: 60 # Evaluate every minute
+      EvaluationPeriods: 1
+      Threshold: 1
+      ComparisonOperator: "GreaterThanOrEqualToThreshold"
+      TreatMissingData: "notBreaching"
+    Metadata:
+      guard:
+        SuppressedRules:
+          - CLOUDWATCH_ALARM_ACTION_CHECK
 
   UpdatePrescriptionStatusStateMachineResources:
     Type: AWS::Serverless::Application
@@ -83,8 +130,8 @@ Resources:
       Role: !GetAtt Format1UpdatePrescriptionsStatusStateMachineResources.Outputs.StateMachineRoleArn
       DefinitionUri: Format1UpdatePrescriptionsStatusStateMachine.asl.json
       DefinitionSubstitutions:
-        ConvertRequestToFhirFormatFunctionArn: !Sub ${ConvertRequestToFhirFormatFunctionArn}:$LATEST
-        UpdatePrescriptionStatusFunctionArn: !Sub ${UpdatePrescriptionStatusFunctionArn}:$LATEST
+        ConvertRequestToFhirFormatFunctionArn: !Sub ${ConvertRequestToFhirFormatFunctionVersion}
+        UpdatePrescriptionStatusFunctionArn: !Sub ${UpdatePrescriptionStatusFunctionVersion}
       Logging:
         Destinations:
           - CloudWatchLogsLogGroup:
@@ -93,6 +140,45 @@ Resources:
         Level: ALL
       Tracing:
         Enabled: true
+
+  Format1UpdatePrescriptionsStatusStateMachineVersion:
+    Type: "AWS::StepFunctions::StateMachineVersion"
+    Properties:
+      StateMachineArn: !Ref Format1UpdatePrescriptionsStatusStateMachine
+      StateMachineRevisionId: !GetAtt Format1UpdatePrescriptionsStatusStateMachine.StateMachineRevisionId
+
+  Format1UpdatePrescriptionsStatusStateMachineAlias:
+    Type: "AWS::StepFunctions::StateMachineAlias"
+    Properties:
+      Name: prod
+      DeploymentPreference:
+        StateMachineVersionArn: !Ref Format1UpdatePrescriptionsStatusStateMachineVersion
+        Type: LINEAR
+        Interval: 2
+        Percentage: 20
+        Alarms:
+          - !Ref Format1UpdatePrescriptionsStatusStateMachineAlarm
+
+  Format1UpdatePrescriptionsStatusStateMachineAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: !Sub "${StackName}-Format1UpdatePrescriptionsStatusStateMachineAlarm"
+      AlarmDescription: !Sub "Alarm when ${StackName}-Format1UpdatePrescriptions Step Function executions fail"
+      Namespace: "AWS/States"
+      MetricName: "ExecutionsFailed"
+      Dimensions:
+        - Name: "StateMachineArn"
+          Value: !Ref Format1UpdatePrescriptionsStatusStateMachine
+      Statistic: "Sum"
+      Period: 60 # Evaluate every minute
+      EvaluationPeriods: 1
+      Threshold: 1
+      ComparisonOperator: "GreaterThanOrEqualToThreshold"
+      TreatMissingData: "notBreaching"
+    Metadata:
+      guard:
+        SuppressedRules:
+          - CLOUDWATCH_ALARM_ACTION_CHECK
 
   Format1UpdatePrescriptionsStatusStateMachineResources:
     Type: AWS::Serverless::Application
@@ -121,6 +207,10 @@ Outputs:
     Description: UpdatePrescriptionStatus state machine name
     Value: !GetAtt UpdatePrescriptionStatusStateMachine.Name
 
+  UpdatePrescriptionStatusStateMachineAlias:
+    Description: UpdatePrescriptionStatus state machine alias
+    Value: !Ref UpdatePrescriptionStatusStateMachineAlias
+
   Format1UpdatePrescriptionsStatusStateMachineArn:
     Description: Format1UpdatePrescriptionsStatus state machine arn
     Value: !Ref Format1UpdatePrescriptionsStatusStateMachine
@@ -128,3 +218,7 @@ Outputs:
   Format1UpdatePrescriptionsStatusStateMachineName:
     Description: Format1UpdatePrescriptionsStatus state machine name
     Value: !GetAtt Format1UpdatePrescriptionsStatusStateMachine.Name
+
+  Format1UpdatePrescriptionsStatusStateMachineAlias:
+    Description: Format1UpdatePrescriptionsStatus state machine name
+    Value: !Ref Format1UpdatePrescriptionsStatusStateMachineAlias
