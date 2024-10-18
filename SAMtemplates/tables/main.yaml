@@ -4,10 +4,6 @@ Description: |
   PSU DynamoDB tables and related resources
 
 Parameters:
-  StackName:
-    Type: String
-    Default: none
-
   EnableDynamoDBAutoScaling:
     Type: String
 
@@ -55,7 +51,7 @@ Resources:
   PrescriptionStatusUpdatesKMSKeyAlias:
     Type: AWS::KMS::Alias
     Properties:
-      AliasName: !Sub alias/${StackName}-PrescriptionStatusUpdatesKMSKeyAlias
+      AliasName: !Sub alias/${AWS::StackName}-PrescriptionStatusUpdatesKMSKeyAlias
       TargetKeyId: !Ref PrescriptionStatusUpdatesKMSKey
 
   UsePrescriptionStatusUpdatesKMSKeyPolicy:
@@ -76,7 +72,7 @@ Resources:
   PrescriptionStatusUpdatesTable:
     Type: AWS::DynamoDB::Table
     Properties:
-      TableName: !Sub ${StackName}-PrescriptionStatusUpdates
+      TableName: !Sub ${AWS::StackName}-PrescriptionStatusUpdates
       PointInTimeRecoverySpecification:
         PointInTimeRecoveryEnabled: true
       AttributeDefinitions:
@@ -146,7 +142,7 @@ Resources:
     Properties:
       Location: dynamodb_resources.yaml
       Parameters:
-        StackName: !Ref StackName
+        StackName: !Ref AWS::StackName
         TableName: !Ref PrescriptionStatusUpdatesTable
         TableArn: !GetAtt PrescriptionStatusUpdatesTable.Arn
 
@@ -352,6 +348,8 @@ Outputs:
   PrescriptionStatusUpdatesTableName:
     Description: PrescriptionStatusUpdates table name
     Value: !Ref PrescriptionStatusUpdatesTable
+    Export:
+      Name: !Sub ${AWS::StackName}:tables:PrescriptionStatusUpdatesTableName
 
   PrescriptionStatusUpdatesTableArn:
     Description: PrescriptionStatusUpdates table arn
@@ -361,4 +359,4 @@ Outputs:
     Description: Use kms key policy arn
     Value: !GetAtt UsePrescriptionStatusUpdatesKMSKeyPolicy.PolicyArn
     Export:
-      Name: !Sub ${StackName}:tables:UsePrescriptionStatusUpdatesKMSKeyPolicyArn
+      Name: !Sub ${AWS::StackName}:tables:UsePrescriptionStatusUpdatesKMSKeyPolicyArn
