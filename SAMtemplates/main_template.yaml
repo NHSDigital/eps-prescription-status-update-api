@@ -81,6 +81,12 @@ Parameters:
       - true
       - false
 
+  DynamoDBUtilizationPercentageThreshold:
+    Type: Number
+    Description: When the database usage crosses this percentage of provisioned capacity, trigger an alarm
+    Default: 90
+
+
 Resources:
   Tables:
     Type: AWS::Serverless::Application
@@ -150,4 +156,5 @@ Resources:
         UpdatePrescriptionStatusFunctionName: !GetAtt Functions.Outputs.UpdatePrescriptionStatusFunctionName
         PrescriptionStatusUpdatesTableName: !GetAtt Tables.Outputs.PrescriptionStatusUpdatesTableName
         ConvertRequestToFhirFormatFunctionName: !GetAtt Functions.Outputs.ConvertRequestToFhirFormatFunctionName
+        DynamoDBUtilizationPercentageThreshold: !Ref DynamoDBUtilizationPercentageThreshold
         EnableAlerts: !Ref EnableAlerts
