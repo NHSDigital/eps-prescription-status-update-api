@@ -20,6 +20,12 @@ install-hooks: install-python
 sam-build: sam-validate compile
 	sam build --template-file SAMtemplates/main_template.yaml --region eu-west-2
 
+sam-build-api-domain: sam-validate compile
+	sam build --template-file SAMtemplates/apis/api_domain.yaml --region eu-west-2
+
+sam-build-tables: sam-validate compile
+	sam build --template-file SAMtemplates/tables/main.yaml --region eu-west-2
+
 sam-build-sandbox: sam-validate-sandbox compile
 	sam build --template-file SAMtemplates/sandbox_template.yaml --region eu-west-2
 
@@ -60,6 +66,7 @@ sam-validate:
 	sam validate --template-file SAMtemplates/main_template.yaml --region eu-west-2
 	sam validate --template-file SAMtemplates/apis/main.yaml --region eu-west-2
 	sam validate --template-file SAMtemplates/apis/api_resources.yaml --region eu-west-2
+	sam validate --template-file SAMtemplates/apis/api_domain.yaml --region eu-west-2
 	sam validate --template-file SAMtemplates/functions/main.yaml --region eu-west-2
 	sam validate --template-file SAMtemplates/functions/lambda_resources.yaml --region eu-west-2
 	sam validate --template-file SAMtemplates/tables/main.yaml --region eu-west-2
@@ -67,6 +74,7 @@ sam-validate:
 	sam validate --template-file SAMtemplates/state_machines/main.yaml --region eu-west-2
 	sam validate --template-file SAMtemplates/state_machines/state_machine_resources.yaml --region eu-west-2
 	sam validate --template-file SAMtemplates/alarms/main.yaml --region eu-west-2
+	sam validate --template-file SAMtemplates/apis/api_domain.yaml --region eu-west-2
 
 sam-validate-sandbox:
 	sam validate --template-file SAMtemplates/sandbox_template.yaml --region eu-west-2
@@ -84,19 +92,23 @@ sam-deploy-package: guard-artifact_bucket guard-artifact_bucket_prefix guard-sta
 		--role-arn $$cloud_formation_execution_role \
 		--no-confirm-changeset \
 		--force-upload \
-		--tags "version=$$VERSION_NUMBER" \
+		--tags \
+				version=$$VERSION_NUMBER \
+				deployment_colour=$$deployment_colour \
 		--parameter-overrides \
-			  TruststoreVersion=$$LATEST_TRUSTSTORE_VERSION \
-			  EnableMutualTLS=$$enable_mutual_tls \
-			  EnableSplunk=true \
-			  EnableDynamoDBAutoScaling=$$DYNAMODB_AUTOSCALE \
-			  VersionNumber=$$VERSION_NUMBER \
-			  CommitId=$$COMMIT_ID \
-			  LogLevel=$$LOG_LEVEL \
-			  LogRetentionInDays=$$LOG_RETENTION_DAYS \
-			  Environment=$$TARGET_ENVIRONMENT \
-			  DeployCheckPrescriptionStatusUpdate=$$DEPLOY_CHECK_PRESCRIPTION_STATUS_UPDATE \
-			  EnableAlerts=$$ENABLE_ALERTS
+				TruststoreVersion=$$LATEST_TRUSTSTORE_VERSION \
+				EnableMutualTLS=$$enable_mutual_tls \
+				EnableSplunk=true \
+				EnableDynamoDBAutoScaling=$$DYNAMODB_AUTOSCALE \
+				VersionNumber=$$VERSION_NUMBER \
+				CommitId=$$COMMIT_ID \
+				LogLevel=$$LOG_LEVEL \
+				LogRetentionInDays=$$LOG_RETENTION_DAYS \
+				Environment=$$TARGET_ENVIRONMENT \
+				DeployCheckPrescriptionStatusUpdate=$$DEPLOY_CHECK_PRESCRIPTION_STATUS_UPDATE \
+				EnableAlerts=$$ENABLE_ALERTS \
+				RestApiGateway=$$RestApiGateway \
+				RestApiGatewayStage=$$RestApiGatewayStage
 
 compile-node:
 	npx tsc --build tsconfig.build.json

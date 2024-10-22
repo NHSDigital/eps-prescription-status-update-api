@@ -1,0 +1,145 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: AWS::Serverless-2016-10-31
+Description: |
+  PSU API's and related resources
+
+Parameters:
+  EnableMutualTLS:
+    Type: String
+
+  TruststoreVersion:
+    Type: String
+
+  RestApiGateway:
+    Type: String
+
+  RestApiGatewayStage:
+    Type: String
+
+  GSULARN:
+    Type: String
+
+  LogRetentionInDays:
+    Type: String
+
+  EnableSplunk:
+    Type: String
+
+Conditions:
+  ShouldUseMutualTLS: !Equals
+    - true
+    - !Ref EnableMutualTLS
+
+Resources:
+  GenerateCertificate:
+    Type: AWS::CertificateManager::Certificate
+    Properties:
+      ValidationMethod: DNS
+      DomainName: !Join
+        - .
+        - - !Ref AWS::StackName
+          - !ImportValue eps-route53-resources:EPS-domain
+      DomainValidationOptions:
+        - DomainName: !Join
+            - .
+            - - !Ref AWS::StackName
+              - !ImportValue eps-route53-resources:EPS-domain
+          HostedZoneId: !ImportValue eps-route53-resources:EPS-ZoneID
+
+  RestApiDomain:
+    Type: AWS::ApiGateway::DomainName
+    Properties:
+      DomainName: !Join
+        - .
+        - - !Ref AWS::StackName
+          - !ImportValue eps-route53-resources:EPS-domain
+      RegionalCertificateArn: !Ref GenerateCertificate
+      EndpointConfiguration:
+        Types:
+          - REGIONAL
+      SecurityPolicy: TLS_1_2
+      MutualTlsAuthentication:
+        TruststoreUri: !If
+          - ShouldUseMutualTLS
+          - !Join
+            - /
+            - - s3:/
+              - !Select
+                - 5
+                - !Split
+                  - ":"
+                  - !ImportValue account-resources:TrustStoreBucket
+              - psu-truststore.pem
+          - !Ref AWS::NoValue
+        TruststoreVersion: !If
+          - ShouldUseMutualTLS
+          - !Ref TruststoreVersion
+          - !Ref AWS::NoValue
+
+  RestApiRecordSet:
+    Type: AWS::Route53::RecordSet
+    Properties:
+      Name: !Join
+        - .
+        - - !Ref AWS::StackName
+          - !ImportValue eps-route53-resources:EPS-domain
+      Type: A
+      HostedZoneId: !ImportValue eps-route53-resources:EPS-ZoneID
+      AliasTarget:
+        DNSName: !GetAtt RestApiDomain.RegionalDomainName
+        HostedZoneId: !GetAtt RestApiDomain.RegionalHostedZoneId
+
+  RestApiDomainMapping:
+    Type: AWS::ApiGateway::BasePathMapping
+    Properties:
+      DomainName: !Ref RestApiDomain
+      RestApiId: !Ref RestApiGateway
+      Stage: !Ref RestApiGatewayStage
+
+  GetGSULArn:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub ${AWS::StackName}-GetGSULArn
+      Timeout: 50
+      MemorySize: 256
+      Architectures:
+        - x86_64
+      Runtime: nodejs20.x
+      InlineCode: |
+        const GSUL_ARN = process.env["GSUL_ARN"]
+        exports.handler = async function(event) {
+          return GSUL_ARN
+        };
+      Handler: index.handler
+      Role: !GetAtt GetGSULArnResources.Outputs.LambdaRoleArn
+      Environment:
+        Variables:
+          GSUL_ARN: !Ref GSULARN
+    Metadata:
+      guard:
+        SuppressedRules:
+          - LAMBDA_DLQ_CHECK
+          - LAMBDA_INSIDE_VPC
+          - LAMBDA_CONCURRENCY_CHECK
+
+  GetGSULArnResources:
+    Type: AWS::Serverless::Application
+    Properties:
+      Location: ../functions/lambda_resources.yaml
+      Parameters:
+        StackName: !Ref AWS::StackName
+        LambdaName: !Sub ${AWS::StackName}-GetGSULArn
+        LambdaArn: !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:${AWS::StackName}-GetGSULArn
+        IncludeAdditionalPolicies: false
+        LogRetentionInDays: !Ref LogRetentionInDays
+        CloudWatchKMSKeyId: !ImportValue account-resources:CloudwatchLogsKmsKeyArn
+        EnableSplunk: !Ref EnableSplunk
+        SplunkSubscriptionFilterRole: !ImportValue lambda-resources:SplunkSubscriptionFilterRole
+        SplunkDeliveryStreamArn: !ImportValue lambda-resources:SplunkDeliveryStream
+
+Outputs:
+  GetGSULArn:
+    Description: The ARN of the GetGSUL lambda
+    Value: !GetAtt GetGSULArn.Arn
+    Export:
+      Name: !Sub ${AWS::StackName}:functions:GetGSULArn:FunctionArn

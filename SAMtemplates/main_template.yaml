@@ -11,10 +11,6 @@ Parameters:
       - true
       - false
 
-  TruststoreVersion:
-    Type: String
-    Default: none
-
   LogLevel:
     Type: String
     Default: INFO
@@ -81,15 +77,12 @@ Parameters:
       - true
       - false
 
-Resources:
-  Tables:
-    Type: AWS::Serverless::Application
-    Properties:
-      Location: tables/main.yaml
-      Parameters:
-        StackName: !Ref AWS::StackName
-        EnableDynamoDBAutoScaling: !Ref EnableDynamoDBAutoScaling
+  PrescriptionStatusUpdatesTableName:
+    Type: String
 
+  TablesStackName:
+    Type: String
+Resources:
   Apis:
     Type: AWS::Serverless::Application
     Properties:
@@ -97,7 +90,6 @@ Resources:
       Parameters:
         StackName: !Ref AWS::StackName
         EnableMutualTLS: !Ref EnableMutualTLS
-        TruststoreVersion: !Ref TruststoreVersion
         UpdatePrescriptionStatusStateMachineName: !GetAtt StateMachines.Outputs.UpdatePrescriptionStatusStateMachineName
         UpdatePrescriptionStatusStateMachineArn: !GetAtt StateMachines.Outputs.UpdatePrescriptionStatusStateMachineArn
         Format1UpdatePrescriptionsStatusStateMachineName: !GetAtt StateMachines.Outputs.Format1UpdatePrescriptionsStatusStateMachineName
@@ -118,7 +110,7 @@ Resources:
       Location: functions/main.yaml
       Parameters:
         StackName: !Ref AWS::StackName
-        PrescriptionStatusUpdatesTableName: !GetAtt Tables.Outputs.PrescriptionStatusUpdatesTableName
+        PrescriptionStatusUpdatesTableName: !Ref PrescriptionStatusUpdatesTableName
         LogLevel: !Ref LogLevel
         LogRetentionInDays: !Ref LogRetentionInDays
         EnableSplunk: !Ref EnableSplunk
@@ -126,6 +118,7 @@ Resources:
         CommitId: !Ref CommitId
         DeployCheckPrescriptionStatusUpdate: !Ref DeployCheckPrescriptionStatusUpdate
         Environment: !Ref Environment
+        TablesStackName: !Ref TablesStackName
 
   StateMachines:
     Type: AWS::Serverless::Application
