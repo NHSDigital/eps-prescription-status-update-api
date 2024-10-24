@@ -25,7 +25,7 @@ Parameters:
   DynamoDBUtilizationPercentageThreshold:
     Type: Number
     Description: When the database usage crosses this percentage of provisioned capacity, trigger an alarm
-    Default: 10
+    Default: 90
 
 Resources:
   GetStatusUpdatesErrorsLogsMetricFilter:
