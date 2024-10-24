@@ -228,6 +228,7 @@ Resources:
   DynamoDBWriteConsumptionAlarm:
     Type: AWS::CloudWatch::Alarm
     Properties:
+      AlarmDescription: DynamoDB usage is nearing provisioned limit. 
       AlarmName: !Sub "${AWS::StackName}_DynamoDB_ConsumedWriteCapacity"
       ActionsEnabled: !Ref EnableAlerts
       AlarmActions:
