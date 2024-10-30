@@ -156,6 +156,7 @@ function generate_uuid(prescriptionItem: itemType, prescriptionDetails: requestT
     .windows(2)
     .map((hex) => parseInt(hex, 16))
 
+  // @ts-expect-error missing properties are not needed
   return uuidv4({random: seed})
 }
 

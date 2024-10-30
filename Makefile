@@ -12,7 +12,7 @@ install-python:
 	poetry install
 
 install-node:
-	npm install --legacy-peer-deps
+	npm ci --legacy-peer-deps
 
 install-hooks: install-python
 	poetry run pre-commit install --install-hooks --overwrite
