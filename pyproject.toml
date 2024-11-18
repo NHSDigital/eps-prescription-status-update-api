@@ -37,7 +37,7 @@ argparse = "^1.4.0"
 pre-commit = "^4.0.1"
 pytest = "^8.3.3"
 cfn-lint = "^1.19.0"
-pyjwt = {extras = ["crypto"], version = "^2.9.0"}
+pyjwt = {extras = ["crypto"], version = "^2.10.0"}
 
 [tool.poetry.scripts]
 
