@@ -158,7 +158,7 @@ Resources:
     Properties:
       Location: functions/lambda_resources.yaml
       Parameters:
-        StackName: AWS::StackName
+        StackName: !Ref AWS::StackName
         LambdaName: !Sub ${AWS::StackName}-status
         LambdaArn: !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:${AWS::StackName}-status
         IncludeAdditionalPolicies: true
@@ -205,7 +205,7 @@ Resources:
     Properties:
       Location: functions/lambda_resources.yaml
       Parameters:
-        StackName: AWS::StackName
+        StackName: !Ref AWS::StackName
         LambdaName: !Sub ${AWS::StackName}-CapabilityStatement
         LambdaArn: !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:${AWS::StackName}-CapabilityStatement
         CloudWatchKMSKeyId: !ImportValue account-resources:CloudwatchLogsKmsKeyArn
