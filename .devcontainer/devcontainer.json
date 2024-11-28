@@ -8,6 +8,13 @@
     "context": "..",
     "args": {}
   },
+  "features": {
+    "ghcr.io/devcontainers/features/docker-outside-of-docker:1": {
+      "version": "latest",
+      "moby": "true",
+      "installDockerBuildx": "true"
+    }
+  },
   "mounts": [
     "source=${env:HOME}${env:USERPROFILE}/.aws,target=/home/vscode/.aws,type=bind",
     "source=${env:HOME}${env:USERPROFILE}/.ssh,target=/home/vscode/.ssh,type=bind",
@@ -55,6 +62,7 @@
       }
     }
   },
+  "remoteEnv": { "LOCAL_WORKSPACE_FOLDER": "${localWorkspaceFolder}" },
   "postCreateCommand": "rm -f ~/.docker/config.json; git config --global --add safe.directory /workspaces/eps-prescription-status-update; make install; direnv allow ."
   // "features": {},
   // Use 'forwardPorts' to make a list of ports inside the container available locally.
