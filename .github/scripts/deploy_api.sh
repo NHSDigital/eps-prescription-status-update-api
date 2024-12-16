@@ -105,7 +105,6 @@ if [[ "${APIGEE_ENVIRONMENT}" == *"sandbox"* ]]; then
 
     echo "Removing security attributes for sandbox environment"
     jq 'del(."paths"."/"."post"."security")' "$SPEC_PATH" > temp.json && mv temp.json "$SPEC_PATH"
-
 fi
 
 # Remove checkprescriptionstatusupdates if its not needed
