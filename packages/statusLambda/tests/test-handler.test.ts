@@ -14,7 +14,7 @@ import {mockAPIGatewayProxyEvent, mockContext} from "@PrescriptionStatusUpdate_c
 const mock = new MockAdapter(axios)
 
 describe("Unit test for status check", function () {
-  let originalEnv: {[key: string]: string | undefined}
+  let originalEnv: {[key: string]: string | undefined} = process.env
   afterEach(() => {
     process.env = {...originalEnv}
     mock.reset()
