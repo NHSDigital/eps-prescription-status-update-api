@@ -222,11 +222,12 @@ paths:
         A maximum of 15 results is returned. If more results are available, then headers LastEvaluatedKey-PrescriptionID and LastEvaluatedKey-TaskID are returned in the result. These values should be used in a subsequent request in the headers ExclusiveStartKey-PrescriptionID and ExclusiveStartKey-TaskID.
         It is possible that less than 15 results are returned even when more are available. This is a feature of the database and filtering methods being used. At least 5 results will be returned, if available.
       parameters:
-        - in: query
-          name: odscode
-          schema:
-            type: string
-          description: The ods code to return prescription status updates for
+        - $ref: "#/components/parameters/OdsCode"
+        # - in: query
+        #   name: odscode
+        #   schema:
+        #     type: string
+        #   description: The ods code to return prescription status updates for
         - in: query
           name: nhsnumber
           schema:
@@ -329,6 +330,14 @@ components:
       schema:
         type: string
         example: 11C46F5F-CDEF-4865-94B2-0EE0EDCC26DA
+    OdsCode:
+      in: query
+      name: odscode
+      required: false
+      description: The nhs number to return prescription status updates for
+      schema:
+        type: string
+        example: C9Z1O
   schemas:
     UpdatePrescriptionStatusBundle:
       type: object
