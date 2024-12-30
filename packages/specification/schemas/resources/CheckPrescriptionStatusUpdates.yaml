@@ -7,6 +7,7 @@ properties:
     type: array
     description: List of prescription status updates that have been sent.
     minItems: 0
+    tryItOutEnabled: false
     items:
       type: object
       required:
