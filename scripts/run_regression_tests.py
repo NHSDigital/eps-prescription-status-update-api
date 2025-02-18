@@ -12,9 +12,10 @@ import requests
 import time
 
 # This should be set to a known good version of regression test repo
-REGRESSION_TESTS_REPO_TAG = "e3fca65a0a66b32a38b6b577b37e4d0b6d17bc5c"
+REGRESSION_TESTS_REPO_TAG = "fix_psu_tests_2"
 
 GITHUB_API_URL = "https://api.github.com/repos/NHSDigital/electronic-prescription-service-api-regression-tests/actions"
+GITHUB_RUN_URL = "https://github.com/NHSDigital/electronic-prescription-service-api-regression-tests/actions/runs"
 
 
 def get_headers():
@@ -142,9 +143,7 @@ def check_job():
         job = get_job()
         job_status = job["status"]
 
-    assert (
-        job["conclusion"] == "success"
-    ), "The regressions test step failed! There are likely test failures."
+    return job["conclusion"]
 
 
 if __name__ == "__main__":
@@ -170,5 +169,15 @@ if __name__ == "__main__":
     trigger_test_run()
 
     workflow_id = find_workflow()
-    check_job()
+    job_status = check_job()
+    if job_status != "success":
+        if arguments.pr_label:
+            pr_label = arguments.pr_label.lower()
+            env = f"PULL-REQUEST/{pr_label}"
+        else:
+            env = arguments.env.upper()
+        print("The regressions test step failed! There are likely test failures.")
+        print(f"See {GITHUB_RUN_URL}/{workflow_id}/ for run details)")
+        print(f"See https://nhsdigital.github.io/eps-test-reports/psu/{env}/ for allure report")
+        raise Exception("Regression test failed")
     print("Success!")
