@@ -12,7 +12,7 @@ import requests
 import time
 
 # This should be set to a known good version of regression test repo
-REGRESSION_TESTS_REPO_TAG = "fix_psu_tests_2"
+REGRESSION_TESTS_REPO_TAG = "v2.12.7"
 
 GITHUB_API_URL = "https://api.github.com/repos/NHSDigital/electronic-prescription-service-api-regression-tests/actions"
 GITHUB_RUN_URL = "https://github.com/NHSDigital/electronic-prescription-service-api-regression-tests/actions/runs"
