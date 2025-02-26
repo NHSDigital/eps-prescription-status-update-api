@@ -61,12 +61,12 @@ on:
       DEPLOY_CHECK_PRESCRIPTION_STATUS_UPDATE:
         type: boolean
         default: false
-      REGRESSION_TESTS_PEM:
-        type: string
-        default: false
       ENABLE_ALERTS:
         type: boolean
         default: true
+      RUN_REGRESSION_TEST:
+        required: true
+        type: boolean 
     secrets:
       CLOUD_FORMATION_DEPLOY_ROLE:
         required: true
@@ -255,6 +255,7 @@ jobs:
           parallel --retries 10 --delay 3 ::: "git pull --rebase && git push"
 
   regression_tests:
+    if: ${{ inputs.RUN_REGRESSION_TEST == true && always() && !failure() && !cancelled() }}
     name: Regression Tests
     uses: ./.github/workflows/run_regression_tests.yml
     needs: release_code_and_api
