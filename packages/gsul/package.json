@@ -21,7 +21,7 @@
     "@aws-sdk/util-dynamodb": "^3.758.0",
     "@middy/core": "^6.1.5",
     "@middy/input-output-logger": "^6.1.4",
-    "@middy/validator": "^6.1.4",
+    "@middy/validator": "^6.1.5",
     "@PrescriptionStatusUpdate_common/middyErrorHandler": "^1.0.0",
     "json-schema-to-ts": "^3.1.1"
   }
