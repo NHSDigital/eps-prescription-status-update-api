@@ -4,6 +4,7 @@ import {injectLambdaContext} from "@aws-lambda-powertools/logger/middleware"
 import middy from "@middy/core"
 import inputOutputLogger from "@middy/input-output-logger"
 import errorHandler from "@nhs/fhir-middy-error-handler"
+import {functionWithLoggerPassedIn, functionWithOutLoggerPassedIn} from "./helper"
 
 const logger = new Logger({serviceName: "status"})
 
@@ -20,12 +21,33 @@ const logger = new Logger({serviceName: "status"})
  */
 
 const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
+  logger.info("This is a log before keys are added")
   logger.appendKeys({
     "x-request-id": event.headers["x-request-id"],
     "x-correlation-id": event.headers["x-correlation-id"],
     "apigw-request-id": event.requestContext.requestId
   })
+  logger.info("This is a log after keys have been added")
 
+  logger.debug("This is a debug message")
+  logger.info("This is an info message")
+  logger.warn("This is a warn message")
+  logger.error("This is an error message")
+  logger.critical("This is a critical message")
+
+  const objectToLog = {
+    property_int: 1,
+    property_string: "This is a string"
+  }
+
+  logger.debug("This shows how to log a whole object", {objectToLog})
+  logger.debug("This shows how to log a custom object", {
+    custom_property_int: 2,
+    custom_property_string: "this is another string"
+  })
+
+  functionWithLoggerPassedIn(logger)
+  functionWithOutLoggerPassedIn()
   const commitId = process.env.COMMIT_ID
   const versionNumber = process.env.VERSION_NUMBER
 
