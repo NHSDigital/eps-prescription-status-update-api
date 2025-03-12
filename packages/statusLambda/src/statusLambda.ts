@@ -3,6 +3,7 @@ import {Logger} from "@aws-lambda-powertools/logger"
 import {injectLambdaContext} from "@aws-lambda-powertools/logger/middleware"
 import middy from "@middy/core"
 import inputOutputLogger from "@middy/input-output-logger"
+import httpHeaderNormalizer from "@middy/http-header-normalizer"
 import errorHandler from "@nhs/fhir-middy-error-handler"
 import {functionWithLoggerPassedIn, functionWithOutLoggerPassedIn} from "./helper"
 
@@ -41,9 +42,16 @@ const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPro
   }
 
   logger.debug("This shows how to log a whole object", {objectToLog})
-  logger.debug("This shows how to log a custom object", {
+  logger.debug("This shows how to log properties to the main log event", {
     custom_property_int: 2,
     custom_property_string: "this is another string"
+  })
+
+  logger.debug("This shows how to log a custom object made as part of the log event", {
+    multiple_custom_properties: {
+      custom_property_int: 2,
+      custom_property_string: "this is another string"
+    }
   })
 
   functionWithLoggerPassedIn(logger)
@@ -65,10 +73,15 @@ const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPro
 
 export const handler = middy(lambdaHandler)
   .use(injectLambdaContext(logger, {clearState: true}))
+  .use(httpHeaderNormalizer())
   .use(
     inputOutputLogger({
       logger: (request) => {
-        logger.info(request)
+        if (request.response) {
+          logger.debug(request)
+        } else {
+          logger.info(request)
+        }
       }
     })
   )
