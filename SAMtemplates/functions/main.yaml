@@ -200,6 +200,7 @@ Resources:
         Variables:
           VERSION_NUMBER: !Ref VersionNumber
           COMMIT_ID: !Ref CommitId
+          LOG_LEVEL: !Ref LogLevel
     Metadata:
       BuildMethod: esbuild
       guard:
