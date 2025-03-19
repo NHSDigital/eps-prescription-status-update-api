@@ -1,5 +1,6 @@
 [project]
 python = "^3.12"
+name = "eps-prescription-status-update-api"
 
 [tool.poetry]
 name = "eps-prescription-status-update-api"
