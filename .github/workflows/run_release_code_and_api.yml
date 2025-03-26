@@ -66,7 +66,10 @@ on:
         default: true
       RUN_REGRESSION_TEST:
         required: true
-        type: boolean 
+        type: boolean
+      STATE_MACHINE_LOG_LEVEL:
+        required: true
+        type: string
     secrets:
       CLOUD_FORMATION_DEPLOY_ROLE:
         required: true
@@ -150,6 +153,7 @@ jobs:
           DYNAMODB_AUTOSCALE: ${{ inputs.DYNAMODB_AUTOSCALE }}
           DEPLOY_CHECK_PRESCRIPTION_STATUS_UPDATE: ${{ inputs.DEPLOY_CHECK_PRESCRIPTION_STATUS_UPDATE }}
           ENABLE_ALERTS: ${{ inputs.ENABLE_ALERTS }}
+          STATE_MACHINE_LOG_LEVEL: ${{ inputs.STATE_MACHINE_LOG_LEVEL }}
         run: ./release_code.sh
 
       - name: get mtls secrets
