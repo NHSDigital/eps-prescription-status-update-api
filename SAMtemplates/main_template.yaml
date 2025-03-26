@@ -86,6 +86,8 @@ Parameters:
     Description: When the database usage crosses this percentage of provisioned capacity, trigger an alarm
     Default: 90
 
+  StateMachineLogLevel:
+    Type: String
 
 Resources:
   Tables:
@@ -145,6 +147,7 @@ Resources:
         ConvertRequestToFhirFormatFunctionArn: !GetAtt Functions.Outputs.ConvertRequestToFhirFormatFunctionArn
         LogRetentionInDays: !Ref LogRetentionInDays
         EnableSplunk: !Ref EnableSplunk
+        StateMachineLogLevel: !Ref StateMachineLogLevel
 
   Alarms:
     Type: AWS::Serverless::Application

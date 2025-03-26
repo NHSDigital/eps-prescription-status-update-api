@@ -34,6 +34,9 @@ Parameters:
     Type: String
     Default: fhir-validator
 
+  StateMachineLogLevel:
+    Type: String
+
 Resources:
   UpdatePrescriptionStatusStateMachine:
     Type: AWS::Serverless::StateMachine
@@ -53,7 +56,7 @@ Resources:
           - CloudWatchLogsLogGroup:
               LogGroupArn: !GetAtt UpdatePrescriptionStatusStateMachineResources.Outputs.StateMachineLogGroupArn
         IncludeExecutionData: true
-        Level: ALL
+        Level: !Ref StateMachineLogLevel
       Tracing:
         Enabled: true
 
@@ -90,7 +93,7 @@ Resources:
           - CloudWatchLogsLogGroup:
               LogGroupArn: !GetAtt Format1UpdatePrescriptionsStatusStateMachineResources.Outputs.StateMachineLogGroupArn
         IncludeExecutionData: true
-        Level: ALL
+        Level: !Ref StateMachineLogLevel
       Tracing:
         Enabled: true
 
