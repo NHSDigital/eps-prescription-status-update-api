@@ -351,7 +351,7 @@ Resources:
 Outputs:
   PrescriptionStatusUpdatesTableName:
     Description: PrescriptionStatusUpdates table name
-    Value: !Ref PrescriptionStatusUpdatesTable
+    Value: CHANGEME
 
   PrescriptionStatusUpdatesTableArn:
     Description: PrescriptionStatusUpdates table arn
