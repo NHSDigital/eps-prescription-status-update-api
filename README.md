@@ -19,6 +19,7 @@ This is the AWS layer that provides an API for EPS Prescription Status Update.
 - `packages/statusLambda/` Returns the status of the updatePrescriptionStatus endpoint
 - `packages/capabilityStatement/` Returns a static capability statement.
 - `packages/cpsuLambda` Handles updating prescription status using a custom format.
+- `packages/nhsNotifyLambda` Handles sending prescription notifications to the NHS notify service.
 - `scripts/` Utilities helpful to developers of this specification.
 - `postman/` Postman collections to call the APIs. Documentation on how to use them are in the collections.
 - `SAMtemplates/` Contains the SAM templates used to define the stacks.
