@@ -428,7 +428,7 @@ Resources:
       AttributeDefinitions:
         - AttributeName: PrescriptionID
           AttributeType: S
-        - AttributeName: NhsNumber
+        - AttributeName: NHSNumber
           AttributeType: S
       KeySchema:
         - AttributeName: PrescriptionID
@@ -438,9 +438,9 @@ Resources:
         - PROVISIONED
         - PAY_PER_REQUEST
       GlobalSecondaryIndexes:
-        - IndexName: NotificationNhsNumberIndex
+        - IndexName: NotificationNHSNumberIndex
           KeySchema:
-            - AttributeName: NhsNumber
+            - AttributeName: NHSNumber
               KeyType: HASH
           Projection:
             ProjectionType: ALL
@@ -525,25 +525,25 @@ Resources:
           PredefinedMetricType: DynamoDBReadCapacityUtilization
 
   # Auto scaling for the global secondary index, NHS number and PrescriptionID
-  NotificationNhsNumberIndexScalingWriteTarget:
+  NotificationNHSNumberIndexScalingWriteTarget:
     Type: AWS::ApplicationAutoScaling::ScalableTarget
     DependsOn: PrescriptionNotificationStateTable
     Condition: EnableDynamoDBAutoScalingCondition
     Properties:
       MinCapacity: !Ref MinWritePrescriptionNotificationStateCapacity
       MaxCapacity: !Ref MaxWritePrescriptionNotificationStateCapacity
-      ResourceId: !Sub table/${PrescriptionNotificationStateTable}/index/NotificationNhsNumberIndex
+      ResourceId: !Sub table/${PrescriptionNotificationStateTable}/index/NotificationNHSNumberIndex
       RoleARN: !GetAtt DynamoDbScalingRole.Arn
       ScalableDimension: "dynamodb:index:WriteCapacityUnits"
       ServiceNamespace: dynamodb
 
-  NotificationNhsNumberIndexScalingWritePolicy:
+  NotificationNHSNumberIndexScalingWritePolicy:
     Type: AWS::ApplicationAutoScaling::ScalingPolicy
     Condition: EnableDynamoDBAutoScalingCondition
     Properties:
-      PolicyName: NotificationNhsNumberIndexScalingWritePolicy
+      PolicyName: NotificationNHSNumberIndexScalingWritePolicy
       PolicyType: TargetTrackingScaling
-      ScalingTargetId: !Ref NotificationNhsNumberIndexScalingWriteTarget
+      ScalingTargetId: !Ref NotificationNHSNumberIndexScalingWriteTarget
       TargetTrackingScalingPolicyConfiguration:
         TargetValue: 50
         ScaleInCooldown: 600
@@ -551,25 +551,25 @@ Resources:
         PredefinedMetricSpecification:
           PredefinedMetricType: DynamoDBWriteCapacityUtilization
 
-  NotificationNhsNumberIndexScalingReadTarget:
+  NotificationNHSNumberIndexScalingReadTarget:
     Type: AWS::ApplicationAutoScaling::ScalableTarget
     DependsOn: PrescriptionNotificationStateTable
     Condition: EnableDynamoDBAutoScalingCondition
     Properties:
       MinCapacity: 1
       MaxCapacity: 100
-      ResourceId: !Sub table/${PrescriptionNotificationStateTable}/index/NotificationNhsNumberIndex
+      ResourceId: !Sub table/${PrescriptionNotificationStateTable}/index/NotificationNHSNumberIndex
       RoleARN: !GetAtt DynamoDbScalingRole.Arn
       ScalableDimension: "dynamodb:index:ReadCapacityUnits"
       ServiceNamespace: dynamodb
 
-  NotificationNhsNumberIndexScalingReadPolicy:
+  NotificationNHSNumberIndexScalingReadPolicy:
     Type: AWS::ApplicationAutoScaling::ScalingPolicy
     Condition: EnableDynamoDBAutoScalingCondition
     Properties:
-      PolicyName: NotificationNhsNumberIndexReadScalingPolicy
+      PolicyName: NotificationNHSNumberIndexReadScalingPolicy
       PolicyType: TargetTrackingScaling
-      ScalingTargetId: !Ref NotificationNhsNumberIndexScalingReadTarget
+      ScalingTargetId: !Ref NotificationNHSNumberIndexScalingReadTarget
       TargetTrackingScalingPolicyConfiguration:
         TargetValue: 70
         ScaleInCooldown: 60
