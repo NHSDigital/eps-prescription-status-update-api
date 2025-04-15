@@ -32,8 +32,8 @@
     "@types/aws-lambda": "^8.10.148",
     "@types/jest": "^29.5.14",
     "@types/node": "^22.14.0",
-    "@typescript-eslint/eslint-plugin": "^8.29.1",
-    "@typescript-eslint/parser": "^8.29.0",
+    "@typescript-eslint/eslint-plugin": "^8.30.1",
+    "@typescript-eslint/parser": "^8.30.1",
     "aws-lambda": "^1.0.7",
     "eslint": "^9.24.0",
     "eslint-config-prettier": "^10.1.1",
@@ -46,7 +46,7 @@
     "ts-jest": "^29.3.1",
     "ts-node": "^10.9.2",
     "typescript": "^5.8.3",
-    "typescript-eslint": "^8.29.1"
+    "typescript-eslint": "^8.30.1"
   },
   "dependencies": {
     "@PrescriptionStatusUpdate_common/middyErrorHandler": "^1.0.0",
