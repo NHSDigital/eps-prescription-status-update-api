@@ -161,3 +161,11 @@ Resources:
         ConvertRequestToFhirFormatFunctionName: !GetAtt Functions.Outputs.ConvertRequestToFhirFormatFunctionName
         DynamoDBUtilizationPercentageThreshold: !Ref DynamoDBUtilizationPercentageThreshold
         EnableAlerts: !Ref EnableAlerts
+
+  Scheduler:
+    Type: AWS::Serverless::Application
+    Properties:
+      Location: event_bridge/main.yaml
+      Parameters:
+        StackName: !Ref AWS::StackName
+        NHSNotifyLambdaArn: !GetAtt Functions.Outputs.NHSNotifyLambdaFunctionArn

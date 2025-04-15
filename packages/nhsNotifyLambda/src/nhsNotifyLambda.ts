@@ -1,4 +1,4 @@
-import {APIGatewayProxyEvent, APIGatewayProxyResult} from "aws-lambda"
+import {EventBridgeEvent} from "aws-lambda"
 import {Logger} from "@aws-lambda-powertools/logger"
 import {injectLambdaContext} from "@aws-lambda-powertools/logger/middleware"
 import middy from "@middy/core"
@@ -7,37 +7,23 @@ import errorHandler from "@nhs/fhir-middy-error-handler"
 
 const logger = new Logger({serviceName: "nhsNotify"})
 
-/* eslint-disable  max-len */
-
 /**
+ * Handler for the scheduled trigger.
  *
- * Event doc: https://docs.aws.amazon.com/apigateway/latest/developerguide/set-up-lambda-proxy-integrations.html#api-gateway-simple-proxy-for-lambda-input-format
- * @param {Object} _event - API Gateway Lambda Proxy Input Format
- *
- * Return doc: https://docs.aws.amazon.com/apigateway/latest/developerguide/set-up-lambda-proxy-integrations.html
- * @returns {Object} object - API Gateway Lambda Proxy Output Format
- *
+ * @param event - The CloudWatch EventBridge scheduled event payload.
  */
+const lambdaHandler = async (event: EventBridgeEvent<never, string>): Promise<void> => {
+  // FIXME: use proper typing for the above argument.
+  // EventBridge jsonifies the details so the second on is a string
 
-const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
-  logger.appendKeys({
-    "x-request-id": event.headers["x-request-id"],
-    "x-correlation-id": event.headers["x-correlation-id"],
-    "apigw-request-id": event.requestContext.requestId
-  })
+  logger.info("NHS Notify lambda triggered by scheduler", {event})
 
-  logger.info("Notify lambda called")
-
-  const nhsNotifyResponseBody = {message: "OK"}
-
-  return {
-    statusCode: 200,
-    body: JSON.stringify(nhsNotifyResponseBody),
-    headers: {
-      "Content-Type": "application/health+json",
-      "Cache-Control": "no-cache"
-    }
-  }
+  // TODO: Notifications logic will be done here.
+  // - pick off SQS messages
+  // - query PrescriptionNotificationState
+  // - process prescriptions, build NHS notify payload
+  // - Make NHS notify request
+  // Don't forget to make appropriate logs.
 }
 
 export const handler = middy(lambdaHandler)
