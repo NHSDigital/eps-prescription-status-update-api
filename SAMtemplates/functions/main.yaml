@@ -320,6 +320,47 @@ Resources:
         SplunkSubscriptionFilterRole: !ImportValue lambda-resources:SplunkSubscriptionFilterRole
         SplunkDeliveryStreamArn: !ImportValue lambda-resources:SplunkDeliveryStream
 
+  NHSNotifyLambda:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub ${StackName}-NHSNotifyLambda
+      CodeUri: ../../packages
+      Handler: nhsNotifyLambda.lambdaHandler
+      Role: !GetAtt NHSNotifyLambdaResources.Outputs.LambdaRoleArn
+      Environment:
+        Variables:
+          LOG_LEVEL: !Ref LogLevel
+    Metadata:
+      BuildMethod: esbuild
+      guard:
+        SuppressedRules:
+          - LAMBDA_DLQ_CHECK
+          - LAMBDA_INSIDE_VPC
+          - LAMBDA_CONCURRENCY_CHECK
+      BuildProperties:
+        Minify: true
+        Target: es2020
+        Sourcemap: true
+        tsconfig: nhsNotifyLambda/tsconfig.json
+        packages: bundle
+        EntryPoints:
+          - nhsNotifyLambda/src/nhsNotifyLambda.ts
+
+  NHSNotifyLambdaResources:
+    Type: AWS::Serverless::Application
+    Properties:
+      Location: lambda_resources.yaml
+      Parameters:
+        StackName: !Ref StackName
+        LambdaName: !Sub ${StackName}-NHSNotifyLambda
+        LambdaArn: !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:${StackName}-NHSNotifyLambda
+        IncludeAdditionalPolicies: false
+        LogRetentionInDays: !Ref LogRetentionInDays
+        CloudWatchKMSKeyId: !ImportValue account-resources:CloudwatchLogsKmsKeyArn
+        EnableSplunk: !Ref EnableSplunk
+        SplunkSubscriptionFilterRole: !ImportValue lambda-resources:SplunkSubscriptionFilterRole
+        SplunkDeliveryStreamArn: !ImportValue lambda-resources:SplunkDeliveryStream
+
 Outputs:
   UpdatePrescriptionStatusFunctionName:
     Description: The function name of the UpdatePrescriptionStatus lambda
@@ -378,3 +419,11 @@ Outputs:
       - ShouldDeployCheckPrescriptionStatusUpdate
       - !GetAtt CheckPrescriptionStatusUpdates.Arn
       - ""
+
+  NHSNotifyLambdaFunctionName:
+    Description: The function name of the NHS Notify lambda
+    Value: !Ref NHSNotifyLambda
+
+  NHSNotifyLambdaFunctionArn:
+    Description: The function ARN of the NHS Notify lambda
+    Value: !GetAtt NHSNotifyLambda.Arn
