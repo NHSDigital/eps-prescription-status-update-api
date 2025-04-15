@@ -320,6 +320,33 @@ Resources:
         SplunkSubscriptionFilterRole: !ImportValue lambda-resources:SplunkSubscriptionFilterRole
         SplunkDeliveryStreamArn: !ImportValue lambda-resources:SplunkDeliveryStream
 
+  NHSNotifyLambdaScheduleEventRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2017-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - scheduler.amazonaws.com
+              Action:
+                - sts:AssumeRole
+      ManagedPolicyArns:
+        - !Ref NHSNotifyLambdaScheduleEventRolePolicy
+        
+  NHSNotifyLambdaScheduleEventRolePolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      PolicyDocument:
+        Version: 2017-10-17
+        Statement:
+          - Effect: Allow
+            Action:
+              - lambda:InvokeFunction
+            Resource:
+              - !GetAtt NHSNotifyLambda.Arn
+
   NHSNotifyLambda:
     Type: AWS::Serverless::Function
     Properties:
@@ -330,6 +357,13 @@ Resources:
       Environment:
         Variables:
           LOG_LEVEL: !Ref LogLevel
+      Events:
+        ScheduleEvent:
+          Type: ScheduleV2
+          Properties:
+            Name: !Sub ${StackName}-NHSNotifySchedule
+            ScheduleExpression: "rate(1 minute)"
+            RoleArn: !GetAtt NHSNotifyLambdaScheduleEventRole.Arn
     Metadata:
       BuildMethod: esbuild
       guard:
