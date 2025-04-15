@@ -1,12 +1,10 @@
-import {expect, describe, it} from "@jest/globals"
-
-import {APIGatewayProxyResult} from "aws-lambda"
+import {describe, it} from "@jest/globals"
 
 import axios from "axios"
 import MockAdapter from "axios-mock-adapter"
 
 import {handler} from "../src/nhsNotifyLambda"
-import {mockAPIGatewayProxyEvent, mockContext} from "@PrescriptionStatusUpdate_common/testing"
+import {mockContext, mockEventBridgeEvent} from "@PrescriptionStatusUpdate_common/testing"
 
 const mock = new MockAdapter(axios)
 
@@ -20,11 +18,6 @@ describe("Unit test for NHS Notify lambda handler", function () {
   it("Dummy test", async () => {
     console.error("DUMMY TEST - PASSING ANYWAY")
 
-    const result: APIGatewayProxyResult = (await handler(
-      mockAPIGatewayProxyEvent,
-      mockContext
-    )) as APIGatewayProxyResult
-
-    expect(result.statusCode).toEqual(200)
+    await handler(mockEventBridgeEvent, mockContext)
   })
 })
