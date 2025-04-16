@@ -66,6 +66,7 @@ Resources:
       Environment:
         Variables:
           TABLE_NAME: !Ref PrescriptionStatusUpdatesTableName
+          NHS_NOTIFY_PRESCRIPTIONS_SQS_QUEUE_URL: !Ref NHSNotifyPrescriptionsSQSQueueUrl
           LOG_LEVEL: !Ref LogLevel
           ENVIRONMENT: !Ref Environment
           TEST_PRESCRIPTIONS_1: "None"
