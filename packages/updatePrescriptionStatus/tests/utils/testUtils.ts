@@ -3,6 +3,7 @@
 import {APIGatewayProxyEvent} from "aws-lambda"
 import {jest} from "@jest/globals"
 import * as dynamo from "@aws-sdk/client-dynamodb"
+import * as sqs from "@aws-sdk/client-sqs"
 
 import {
   LINE_ITEM_ID_CODESYSTEM,
@@ -174,6 +175,20 @@ export function mockDynamoDBClient() {
     return {
       ...dynamo,
       DynamoDBClient: jest.fn().mockImplementation(() => ({
+        send: mockSend
+      }))
+    }
+  })
+  return {mockSend}
+}
+
+// Similarly mock the SQS client
+export function mockSQSClient() {
+  const mockSend = jest.fn()
+  jest.unstable_mockModule("@aws-sdk/client-sqs", () => {
+    return {
+      ...sqs,
+      SQSClient: jest.fn().mockImplementation(() => ({
         send: mockSend
       }))
     }

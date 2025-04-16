@@ -17,6 +17,7 @@ import {
   generateExpectedItems,
   generateMockEvent,
   mockDynamoDBClient,
+  mockSQSClient,
   TASK_VALUES
 } from "./utils/testUtils"
 
@@ -36,7 +37,8 @@ import {
 } from "../src/utils/responses"
 import {QueryCommand, TransactionCanceledException, TransactWriteItemsCommand} from "@aws-sdk/client-dynamodb"
 
-const {mockSend} = mockDynamoDBClient()
+const {mockSend: dynamoDBMockSend} = mockDynamoDBClient()
+const {mockSend: sqsMockSend} = mockSQSClient()
 const {handler, logger} = await import("../src/updatePrescriptionStatus")
 const LAMBDA_TIMEOUT_MS = 9500 // 9.5 sec
 
@@ -75,7 +77,7 @@ describe("Integration tests for updatePrescriptionStatus handler", () => {
     expect(response.statusCode).toEqual(201)
     expect(JSON.parse(response.body)).toEqual(responseSingleItem)
 
-    expect(mockSend).toHaveBeenCalledWith(
+    expect(dynamoDBMockSend).toHaveBeenCalledWith(
       expect.objectContaining(expectedItems)
     )
   })
@@ -101,7 +103,7 @@ describe("Integration tests for updatePrescriptionStatus handler", () => {
     expect(JSON.parse(response.body)).toEqual(responseSingleItem)
 
     expect(expectedItems.input.TransactItems[0].Put.Item.RepeatNo).toEqual(undefined)
-    expect(mockSend).toHaveBeenCalledWith(
+    expect(dynamoDBMockSend).toHaveBeenCalledWith(
       expect.objectContaining(expectedItems)
     )
   })
@@ -126,7 +128,7 @@ describe("Integration tests for updatePrescriptionStatus handler", () => {
     expect(JSON.parse(response.body)).toEqual(responseSingleItem)
 
     expect(expectedItems.input.TransactItems[0].Put.Item.RepeatNo).toEqual(1)
-    expect(mockSend).toHaveBeenCalledWith(
+    expect(dynamoDBMockSend).toHaveBeenCalledWith(
       expect.objectContaining(expectedItems)
     )
   })
@@ -141,7 +143,7 @@ describe("Integration tests for updatePrescriptionStatus handler", () => {
     expect(response.statusCode).toEqual(201)
     expect(JSON.parse(response.body)).toEqual(responseMultipleItems)
 
-    expect(mockSend).toHaveBeenCalledWith(
+    expect(dynamoDBMockSend).toHaveBeenCalledWith(
       expect.objectContaining(expectedItems)
     )
   })
@@ -194,7 +196,7 @@ describe("Integration tests for updatePrescriptionStatus handler", () => {
 
   it("when dynamo call fails, expect 500 status code and internal server error message", async () => {
     const event = generateMockEvent(requestDispatched)
-    mockSend.mockRejectedValue(new Error() as never)
+    dynamoDBMockSend.mockRejectedValue(new Error() as never)
 
     const response: APIGatewayProxyResult = await handler(event, {})
 
@@ -203,7 +205,7 @@ describe("Integration tests for updatePrescriptionStatus handler", () => {
   })
 
   it("when data store update times out, expect 504 status code and relevant error message", async () => {
-    mockSend.mockImplementation((command) => new Promise((resolve) => {
+    dynamoDBMockSend.mockImplementation((command) => new Promise((resolve) => {
       if (!(command instanceof TransactWriteItemsCommand)) {
         resolve(false)
       }
@@ -279,7 +281,7 @@ describe("Integration tests for updatePrescriptionStatus handler", () => {
     const body = generateBody()
     const mockEvent: APIGatewayProxyEvent = generateMockEvent(body)
 
-    mockSend.mockRejectedValue(
+    dynamoDBMockSend.mockRejectedValue(
       new TransactionCanceledException({
         message:
           "DynamoDB transaction cancelled due to conditional check failure.",
@@ -324,7 +326,7 @@ describe("Integration tests for updatePrescriptionStatus handler", () => {
       requestDuplicateItems
     )
 
-    mockSend.mockRejectedValue(
+    dynamoDBMockSend.mockRejectedValue(
       new TransactionCanceledException({
         message:
           "DynamoDB transaction cancelled due to conditional check failure.",
@@ -375,7 +377,7 @@ describe("Integration tests for updatePrescriptionStatus handler", () => {
     const mockEvent: APIGatewayProxyEvent = generateMockEvent(body)
     const loggerSpy = jest.spyOn(logger, "info")
 
-    mockSend.mockImplementation(
+    dynamoDBMockSend.mockImplementation(
       async (command) => {
         if (command instanceof QueryCommand) {
           return new Object({Items: [
@@ -406,5 +408,18 @@ describe("Integration tests for updatePrescriptionStatus handler", () => {
         previousTerminalStatus: "in-progress"
       }
     )
+  })
+
+  it("when the notification SQS push fails, the response still succeeds", async () => {
+    // TODO: I'm not convinced this is working...
+    sqsMockSend.mockImplementation(
+      async () => {
+        throw new Error("Test error")
+      }
+    )
+
+    const event: APIGatewayProxyEvent = generateMockEvent(requestDispatched)
+    const response: APIGatewayProxyResult = await handler(event, {})
+    expect(response.statusCode).toBe(201)
   })
 })

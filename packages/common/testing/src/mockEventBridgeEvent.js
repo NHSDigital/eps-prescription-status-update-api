@@ -3,7 +3,7 @@ export const mockEventBridgeEvent = {
     version: "0",
     account: "123456789012",
     time: new Date().toISOString(),
-    region: "us-east-1",
+    region: "eu-west-2",
     resources: [],
     source: "aws.events",
     "detail-type": "Scheduled Event",
