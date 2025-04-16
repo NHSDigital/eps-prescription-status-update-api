@@ -352,7 +352,7 @@ Resources:
     Properties:
       FunctionName: !Sub ${StackName}-NHSNotifyLambda
       CodeUri: ../../packages/
-      Handler: nhsNotifyLambda.lambdaHandler
+      Handler: nhsNotifyLambda.handler
       Role: !GetAtt NHSNotifyLambdaResources.Outputs.LambdaRoleArn
       Environment:
         Variables:
