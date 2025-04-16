@@ -330,8 +330,8 @@ Resources:
             Principal:
               Service:
                 - scheduler.amazonaws.com
-              Action:
-                - sts:AssumeRole
+            Action:
+              - sts:AssumeRole
       ManagedPolicyArns:
         - !Ref NHSNotifyLambdaScheduleEventRolePolicy
         
