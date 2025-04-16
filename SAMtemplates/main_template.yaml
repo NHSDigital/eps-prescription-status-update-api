@@ -98,6 +98,13 @@ Resources:
         StackName: !Ref AWS::StackName
         EnableDynamoDBAutoScaling: !Ref EnableDynamoDBAutoScaling
 
+  Messaging:
+    Type: AWS::Serverless::Application
+    Properties:
+      Location: messaging/main.yaml
+      Parameters:
+        StackName: !Ref AWS::StackName
+
   Apis:
     Type: AWS::Serverless::Application
     Properties:
