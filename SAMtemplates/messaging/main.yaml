@@ -25,7 +25,7 @@ Resources:
     Properties:
       QueueName: !Sub ${AWS::StackName}-NHSNotifyPrescriptionsDeadLetter
       KmsMasterKeyId: !ImportValue account-resources:SqsKMSKey
-      MessageRetentionPeriod: 2629743   # 1 month in seconds
+      MessageRetentionPeriod: 604800   # 1 week in seconds
       VisibilityTimeout: 60
 
   ReadNHSNotifyPrescriptionsSQSQueuePolicy:
