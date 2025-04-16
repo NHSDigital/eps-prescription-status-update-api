@@ -357,6 +357,7 @@ Resources:
       Environment:
         Variables:
           LOG_LEVEL: !Ref LogLevel
+          NHS_NOTIFY_PRESCRIPTIONS_SQS_QUEUE_URL: !ImportValue !Sub ${StackName}-NHSNotifyPrescriptionsSQSQueueUrl
       Events:
         ScheduleEvent:
           Type: ScheduleV2
