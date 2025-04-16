@@ -25,6 +25,10 @@ Parameters:
     Type: String
     Default: none
 
+  NHSNotifyPrescriptionsSQSQueueUrl:
+    Type: String
+    Default: none
+
   LogLevel:
     Type: String
 
@@ -357,7 +361,7 @@ Resources:
       Environment:
         Variables:
           LOG_LEVEL: !Ref LogLevel
-          NHS_NOTIFY_PRESCRIPTIONS_SQS_QUEUE_URL: !ImportValue !Sub ${StackName}-NHSNotifyPrescriptionsSQSQueueUrl
+          NHS_NOTIFY_PRESCRIPTIONS_SQS_QUEUE_URL: !Ref NHSNotifyPrescriptionsSQSQueueUrl
       Events:
         ScheduleEvent:
           Type: ScheduleV2
