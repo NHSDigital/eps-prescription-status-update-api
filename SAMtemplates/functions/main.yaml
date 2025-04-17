@@ -63,13 +63,6 @@ Resources:
       CodeUri: ../../packages
       Handler: updatePrescriptionStatus.handler
       Role: !GetAtt UpdatePrescriptionStatusResources.Outputs.LambdaRoleArn
-      Policies:
-        - Statement:
-            Effect: Allow
-            Action:
-              - sqs:sendmessage
-            Resource:
-              - !Ref NHSNotifyPrescriptionsSQSQueueArn
       Environment:
         Variables:
           TABLE_NAME: !Ref PrescriptionStatusUpdatesTableName
@@ -108,6 +101,7 @@ Resources:
           - - Fn::ImportValue: !Sub ${StackName}:tables:${PrescriptionStatusUpdatesTableName}:TableWritePolicyArn
             - Fn::ImportValue: !Sub ${StackName}:tables:${PrescriptionStatusUpdatesTableName}:TableReadPolicyArn
             - Fn::ImportValue: !Sub ${StackName}:tables:UsePrescriptionStatusUpdatesKMSKeyPolicyArn
+            - Fn::ImportValue: !Sub ${StackName}-WriteNHSNotifyPrescriptionsSQSQueuePolicyArn
         LogRetentionInDays: !Ref LogRetentionInDays
         CloudWatchKMSKeyId: !ImportValue account-resources:CloudwatchLogsKmsKeyArn
         EnableSplunk: !Ref EnableSplunk

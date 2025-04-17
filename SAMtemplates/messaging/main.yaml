@@ -36,14 +36,25 @@ Resources:
         Statement:
           - Effect: Allow
             Action:
-              - sqs:ChangeMessageVisibility
-              - sqs:DeleteMessage
               - sqs:ReceiveMessage
               - sqs:GetQueueAttributes
               - sqs:GetQueueUrl
               - sqs:ListQueues
             Resource: !GetAtt NHSNotifyPrescriptionsSQSQueue.Arn
-
+            
+  WriteNHSNotifyPrescriptionsSQSQueuePolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      ManagedPolicyName: !Sub ${AWS::StackName}-NHSNotifyPrescriptionsSendMessagePolicy
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Action:
+              - sqs:SendMessage
+              - sqs:DeleteMessage
+            Resource: !GetAtt NSNotifyPrescriptionsSQSQueue.Arn
+            
 Outputs:
   NHSNotifyPrescriptionsSQSQueueUrl:
     Description: The URL of the NHS Notify Prescriptions SQS Queue
@@ -56,3 +67,16 @@ Outputs:
     Value: !GetAtt NHSNotifyPrescriptionsSQSQueue.Arn
     Export:
       Name: !Sub ${AWS::StackName}-NHSNotifyPrescriptionsSQSQueueArn
+
+  ReadNHSNotifyPrescriptionsSQSQueuePolicyArn:
+    Description: ARN of policy granting permission to read the prescriptions queue
+    Value: !Ref ReadNHSNotifyPrescriptionsSQSQueuePolicy
+    Export:
+      Name: !Sub ${AWS::StackName}-ReadNHSNotifyPrescriptionsSQSQueuePolicyArn
+      
+      
+  WriteNHSNotifyPrescriptionsSQSQueuePolicyArn:
+    Description: ARN of policy granting permission to write to the prescriptions queue
+    Value: !Ref WriteNHSNotifyPrescriptionsSQSQueuePolicy
+    Export:
+      Name: !Sub ${AWS::StackName}-WriteNHSNotifyPrescriptionsSQSQueuePolicyArn
