@@ -63,6 +63,13 @@ Resources:
       CodeUri: ../../packages
       Handler: updatePrescriptionStatus.handler
       Role: !GetAtt UpdatePrescriptionStatusResources.Outputs.LambdaRoleArn
+      Policies:
+        - Statement:
+            Effect: Allow
+            Action:
+              - sqs:SendMessage
+            Resource:
+              - !Ref NHSNotifyPrescriptionsSQSQueueArn
       Environment:
         Variables:
           TABLE_NAME: !Ref PrescriptionStatusUpdatesTableName

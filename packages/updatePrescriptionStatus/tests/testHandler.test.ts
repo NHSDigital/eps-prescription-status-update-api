@@ -413,7 +413,21 @@ describe("Integration tests for updatePrescriptionStatus handler", () => {
   })
 
   it("when the notification SQS push fails, the response still succeeds", async () => {
-    // TODO: I'm not convinced this is working...
+    sqsMockSend.mockImplementation(
+      async () => {
+        throw new Error("Test error")
+      }
+    )
+
+    const event: APIGatewayProxyEvent = generateMockEvent(requestDispatched)
+    const response: APIGatewayProxyResult = await handler(event, {})
+    expect(response.statusCode).toBe(201)
+  })
+
+  it("when SQS environment variables are not set, the response still succeeds", async () => {
+    process.env.NHS_NOTIFY_PRESCRIPTIONS_SQS_QUEUE_URL = undefined
+    process.env.AWS_REGION = undefined
+
     sqsMockSend.mockImplementation(
       async () => {
         throw new Error("Test error")
