@@ -70,13 +70,13 @@ Outputs:
 
   ReadNHSNotifyPrescriptionsSQSQueuePolicyArn:
     Description: ARN of policy granting permission to read the prescriptions queue
-    Value: !Ref ReadNHSNotifyPrescriptionsSQSQueuePolicy.Arn
+    Value: !Ref ReadNHSNotifyPrescriptionsSQSQueuePolicy
     Export:
       Name: !Sub ${StackName}-ReadNHSNotifyPrescriptionsSQSQueuePolicyArn
       
       
   WriteNHSNotifyPrescriptionsSQSQueuePolicyArn:
     Description: ARN of policy granting permission to write to the prescriptions queue
-    Value: !Ref WriteNHSNotifyPrescriptionsSQSQueuePolicy.Arn
+    Value: !Ref WriteNHSNotifyPrescriptionsSQSQueuePolicy
     Export:
       Name: !Sub ${StackName}-WriteNHSNotifyPrescriptionsSQSQueuePolicyArn
