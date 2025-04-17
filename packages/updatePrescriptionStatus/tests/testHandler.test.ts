@@ -44,9 +44,12 @@ const {handler, logger} = await import("../src/updatePrescriptionStatus")
 
 const LAMBDA_TIMEOUT_MS = 9500 // 9.5 sec
 
+const ORIGINAL_ENV = {...process.env}
+
 describe("Integration tests for updatePrescriptionStatus handler", () => {
   beforeEach(() => {
     jest.resetModules()
+    process.env = {...ORIGINAL_ENV}
     jest.clearAllMocks()
     jest.resetAllMocks()
     jest.clearAllTimers()
