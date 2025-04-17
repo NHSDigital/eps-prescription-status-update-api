@@ -11,7 +11,7 @@ Resources:
   NHSNotifyPrescriptionsSQSQueue:
     Type: AWS::SQS::Queue
     Properties:
-      QueueName: !Sub ${AWS::StackName}-NHSNotifyPrescriptions
+      QueueName: !Sub ${StackName}-NHSNotifyPrescriptions
       KmsMasterKeyId: !ImportValue account-resources:SqsKMSKey
       # TODO: Later, I think 1 day will not be enough. But for now, expiry is the only way to remove messages!
       MessageRetentionPeriod: 86400    # 1 day in seconds
@@ -23,7 +23,7 @@ Resources:
   NHSNotifyPrescriptionsDeadLetterQueue:
     Type: AWS::SQS::Queue
     Properties:
-      QueueName: !Sub ${AWS::StackName}-NHSNotifyPrescriptionsDeadLetter
+      QueueName: !Sub ${StackName}-NHSNotifyPrescriptionsDeadLetter
       KmsMasterKeyId: !ImportValue account-resources:SqsKMSKey
       MessageRetentionPeriod: 604800   # 1 week in seconds
       VisibilityTimeout: 60
@@ -45,7 +45,7 @@ Resources:
   WriteNHSNotifyPrescriptionsSQSQueuePolicy:
     Type: AWS::IAM::ManagedPolicy
     Properties:
-      ManagedPolicyName: !Sub ${AWS::StackName}-NHSNotifyPrescriptionsSendMessagePolicy
+      ManagedPolicyName: !Sub ${StackName}-NHSNotifyPrescriptionsSendMessagePolicy
       PolicyDocument:
         Version: "2012-10-17"
         Statement:
@@ -60,23 +60,23 @@ Outputs:
     Description: The URL of the NHS Notify Prescriptions SQS Queue
     Value: !Ref NHSNotifyPrescriptionsSQSQueue
     Export:
-      Name: !Sub ${AWS::StackName}-NHSNotifyPrescriptionsSQSQueueUrl
+      Name: !Sub ${StackName}-NHSNotifyPrescriptionsSQSQueueUrl
 
   NHSNotifyPrescriptionsSQSQueueArn:
     Description: The ARN of the NHS Notify Prescriptions SQS Queue
     Value: !GetAtt NHSNotifyPrescriptionsSQSQueue.Arn
     Export:
-      Name: !Sub ${AWS::StackName}-NHSNotifyPrescriptionsSQSQueueArn
+      Name: !Sub ${StackName}-NHSNotifyPrescriptionsSQSQueueArn
 
   ReadNHSNotifyPrescriptionsSQSQueuePolicyArn:
     Description: ARN of policy granting permission to read the prescriptions queue
-    Value: !Ref ReadNHSNotifyPrescriptionsSQSQueuePolicy
+    Value: !Ref ReadNHSNotifyPrescriptionsSQSQueuePolicy.Arn
     Export:
-      Name: !Sub ${AWS::StackName}-ReadNHSNotifyPrescriptionsSQSQueuePolicyArn
+      Name: !Sub ${StackName}-ReadNHSNotifyPrescriptionsSQSQueuePolicyArn
       
       
   WriteNHSNotifyPrescriptionsSQSQueuePolicyArn:
     Description: ARN of policy granting permission to write to the prescriptions queue
-    Value: !Ref WriteNHSNotifyPrescriptionsSQSQueuePolicy
+    Value: !Ref WriteNHSNotifyPrescriptionsSQSQueuePolicy.Arn
     Export:
-      Name: !Sub ${AWS::StackName}-WriteNHSNotifyPrescriptionsSQSQueuePolicyArn
+      Name: !Sub ${StackName}-WriteNHSNotifyPrescriptionsSQSQueuePolicyArn
