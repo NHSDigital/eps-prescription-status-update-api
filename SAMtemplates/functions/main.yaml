@@ -395,12 +395,16 @@ Resources:
         StackName: !Ref StackName
         LambdaName: !Sub ${StackName}-NHSNotifyLambda
         LambdaArn: !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:${StackName}-NHSNotifyLambda
-        IncludeAdditionalPolicies: false
         LogRetentionInDays: !Ref LogRetentionInDays
         CloudWatchKMSKeyId: !ImportValue account-resources:CloudwatchLogsKmsKeyArn
         EnableSplunk: !Ref EnableSplunk
         SplunkSubscriptionFilterRole: !ImportValue lambda-resources:SplunkSubscriptionFilterRole
         SplunkDeliveryStreamArn: !ImportValue lambda-resources:SplunkDeliveryStream
+        IncludeAdditionalPolicies: true
+        AdditionalPolicies: !Join
+          - ","
+          - - Fn::ImportValue: !Sub ${StackName}-WriteNHSNotifyPrescriptionsSQSQueuePolicyArn
+            - Fn::ImportValue: !Sub ${StackName}-ReadNHSNotifyPrescriptionsSQSQueuePolicyArn
 
 Outputs:
   UpdatePrescriptionStatusFunctionName:
