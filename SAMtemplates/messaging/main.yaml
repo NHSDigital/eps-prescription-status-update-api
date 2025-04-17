@@ -53,7 +53,7 @@ Resources:
             Action:
               - sqs:SendMessage
               - sqs:DeleteMessage
-            Resource: !GetAtt NSNotifyPrescriptionsSQSQueue.Arn
+            Resource: !GetAtt NHSNotifyPrescriptionsSQSQueue.Arn
             
 Outputs:
   NHSNotifyPrescriptionsSQSQueueUrl:
