@@ -1,7 +1,8 @@
+import {Logger} from "@aws-lambda-powertools/logger"
 import {SQSClient, SendMessageBatchCommand} from "@aws-sdk/client-sqs"
+
 import {v4} from "uuid"
 
-import {Logger} from "@aws-lambda-powertools/logger"
 import {DataItem} from "../updatePrescriptionStatus"
 
 const sqsUrl = process.env.NHS_NOTIFY_PRESCRIPTIONS_SQS_QUEUE_URL
@@ -37,11 +38,9 @@ export async function pushPrescriptionToNotificationSQS(data: Array<DataItem>, l
   const batches = chunkArray(data, 10)
 
   for (const batch of batches) {
-    // Create SQS entries. Each message is required to have an unique Id string.
-    // TODO: I'm creating a new UUID here, but am I safe to use the lineID? It looks like it should be unique
+    // Create SQS messages. For each message, generate a new UUID
     const entries = batch.map((item) => ({
       Id: v4().toUpperCase(),
-      // Id: item.LineItemID || v4().toUpperCase(),
       MessageBody: JSON.stringify(item)
     }))
 

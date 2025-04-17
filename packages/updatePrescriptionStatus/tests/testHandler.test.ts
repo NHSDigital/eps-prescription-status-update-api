@@ -39,7 +39,9 @@ import {QueryCommand, TransactionCanceledException, TransactWriteItemsCommand} f
 
 const {mockSend: dynamoDBMockSend} = mockDynamoDBClient()
 const {mockSend: sqsMockSend} = mockSQSClient()
+
 const {handler, logger} = await import("../src/updatePrescriptionStatus")
+
 const LAMBDA_TIMEOUT_MS = 9500 // 9.5 sec
 
 describe("Integration tests for updatePrescriptionStatus handler", () => {
