@@ -67,7 +67,7 @@ Resources:
         - Statement:
             Effect: Allow
             Action:
-              - sqs:SendMessage
+              - sqs:sendmessage
             Resource:
               - !Ref NHSNotifyPrescriptionsSQSQueueArn
       Environment:
