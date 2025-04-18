@@ -29,6 +29,10 @@
       "path": "../packages/cpsuLambda"
     },
     {
+      "name": "packages/nhsNotifyLambda",
+      "path": "../packages/nhsNotifyLambda"
+    },
+    {
       "name": "packages/capabilityStatement",
       "path": "../packages/capabilityStatement"
     },

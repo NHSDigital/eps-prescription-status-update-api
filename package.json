@@ -22,6 +22,7 @@
     "packages/capabilityStatement",
     "packages/cpsuLambda",
     "packages/checkPrescriptionStatusUpdates",
+    "packages/nhsNotifyLambda",
     "packages/common/testing",
     "packages/common/middyErrorHandler"
   ],
