@@ -37,9 +37,12 @@ Resources:
           - Effect: Allow
             Action:
               - sqs:ReceiveMessage
+              - sqs:DeleteMessage
+              - sqs:ChangeMessageVisibility
               - sqs:GetQueueAttributes
               - sqs:GetQueueUrl
-              - sqs:ListQueues
+              - kms:GenerateDataKey
+              - kms:Decrypt
             Resource: !GetAtt NHSNotifyPrescriptionsSQSQueue.Arn
             
   WriteNHSNotifyPrescriptionsSQSQueuePolicy:
@@ -52,7 +55,8 @@ Resources:
           - Effect: Allow
             Action:
               - sqs:SendMessage
-              - sqs:DeleteMessage
+              - sqs:SendMessageBatch
+              - sqs:GetQueueUrl
               - kms:GenerateDataKey
               - kms:Decrypt
             Resource: !GetAtt NHSNotifyPrescriptionsSQSQueue.Arn
