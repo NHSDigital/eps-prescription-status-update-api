@@ -5,11 +5,18 @@ import {
   DeleteMessageBatchCommand,
   Message
 } from "@aws-sdk/client-sqs"
+import {DynamoDBClient} from "@aws-sdk/client-dynamodb"
+import {DynamoDBDocumentClient, PutCommand} from "@aws-sdk/lib-dynamodb"
 
+import {DataItem} from "./types"
+
+const dynamoTable = process.env.TABLE_NAME
 const sqsUrl = process.env.NHS_NOTIFY_PRESCRIPTIONS_SQS_QUEUE_URL
 
-// The AWS_REGION is always defined in lambda environments
+// AWS clients
 const sqs = new SQSClient({region: process.env.AWS_REGION})
+const dynamo = new DynamoDBClient({region: process.env.AWS_REGION})
+const docClient = DynamoDBDocumentClient.from(dynamo)
 
 /**
  * Pulls up to `maxTotal` messages off the queue (in batches of up to 10),
@@ -59,4 +66,37 @@ export async function drainQueue(logger: Logger, maxTotal = 100) {
   }
 
   return allMessages
+}
+
+export async function addPrescriptionToNotificationStateStore(logger: Logger, dataArray: Array<DataItem>) {
+  if (!dynamoTable) {
+    logger.error("DynamoDB table not configured")
+    throw new Error("TABLE_NAME not set")
+  }
+
+  logger.info("Pushing data to DynamoDB", {count: dataArray.length})
+
+  for (const data of dataArray) {
+    const item = {
+      ...data,
+      // TTL for the item, // TODO: what to set?
+      ExpiryTime: 86400
+    }
+
+    try {
+      await docClient.send(new PutCommand({
+        TableName: dynamoTable,
+        Item: item
+      }))
+      logger.info("Upserted prescription", {
+        PrescriptionID: data.PrescriptionID,
+        PatientNHSNumber: data.PatientNHSNumber
+      })
+    } catch (err) {
+      logger.error("Failed to write to DynamoDB", {
+        PrescriptionID: data.PrescriptionID,
+        error: err
+      })
+    }
+  }
 }

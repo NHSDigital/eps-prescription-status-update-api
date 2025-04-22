@@ -166,7 +166,8 @@ const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPro
   // This prescription was handled successfully,
   // so add a message to the notifications SQS
   try {
-    await pushPrescriptionToNotificationSQS(dataItems, logger)
+    const requestId = event.headers["x-request-id"] || "x-request-id-not-found"
+    await pushPrescriptionToNotificationSQS(requestId, dataItems, logger)
   } catch (err) {
     logger.error("Failed to push prescriptions to the notifications SQS", {err})
     // DO NOT throw an error here, since we want to still return the update!

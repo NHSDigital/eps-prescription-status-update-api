@@ -586,6 +586,12 @@ Outputs:
     Description: PrescriptionStatusUpdates table arn
     Value: !GetAtt PrescriptionStatusUpdatesTable.Arn
     
+  UsePrescriptionStatusUpdatesKMSKeyPolicyArn:
+    Description: Use kms key policy arn
+    Value: !GetAtt UsePrescriptionStatusUpdatesKMSKeyPolicy.PolicyArn
+    Export:
+      Name: !Sub ${StackName}:tables:UsePrescriptionStatusUpdatesKMSKeyPolicyArn
+
   PrescriptionNotificationStateTableName:
     Description: "PrescriptionNotificationState table name"
     Value: !Ref PrescriptionNotificationStateTable
@@ -593,9 +599,9 @@ Outputs:
   PrescriptionNotificationStateTableArn:
     Description: "PrescriptionNotificationState table ARN"
     Value: !GetAtt PrescriptionNotificationStateTable.Arn
-    
-  UsePrescriptionStatusUpdatesKMSKeyPolicyArn:
+
+  UsePrescriptionNotificationStateKMSKeyPolicyArn:
     Description: Use kms key policy arn
-    Value: !GetAtt UsePrescriptionStatusUpdatesKMSKeyPolicy.PolicyArn
+    Value: !GetAtt UsePrescriptionNotificationStateKMSKeyPolicy.PolicyArn
     Export:
-      Name: !Sub ${StackName}:tables:UsePrescriptionStatusUpdatesKMSKeyPolicyArn
+      Name: !Sub ${StackName}:tables:UsePrescriptionNotificationStateKMSKeyPolicyArn

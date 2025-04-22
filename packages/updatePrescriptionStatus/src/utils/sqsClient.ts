@@ -26,8 +26,8 @@ function chunkArray<T>(arr: Array<T>, size: number): Array<Array<T>> {
  * @param data - Array of DataItems to send to SQS
  * @param logger - Logger instance
  */
-export async function pushPrescriptionToNotificationSQS(data: Array<DataItem>, logger: Logger) {
-  logger.info("Pushing data items up to the notifications SQS", {data, sqsUrl})
+export async function pushPrescriptionToNotificationSQS(requestId: string, data: Array<DataItem>, logger: Logger) {
+  logger.info("Pushing data items up to the notifications SQS", {count: data.length, sqsUrl})
 
   if (!sqsUrl) {
     logger.error("Notifications SQS URL not found in environment variables")
@@ -37,22 +37,34 @@ export async function pushPrescriptionToNotificationSQS(data: Array<DataItem>, l
   // SQS batch calls are limited to 10 messages per request, so chunk the data
   const batches = chunkArray(data, 10)
 
+  // Only these statuses will be pushed to the SQS
+  const updateStatuses: Array<string> = [
+    "ready to collect",
+    "ready to collect - partial"
+  ]
+
   for (const batch of batches) {
-    // Create SQS messages. For each message, generate a new UUID
-    const entries = batch.map((item) => ({
-      Id: v4().toUpperCase(),
-      MessageBody: JSON.stringify(item)
-    }))
+    const entries = batch
+      .filter((item) => updateStatuses.includes(item.Status))
+      // Add the request ID to the SQS message
+      .map((item) => ({...item, requestId}))
+      .map((item) => ({Id: v4().toUpperCase(), MessageBody: JSON.stringify(item)}))
+
+    if (!entries.length) {
+      // Carry on if we have no updates to make.
+      continue
+    }
 
     const params = {
       QueueUrl: sqsUrl,
       Entries: entries
     }
 
-    const messageIds = entries.map((el) => {
-      return el.Id
-    })
-    logger.debug("Pushing prescriptions with the following SQS message IDs", {messageIds})
+    const messageIds = entries.map((el) => el.Id)
+    logger.info(
+      "Notification required. Pushing prescriptions with the following SQS message IDs",
+      {messageIds, requestId}
+    )
 
     try {
       const command = new SendMessageBatchCommand(params)
