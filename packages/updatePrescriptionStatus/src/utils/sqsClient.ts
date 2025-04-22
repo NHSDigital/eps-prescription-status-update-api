@@ -49,6 +49,11 @@ export async function pushPrescriptionToNotificationSQS(data: Array<DataItem>, l
       Entries: entries
     }
 
+    const messageIds = entries.map((el) => {
+      return el.Id
+    })
+    logger.debug("Pushing prescriptions with the following SQS message IDs", {messageIds})
+
     try {
       const command = new SendMessageBatchCommand(params)
       const result = await sqs.send(command)
