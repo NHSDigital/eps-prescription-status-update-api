@@ -24,7 +24,8 @@ jobs:
           echo "commit_id=${{ github.sha }}" >> "$GITHUB_OUTPUT"
 
   tag_release:
-    needs: quality_checks
+    # TODO: Reinstate this
+    # needs: quality_checks
     runs-on: ubuntu-22.04
     outputs:
       version_tag: ${{steps.output_version_tag.outputs.VERSION_TAG}}

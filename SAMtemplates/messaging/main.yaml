@@ -30,6 +30,22 @@ Resources:
       AliasName: !Sub alias/${StackName}-NotificationSQSQueueKMSKey
       TargetKeyId: !Ref NotificationSQSQueueKMSKey
 
+  UseNotificationSQSQueueKMSKeyPolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      ManagedPolicyName: !Sub ${StackName}-UseNotificationSQSQueueKMSKey
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: AllowKmsForSqsEncryption
+            Effect: Allow
+            Action:
+              - kms:DescribeKey
+              - kms:GenerateDataKey*
+              - kms:Encrypt
+              - kms:Decrypt
+            Resource: !GetAtt NotificationSQSQueueKMSKey.Arn
+
   NHSNotifyPrescriptionsSQSQueue:
     Type: AWS::SQS::Queue
     Properties:
