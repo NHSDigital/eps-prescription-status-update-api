@@ -52,7 +52,12 @@ export async function pushPrescriptionToNotificationSQS(data: Array<DataItem>, l
     try {
       const command = new SendMessageBatchCommand(params)
       const result = await sqs.send(command)
-      logger.info("Successfully sent a batch of prescriptions to the notifications SQS", {result})
+      if (result.Successful) {
+        logger.info("Successfully sent a batch of prescriptions to the notifications SQS", {result})
+      } else {
+        logger.error("Failed to send a batch of prescriptions to the notifications SQS", {result})
+        throw new Error("Failed to send a batch of prescriptions to the notifications SQS")
+      }
     } catch (error) {
       logger.error("Failed to send a batch of prescriptions to the notifications SQS", {error})
       throw error
