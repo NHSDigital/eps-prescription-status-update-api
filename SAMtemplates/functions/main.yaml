@@ -25,6 +25,10 @@ Parameters:
     Type: String
     Default: none
 
+  PrescriptionNotificationStateTableName:
+    Type: String
+    Default: none
+
   NHSNotifyPrescriptionsSQSQueueUrl:
     Type: String
     Default: none

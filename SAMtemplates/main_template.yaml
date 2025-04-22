@@ -134,6 +134,7 @@ Resources:
       Parameters:
         StackName: !Ref AWS::StackName
         PrescriptionStatusUpdatesTableName: !GetAtt Tables.Outputs.PrescriptionStatusUpdatesTableName
+        PrescriptionNotificationStateTableName: !GetAtt Tables.Outputs.PrescriptionNotificationStateTableName
         NHSNotifyPrescriptionsSQSQueueUrl: !GetAtt Messaging.Outputs.NHSNotifyPrescriptionsSQSQueueUrl
         LogLevel: !Ref LogLevel
         LogRetentionInDays: !Ref LogRetentionInDays
