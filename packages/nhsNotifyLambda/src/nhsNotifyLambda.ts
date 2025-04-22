@@ -55,7 +55,7 @@ const lambdaHandler = async (event: EventBridgeEvent<never, string>): Promise<vo
       }
     }).filter((i): i is DataItem => i !== null)
 
-    logger.info("Processing prescription notifications", {count: items.length, items})
+    logger.info("Fetched prescription notification messages", {count: items.length, items})
 
     // TODO: Notifications logic will be done here.
     // - query PrescriptionNotificationState
