@@ -41,14 +41,11 @@ export async function drainQueue(logger: Logger, maxTotal = 100) {
     })
 
     const response = await sqs.send(receiveCmd)
-    logger.info("Fetched messages", {response})
+    logger.info("Response from SQS fetch", {response})
     const {Messages} = response
 
-    if (!Messages) {
-      throw new Error("Failed to fetch messages from SQS")
-    }
     // if the queue is now empty, then break the loop
-    if (Messages.length === 0) break
+    if (!Messages || Messages.length === 0) break
 
     allMessages.push(...Messages)
     receivedSoFar += Messages.length
@@ -84,7 +81,11 @@ export async function addPrescriptionToNotificationStateStore(logger: Logger, da
   for (const data of dataArray) {
     const item = {
       ...data,
-      // TTL for the item, // TODO: what to set?
+      // TTL for the item.
+      // Since we only care about notifications that happened within
+      // the cooldown period, a day of storage is more than enough for
+      // practical purposes. But:
+      // TODO: Do we need to store this for longer for auditing and crisis resolution?
       ExpiryTime: 86400
     }
 

@@ -524,7 +524,7 @@ Resources:
         PredefinedMetricSpecification:
           PredefinedMetricType: DynamoDBReadCapacityUtilization
 
-  # Auto scaling for the global secondary index, NHS number and PrescriptionID
+  # Scaling for the indexes
   NotificationNHSNumberIndexScalingWriteTarget:
     Type: AWS::ApplicationAutoScaling::ScalableTarget
     DependsOn: PrescriptionNotificationStateTable

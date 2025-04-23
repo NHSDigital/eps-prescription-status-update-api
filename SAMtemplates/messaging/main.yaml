@@ -16,7 +16,6 @@ Resources:
         Version: 2012-10-17
         Id: NotificationSQSQueueKeyPolicy
         Statement:
-          # allow full control to account root
           - Sid: EnableIAMUserPermissions
             Effect: Allow
             Principal:
