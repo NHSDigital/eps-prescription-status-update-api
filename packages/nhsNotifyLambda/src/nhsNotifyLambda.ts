@@ -16,13 +16,14 @@ const logger = new Logger({serviceName: "nhsNotify"})
  *
  * @param event - The CloudWatch EventBridge scheduled event payload.
  */
-const lambdaHandler = async (event: EventBridgeEvent<never, string>): Promise<void> => {
+export const lambdaHandler = async (event: EventBridgeEvent<never, string>): Promise<void> => {
   // EventBridge jsonifies the details so the second type of the event is a string. That's unused here, though
 
   logger.info("NHS Notify lambda triggered by scheduler", {event})
 
   try {
     const messages = await drainQueue(logger, 100)
+    logger.info("messages", {messages})
 
     if (messages.length === 0) {
       logger.info("No messages to process")

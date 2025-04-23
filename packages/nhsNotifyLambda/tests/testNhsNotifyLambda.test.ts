@@ -1,23 +1,39 @@
-import {describe, it} from "@jest/globals"
+import {jest, describe, it} from "@jest/globals"
 
-import axios from "axios"
-import MockAdapter from "axios-mock-adapter"
+const mockDrainQueue = jest.fn()
+jest.unstable_mockModule(
+  "../src/utils",
+  async () => {
+    return {
+      __esmodule: true,
+      drainQueue: mockDrainQueue
+    }
+  }
+)
 
-import {handler} from "../src/nhsNotifyLambda"
-import {mockContext, mockEventBridgeEvent} from "@PrescriptionStatusUpdate_common/testing"
+let lambdaHandler: typeof import("../src/nhsNotifyLambda").lambdaHandler
+beforeAll(async () => {
+  ({lambdaHandler} = await import("../src/nhsNotifyLambda"))
+})
 
-const mock = new MockAdapter(axios)
+import {mockEventBridgeEvent} from "@PrescriptionStatusUpdate_common/testing"
+
+const ORIGINAL_ENV = {...process.env}
 
 describe("Unit test for NHS Notify lambda handler", function () {
-  let originalEnv: {[key: string]: string | undefined} = process.env
+
   afterEach(() => {
-    process.env = {...originalEnv}
-    mock.reset()
+    process.env = {...ORIGINAL_ENV}
   })
 
-  it("Dummy test", async () => {
-    console.error("DUMMY TEST - PASSING ANYWAY")
+  it("When drainQueue throws an error, the handler throws an error", async () => {
+    mockDrainQueue.mockImplementation(() => Promise.reject(new Error("Failed")))
+    await expect(lambdaHandler(mockEventBridgeEvent)).rejects.toThrow("Failed")
+  })
 
-    await handler(mockEventBridgeEvent, mockContext)
+  it("When drainQueue returns no messages, the request succeeds", async () => {
+    mockDrainQueue.mockImplementation(() => Promise.resolve([]))
+
+    await expect(lambdaHandler(mockEventBridgeEvent)).resolves.not.toThrow()
   })
 })
