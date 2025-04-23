@@ -18,14 +18,15 @@ describe("NHS notify lambda helper functions", () => {
 
   describe("drainQueue", () => {
     let logger: Logger
+    let errorSpy: SpiedFunction<(msg: string, ...meta: Array<unknown>) => void>
 
     beforeEach(() => {
       jest.resetModules()
       jest.clearAllMocks()
 
       process.env = {...ORIGINAL_ENV}
-
       logger = new Logger({serviceName: "test-service"})
+      errorSpy = jest.spyOn(logger, "error")
     })
 
     it("Does not throw an error when the SQS fetch succeeds", async () => {
@@ -34,16 +35,53 @@ describe("NHS notify lambda helper functions", () => {
       // Mock once for the fetch, and once for the delete
       sqsMockSend
         .mockImplementationOnce(() => Promise.resolve(payload))
-        .mockImplementationOnce(() => Promise.resolve({Success: {}}))
+        .mockImplementationOnce(() => Promise.resolve({Successful: []}))
 
       const messages = await drainQueue(logger, 10)
       expect(sqsMockSend).toHaveBeenCalledTimes(2)
       expect(messages).toStrictEqual(payload.Messages)
     })
 
+    it("returns empty array if queue is empty on first fetch", async () => {
+      sqsMockSend.mockImplementation(() => Promise.resolve({Messages: []}))
+
+      const messages = await drainQueue(logger, 5)
+      expect(messages).toEqual([])
+      expect(sqsMockSend).toHaveBeenCalledTimes(1)
+      // no deletion attempted
+    })
+
     it("Throws an error if the SQS fetch fails", async () => {
-      sqsMockSend.mockImplementation(() => Promise.reject(new Error("Failed")))
-      await expect(drainQueue(logger, 10)).rejects.toThrow("Failed")
+      sqsMockSend.mockImplementation(() => Promise.reject(new Error("Fetch failed")))
+      await expect(drainQueue(logger, 10)).rejects.toThrow("Fetch failed")
+    })
+
+    it("Throws an error if the delete batch operation fails", async () => {
+      const msg = constructDataItem() as Message
+      // first call: fetch, second call: delete
+      sqsMockSend
+        .mockImplementationOnce(() =>
+          Promise.resolve({Messages: [msg]})
+        )
+        .mockImplementationOnce(() =>
+          Promise.resolve({
+            Failed: [{Id: msg.MessageId!, Message: "del-error", Code: "500"}]
+          })
+        )
+
+      await expect(drainQueue(logger, 1)).rejects.toThrow("Failed to delete fetched messages from SQS")
+      expect(errorSpy).toHaveBeenCalledWith(
+        "Some messages failed to delete",
+        {failed: expect.any(Array)}
+      )
+    })
+
+    it("Throws an error if the SQS URL is not configured", async () => {
+      delete process.env.NHS_NOTIFY_PRESCRIPTIONS_SQS_QUEUE_URL
+      const {drainQueue} = await import("../src/utils")
+
+      await expect(drainQueue(logger)).rejects.toThrow("NHS_NOTIFY_PRESCRIPTIONS_SQS_QUEUE_URL not set")
+      expect(errorSpy).toHaveBeenCalledWith("Notifications SQS URL not configured")
     })
   })
 

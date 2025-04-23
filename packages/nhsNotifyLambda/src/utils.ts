@@ -40,7 +40,10 @@ export async function drainQueue(logger: Logger, maxTotal = 100) {
       VisibilityTimeout: 30
     })
 
-    const {Messages} = await sqs.send(receiveCmd)
+    const response = await sqs.send(receiveCmd)
+    logger.info("Fetched messages", {response})
+    const {Messages} = response
+
     if (!Messages) {
       throw new Error("Failed to fetch messages from SQS")
     }
@@ -61,7 +64,7 @@ export async function drainQueue(logger: Logger, maxTotal = 100) {
     })
     const delResult = await sqs.send(deleteCmd)
 
-    if (delResult.Failed && delResult.Failed.length > 0) {
+    if (delResult.Failed) {
       logger.error("Some messages failed to delete", {failed: delResult.Failed})
       throw new Error("Failed to delete fetched messages from SQS")
     }
