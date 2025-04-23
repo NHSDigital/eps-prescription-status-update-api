@@ -2,8 +2,7 @@ import {jest} from "@jest/globals"
 import {SpiedFunction} from "jest-mock"
 
 import {Logger} from "@aws-lambda-powertools/logger"
-import {DynamoDBDocumentClient} from "@aws-sdk/lib-dynamodb"
-import {PutCommand} from "@aws-sdk/lib-dynamodb"
+import {DynamoDBDocumentClient, PutCommand} from "@aws-sdk/lib-dynamodb"
 import {Message} from "@aws-sdk/client-sqs"
 
 import {constructDataItem, mockSQSClient} from "./testHelpers"
