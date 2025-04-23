@@ -41,8 +41,11 @@ export async function drainQueue(logger: Logger, maxTotal = 100) {
     })
 
     const {Messages} = await sqs.send(receiveCmd)
+    if (!Messages) {
+      throw new Error("Failed to fetch messages from SQS")
+    }
     // if the queue is now empty, then break the loop
-    if (!Messages || Messages.length === 0) break
+    if (Messages.length === 0) break
 
     allMessages.push(...Messages)
     receivedSoFar += Messages.length
