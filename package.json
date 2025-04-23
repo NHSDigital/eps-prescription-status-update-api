@@ -24,7 +24,8 @@
     "packages/checkPrescriptionStatusUpdates",
     "packages/nhsNotifyLambda",
     "packages/common/testing",
-    "packages/common/middyErrorHandler"
+    "packages/common/middyErrorHandler",
+    "packages/common/commonTypes"
   ],
   "devDependencies": {
     "@semantic-release/changelog": "^6.0.3",
@@ -50,6 +51,7 @@
   },
   "dependencies": {
     "@PrescriptionStatusUpdate_common/middyErrorHandler": "^1.0.0",
+    "@PrescriptionStatusUpdate_common/commonTypes": "^1.0.0",
     "conventional-changelog-eslint": "^6.0.0",
     "esbuild": "^0.25.3"
   }

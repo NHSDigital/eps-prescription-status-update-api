@@ -4,6 +4,7 @@
     "rootDir": ".",
     "outDir": "lib"
   },
+  "references": [],
   "include": ["src/**/*", "tests/**/*"],
   "exclude": ["node_modules"]
 }

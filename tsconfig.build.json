@@ -6,6 +6,7 @@
   "references": [
     {"path": "packages/common/testing"},
     {"path": "packages/common/middyErrorHandler"},
+    {"path": "packages/common/commonTypes"},
     {"path": "packages/gsul"},
     {"path": "packages/updatePrescriptionStatus"},
     {"path": "packages/sandbox"},

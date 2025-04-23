@@ -5,7 +5,7 @@ import {Logger} from "@aws-lambda-powertools/logger"
 import {DynamoDBDocumentClient, PutCommand} from "@aws-sdk/lib-dynamodb"
 import {Message} from "@aws-sdk/client-sqs"
 
-import {constructDataItem, mockSQSClient} from "./testHelpers"
+import {constructPSUDataItem, mockSQSClient} from "./testHelpers"
 
 const {mockSend: sqsMockSend} = mockSQSClient()
 
@@ -29,7 +29,7 @@ describe("NHS notify lambda helper functions", () => {
     })
 
     it("Does not throw an error when the SQS fetch succeeds", async () => {
-      const payload = {Messages: Array.from({length: 10}, () => (constructDataItem() as Message))}
+      const payload = {Messages: Array.from({length: 10}, () => (constructPSUDataItem() as Message))}
 
       // Mock once for the fetch, and once for the delete
       sqsMockSend
@@ -56,7 +56,7 @@ describe("NHS notify lambda helper functions", () => {
     })
 
     it("Throws an error if the delete batch operation fails", async () => {
-      const msg = constructDataItem() as Message
+      const msg = constructPSUDataItem() as Message
       // first call: fetch, second call: delete
       sqsMockSend
         .mockImplementationOnce(() =>
@@ -107,7 +107,7 @@ describe("NHS notify lambda helper functions", () => {
       const {addPrescriptionToNotificationStateStore} = await import("../src/utils")
 
       await expect(
-        addPrescriptionToNotificationStateStore(logger, [constructDataItem()])
+        addPrescriptionToNotificationStateStore(logger, [constructPSUDataItem()])
       ).rejects.toThrow("TABLE_NAME not set")
 
       expect(errorSpy).toHaveBeenCalledWith(
@@ -118,7 +118,7 @@ describe("NHS notify lambda helper functions", () => {
     })
 
     it("throws and logs error when a DynamoDB write fails", async () => {
-      const item = constructDataItem()
+      const item = constructPSUDataItem()
       const awsErr = new Error("AWS error")
       sendSpy.mockImplementationOnce(() => Promise.reject(awsErr))
 
@@ -142,7 +142,7 @@ describe("NHS notify lambda helper functions", () => {
     })
 
     it("puts data in DynamoDB and logs correctly when configured", async () => {
-      const item = constructDataItem()
+      const item = constructPSUDataItem()
       sendSpy.mockImplementationOnce(() => Promise.resolve({}))
 
       await addPrescriptionToNotificationStateStore(logger, [item])

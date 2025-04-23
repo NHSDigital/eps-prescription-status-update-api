@@ -2,7 +2,7 @@ import {jest} from "@jest/globals"
 
 import * as sqs from "@aws-sdk/client-sqs"
 
-import {DataItem} from "../src/types"
+import {PSUDataItem} from "@PrescriptionStatusUpdate_common/commonTypes"
 
 // Similarly mock the SQS client
 export function mockSQSClient() {
@@ -18,7 +18,7 @@ export function mockSQSClient() {
   return {mockSend}
 }
 
-export function constructDataItem(overrides: Partial<DataItem> = {}): DataItem {
+export function constructPSUDataItem(overrides: Partial<PSUDataItem> = {}): PSUDataItem {
   return {
     LastModified: "2023-01-02T00:00:00Z",
     LineItemID: "spamandeggs",

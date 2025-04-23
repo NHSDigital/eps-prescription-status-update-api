@@ -119,6 +119,7 @@ lint-node: compile-node
 	npm run lint --workspace packages/nhsNotifyLambda
 	npm run lint --workspace packages/common/testing
 	npm run lint --workspace packages/common/middyErrorHandler
+	npm run lint --workspace packages/common/commonTypes
 
 lint-specification: compile-specification
 	npm run lint --workspace packages/specification
@@ -166,6 +167,7 @@ clean:
 	rm -rf packages/checkPrescriptionStatusUpdates/lib
 	rm -rf packages/common/testing/lib
 	rm -rf packages/common/middyErrorHandler/lib
+	rm -rf packages/common/commonTypes/lib
 	rm -rf .aws-sam
 
 deep-clean: clean

@@ -6,7 +6,7 @@ import middy from "@middy/core"
 import inputOutputLogger from "@middy/input-output-logger"
 import errorHandler from "@nhs/fhir-middy-error-handler"
 
-import {DataItem} from "./types"
+import {PSUDataItem} from "@PrescriptionStatusUpdate_common/commonTypes"
 import {drainQueue} from "./utils"
 
 const logger = new Logger({serviceName: "nhsNotify"})
@@ -30,15 +30,15 @@ export const lambdaHandler = async (event: EventBridgeEvent<string, string>): Pr
       return
     }
 
-    // parse & log each DataItem as a placeholder for now.
+    // parse & log each PSUDataItem as a placeholder for now.
     const items = messages.map((m) => {
       try {
-        return JSON.parse(m.Body!) as DataItem
+        return JSON.parse(m.Body!) as PSUDataItem
       } catch (err) {
         logger.error("Failed to parse message body", {body: m.Body, error: err})
         return null
       }
-    }).filter((i): i is DataItem => i !== null)
+    }).filter((i): i is PSUDataItem => i !== null)
 
     logger.info("Fetched prescription notification messages", {count: items.length, items})
 

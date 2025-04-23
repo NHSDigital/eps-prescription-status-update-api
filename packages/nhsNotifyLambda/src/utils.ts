@@ -8,7 +8,7 @@ import {
 import {DynamoDBClient} from "@aws-sdk/client-dynamodb"
 import {DynamoDBDocumentClient, PutCommand} from "@aws-sdk/lib-dynamodb"
 
-import {DataItem} from "./types"
+import {PSUDataItem} from "@PrescriptionStatusUpdate_common/commonTypes"
 
 const dynamoTable = process.env.TABLE_NAME
 const sqsUrl = process.env.NHS_NOTIFY_PRESCRIPTIONS_SQS_QUEUE_URL
@@ -73,7 +73,7 @@ export async function drainQueue(logger: Logger, maxTotal = 100) {
   return allMessages
 }
 
-export async function addPrescriptionToNotificationStateStore(logger: Logger, dataArray: Array<DataItem>) {
+export async function addPrescriptionToNotificationStateStore(logger: Logger, dataArray: Array<PSUDataItem>) {
   if (!dynamoTable) {
     logger.error("DynamoDB table not configured")
     throw new Error("TABLE_NAME not set")
