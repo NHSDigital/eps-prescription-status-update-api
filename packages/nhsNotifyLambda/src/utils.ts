@@ -60,8 +60,7 @@ export async function drainQueue(logger: Logger, maxTotal = 100) {
 
     if (delResult.Failed && delResult.Failed.length > 0) {
       logger.error("Some messages failed to delete", {failed: delResult.Failed})
-      // TODO: Is this error handling logic in line with the business logic?
-      // Or should this cause the whole thing to crash out?
+      throw new Error("Failed to delete fetched messages from SQS")
     }
   }
 
@@ -97,6 +96,7 @@ export async function addPrescriptionToNotificationStateStore(logger: Logger, da
         PrescriptionID: data.PrescriptionID,
         error: err
       })
+      throw err
     }
   }
 }
