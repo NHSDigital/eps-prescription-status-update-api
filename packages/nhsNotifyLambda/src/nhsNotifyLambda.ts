@@ -41,7 +41,7 @@ export const lambdaHandler = async (event: EventBridgeEvent<string, string>): Pr
     }).filter((i): i is PSUDataItem => i !== null)
 
     const toNotify = items.map((m) => ({
-      xRequestId: m.RequestID,
+      RequestID: m.RequestID,
       TaskId: m.TaskID,
       Message: "Notification Required"
     }))
