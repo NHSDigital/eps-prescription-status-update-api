@@ -42,10 +42,15 @@ export function saltyHash(input: string, hashFunction: string = "sha256"): strin
  * Pushes an array of DataItems to the notifications SQS queue
  * Uses SendMessageBatch to send up to 10 at a time
  *
+ * @param requestId - The x-request-id header from the incoming event
  * @param data - Array of DataItems to send to SQS
  * @param logger - Logger instance
  */
-export async function pushPrescriptionToNotificationSQS(requestId: string, data: Array<DataItem>, logger: Logger) {
+export async function pushPrescriptionToNotificationSQS(
+  requestId: string,
+  data: Array<DataItem>,
+  logger: Logger
+) {
   logger.info("Pushing data items up to the notifications SQS", {count: data.length, sqsUrl})
 
   if (!sqsUrl) {
@@ -62,37 +67,36 @@ export async function pushPrescriptionToNotificationSQS(requestId: string, data:
     "ready to collect - partial"
   ]
 
-  // TODO: De-duplicate on NHS number. Can we use the message ID to do that? Will SQS reject it?
-
   for (const batch of batches) {
     const entries = batch
       .filter((item) => updateStatuses.includes(item.Status))
       // Add the request ID to the SQS message
       .map((item) => ({...item, requestId}))
-      .map((item) => {
-        return {Id: saltyHash(item.PatientNHSNumber), MessageBody: JSON.stringify(item)}
-      })
+      // Build SQS batch entries with FIFO parameters
+      .map((item, idx) => ({
+        Id: idx.toString(),
+        MessageBody: JSON.stringify(item),
+        MessageGroupId: requestId,
+        MessageDeduplicationId: saltyHash(item.PatientNHSNumber) // dedupe on NHS number
+      }))
 
-    if (!entries.length) {
+    if (entries.length === 0) {
       // Carry on if we have no updates to make.
       continue
     }
 
-    const params = {
-      QueueUrl: sqsUrl,
-      Entries: entries
-    }
-
-    const messageIds = entries.map((el) => el.Id)
     logger.info(
-      "Notification required. Pushing prescriptions with the following SQS message IDs",
-      {messageIds, requestId}
+      "Notification required. Pushing prescriptions with deduplication IDs",
+      {deduplicationIds: entries.map(e => e.MessageDeduplicationId), requestId}
     )
 
     try {
-      const command = new SendMessageBatchCommand(params)
+      const command = new SendMessageBatchCommand({
+        QueueUrl: sqsUrl,
+        Entries: entries
+      })
       const result = await sqs.send(command)
-      if (result.Successful) {
+      if (result.Successful && result.Successful.length === entries.length) {
         logger.info("Successfully sent a batch of prescriptions to the notifications SQS", {result})
       } else {
         logger.error("Failed to send a batch of prescriptions to the notifications SQS", {result})
