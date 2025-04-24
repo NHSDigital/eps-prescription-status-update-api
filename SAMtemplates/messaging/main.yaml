@@ -56,7 +56,7 @@ Resources:
       RedrivePolicy:
         deadLetterTargetArn: !GetAtt NHSNotifyPrescriptionsDeadLetterQueue.Arn
         maxReceiveCount: 5
-      VisibilityTimeout: 60
+      VisibilityTimeout: 300
 
   NHSNotifyPrescriptionsDeadLetterQueue:
     Type: AWS::SQS::Queue
@@ -66,7 +66,7 @@ Resources:
       ContentBasedDeduplication: false
       KmsMasterKeyId: !Ref NotificationSQSQueueKMSKeyAlias
       MessageRetentionPeriod: 604800   # 1 week in seconds
-      VisibilityTimeout: 60
+      VisibilityTimeout: 300
 
   ReadNHSNotifyPrescriptionsSQSQueuePolicy:
     Type: AWS::IAM::ManagedPolicy
