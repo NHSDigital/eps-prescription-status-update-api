@@ -1,20 +1,41 @@
 import {Logger} from "@aws-lambda-powertools/logger"
 import {SQSClient, SendMessageBatchCommand} from "@aws-sdk/client-sqs"
 
+import {createHmac} from "crypto"
+
 import {DataItem} from "../updatePrescriptionStatus"
 
-const sqsUrl = process.env.NHS_NOTIFY_PRESCRIPTIONS_SQS_QUEUE_URL
+const sqsUrl: string | undefined = process.env.NHS_NOTIFY_PRESCRIPTIONS_SQS_QUEUE_URL
+const sqsSalt: string = process.env.SQS_SALT ?? "DEVSALT"
 
 // The AWS_REGION is always defined in lambda environments
 const sqs = new SQSClient({region: process.env.AWS_REGION})
 
-// Returns the original array, chunked in batches of up to <size>
+/**
+ * Returns the original array, chunked in batches of up to <size>
+ *
+ * @param arr - Array to be chunked
+ * @param size - The maximum size of each chunk. The final chunk may be smaller.
+ */
 function chunkArray<T>(arr: Array<T>, size: number): Array<Array<T>> {
   const chunks: Array<Array<T>> = []
   for (let i = 0; i < arr.length; i += size) {
     chunks.push(arr.slice(i, i + size))
   }
   return chunks
+}
+
+/**
+ * Salts and hashes a string.
+ *
+ * @param input - The string to be hashed
+ * @param hashFunction - Which hash function to use. HMAC compatible. Defaults to SHA-256
+ * @returns - A hex encoded string of the hash
+ */
+export function saltyHash(input: string, hashFunction: string = "sha256"): string {
+  return createHmac(hashFunction, sqsSalt)
+    .update(input, "utf8")
+    .digest("hex")
 }
 
 /**
@@ -48,8 +69,9 @@ export async function pushPrescriptionToNotificationSQS(requestId: string, data:
       .filter((item) => updateStatuses.includes(item.Status))
       // Add the request ID to the SQS message
       .map((item) => ({...item, requestId}))
-      // TODO: The NHS number shouldn't be used directly - add some salt?
-      .map((item) => ({Id: item.PatientNHSNumber, MessageBody: JSON.stringify(item)}))
+      .map((item) => {
+        return {Id: saltyHash(item.PatientNHSNumber), MessageBody: JSON.stringify(item)}
+      })
 
     if (!entries.length) {
       // Carry on if we have no updates to make.

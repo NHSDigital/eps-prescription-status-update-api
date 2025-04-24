@@ -8,12 +8,13 @@ import {SpiedFunction} from "jest-mock"
 
 import {Logger} from "@aws-lambda-powertools/logger"
 import {LogItemMessage, LogItemExtraInput} from "@aws-lambda-powertools/logger/lib/cjs/types/Logger"
+import {SendMessageBatchCommand} from "@aws-sdk/client-sqs"
 
 import {createMockDataItem, mockSQSClient} from "./utils/testUtils"
 
 const {mockSend} = mockSQSClient()
 
-const {pushPrescriptionToNotificationSQS} = await import("../src/utils/sqsClient")
+const {pushPrescriptionToNotificationSQS, saltyHash} = await import("../src/utils/sqsClient")
 
 const ORIGINAL_ENV = {...process.env}
 
@@ -38,10 +39,10 @@ describe("Unit tests for pushPrescriptionToNotificationSQS", () => {
   it("throws if the SQS URL is not configured", async () => {
     process.env.NHS_NOTIFY_PRESCRIPTIONS_SQS_QUEUE_URL = undefined
     // Re-import the function so the environment change gets picked up
-    const {pushPrescriptionToNotificationSQS} = await import("../src/utils/sqsClient")
+    const {pushPrescriptionToNotificationSQS: tempFunc} = await import("../src/utils/sqsClient")
 
     await expect(
-      pushPrescriptionToNotificationSQS("req-123", [], logger)
+      tempFunc("req-123", [], logger)
     ).rejects.toThrow("Notifications SQS URL not configured")
 
     expect(errorSpy).toHaveBeenCalledWith(
@@ -85,7 +86,25 @@ describe("Unit tests for pushPrescriptionToNotificationSQS", () => {
     // Should have attempted exactly one SendMessageBatch call
     expect(mockSend).toHaveBeenCalledTimes(1)
 
-    // Confirm it logged the "notification required" and the success
+    // Grab the SendMessageBatchCommand that was sent
+    const sent = mockSend.mock.calls[0][0]
+    expect(sent).toBeInstanceOf(SendMessageBatchCommand)
+    if (!(sent instanceof SendMessageBatchCommand)) {
+      throw new Error("Expected a SendMessageBatchCommand")
+    }
+    const entries = sent.input.Entries!
+
+    expect(entries).toHaveLength(2)
+
+    entries.forEach((entry: { Id?: string; MessageBody?: string }, idx: number) => {
+      const original = payload[idx]
+      expect(entry.Id).toBe(saltyHash(original.PatientNHSNumber))
+      expect(entry.MessageBody).toBe(
+        JSON.stringify({...original, requestId: "req-789"})
+      )
+    })
+
+    // Check logging of notification and success
     expect(infoSpy).toHaveBeenCalledWith(
       "Notification required. Pushing prescriptions with the following SQS message IDs",
       expect.objectContaining({requestId: "req-789", messageIds: expect.any(Array)})
