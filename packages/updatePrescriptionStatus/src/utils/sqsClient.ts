@@ -1,8 +1,6 @@
 import {Logger} from "@aws-lambda-powertools/logger"
 import {SQSClient, SendMessageBatchCommand} from "@aws-sdk/client-sqs"
 
-import {v4} from "uuid"
-
 import {DataItem} from "../updatePrescriptionStatus"
 
 const sqsUrl = process.env.NHS_NOTIFY_PRESCRIPTIONS_SQS_QUEUE_URL
@@ -43,12 +41,15 @@ export async function pushPrescriptionToNotificationSQS(requestId: string, data:
     "ready to collect - partial"
   ]
 
+  // TODO: De-duplicate on NHS number. Can we use the message ID to do that? Will SQS reject it?
+
   for (const batch of batches) {
     const entries = batch
       .filter((item) => updateStatuses.includes(item.Status))
       // Add the request ID to the SQS message
       .map((item) => ({...item, requestId}))
-      .map((item) => ({Id: v4().toUpperCase(), MessageBody: JSON.stringify(item)}))
+      // TODO: The NHS number shouldn't be used directly - add some salt?
+      .map((item) => ({Id: item.PatientNHSNumber, MessageBody: JSON.stringify(item)}))
 
     if (!entries.length) {
       // Carry on if we have no updates to make.
