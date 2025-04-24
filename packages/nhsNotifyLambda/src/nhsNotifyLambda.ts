@@ -40,7 +40,12 @@ export const lambdaHandler = async (event: EventBridgeEvent<string, string>): Pr
       }
     }).filter((i): i is PSUDataItem => i !== null)
 
-    logger.info("Fetched prescription notification messages", {count: items.length, items})
+    const toNotify = items.map((m) => ({
+      xRequestId: m.RequestID,
+      TaskId: m.TaskID,
+      Message: "Notification Required"
+    }))
+    logger.info("Fetched prescription notification messages", {count: toNotify.length, toNotify})
 
     // TODO: Notifications logic will be done here.
     // - query PrescriptionNotificationState

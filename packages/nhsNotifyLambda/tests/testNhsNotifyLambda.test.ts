@@ -58,7 +58,11 @@ describe("Unit test for NHS Notify lambda handler", () => {
   })
 
   it("When drainQueue returns only valid JSON messages, all are processed", async () => {
-    const validItem = {prescriptionId: "abc123"}
+    const validItem = {
+      prescriptionId: "abc123",
+      TaskID: "task-1",
+      "x-request-id": "req-1"
+    }
     mockDrainQueue.mockImplementation(() =>
       Promise.resolve([{Body: JSON.stringify(validItem)}])
     )
@@ -68,12 +72,25 @@ describe("Unit test for NHS Notify lambda handler", () => {
     expect(mockError).not.toHaveBeenCalled()
     expect(mockInfo).toHaveBeenCalledWith(
       "Fetched prescription notification messages",
-      {count: 1, items: [validItem]}
+      {
+        count: 1,
+        toNotify: [
+          {
+            xRequestId: "req-1",
+            TaskId: "task-1",
+            Message: "Notification Required"
+          }
+        ]
+      }
     )
   })
 
   it("Filters out invalid JSON and logs parse errors", async () => {
-    const validItem = {foo: "bar"}
+    const validItem = {
+      foo: "bar",
+      TaskID: "task-2",
+      "x-request-id": "req-2"
+    }
     const messages = [
       {Body: JSON.stringify(validItem)},
       {Body: "not-json"}
@@ -95,7 +112,16 @@ describe("Unit test for NHS Notify lambda handler", () => {
     // only the one valid item should make it through
     expect(mockInfo).toHaveBeenCalledWith(
       "Fetched prescription notification messages",
-      {count: 1, items: [validItem]}
+      {
+        count: 1,
+        toNotify: [
+          {
+            xRequestId: "req-2",
+            TaskId: "task-2",
+            Message: "Notification Required"
+          }
+        ]
+      }
     )
   })
 })
