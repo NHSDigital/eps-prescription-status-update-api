@@ -77,7 +77,7 @@ describe("Unit tests for pushPrescriptionToNotificationSQS", () => {
       createMockDataItem({Status: "a status that will never be real"})
     ]
 
-    mockSend.mockImplementationOnce(() => Promise.resolve({Successful: [{}]}))
+    mockSend.mockImplementationOnce(() => Promise.resolve({Successful: [{}], Failed: [{}]}))
 
     await expect(
       pushPrescriptionToNotificationSQS("req-789", payload, logger)
@@ -96,22 +96,30 @@ describe("Unit tests for pushPrescriptionToNotificationSQS", () => {
 
     expect(entries).toHaveLength(2)
 
-    entries.forEach((entry: { Id?: string; MessageBody?: string }, idx: number) => {
+    entries.forEach((entry, idx) => {
       const original = payload[idx]
-      expect(entry.Id).toBe(saltyHash(original.PatientNHSNumber))
+      expect(entry.Id).toBe(idx.toString())
       expect(entry.MessageBody).toBe(
         JSON.stringify({...original, requestId: "req-789"})
       )
+      // FIFO params
+      expect(entry.MessageGroupId).toBe("req-789")
+      expect(entry.MessageDeduplicationId).toBe(
+        saltyHash(original.PatientNHSNumber)
+      )
     })
 
-    // Check logging of notification and success
     expect(infoSpy).toHaveBeenCalledWith(
-      "Notification required. Pushing prescriptions with the following SQS message IDs",
-      expect.objectContaining({requestId: "req-789", messageIds: expect.any(Array)})
+      "Notification required. Pushing prescriptions with deduplication IDs",
+      expect.objectContaining({requestId: "req-789", deduplicationIds: expect.any(Array)})
     )
     expect(infoSpy).toHaveBeenCalledWith(
       "Successfully sent a batch of prescriptions to the notifications SQS",
-      {result: {Successful: [{}]}}
+      {result: {Successful: [{}], Failed: [{}]}}
+    )
+    expect(errorSpy).toHaveBeenCalledWith(
+      "Failed to send a batch of prescriptions to the notifications SQS",
+      {result: {Successful: [{}], Failed: [{}]}}
     )
   })
 
@@ -132,16 +140,15 @@ describe("Unit tests for pushPrescriptionToNotificationSQS", () => {
   })
 
   it("chunks large payloads into batches of 10", async () => {
-    // Create 12 ready-to-collect items
-    const payload = Array.from({length: 12}, () => (createMockDataItem({Status: "ready to collect"})))
+    const payload = Array.from({length: 12}, () =>
+      createMockDataItem({Status: "ready to collect"})
+    )
 
-    // Two calls
-    mockSend.mockImplementationOnce(() => Promise.resolve({Successful: [{}]}))
-    mockSend.mockImplementationOnce(() => Promise.resolve({Successful: [{}]}))
+    mockSend.mockImplementationOnce(() => Promise.resolve({Successful: Array(10).fill({})}))
+    mockSend.mockImplementationOnce(() => Promise.resolve({Successful: Array(2).fill({})}))
 
     await pushPrescriptionToNotificationSQS("req-111", payload, logger)
 
-    // Expect two separate batch sends: 10 then 2
     expect(mockSend).toHaveBeenCalledTimes(2)
   })
 })

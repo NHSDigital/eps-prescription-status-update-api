@@ -96,11 +96,12 @@ export async function pushPrescriptionToNotificationSQS(
         Entries: entries
       })
       const result = await sqs.send(command)
-      if (result.Successful && result.Successful.length === entries.length) {
+      if (result.Successful) {
         logger.info("Successfully sent a batch of prescriptions to the notifications SQS", {result})
-      } else {
+      }
+      // Some may succeed, and some may fail. So check for both
+      if (result.Failed) {
         logger.error("Failed to send a batch of prescriptions to the notifications SQS", {result})
-        throw new Error("Failed to send a batch of prescriptions to the notifications SQS")
       }
     } catch (error) {
       logger.error("Failed to send a batch of prescriptions to the notifications SQS", {error})
