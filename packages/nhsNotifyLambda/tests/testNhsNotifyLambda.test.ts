@@ -61,7 +61,7 @@ describe("Unit test for NHS Notify lambda handler", () => {
     const validItem = {
       prescriptionId: "abc123",
       TaskID: "task-1",
-      "x-request-id": "req-1"
+      RequestID: "req-1"
     }
     mockDrainQueue.mockImplementation(() =>
       Promise.resolve([{Body: JSON.stringify(validItem)}])
@@ -76,7 +76,7 @@ describe("Unit test for NHS Notify lambda handler", () => {
         count: 1,
         toNotify: [
           {
-            xRequestId: "req-1",
+            RequestID: "req-1",
             TaskId: "task-1",
             Message: "Notification Required"
           }
@@ -89,7 +89,7 @@ describe("Unit test for NHS Notify lambda handler", () => {
     const validItem = {
       foo: "bar",
       TaskID: "task-2",
-      "x-request-id": "req-2"
+      RequestID: "req-2"
     }
     const messages = [
       {Body: JSON.stringify(validItem)},
@@ -116,7 +116,7 @@ describe("Unit test for NHS Notify lambda handler", () => {
         count: 1,
         toNotify: [
           {
-            xRequestId: "req-2",
+            RequestID: "req-2",
             TaskId: "task-2",
             Message: "Notification Required"
           }
