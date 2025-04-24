@@ -40,9 +40,7 @@ export async function drainQueue(logger: Logger, maxTotal = 100) {
       VisibilityTimeout: 30
     })
 
-    const response = await sqs.send(receiveCmd)
-    logger.info("Response from SQS fetch", {response})
-    const {Messages} = response
+    const {Messages} = await sqs.send(receiveCmd)
 
     // if the queue is now empty, then break the loop
     if (!Messages || Messages.length === 0) break

@@ -23,7 +23,6 @@ export const lambdaHandler = async (event: EventBridgeEvent<string, string>): Pr
 
   try {
     const messages = await drainQueue(logger, 100)
-    logger.info("messages", {messages})
 
     if (messages.length === 0) {
       logger.info("No messages to process")
