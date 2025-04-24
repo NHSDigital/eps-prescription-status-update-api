@@ -11,6 +11,10 @@ import {drainQueue} from "./utils"
 
 const logger = new Logger({serviceName: "nhsNotify"})
 
+interface NotifyPSUDataItem extends PSUDataItem {
+  "x-request-id": string
+}
+
 /**
  * Handler for the scheduled trigger.
  *
@@ -33,14 +37,19 @@ export const lambdaHandler = async (event: EventBridgeEvent<string, string>): Pr
     // parse & log each PSUDataItem as a placeholder for now.
     const items = messages.map((m) => {
       try {
-        return JSON.parse(m.Body!) as PSUDataItem
+        return JSON.parse(m.Body!) as NotifyPSUDataItem
       } catch (err) {
         logger.error("Failed to parse message body", {body: m.Body, error: err})
         return null
       }
-    }).filter((i): i is PSUDataItem => i !== null)
+    }).filter((i): i is NotifyPSUDataItem => i !== null)
 
-    logger.info("Fetched prescription notification messages", {count: items.length, items})
+    const toNotify = items.map((m) => ({
+      xRequestId: m["x-request-id"],
+      TaskId: m.TaskID,
+      Message: "Notification Required"
+    }))
+    logger.info("Fetched prescription notification messages", {count: toNotify.length, toNotify})
 
     // TODO: Notifications logic will be done here.
     // - query PrescriptionNotificationState
