@@ -70,18 +70,19 @@ export async function pushPrescriptionToNotificationSQS(
   for (const batch of batches) {
     const entries = batch
       .filter((item) => updateStatuses.includes(item.Status))
-      // Add the request ID to the SQS message
-      .map((item) => ({...item, requestId}))
       // Build SQS batch entries with FIFO parameters
       .map((item, idx) => ({
         Id: idx.toString(),
         MessageBody: JSON.stringify(item),
+        // FIFO
         MessageGroupId: requestId,
-        MessageDeduplicationId: saltyHash(item.PatientNHSNumber) // dedupe on NHS number
+        // We dedupe on both nhs number and ods code
+        MessageDeduplicationId: saltyHash(`${item.PatientNHSNumber}:${item.PharmacyODSCode}`)
       }))
 
     if (entries.length === 0) {
       // Carry on if we have no updates to make.
+      logger.info("No entries to post to the notifications SQS")
       continue
     }
 

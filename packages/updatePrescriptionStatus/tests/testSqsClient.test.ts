@@ -105,7 +105,7 @@ describe("Unit tests for pushPrescriptionToNotificationSQS", () => {
       // FIFO params
       expect(entry.MessageGroupId).toBe("req-789")
       expect(entry.MessageDeduplicationId).toBe(
-        saltyHash(original.PatientNHSNumber)
+        saltyHash(`${original.PatientNHSNumber}:${original.PharmacyODSCode}`)
       )
     })
 
