@@ -100,7 +100,7 @@ describe("Unit tests for pushPrescriptionToNotificationSQS", () => {
       const original = payload[idx]
       expect(entry.Id).toBe(idx.toString())
       expect(entry.MessageBody).toBe(
-        JSON.stringify({...original, requestId: "req-789"})
+        JSON.stringify({...original})
       )
       // FIFO params
       expect(entry.MessageGroupId).toBe("req-789")
