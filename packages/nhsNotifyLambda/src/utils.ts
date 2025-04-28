@@ -62,6 +62,11 @@ export async function clearCompletedSQSMessages(
   messages: Array<Message>,
   logger: Logger
 ): Promise<void> {
+  if (!sqsUrl) {
+    logger.error("Notifications SQS URL not configured")
+    throw new Error("NHS_NOTIFY_PRESCRIPTIONS_SQS_QUEUE_URL not set")
+  }
+
   const deleteMessages = messages.map((m) => ({
     Id: m.MessageId!,
     ReceiptHandle: m.ReceiptHandle!
@@ -77,6 +82,8 @@ export async function clearCompletedSQSMessages(
     logger.error("Some messages failed to delete", {failed: delResult.Failed})
     throw new Error("Failed to delete fetched messages from SQS")
   }
+
+  logger.info("Successfully deleted messages from SQS", {result: delResult})
 }
 
 export async function addPrescriptionToNotificationStateStore(logger: Logger, dataArray: Array<PSUDataItem>) {
