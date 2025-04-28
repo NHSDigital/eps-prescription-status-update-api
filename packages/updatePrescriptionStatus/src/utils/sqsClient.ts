@@ -61,11 +61,11 @@ export async function pushPrescriptionToNotificationSQS(
     throw new Error("Notifications SQS URL not configured")
   }
 
-  // Only allow through sites and systems that are whitelisted
-  const whitelistedData = checkSiteOrSystemIsNotifyEnabled(data)
+  // Only allow through sites and systems that are allowedSitesAndSystems
+  const allowedSitesAndSystemsData = checkSiteOrSystemIsNotifyEnabled(data)
 
   // SQS batch calls are limited to 10 messages per request, so chunk the data
-  const batches = chunkArray(whitelistedData, 10)
+  const batches = chunkArray(allowedSitesAndSystemsData, 10)
 
   // Only these statuses will be pushed to the SQS
   const updateStatuses: Array<string> = [
