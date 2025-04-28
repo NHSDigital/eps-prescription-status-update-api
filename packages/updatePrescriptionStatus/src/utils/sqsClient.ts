@@ -16,6 +16,7 @@ const sqs = new SQSClient({region: process.env.AWS_REGION})
  *
  * @param arr - Array to be chunked
  * @param size - The maximum size of each chunk. The final chunk may be smaller.
+ * @returns - an (N+1) dimensional array
  */
 function chunkArray<T>(arr: Array<T>, size: number): Array<Array<T>> {
   const chunks: Array<Array<T>> = []
@@ -32,7 +33,7 @@ function chunkArray<T>(arr: Array<T>, size: number): Array<Array<T>> {
  * @param hashFunction - Which hash function to use. HMAC compatible. Defaults to SHA-256
  * @returns - A hex encoded string of the hash
  */
-export function saltyHash(input: string, hashFunction: string = "sha256"): string {
+export function saltedHash(input: string, hashFunction: string = "sha256"): string {
   return createHmac(hashFunction, sqsSalt)
     .update(input, "utf8")
     .digest("hex")
@@ -75,10 +76,11 @@ export async function pushPrescriptionToNotificationSQS(
         Id: idx.toString(),
         MessageBody: JSON.stringify(item),
         // FIFO
-        MessageGroupId: requestId,
         // We dedupe on both nhs number and ods code
-        MessageDeduplicationId: saltyHash(`${item.PatientNHSNumber}:${item.PharmacyODSCode}`)
+        MessageDeduplicationId: saltedHash(`${item.PatientNHSNumber}:${item.PharmacyODSCode}`),
+        MessageGroupId: requestId
       }))
+    // We could do a round of deduplications here, but benefits would be minimal and AWS SQS will do it for us anyway.
 
     if (entries.length === 0) {
       // Carry on if we have no updates to make.

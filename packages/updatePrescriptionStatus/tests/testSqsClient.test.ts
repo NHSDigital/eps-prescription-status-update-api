@@ -14,7 +14,7 @@ import {createMockDataItem, mockSQSClient} from "./utils/testUtils"
 
 const {mockSend} = mockSQSClient()
 
-const {pushPrescriptionToNotificationSQS, saltyHash} = await import("../src/utils/sqsClient")
+const {pushPrescriptionToNotificationSQS, saltedHash} = await import("../src/utils/sqsClient")
 
 const ORIGINAL_ENV = {...process.env}
 
@@ -105,7 +105,7 @@ describe("Unit tests for pushPrescriptionToNotificationSQS", () => {
       // FIFO params
       expect(entry.MessageGroupId).toBe("req-789")
       expect(entry.MessageDeduplicationId).toBe(
-        saltyHash(`${original.PatientNHSNumber}:${original.PharmacyODSCode}`)
+        saltedHash(`${original.PatientNHSNumber}:${original.PharmacyODSCode}`)
       )
     })
 
