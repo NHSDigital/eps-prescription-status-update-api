@@ -3,7 +3,9 @@ import {SQSClient, SendMessageBatchCommand} from "@aws-sdk/client-sqs"
 
 import {createHmac} from "crypto"
 
-import {DataItem} from "../updatePrescriptionStatus"
+import {PSUDataItem} from "@PrescriptionStatusUpdate_common/commonTypes"
+
+import {checkSiteOrSystemIsNotifyWhitelisted} from "../validation/notificationSiteAndSystemFilters"
 
 const sqsUrl: string | undefined = process.env.NHS_NOTIFY_PRESCRIPTIONS_SQS_QUEUE_URL
 const sqsSalt: string = process.env.SQS_SALT ?? "DEVSALT"
@@ -40,16 +42,16 @@ export function saltedHash(input: string, hashFunction: string = "sha256"): stri
 }
 
 /**
- * Pushes an array of DataItems to the notifications SQS queue
+ * Pushes an array of PSUDataItem to the notifications SQS queue
  * Uses SendMessageBatch to send up to 10 at a time
  *
  * @param requestId - The x-request-id header from the incoming event
- * @param data - Array of DataItems to send to SQS
+ * @param data - Array of PSUDataItem to send to SQS
  * @param logger - Logger instance
  */
 export async function pushPrescriptionToNotificationSQS(
   requestId: string,
-  data: Array<DataItem>,
+  data: Array<PSUDataItem>,
   logger: Logger
 ) {
   logger.info("Pushing data items up to the notifications SQS", {count: data.length, sqsUrl})
@@ -59,8 +61,11 @@ export async function pushPrescriptionToNotificationSQS(
     throw new Error("Notifications SQS URL not configured")
   }
 
+  // Only allow through sites and systems that are whitelisted
+  const whitelistedData = checkSiteOrSystemIsNotifyWhitelisted(data)
+
   // SQS batch calls are limited to 10 messages per request, so chunk the data
-  const batches = chunkArray(data, 10)
+  const batches = chunkArray(whitelistedData, 10)
 
   // Only these statuses will be pushed to the SQS
   const updateStatuses: Array<string> = [

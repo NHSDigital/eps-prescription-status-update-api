@@ -11,6 +11,8 @@ import httpHeaderNormalizer from "@middy/http-header-normalizer"
 import errorHandler from "@nhs/fhir-middy-error-handler"
 import {Bundle, BundleEntry, Task} from "fhir/r4"
 
+import {PSUDataItem} from "@PrescriptionStatusUpdate_common/commonTypes"
+
 import {transactionBundle, validateEntry} from "./validation/content"
 import {getPreviousItem, persistDataItems} from "./utils/databaseClient"
 import {jobWithTimeout, hasTimedOut} from "./utils/timeoutUtils"
@@ -41,21 +43,6 @@ export const TEST_PRESCRIPTIONS_1 = (process.env.TEST_PRESCRIPTIONS_1 ?? "")
   .split(",").map(item => item.trim()) || []
 export const TEST_PRESCRIPTIONS_2 = (process.env.TEST_PRESCRIPTIONS_2 ?? "")
   .split(",").map(item => item.trim()) || []
-
-export interface DataItem {
-  LastModified: string
-  LineItemID: string
-  PatientNHSNumber: string
-  PharmacyODSCode: string
-  PrescriptionID: string
-  RepeatNo?: number
-  RequestID: string
-  Status: string
-  TaskID: string
-  TerminalStatus: string
-  ApplicationName: string
-  ExpiryTime: number
-}
 
 const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
   logger.appendKeys({
@@ -260,8 +247,8 @@ export function buildDataItems(
   requestEntries: Array<BundleEntry>,
   xRequestID: string,
   applicationName: string
-): Array<DataItem> {
-  const dataItems: Array<DataItem> = []
+): Array<PSUDataItem> {
+  const dataItems: Array<PSUDataItem> = []
 
   for (const requestEntry of requestEntries) {
     const task = requestEntry.resource as Task
@@ -269,7 +256,7 @@ export function buildDataItems(
 
     const repeatNo = task.input?.[0]?.valueInteger
 
-    const dataItem: DataItem = {
+    const dataItem: PSUDataItem = {
       LastModified: task.lastModified!,
       LineItemID: task.focus!.identifier!.value!.toUpperCase(),
       PatientNHSNumber: task.for!.identifier!.value!,
@@ -300,7 +287,7 @@ function response(statusCode: number, responseEntries: Array<BundleEntry>) {
   }
 }
 
-async function logTransitions(dataItems: Array<DataItem>): Promise<void> {
+async function logTransitions(dataItems: Array<PSUDataItem>): Promise<void> {
   for (const dataItem of dataItems) {
     try {
       const previousItem = await getPreviousItem(dataItem)
