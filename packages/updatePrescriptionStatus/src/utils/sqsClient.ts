@@ -82,7 +82,7 @@ export async function pushPrescriptionToNotificationSQS(
       }))
     // We could do a round of deduplications here, but benefits would be minimal and AWS SQS will do it for us anyway.
 
-    if (entries.length === 0) {
+    if (!entries.length) {
       // Carry on if we have no updates to make.
       logger.info("No entries to post to the notifications SQS")
       continue
