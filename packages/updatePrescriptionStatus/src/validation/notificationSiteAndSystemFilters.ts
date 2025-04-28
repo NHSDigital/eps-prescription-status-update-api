@@ -1,8 +1,7 @@
 import {PSUDataItem} from "@PrescriptionStatusUpdate_common/commonTypes"
-import {logger} from "../updatePrescriptionStatus"
 
 const enabledSiteODSCodes: Array<string> = [
-  "ABC123"
+  "FA565"
 ]
 
 // Enabled supplier names
@@ -15,7 +14,7 @@ const enabledSystems: Array<string> = [
 ]
 
 const blockedSiteODSCodes: Array<string> = [
-  "DEF456"
+  "A83008"
 ]
 
 /**
@@ -36,18 +35,16 @@ export function checkSiteOrSystemIsNotifyEnabled(
 
   return data.filter((item) => {
     const appName = item.ApplicationName.toLowerCase()
-    const odsCode = item.PharmacyODSCode
+    const odsCode = item.PharmacyODSCode.toLowerCase()
 
     // Is this item either ODS enabled, or supplier enabled?
     const isEnabledSystem = sitesSet.has(odsCode) || systemsSet.has(appName)
     if (!isEnabledSystem) {
-      logger.info("Notifications disabled for dispensing site", {requestID: item.RequestID})
       return false
     }
 
     // Cannot have a blocked ODS code
     if (blockedSet.has(odsCode)) {
-      logger.info("Notifications disabled for dispensing site", {requestID: item.RequestID})
       return false
     }
 

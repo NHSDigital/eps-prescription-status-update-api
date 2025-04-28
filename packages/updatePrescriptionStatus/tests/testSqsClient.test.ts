@@ -15,6 +15,7 @@ import {createMockDataItem, mockSQSClient} from "./utils/testUtils"
 const {mockSend} = mockSQSClient()
 
 const {pushPrescriptionToNotificationSQS, saltedHash} = await import("../src/utils/sqsClient")
+const {checkSiteOrSystemIsNotifyEnabled} = await import("../src/validation/notificationSiteAndSystemFilters")
 
 const ORIGINAL_ENV = {...process.env}
 
@@ -144,11 +145,63 @@ describe("Unit tests for pushPrescriptionToNotificationSQS", () => {
       createMockDataItem({Status: "ready to collect"})
     )
 
-    mockSend.mockImplementationOnce(() => Promise.resolve({Successful: Array(10).fill({})}))
-    mockSend.mockImplementationOnce(() => Promise.resolve({Successful: Array(2).fill({})}))
+    mockSend
+      .mockImplementationOnce(() => Promise.resolve({Successful: Array(10).fill({})}))
+      .mockImplementationOnce(() => Promise.resolve({Successful: Array(2).fill({})}))
 
     await pushPrescriptionToNotificationSQS("req-111", payload, logger)
-
     expect(mockSend).toHaveBeenCalledTimes(2)
+  })
+})
+
+describe("Unit tests for checkSiteOrSystemIsNotifyEnabled", () => {
+  it("includes an item with an enabled ODS code", () => {
+    const item = createMockDataItem({
+      PharmacyODSCode: "FA565",
+      ApplicationName: "not a real test supplier"
+    })
+    const result = checkSiteOrSystemIsNotifyEnabled([item])
+    expect(result).toEqual([item])
+  })
+
+  it("includes an item with an enabled ApplicationName", () => {
+    const item = createMockDataItem({
+      PharmacyODSCode: "ZZZ999",
+      ApplicationName: "Internal Test System"
+    })
+    const result = checkSiteOrSystemIsNotifyEnabled([item])
+    expect(result).toEqual([item])
+  })
+
+  it("is case insensitive for both ODS code and ApplicationName", () => {
+    const item1 = createMockDataItem({
+      PharmacyODSCode: "FA565",
+      ApplicationName: "not a real test supplier"
+    })
+    const item2 = createMockDataItem({
+      PharmacyODSCode: "zzz999",
+      ApplicationName: "internal test SYSTEM"
+    })
+    const result = checkSiteOrSystemIsNotifyEnabled([item1, item2])
+    console.log(result)
+    expect(result).toEqual([item1, item2])
+  })
+
+  it("excludes an item when its ODS code is blocked, even if otherwise enabled", () => {
+    const item = createMockDataItem({
+      PharmacyODSCode: "A83008",
+      ApplicationName: "Internal Test System"
+    })
+    const result = checkSiteOrSystemIsNotifyEnabled([item])
+    expect(result).toEqual([])
+  })
+
+  it("excludes items that are neither enabled nor blocked", () => {
+    const item = createMockDataItem({
+      PharmacyODSCode: "NOTINLIST",
+      ApplicationName: "Some Other System"
+    })
+    const result = checkSiteOrSystemIsNotifyEnabled([item])
+    expect(result).toEqual([])
   })
 })
