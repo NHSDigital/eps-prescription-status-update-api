@@ -7,11 +7,13 @@ import {
 } from "@jest/globals"
 
 const mockDrainQueue = jest.fn()
+const mockClearCompletedSQSMessages = jest.fn()
 jest.unstable_mockModule(
   "../src/utils",
   async () => ({
     __esModule: true,
-    drainQueue: mockDrainQueue
+    drainQueue: mockDrainQueue,
+    clearCompletedSQSMessages: mockClearCompletedSQSMessages
   })
 )
 
