@@ -5,7 +5,7 @@ import {createHmac} from "crypto"
 
 import {PSUDataItem} from "@PrescriptionStatusUpdate_common/commonTypes"
 
-import {checkSiteOrSystemIsNotifyWhitelisted} from "../validation/notificationSiteAndSystemFilters"
+import {checkSiteOrSystemIsNotifyEnabled} from "../validation/notificationSiteAndSystemFilters"
 
 const sqsUrl: string | undefined = process.env.NHS_NOTIFY_PRESCRIPTIONS_SQS_QUEUE_URL
 const sqsSalt: string = process.env.SQS_SALT ?? "DEVSALT"
@@ -62,7 +62,7 @@ export async function pushPrescriptionToNotificationSQS(
   }
 
   // Only allow through sites and systems that are whitelisted
-  const whitelistedData = checkSiteOrSystemIsNotifyWhitelisted(data)
+  const whitelistedData = checkSiteOrSystemIsNotifyEnabled(data)
 
   // SQS batch calls are limited to 10 messages per request, so chunk the data
   const batches = chunkArray(whitelistedData, 10)

@@ -1,11 +1,12 @@
 import {PSUDataItem} from "@PrescriptionStatusUpdate_common/commonTypes"
+import {logger} from "../updatePrescriptionStatus"
 
-const whitelistedSiteODSCodes: Array<string> = [
+const enabledSiteODSCodes: Array<string> = [
   "ABC123"
 ]
 
-// Whitelisted supplier names
-const whitelistedSystems: Array<string> = [
+// Enabled supplier names
+const enabledSystems: Array<string> = [
   "Internal Test System",
   "Apotec Ltd - Apotec CRM - Production",
   "CrxPatientApp",
@@ -13,35 +14,39 @@ const whitelistedSystems: Array<string> = [
   "Titan PSU Prod"
 ]
 
-const blacklistedSiteODSCodes: Array<string> = [
+const blockedSiteODSCodes: Array<string> = [
   "DEF456"
 ]
 
 /**
- * Given an array of PSUDataItem, only returns those which ARE whitelisted at a site or system level,
- * AND are NOT blacklisted at the site level.
+ * Given an array of PSUDataItem, only returns those which ARE enabled at a site or system level,
+ * AND are NOT blocked at the site level.
  *
  * @param data - Array of PSUDataItem to be processed
  * @returns - the filtered array
  */
-export function checkSiteOrSystemIsNotifyWhitelisted(
+export function checkSiteOrSystemIsNotifyEnabled(
   data: Array<PSUDataItem>
 ): Array<PSUDataItem> {
   // Make everything lowercase, so we're case insensitive
-  const sitesSet = new Set(whitelistedSiteODSCodes.map((s) => s.toLowerCase()))
-  const systemsSet = new Set(whitelistedSystems.map((s) => s.toLowerCase()))
-  const blacklistedSet = new Set(blacklistedSiteODSCodes)
+  const sitesSet = new Set(enabledSiteODSCodes.map((s) => s.toLowerCase()))
+  const systemsSet = new Set(enabledSystems.map((s) => s.toLowerCase()))
+
+  const blockedSet = new Set(blockedSiteODSCodes.map((s) => s.toLowerCase()))
 
   return data.filter((item) => {
     const appName = item.ApplicationName.toLowerCase()
     const odsCode = item.PharmacyODSCode
 
-    // Is this item either ODS whitelisted, or supplier whitelisted?
-    const isWhitelistedSystem = sitesSet.has(odsCode) || systemsSet.has(appName)
-    if (!isWhitelistedSystem) return false
+    // Is this item either ODS enabled, or supplier enabled?
+    const isEnabledSystem = sitesSet.has(odsCode) || systemsSet.has(appName)
+    if (!isEnabledSystem) {
+      logger.info("Notifications disabled for dispensing site", {requestID: item.RequestID})
+      return false
+    }
 
-    // Cannot have a blacklisted ODS code
-    if (blacklistedSet.has(odsCode)) return false
+    // Cannot have a blocked ODS code
+    if (blockedSet.has(odsCode)) return false
 
     return true
   })
