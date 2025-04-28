@@ -46,7 +46,10 @@ export function checkSiteOrSystemIsNotifyEnabled(
     }
 
     // Cannot have a blocked ODS code
-    if (blockedSet.has(odsCode)) return false
+    if (blockedSet.has(odsCode)) {
+      logger.info("Notifications disabled for dispensing site", {requestID: item.RequestID})
+      return false
+    }
 
     return true
   })
