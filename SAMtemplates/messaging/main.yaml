@@ -1,0 +1,129 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: AWS::Serverless-2016-10-31
+Description: |
+  SQS messaging stacks used by the PSU
+
+Parameters:
+  StackName:
+    Type: String
+
+Resources:
+  NotificationSQSQueueKMSKey:
+    Type: AWS::KMS::Key
+    Properties:
+      EnableKeyRotation: true
+      KeyPolicy:
+        Version: 2012-10-17
+        Id: NotificationSQSQueueKeyPolicy
+        Statement:
+          - Sid: EnableIAMUserPermissions
+            Effect: Allow
+            Principal:
+              AWS: !Sub "arn:aws:iam::${AWS::AccountId}:root"
+            Action: kms:*
+            Resource: "*"
+
+  NotificationSQSQueueKMSKeyAlias:
+    Type: AWS::KMS::Alias
+    Properties:
+      AliasName: !Sub alias/${StackName}-NotificationSQSQueueKMSKey
+      TargetKeyId: !Ref NotificationSQSQueueKMSKey
+
+  UseNotificationSQSQueueKMSKeyPolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      ManagedPolicyName: !Sub ${StackName}-UseNotificationSQSQueueKMSKey
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: AllowKmsForSqsEncryption
+            Effect: Allow
+            Action:
+              - kms:DescribeKey
+              - kms:GenerateDataKey*
+              - kms:Encrypt
+              - kms:Decrypt
+            Resource: !GetAtt NotificationSQSQueueKMSKey.Arn
+
+  NHSNotifyPrescriptionsSQSQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: !Sub ${StackName}-NHSNotifyPrescriptions
+      KmsMasterKeyId: !Ref NotificationSQSQueueKMSKeyAlias
+      MessageRetentionPeriod: 86400    # 1 day in seconds
+      RedrivePolicy:
+        deadLetterTargetArn: !GetAtt NHSNotifyPrescriptionsDeadLetterQueue.Arn
+        maxReceiveCount: 5
+      VisibilityTimeout: 300
+
+  NHSNotifyPrescriptionsDeadLetterQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: !Sub ${StackName}-NHSNotifyPrescriptionsDeadLetter
+      KmsMasterKeyId: !Ref NotificationSQSQueueKMSKeyAlias
+      MessageRetentionPeriod: 604800   # 1 week in seconds
+      VisibilityTimeout: 300
+
+  ReadNHSNotifyPrescriptionsSQSQueuePolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action:
+              - sqs:ReceiveMessage
+              - sqs:DeleteMessage
+              - sqs:ChangeMessageVisibility
+              - sqs:GetQueueAttributes
+              - sqs:GetQueueUrl
+              - kms:GenerateDataKey
+              - kms:Decrypt
+            Resource: !GetAtt NHSNotifyPrescriptionsSQSQueue.Arn
+            
+  WriteNHSNotifyPrescriptionsSQSQueuePolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      ManagedPolicyName: !Sub ${StackName}-NHSNotifyPrescriptionsSendMessagePolicy
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Action:
+              - sqs:SendMessage
+              - sqs:SendMessageBatch
+              - sqs:GetQueueUrl
+              - kms:GenerateDataKey
+              - kms:Decrypt
+            Resource: !GetAtt NHSNotifyPrescriptionsSQSQueue.Arn
+            
+Outputs:
+  NHSNotifyPrescriptionsSQSQueueUrl:
+    Description: The URL of the NHS Notify Prescriptions SQS Queue
+    Value: !Ref NHSNotifyPrescriptionsSQSQueue
+    Export:
+      Name: !Sub ${StackName}-NHSNotifyPrescriptionsSQSQueueUrl
+
+  NHSNotifyPrescriptionsSQSQueueArn:
+    Description: The ARN of the NHS Notify Prescriptions SQS Queue
+    Value: !GetAtt NHSNotifyPrescriptionsSQSQueue.Arn
+    Export:
+      Name: !Sub ${StackName}-NHSNotifyPrescriptionsSQSQueueArn
+
+  ReadNHSNotifyPrescriptionsSQSQueuePolicyArn:
+    Description: ARN of policy granting permission to read the prescriptions queue
+    Value: !Ref ReadNHSNotifyPrescriptionsSQSQueuePolicy
+    Export:
+      Name: !Sub ${StackName}-ReadNHSNotifyPrescriptionsSQSQueuePolicyArn
+
+  WriteNHSNotifyPrescriptionsSQSQueuePolicyArn:
+    Description: ARN of policy granting permission to write to the prescriptions queue
+    Value: !Ref WriteNHSNotifyPrescriptionsSQSQueuePolicy
+    Export:
+      Name: !Sub ${StackName}-WriteNHSNotifyPrescriptionsSQSQueuePolicyArn
+
+  UseNotificationSQSQueueKMSKeyPolicyArn:
+    Description: ARN of managed policy granting prescriptions queue KMS usage
+    Value: !Ref UseNotificationSQSQueueKMSKeyPolicy
+    Export:
+      Name: !Sub ${StackName}-UseNotificationSQSQueueKMSKeyPolicyArn
