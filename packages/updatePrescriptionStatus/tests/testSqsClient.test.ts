@@ -8,12 +8,13 @@ import {SpiedFunction} from "jest-mock"
 
 import {Logger} from "@aws-lambda-powertools/logger"
 import {LogItemMessage, LogItemExtraInput} from "@aws-lambda-powertools/logger/lib/cjs/types/Logger"
+import {SendMessageBatchCommand} from "@aws-sdk/client-sqs"
 
 import {createMockDataItem, mockSQSClient} from "./utils/testUtils"
 
 const {mockSend} = mockSQSClient()
 
-const {pushPrescriptionToNotificationSQS} = await import("../src/utils/sqsClient")
+const {pushPrescriptionToNotificationSQS, saltedHash} = await import("../src/utils/sqsClient")
 
 const ORIGINAL_ENV = {...process.env}
 
@@ -38,10 +39,10 @@ describe("Unit tests for pushPrescriptionToNotificationSQS", () => {
   it("throws if the SQS URL is not configured", async () => {
     process.env.NHS_NOTIFY_PRESCRIPTIONS_SQS_QUEUE_URL = undefined
     // Re-import the function so the environment change gets picked up
-    const {pushPrescriptionToNotificationSQS} = await import("../src/utils/sqsClient")
+    const {pushPrescriptionToNotificationSQS: tempFunc} = await import("../src/utils/sqsClient")
 
     await expect(
-      pushPrescriptionToNotificationSQS("req-123", [], logger)
+      tempFunc("req-123", [], logger)
     ).rejects.toThrow("Notifications SQS URL not configured")
 
     expect(errorSpy).toHaveBeenCalledWith(
@@ -76,7 +77,7 @@ describe("Unit tests for pushPrescriptionToNotificationSQS", () => {
       createMockDataItem({Status: "a status that will never be real"})
     ]
 
-    mockSend.mockImplementationOnce(() => Promise.resolve({Successful: [{}]}))
+    mockSend.mockImplementationOnce(() => Promise.resolve({Successful: [{}], Failed: [{}]}))
 
     await expect(
       pushPrescriptionToNotificationSQS("req-789", payload, logger)
@@ -85,14 +86,40 @@ describe("Unit tests for pushPrescriptionToNotificationSQS", () => {
     // Should have attempted exactly one SendMessageBatch call
     expect(mockSend).toHaveBeenCalledTimes(1)
 
-    // Confirm it logged the "notification required" and the success
+    // Grab the SendMessageBatchCommand that was sent
+    const sent = mockSend.mock.calls[0][0]
+    expect(sent).toBeInstanceOf(SendMessageBatchCommand)
+    if (!(sent instanceof SendMessageBatchCommand)) {
+      throw new Error("Expected a SendMessageBatchCommand")
+    }
+    const entries = sent.input.Entries!
+
+    expect(entries).toHaveLength(2)
+
+    entries.forEach((entry, idx) => {
+      const original = payload[idx]
+      expect(entry.Id).toBe(idx.toString())
+      expect(entry.MessageBody).toBe(
+        JSON.stringify({...original})
+      )
+      // FIFO params
+      expect(entry.MessageGroupId).toBe("req-789")
+      expect(entry.MessageDeduplicationId).toBe(
+        saltedHash(`${original.PatientNHSNumber}:${original.PharmacyODSCode}`)
+      )
+    })
+
     expect(infoSpy).toHaveBeenCalledWith(
       "Notification required. Pushing prescriptions to the notifications SQS with the following SQS message IDs",
-      expect.objectContaining({requestId: "req-789", messageIds: expect.any(Array)})
+      expect.objectContaining({requestId: "req-789", deduplicationIds: expect.any(Array)})
     )
     expect(infoSpy).toHaveBeenCalledWith(
       "Successfully sent a batch of prescriptions to the notifications SQS",
-      {result: {Successful: [{}]}}
+      {result: {Successful: [{}], Failed: [{}]}}
+    )
+    expect(errorSpy).toHaveBeenCalledWith(
+      "Failed to send a batch of prescriptions to the notifications SQS",
+      {result: {Successful: [{}], Failed: [{}]}}
     )
   })
 
@@ -113,16 +140,15 @@ describe("Unit tests for pushPrescriptionToNotificationSQS", () => {
   })
 
   it("chunks large payloads into batches of 10", async () => {
-    // Create 12 ready-to-collect items
-    const payload = Array.from({length: 12}, () => (createMockDataItem({Status: "ready to collect"})))
+    const payload = Array.from({length: 12}, () =>
+      createMockDataItem({Status: "ready to collect"})
+    )
 
-    // Two calls
-    mockSend.mockImplementationOnce(() => Promise.resolve({Successful: [{}]}))
-    mockSend.mockImplementationOnce(() => Promise.resolve({Successful: [{}]}))
+    mockSend.mockImplementationOnce(() => Promise.resolve({Successful: Array(10).fill({})}))
+    mockSend.mockImplementationOnce(() => Promise.resolve({Successful: Array(2).fill({})}))
 
     await pushPrescriptionToNotificationSQS("req-111", payload, logger)
 
-    // Expect two separate batch sends: 10 then 2
     expect(mockSend).toHaveBeenCalledTimes(2)
   })
 })

@@ -60,6 +60,17 @@ Conditions:
     - !Ref DeployCheckPrescriptionStatusUpdate
 
 Resources:
+  SQSSaltSecret:
+    Type: AWS::SecretsManager::Secret
+    Properties:
+      Name: !Sub ${StackName}-SqsSalt
+      Description: Auto-generated salt for SQS_SALT
+      GenerateSecretString:
+        SecretStringTemplate: "{}"
+        GenerateStringKey: salt
+        PasswordLength: 32
+        ExcludePunctuation: true
+
   UpdatePrescriptionStatus:
     Type: AWS::Serverless::Function
     Properties:
@@ -71,6 +82,7 @@ Resources:
         Variables:
           TABLE_NAME: !Ref PrescriptionStatusUpdatesTableName
           NHS_NOTIFY_PRESCRIPTIONS_SQS_QUEUE_URL: !Ref NHSNotifyPrescriptionsSQSQueueUrl
+          SQS_SALT: !Sub "{{resolve:secretsmanager:${SQSSaltSecret}:SecretString:salt}}"
           LOG_LEVEL: !Ref LogLevel
           ENVIRONMENT: !Ref Environment
           TEST_PRESCRIPTIONS_1: "None"

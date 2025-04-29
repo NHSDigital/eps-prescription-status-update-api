@@ -7,11 +7,13 @@ import {
 } from "@jest/globals"
 
 const mockDrainQueue = jest.fn()
+const mockClearCompletedSQSMessages = jest.fn()
 jest.unstable_mockModule(
   "../src/utils",
   async () => ({
     __esModule: true,
-    drainQueue: mockDrainQueue
+    drainQueue: mockDrainQueue,
+    clearCompletedSQSMessages: mockClearCompletedSQSMessages
   })
 )
 
@@ -55,6 +57,51 @@ describe("Unit test for NHS Notify lambda handler", () => {
     await expect(lambdaHandler(mockEventBridgeEvent)).resolves.not.toThrow()
 
     expect(mockInfo).toHaveBeenCalledWith("No messages to process")
+  })
+
+  it("Clears completed messages after successful processing", async () => {
+    const item1 = {TaskID: "t1", RequestID: "r1"}
+    const item2 = {TaskID: "t2", RequestID: "r2"}
+    const msg1 = {Body: JSON.stringify(item1)}
+    const msg2 = {Body: JSON.stringify(item2)}
+    // drainQueue returns two messages
+    mockDrainQueue.mockImplementationOnce(() => Promise.resolve([msg1, msg2]))
+    // deletion succeeds
+    mockClearCompletedSQSMessages.mockImplementationOnce(() => Promise.resolve(undefined))
+
+    await expect(lambdaHandler(mockEventBridgeEvent)).resolves.not.toThrow()
+
+    // ensure we logged the fetched notifications
+    expect(mockInfo).toHaveBeenCalledWith(
+      "Fetched prescription notification messages",
+      {
+        count: 2,
+        toNotify: [
+          {RequestID: "r1", TaskId: "t1", Message: "Notification Required"},
+          {RequestID: "r2", TaskId: "t2", Message: "Notification Required"}
+        ]
+      }
+    )
+    // ensure clearCompletedSQSMessages was called with the original messages array
+    expect(mockClearCompletedSQSMessages).toHaveBeenCalledWith(
+      [msg1, msg2],
+      expect.any(Object) // the logger instance
+    )
+  })
+
+  it("Throws and logs if clearCompletedSQSMessages fails", async () => {
+    const item = {TaskID: "tx", RequestID: "rx"}
+    const msg = {Body: JSON.stringify(item)}
+    mockDrainQueue.mockImplementationOnce(() => Promise.resolve([msg]))
+    const deletionError = new Error("Delete failed")
+    mockClearCompletedSQSMessages.mockImplementationOnce(() => Promise.reject(deletionError))
+
+    await expect(lambdaHandler(mockEventBridgeEvent)).rejects.toThrow("Delete failed")
+
+    expect(mockError).toHaveBeenCalledWith(
+      "Error while deleting successfully processed messages from SQS",
+      {error: deletionError}
+    )
   })
 
   it("When drainQueue returns only valid JSON messages, all are processed", async () => {

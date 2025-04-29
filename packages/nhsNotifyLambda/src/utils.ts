@@ -22,7 +22,7 @@ const docClient = DynamoDBDocumentClient.from(dynamo)
  * Pulls up to `maxTotal` messages off the queue (in batches of up to 10),
  * logs them, and deletes them.
  */
-export async function drainQueue(logger: Logger, maxTotal = 100) {
+export async function drainQueue(logger: Logger, maxTotal = 100): Promise<Array<Message>> {
   let receivedSoFar = 0
   const allMessages: Array<Message> = []
 
@@ -47,25 +47,43 @@ export async function drainQueue(logger: Logger, maxTotal = 100) {
 
     allMessages.push(...Messages)
     receivedSoFar += Messages.length
-
-    // delete this batch of messages from the queue
-    const deleteEntries = Messages.map((m) => ({
-      Id: m.MessageId!,
-      ReceiptHandle: m.ReceiptHandle!
-    }))
-    const deleteCmd = new DeleteMessageBatchCommand({
-      QueueUrl: sqsUrl,
-      Entries: deleteEntries
-    })
-    const delResult = await sqs.send(deleteCmd)
-
-    if (delResult.Failed) {
-      logger.error("Some messages failed to delete", {failed: delResult.Failed})
-      throw new Error("Failed to delete fetched messages from SQS")
-    }
   }
 
   return allMessages
+}
+
+/**
+ * For each message given, delete it from the notifications SQS. Throws an error if it fails
+ *
+ * @param messages - The messages that were received from SQS, and are to be deleted.
+ * @param logger - the logging object
+ */
+export async function clearCompletedSQSMessages(
+  messages: Array<Message>,
+  logger: Logger
+): Promise<void> {
+  if (!sqsUrl) {
+    logger.error("Notifications SQS URL not configured")
+    throw new Error("NHS_NOTIFY_PRESCRIPTIONS_SQS_QUEUE_URL not set")
+  }
+
+  const deleteMessages = messages.map((m) => ({
+    Id: m.MessageId!,
+    ReceiptHandle: m.ReceiptHandle!
+  }))
+
+  const deleteCmd = new DeleteMessageBatchCommand({
+    QueueUrl: sqsUrl,
+    Entries: deleteMessages
+  })
+  const delResult = await sqs.send(deleteCmd)
+
+  if (delResult.Failed) {
+    logger.error("Some messages failed to delete", {failed: delResult.Failed})
+    throw new Error("Failed to delete fetched messages from SQS")
+  }
+
+  logger.info("Successfully deleted messages from SQS", {result: delResult})
 }
 
 export async function addPrescriptionToNotificationStateStore(logger: Logger, dataArray: Array<PSUDataItem>) {
