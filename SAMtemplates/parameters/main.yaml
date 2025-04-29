@@ -1,10 +1,16 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Description: >-
-  SSM Parameter Store entries. Can be temporarily updated in the console, but will be overwritten by deployments.
+  SSM Parameter Store entries. Values may differ between prod and non-prod environments
 
 Parameters:
   StackName:
     Type: String
+
+  Environment:
+    Type: String
+
+Conditions:
+  IsProd: !Equals [ !Ref Environment, prod ]
 
 Resources:
   EnabledSiteODSCodesParameter:
@@ -13,9 +19,12 @@ Resources:
       Name: !Sub ${StackName}-PSUNotifyEnabledSiteODSCodes
       Description: "List of site ODS codes for which notifications are enabled"
       Type: StringList
-      # comma-separated list
-      Value: >
-        FA565
+      Value: !If
+        - IsProd
+        - > # Prod notification enabled
+          FA565
+        - > # Non-prod
+          FA565
 
   EnabledSystemsParameter:
     Type: AWS::SSM::Parameter
@@ -23,13 +32,19 @@ Resources:
       Name: !Sub ${StackName}-PSUNotifyEnabledSystems
       Description: "List of application names for which notifications are enabled"
       Type: StringList
-      # comma-separated list
-      Value: >
-        Internal Test System,
-        Apotec Ltd - Apotec CRM - Production,
-        CrxPatientApp,
-        nhsPrescriptionApp,
-        Titan PSU Prod
+      Value: !If
+        - IsProd
+        - > # Prod notification enabled
+          Apotec Ltd - Apotec CRM - Production,
+          CrxPatientApp,
+          nhsPrescriptionApp,
+          Titan PSU Prod
+        - > # Non-prod
+          Internal Test System,
+          Apotec Ltd - Apotec CRM - Production,
+          CrxPatientApp,
+          nhsPrescriptionApp,
+          Titan PSU Prod
 
   BlockedSiteODSCodesParameter:
     Type: AWS::SSM::Parameter
@@ -37,9 +52,12 @@ Resources:
       Name: !Sub ${StackName}-PSUNotifyBlockedSiteODSCodes
       Description: "List of site ODS codes for which notifications are blocked"
       Type: StringList
-      # comma-separated list
-      Value: >
-        A83008
+      Value: !If
+        - IsProd
+        - > # Prod notification enabled
+          A83008
+        - > # Non-prod
+          A83008
 
 Outputs:
   EnabledSiteODSCodesParameterName:
