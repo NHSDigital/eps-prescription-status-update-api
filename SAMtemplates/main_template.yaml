@@ -90,6 +90,13 @@ Parameters:
     Type: String
 
 Resources:
+  Parameters:
+    Type: AWS::Serverless::Application
+    Properties:
+      Location: parameters/main.yaml
+      Parameters:
+        StackName: !Ref AWS::StackName
+
   Tables:
     Type: AWS::Serverless::Application
     Properties:
@@ -136,6 +143,9 @@ Resources:
         PrescriptionStatusUpdatesTableName: !GetAtt Tables.Outputs.PrescriptionStatusUpdatesTableName
         PrescriptionNotificationStateTableName: !GetAtt Tables.Outputs.PrescriptionNotificationStateTableName
         NHSNotifyPrescriptionsSQSQueueUrl: !GetAtt Messaging.Outputs.NHSNotifyPrescriptionsSQSQueueUrl
+        EnabledSiteODSCodesParam: !GetAtt Paramters.Outputs.EnabledSiteODSCodesParameterName
+        EnabledSystemsParam: !GetAtt Paramters.Outputs.EnabledSystemsParameterName
+        BlockedSiteODSCodesParam: !GetAtt Paramters.Outputs.BlockedSiteODSCodesParameterName
         LogLevel: !Ref LogLevel
         LogRetentionInDays: !Ref LogRetentionInDays
         EnableSplunk: !Ref EnableSplunk

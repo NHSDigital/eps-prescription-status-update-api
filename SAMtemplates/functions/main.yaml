@@ -33,6 +33,18 @@ Parameters:
     Type: String
     Default: none
 
+  EnabledSiteODSCodesParam:
+    Type: AWS::SSM::Parameter::Value<StringList>
+    Default: none
+
+  EnabledSystemsParam:
+    Type: AWS::SSM::Parameter::Value<StringList>
+    Default: none
+
+  BlockedSiteODSCodesParam:
+    Type: AWS::SSM::Parameter::Value<StringList>
+    Default: none
+
   LogLevel:
     Type: String
 
@@ -83,6 +95,9 @@ Resources:
           TABLE_NAME: !Ref PrescriptionStatusUpdatesTableName
           NHS_NOTIFY_PRESCRIPTIONS_SQS_QUEUE_URL: !Ref NHSNotifyPrescriptionsSQSQueueUrl
           SQS_SALT: !Sub "{{resolve:secretsmanager:${SQSSaltSecret}:SecretString:salt}}"
+          ENABLED_SITE_ODS_CODES: !Join [",", !Ref EnabledSiteODSCodesParam]
+          ENABLED_SYSTEMS: !Join [",", !Ref EnabledSystemsParam]
+          BLOCKED_SITE_ODS_CODES: !Join [",", !Ref BlockedSiteODSCodesParam]
           LOG_LEVEL: !Ref LogLevel
           ENVIRONMENT: !Ref Environment
           TEST_PRESCRIPTIONS_1: "None"
