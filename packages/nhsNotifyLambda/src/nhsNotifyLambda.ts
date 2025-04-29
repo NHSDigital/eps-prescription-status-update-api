@@ -7,7 +7,7 @@ import inputOutputLogger from "@middy/input-output-logger"
 import errorHandler from "@nhs/fhir-middy-error-handler"
 
 import {PSUDataItem} from "@PrescriptionStatusUpdate_common/commonTypes"
-import {drainQueue} from "./utils"
+import {clearCompletedSQSMessages, drainQueue} from "./utils"
 
 const logger = new Logger({serviceName: "nhsNotify"})
 
@@ -21,8 +21,9 @@ export const lambdaHandler = async (event: EventBridgeEvent<string, string>): Pr
 
   logger.info("NHS Notify lambda triggered by scheduler", {event})
 
+  let messages
   try {
-    const messages = await drainQueue(logger, 100)
+    messages = await drainQueue(logger, 100)
 
     if (messages.length === 0) {
       logger.info("No messages to process")
@@ -54,6 +55,15 @@ export const lambdaHandler = async (event: EventBridgeEvent<string, string>): Pr
 
   } catch (err) {
     logger.error("Error while draining SQS queue", {error: err})
+    throw err
+  }
+
+  // By waiting until a message is successfully processed before deleting it from SQS,
+  // failed messages will eventually be retried by subsequent notify consumers.
+  try {
+    await clearCompletedSQSMessages(messages, logger)
+  } catch (err) {
+    logger.error("Error while deleting successfully processed messages from SQS", {error: err})
     throw err
   }
 }
