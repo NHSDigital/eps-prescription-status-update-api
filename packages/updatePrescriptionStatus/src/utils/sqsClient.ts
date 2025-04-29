@@ -34,6 +34,9 @@ function chunkArray<T>(arr: Array<T>, size: number): Array<Array<T>> {
  * @returns - A hex encoded string of the hash
  */
 export function saltedHash(input: string, hashFunction: string = "sha256"): string {
+  if (sqsSalt === "DEVSALT") {
+    console.warn("Using the fallback salt value - please update the environment variable `SQS_SALT` to a random value.")
+  }
   return createHmac(hashFunction, sqsSalt)
     .update(input, "utf8")
     .digest("hex")
