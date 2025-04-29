@@ -84,7 +84,6 @@ Resources:
               - kms:GenerateDataKey
               - kms:Decrypt
             Resource: !GetAtt NHSNotifyPrescriptionsSQSQueue.Arn
-
   WriteNHSNotifyPrescriptionsSQSQueuePolicy:
     Type: AWS::IAM::ManagedPolicy
     Properties:
@@ -100,7 +99,6 @@ Resources:
               - kms:GenerateDataKey
               - kms:Decrypt
             Resource: !GetAtt NHSNotifyPrescriptionsSQSQueue.Arn
-
 Outputs:
   NHSNotifyPrescriptionsSQSQueueUrl:
     Description: The URL of the NHS Notify Prescriptions SQS Queue
