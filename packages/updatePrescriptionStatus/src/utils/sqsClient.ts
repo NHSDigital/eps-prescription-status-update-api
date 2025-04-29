@@ -55,7 +55,7 @@ export async function pushPrescriptionToNotificationSQS(
   data: Array<DataItem>,
   logger: Logger
 ) {
-  logger.info("Pushing data items up to the notifications SQS", {count: data.length, sqsUrl})
+  logger.info("Checking if any items require notifications", {numItemsToBeChecked: data.length, sqsUrl})
 
   if (!sqsUrl) {
     logger.error("Notifications SQS URL not found in environment variables")
@@ -73,7 +73,7 @@ export async function pushPrescriptionToNotificationSQS(
 
   for (const batch of batches) {
     const entries = batch
-      .filter((item) => updateStatuses.includes(item.Status))
+      .filter((item) => updateStatuses.includes(item.Status.toLowerCase()))
       // Build SQS batch entries with FIFO parameters
       .map((item, idx) => ({
         Id: idx.toString(),
@@ -92,7 +92,7 @@ export async function pushPrescriptionToNotificationSQS(
     }
 
     logger.info(
-      "Notification required. Pushing prescriptions with deduplication IDs",
+      "Notification required. Pushing prescriptions to the notifications SQS with the following SQS message IDs",
       {deduplicationIds: entries.map(e => e.MessageDeduplicationId), requestId}
     )
 
