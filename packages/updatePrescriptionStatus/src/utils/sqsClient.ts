@@ -27,7 +27,7 @@ function chunkArray<T>(arr: Array<T>, size: number): Array<Array<T>> {
  * @param logger - Logger instance
  */
 export async function pushPrescriptionToNotificationSQS(requestId: string, data: Array<DataItem>, logger: Logger) {
-  logger.info("Pushing data items up to the notifications SQS", {count: data.length, sqsUrl})
+  logger.info("Checking if any items require notifications", {numItemsToBeChecked: data.length, sqsUrl})
 
   if (!sqsUrl) {
     logger.error("Notifications SQS URL not found in environment variables")
@@ -45,7 +45,7 @@ export async function pushPrescriptionToNotificationSQS(requestId: string, data:
 
   for (const batch of batches) {
     const entries = batch
-      .filter((item) => updateStatuses.includes(item.Status))
+      .filter((item) => updateStatuses.includes(item.Status.toLowerCase()))
       // Add the request ID to the SQS message
       .map((item) => ({...item, requestId}))
       .map((item) => ({Id: v4().toUpperCase(), MessageBody: JSON.stringify(item)}))
@@ -62,7 +62,7 @@ export async function pushPrescriptionToNotificationSQS(requestId: string, data:
 
     const messageIds = entries.map((el) => el.Id)
     logger.info(
-      "Notification required. Pushing prescriptions with the following SQS message IDs",
+      "Notification required. Pushing prescriptions to the notifications SQS with the following SQS message IDs",
       {messageIds, requestId}
     )
 
