@@ -63,8 +63,8 @@ describe("Unit tests for pushPrescriptionToNotificationSQS", () => {
 
     // It logs the initial push attempt, but never actually sends
     expect(infoSpy).toHaveBeenCalledWith(
-      "Pushing data items up to the notifications SQS",
-      {count: data.length, sqsUrl: process.env.NHS_NOTIFY_PRESCRIPTIONS_SQS_QUEUE_URL}
+      "Checking if any items require notifications",
+      {numItemsToBeChecked: data.length, sqsUrl: process.env.NHS_NOTIFY_PRESCRIPTIONS_SQS_QUEUE_URL}
     )
     expect(mockSend).not.toHaveBeenCalled()
   })
@@ -87,7 +87,7 @@ describe("Unit tests for pushPrescriptionToNotificationSQS", () => {
 
     // Confirm it logged the "notification required" and the success
     expect(infoSpy).toHaveBeenCalledWith(
-      "Notification required. Pushing prescriptions with the following SQS message IDs",
+      "Notification required. Pushing prescriptions to the notifications SQS with the following SQS message IDs",
       expect.objectContaining({requestId: "req-789", messageIds: expect.any(Array)})
     )
     expect(infoSpy).toHaveBeenCalledWith(
