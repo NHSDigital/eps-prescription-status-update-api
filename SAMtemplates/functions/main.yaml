@@ -331,7 +331,7 @@ Resources:
         SplunkSubscriptionFilterRole: !ImportValue lambda-resources:SplunkSubscriptionFilterRole
         SplunkDeliveryStreamArn: !ImportValue lambda-resources:SplunkDeliveryStream
 
-  PSUNotifyProcessorScheduleEventRole:
+  NotifyProcessorScheduleEventRole:
     Type: AWS::IAM::Role
     Properties:
       AssumeRolePolicyDocument:
@@ -344,9 +344,9 @@ Resources:
             Action:
               - sts:AssumeRole
       ManagedPolicyArns:
-        - !Ref PSUNotifyProcessorScheduleEventRolePolicy
+        - !Ref NotifyProcessorScheduleEventRolePolicy
 
-  PSUNotifyProcessorScheduleEventRolePolicy:
+  NotifyProcessorScheduleEventRolePolicy:
     Type: AWS::IAM::ManagedPolicy
     Properties:
       PolicyDocument:
@@ -356,15 +356,15 @@ Resources:
             Action:
               - lambda:InvokeFunction
             Resource:
-              - !GetAtt PSUNotifyProcessor.Arn
+              - !GetAtt NotifyProcessor.Arn
 
-  PSUNotifyProcessor:
+  NotifyProcessor:
     Type: AWS::Serverless::Function
     Properties:
-      FunctionName: !Sub ${StackName}-PSUNotifyProcessor
+      FunctionName: !Sub ${StackName}-NotifyProcessor
       CodeUri: ../../packages/
       Handler: nhsNotifyLambda.handler
-      Role: !GetAtt PSUNotifyProcessorResources.Outputs.LambdaRoleArn
+      Role: !GetAtt NotifyProcessorResources.Outputs.LambdaRoleArn
       Environment:
         Variables:
           LOG_LEVEL: !Ref LogLevel
@@ -376,7 +376,7 @@ Resources:
           Properties:
             Name: !Sub ${StackName}-NHSNotifySchedule
             ScheduleExpression: "rate(1 minute)"
-            RoleArn: !GetAtt PSUNotifyProcessorScheduleEventRole.Arn
+            RoleArn: !GetAtt NotifyProcessorScheduleEventRole.Arn
     Metadata:
       BuildMethod: esbuild
       guard:
@@ -393,14 +393,14 @@ Resources:
         EntryPoints:
           - nhsNotifyLambda/src/nhsNotifyLambda.ts
 
-  PSUNotifyProcessorResources:
+  NotifyProcessorResources:
     Type: AWS::Serverless::Application
     Properties:
       Location: lambda_resources.yaml
       Parameters:
         StackName: !Ref StackName
-        LambdaName: !Sub ${StackName}-PSUNotifyProcessor
-        LambdaArn: !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:${StackName}-PSUNotifyProcessor
+        LambdaName: !Sub ${StackName}-NotifyProcessor
+        LambdaArn: !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:${StackName}-NotifyProcessor
         LogRetentionInDays: !Ref LogRetentionInDays
         CloudWatchKMSKeyId: !ImportValue account-resources:CloudwatchLogsKmsKeyArn
         EnableSplunk: !Ref EnableSplunk
@@ -475,10 +475,10 @@ Outputs:
       - !GetAtt CheckPrescriptionStatusUpdates.Arn
       - ""
 
-  PSUNotifyProcessorFunctionName:
+  NotifyProcessorFunctionName:
     Description: The function name of the NHS Notify lambda
-    Value: !Ref PSUNotifyProcessor
+    Value: !Ref NotifyProcessor
 
-  PSUNotifyProcessorFunctionArn:
+  NotifyProcessorFunctionArn:
     Description: The function ARN of the NHS Notify lambda
-    Value: !GetAtt PSUNotifyProcessor.Arn
+    Value: !GetAtt NotifyProcessor.Arn
