@@ -54,7 +54,7 @@ Resources:
       Type: StringList
       Value: !If
         - IsProd
-        - > # Prod notification enabled
+        - > # Prod notification disabled
           A83008
         - > # Non-prod
           A83008
