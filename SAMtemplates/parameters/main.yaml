@@ -1,0 +1,79 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: >-
+  SSM Parameter Store entries. Values may differ between prod and non-prod environments
+
+Parameters:
+  StackName:
+    Type: String
+
+  Environment:
+    Type: String
+
+Conditions:
+  IsProd: !Equals [ !Ref Environment, prod ]
+
+Resources:
+  EnabledSiteODSCodesParameter:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub ${StackName}-PSUNotifyEnabledSiteODSCodes
+      Description: "List of site ODS codes for which notifications are enabled"
+      Type: String
+      Value: !If
+        - IsProd
+        - > # Prod notification enabled
+          FA565
+        - > # Non-prod
+          FA565
+
+  EnabledSystemsParameter:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub ${StackName}-PSUNotifyEnabledSystems
+      Description: "List of application names for which notifications are enabled"
+      Type: String
+      Value: !If
+        - IsProd
+        - > # Prod notification enabled
+          Apotec Ltd - Apotec CRM - Production,
+          CrxPatientApp,
+          nhsPrescriptionApp,
+          Titan PSU Prod
+        - > # Non-prodfdsaafdsa
+          Internal Test System,
+          Apotec Ltd - Apotec CRM - Production,
+          CrxPatientApp,
+          nhsPrescriptionApp,
+          Titan PSU Prod
+
+  BlockedSiteODSCodesParameter:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub ${StackName}-PSUNotifyBlockedSiteODSCodes
+      Description: "List of site ODS codes for which notifications are blocked"
+      Type: String
+      Value: !If
+        - IsProd
+        - > # Prod notification disabled
+          A83008
+        - > # Non-prod
+          A83008
+
+Outputs:
+  EnabledSiteODSCodesParameterName:
+    Description: "Name of the SSM parameter holding enabled site ODS codes"
+    Value: !Ref EnabledSiteODSCodesParameter
+    Export:
+      Name: !Sub ${StackName}-PSUNotifyEnabledSiteODSCodesParam
+
+  EnabledSystemsParameterName:
+    Description: "Name of the SSM parameter holding enabled system names"
+    Value: !Ref EnabledSystemsParameter
+    Export:
+      Name: !Sub ${StackName}-PSUNotifyEnabledSystemsParam
+
+  BlockedSiteODSCodesParameterName:
+    Description: "Name of the SSM parameter holding blocked site ODS codes"
+    Value: !Ref BlockedSiteODSCodesParameter
+    Export:
+      Name: !Sub ${StackName}-PSUNotifyBlockedSiteODSCodesParam
