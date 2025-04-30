@@ -1,42 +1,17 @@
 import {PSUDataItem} from "@PrescriptionStatusUpdate_common/commonTypes"
-import AWS from "aws-sdk"
 
-const ssm = new AWS.SSM()
-
-/**
- * Fetches the comma-delimited StringList from SSM, normalizes & returns a Set<string>.
- */
-async function fetchListFromSSM(paramNameEnvVar: string): Promise<Set<string>> {
-  const paramName = process.env[paramNameEnvVar]
-  if (!paramName) {
-    throw new Error(`Missing required env-var ${paramNameEnvVar}`)
-  }
-  const resp = await ssm
-    .getParameter({Name: paramName, WithDecryption: false})
-    .promise()
-
-  const raw = resp.Parameter?.Value ?? ""
-  return new Set(
-    raw
-      .split(",")
-      .map((s) => s.trim().toLowerCase())
-      .filter(Boolean)
+function getEnvList(name: string): Set<string> {
+  const raw = process.env[name] ?? ""
+  return new Set(raw
+    .split(",")
+    .map((s) => s.trim().toLowerCase())
+    .filter(Boolean) // Remove empty entries
   )
 }
 
-const listsReady: Promise<{
-  enabledSiteODSCodes: Set<string>;
-  enabledSystems: Set<string>;
-  blockedSiteODSCodes: Set<string>;
-}> = (async () => {
-  const [enabledSiteODSCodes, enabledSystems, blockedSiteODSCodes] =
-    await Promise.all([
-      fetchListFromSSM("ENABLED_SITE_ODS_CODES"),
-      fetchListFromSSM("ENABLED_SYSTEMS"),
-      fetchListFromSSM("BLOCKED_SITE_ODS_CODES")
-    ])
-  return {enabledSiteODSCodes, enabledSystems, blockedSiteODSCodes}
-})()
+const enabledSiteODSCodes = getEnvList("ENABLED_SITE_ODS_CODES")
+const enabledSystems = getEnvList("ENABLED_SYSTEMS")
+const blockedSiteODSCodes = getEnvList("BLOCKED_SITE_ODS_CODES")
 
 /**
  * Given an array of PSUDataItem, only returns those which:
@@ -46,15 +21,9 @@ const listsReady: Promise<{
  * @param data - Array of PSUDataItem to be processed
  * @returns - the filtered array
  */
-export async function checkSiteOrSystemIsNotifyEnabled(
+export function checkSiteOrSystemIsNotifyEnabled(
   data: Array<PSUDataItem>
-): Promise<Array<PSUDataItem>> {
-  const {
-    enabledSiteODSCodes,
-    enabledSystems,
-    blockedSiteODSCodes
-  } = await listsReady
-
+): Array<PSUDataItem> {
   return data.filter((item) => {
     const appName = item.ApplicationName.toLowerCase()
     const odsCode = item.PharmacyODSCode.toLowerCase()

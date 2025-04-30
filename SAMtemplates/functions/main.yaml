@@ -34,13 +34,13 @@ Parameters:
     Default: none
 
   EnabledSiteODSCodesParam:
-    Type: String
+    Type: AWS::SSM::Parameter::Value<String>
 
   EnabledSystemsParam:
-    Type: String
+    Type: AWS::SSM::Parameter::Value<String>
 
   BlockedSiteODSCodesParam:
-    Type: String
+    Type: AWS::SSM::Parameter::Value<String>
     
   LogLevel:
     Type: String

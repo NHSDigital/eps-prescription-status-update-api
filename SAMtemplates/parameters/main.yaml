@@ -18,7 +18,7 @@ Resources:
     Properties:
       Name: !Sub ${StackName}-PSUNotifyEnabledSiteODSCodes
       Description: "List of site ODS codes for which notifications are enabled"
-      Type: StringList
+      Type: String
       Value: !If
         - IsProd
         - > # Prod notification enabled
@@ -31,7 +31,7 @@ Resources:
     Properties:
       Name: !Sub ${StackName}-PSUNotifyEnabledSystems
       Description: "List of application names for which notifications are enabled"
-      Type: StringList
+      Type: String
       Value: !If
         - IsProd
         - > # Prod notification enabled
@@ -51,7 +51,7 @@ Resources:
     Properties:
       Name: !Sub ${StackName}-PSUNotifyBlockedSiteODSCodes
       Description: "List of site ODS codes for which notifications are blocked"
-      Type: StringList
+      Type: String
       Value: !If
         - IsProd
         - > # Prod notification disabled
