@@ -66,7 +66,7 @@ export async function pushPrescriptionToNotificationSQS(
   }
 
   // Only allow through sites and systems that are allowedSitesAndSystems
-  const allowedSitesAndSystemsData = await checkSiteOrSystemIsNotifyEnabled(data)
+  const allowedSitesAndSystemsData = checkSiteOrSystemIsNotifyEnabled(data)
   logger.info(
     "Filtered out sites and suppliers that are not enabled, or are explicitly disabled",
     {
