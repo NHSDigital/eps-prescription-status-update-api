@@ -355,7 +355,7 @@ Resources:
         SplunkSubscriptionFilterRole: !ImportValue lambda-resources:SplunkSubscriptionFilterRole
         SplunkDeliveryStreamArn: !ImportValue lambda-resources:SplunkDeliveryStream
 
-  NHSNotifyLambdaScheduleEventRole:
+  NotifyProcessorScheduleEventRole:
     Type: AWS::IAM::Role
     Properties:
       AssumeRolePolicyDocument:
@@ -368,9 +368,9 @@ Resources:
             Action:
               - sts:AssumeRole
       ManagedPolicyArns:
-        - !Ref NHSNotifyLambdaScheduleEventRolePolicy
+        - !Ref NotifyProcessorScheduleEventRolePolicy
 
-  NHSNotifyLambdaScheduleEventRolePolicy:
+  NotifyProcessorScheduleEventRolePolicy:
     Type: AWS::IAM::ManagedPolicy
     Properties:
       PolicyDocument:
@@ -380,15 +380,15 @@ Resources:
             Action:
               - lambda:InvokeFunction
             Resource:
-              - !GetAtt NHSNotifyLambda.Arn
+              - !GetAtt NotifyProcessor.Arn
 
-  NHSNotifyLambda:
+  NotifyProcessor:
     Type: AWS::Serverless::Function
     Properties:
-      FunctionName: !Sub ${StackName}-NHSNotifyLambda
+      FunctionName: !Sub ${StackName}-NotifyProcessor
       CodeUri: ../../packages/
       Handler: nhsNotifyLambda.handler
-      Role: !GetAtt NHSNotifyLambdaResources.Outputs.LambdaRoleArn
+      Role: !GetAtt NotifyProcessorResources.Outputs.LambdaRoleArn
       Environment:
         Variables:
           LOG_LEVEL: !Ref LogLevel
@@ -400,7 +400,7 @@ Resources:
           Properties:
             Name: !Sub ${StackName}-NHSNotifySchedule
             ScheduleExpression: "rate(1 minute)"
-            RoleArn: !GetAtt NHSNotifyLambdaScheduleEventRole.Arn
+            RoleArn: !GetAtt NotifyProcessorScheduleEventRole.Arn
     Metadata:
       BuildMethod: esbuild
       guard:
@@ -417,14 +417,14 @@ Resources:
         EntryPoints:
           - nhsNotifyLambda/src/nhsNotifyLambda.ts
 
-  NHSNotifyLambdaResources:
+  NotifyProcessorResources:
     Type: AWS::Serverless::Application
     Properties:
       Location: lambda_resources.yaml
       Parameters:
         StackName: !Ref StackName
-        LambdaName: !Sub ${StackName}-NHSNotifyLambda
-        LambdaArn: !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:${StackName}-NHSNotifyLambda
+        LambdaName: !Sub ${StackName}-NotifyProcessor
+        LambdaArn: !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:${StackName}-NotifyProcessor
         LogRetentionInDays: !Ref LogRetentionInDays
         CloudWatchKMSKeyId: !ImportValue account-resources:CloudwatchLogsKmsKeyArn
         EnableSplunk: !Ref EnableSplunk
@@ -499,10 +499,10 @@ Outputs:
       - !GetAtt CheckPrescriptionStatusUpdates.Arn
       - ""
 
-  NHSNotifyLambdaFunctionName:
+  NotifyProcessorFunctionName:
     Description: The function name of the NHS Notify lambda
-    Value: !Ref NHSNotifyLambda
+    Value: !Ref NotifyProcessor
 
-  NHSNotifyLambdaFunctionArn:
+  NotifyProcessorFunctionArn:
     Description: The function ARN of the NHS Notify lambda
-    Value: !GetAtt NHSNotifyLambda.Arn
+    Value: !GetAtt NotifyProcessor.Arn
