@@ -189,7 +189,7 @@ describe("Unit tests for checkSiteOrSystemIsNotifyEnabled", () => {
 
   it("is case insensitive for both ODS code and ApplicationName", () => {
     const item1 = createMockDataItem({
-      PharmacyODSCode: "FA565",
+      PharmacyODSCode: "fa565",
       ApplicationName: "not a real test supplier"
     })
     const item2 = createMockDataItem({
@@ -203,7 +203,7 @@ describe("Unit tests for checkSiteOrSystemIsNotifyEnabled", () => {
 
   it("excludes an item when its ODS code is blocked, even if otherwise enabled", () => {
     const item = createMockDataItem({
-      PharmacyODSCode: "A83008",
+      PharmacyODSCode: "a83008",
       ApplicationName: "Internal Test System"
     })
     const result = checkSiteOrSystemIsNotifyEnabled([item])
