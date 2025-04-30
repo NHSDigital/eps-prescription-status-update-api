@@ -13,7 +13,7 @@ jobs:
       SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
   get_commit_id:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     outputs:
       commit_id: ${{ steps.commit_id.outputs.commit_id }}
     steps:
@@ -24,7 +24,7 @@ jobs:
 
   tag_release:
     needs: quality_checks
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     outputs:
       version_tag: ${{steps.output_version_tag.outputs.VERSION_TAG}}
     steps:
@@ -132,6 +132,8 @@ jobs:
       DEPLOY_APIGEE_CPSU: true
       DEPLOY_CHECK_PRESCRIPTION_STATUS_UPDATE: true
       ENABLE_ALERTS: true
+      RUN_REGRESSION_TEST: true
+      STATE_MACHINE_LOG_LEVEL: ALL
     secrets:
       CLOUD_FORMATION_DEPLOY_ROLE: ${{ secrets.DEV_CLOUD_FORMATION_DEPLOY_ROLE }}
       DEV_CLOUD_FORMATION_CHECK_VERSION_ROLE: ${{ secrets.DEV_CLOUD_FORMATION_CHECK_VERSION_ROLE }}
@@ -159,6 +161,8 @@ jobs:
       DYNAMODB_AUTOSCALE: false
       DEPLOY_APIGEE_CPSU: true
       DEPLOY_CHECK_PRESCRIPTION_STATUS_UPDATE: true
+      RUN_REGRESSION_TEST: false
+      STATE_MACHINE_LOG_LEVEL: ALL
     secrets:
       CLOUD_FORMATION_DEPLOY_ROLE: ${{ secrets.DEV_CLOUD_FORMATION_DEPLOY_ROLE }}
       PROXYGEN_ROLE: ${{ secrets.PROXYGEN_PTL_ROLE }}
@@ -191,6 +195,8 @@ jobs:
       DEPLOY_APIGEE_CPSU: true
       DEPLOY_CHECK_PRESCRIPTION_STATUS_UPDATE: true
       ENABLE_ALERTS: true
+      RUN_REGRESSION_TEST: false
+      STATE_MACHINE_LOG_LEVEL: ERROR
     secrets:
       CLOUD_FORMATION_DEPLOY_ROLE: ${{ secrets.REF_CLOUD_FORMATION_DEPLOY_ROLE }}
       PROXYGEN_ROLE: ${{ secrets.PROXYGEN_PTL_ROLE }}
@@ -223,6 +229,8 @@ jobs:
       DEPLOY_APIGEE_CPSU: true
       DEPLOY_CHECK_PRESCRIPTION_STATUS_UPDATE: true
       ENABLE_ALERTS: true
+      RUN_REGRESSION_TEST: true
+      STATE_MACHINE_LOG_LEVEL: ALL
     secrets:
       CLOUD_FORMATION_DEPLOY_ROLE: ${{ secrets.QA_CLOUD_FORMATION_DEPLOY_ROLE }}
       PROXYGEN_ROLE: ${{ secrets.PROXYGEN_PTL_ROLE }}
@@ -250,6 +258,8 @@ jobs:
       DEPLOY_APIGEE_CPSU: true
       DEPLOY_CHECK_PRESCRIPTION_STATUS_UPDATE: true
       ENABLE_ALERTS: true
+      RUN_REGRESSION_TEST: true
+      STATE_MACHINE_LOG_LEVEL: ALL
     secrets:
       CLOUD_FORMATION_DEPLOY_ROLE: ${{ secrets.INT_CLOUD_FORMATION_DEPLOY_ROLE }}
       DEV_CLOUD_FORMATION_CHECK_VERSION_ROLE: ${{ secrets.DEV_CLOUD_FORMATION_CHECK_VERSION_ROLE }}
@@ -277,6 +287,8 @@ jobs:
       DYNAMODB_AUTOSCALE: false
       DEPLOY_APIGEE_CPSU: true
       DEPLOY_CHECK_PRESCRIPTION_STATUS_UPDATE: true
+      RUN_REGRESSION_TEST: false
+      STATE_MACHINE_LOG_LEVEL: ALL
     secrets:
       CLOUD_FORMATION_DEPLOY_ROLE: ${{ secrets.INT_CLOUD_FORMATION_DEPLOY_ROLE }}
       PROXYGEN_ROLE: ${{ secrets.PROXYGEN_PROD_ROLE }}
@@ -311,6 +323,8 @@ jobs:
       DEPLOY_APIGEE_CPSU: true
       DEPLOY_CHECK_PRESCRIPTION_STATUS_UPDATE: false
       ENABLE_ALERTS: true
+      RUN_REGRESSION_TEST: false
+      STATE_MACHINE_LOG_LEVEL: ERROR
     secrets:
       CLOUD_FORMATION_DEPLOY_ROLE: ${{ secrets.PROD_CLOUD_FORMATION_DEPLOY_ROLE }}
       DEV_CLOUD_FORMATION_CHECK_VERSION_ROLE: ${{ secrets.DEV_CLOUD_FORMATION_CHECK_VERSION_ROLE }}

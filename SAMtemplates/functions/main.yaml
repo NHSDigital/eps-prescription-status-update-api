@@ -25,6 +25,14 @@ Parameters:
     Type: String
     Default: none
 
+  PrescriptionNotificationStateTableName:
+    Type: String
+    Default: none
+
+  NHSNotifyPrescriptionsSQSQueueUrl:
+    Type: String
+    Default: none
+
   LogLevel:
     Type: String
 
@@ -52,6 +60,17 @@ Conditions:
     - !Ref DeployCheckPrescriptionStatusUpdate
 
 Resources:
+  SQSSaltSecret:
+    Type: AWS::SecretsManager::Secret
+    Properties:
+      Name: !Sub ${StackName}-SqsSalt
+      Description: Auto-generated salt for SQS_SALT
+      GenerateSecretString:
+        SecretStringTemplate: "{}"
+        GenerateStringKey: salt
+        PasswordLength: 32
+        ExcludePunctuation: true
+
   UpdatePrescriptionStatus:
     Type: AWS::Serverless::Function
     Properties:
@@ -62,6 +81,8 @@ Resources:
       Environment:
         Variables:
           TABLE_NAME: !Ref PrescriptionStatusUpdatesTableName
+          NHS_NOTIFY_PRESCRIPTIONS_SQS_QUEUE_URL: !Ref NHSNotifyPrescriptionsSQSQueueUrl
+          SQS_SALT: !Sub "{{resolve:secretsmanager:${SQSSaltSecret}:SecretString:salt}}"
           LOG_LEVEL: !Ref LogLevel
           ENVIRONMENT: !Ref Environment
           TEST_PRESCRIPTIONS_1: "None"
@@ -96,6 +117,8 @@ Resources:
           - - Fn::ImportValue: !Sub ${StackName}:tables:${PrescriptionStatusUpdatesTableName}:TableWritePolicyArn
             - Fn::ImportValue: !Sub ${StackName}:tables:${PrescriptionStatusUpdatesTableName}:TableReadPolicyArn
             - Fn::ImportValue: !Sub ${StackName}:tables:UsePrescriptionStatusUpdatesKMSKeyPolicyArn
+            - Fn::ImportValue: !Sub ${StackName}-UseNotificationSQSQueueKMSKeyPolicyArn
+            - Fn::ImportValue: !Sub ${StackName}-WriteNHSNotifyPrescriptionsSQSQueuePolicyArn
         LogRetentionInDays: !Ref LogRetentionInDays
         CloudWatchKMSKeyId: !ImportValue account-resources:CloudwatchLogsKmsKeyArn
         EnableSplunk: !Ref EnableSplunk
@@ -320,6 +343,91 @@ Resources:
         SplunkSubscriptionFilterRole: !ImportValue lambda-resources:SplunkSubscriptionFilterRole
         SplunkDeliveryStreamArn: !ImportValue lambda-resources:SplunkDeliveryStream
 
+  NotifyProcessorScheduleEventRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - scheduler.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      ManagedPolicyArns:
+        - !Ref NotifyProcessorScheduleEventRolePolicy
+
+  NotifyProcessorScheduleEventRolePolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action:
+              - lambda:InvokeFunction
+            Resource:
+              - !GetAtt NotifyProcessor.Arn
+
+  NotifyProcessor:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub ${StackName}-NotifyProcessor
+      CodeUri: ../../packages/
+      Handler: nhsNotifyLambda.handler
+      Role: !GetAtt NotifyProcessorResources.Outputs.LambdaRoleArn
+      Environment:
+        Variables:
+          LOG_LEVEL: !Ref LogLevel
+          NHS_NOTIFY_PRESCRIPTIONS_SQS_QUEUE_URL: !Ref NHSNotifyPrescriptionsSQSQueueUrl
+          TABLE_NAME: !Ref PrescriptionNotificationStateTableName
+      Events:
+        ScheduleEvent:
+          Type: ScheduleV2
+          Properties:
+            Name: !Sub ${StackName}-NHSNotifySchedule
+            ScheduleExpression: "rate(1 minute)"
+            RoleArn: !GetAtt NotifyProcessorScheduleEventRole.Arn
+    Metadata:
+      BuildMethod: esbuild
+      guard:
+        SuppressedRules:
+        - LAMBDA_DLQ_CHECK
+        - LAMBDA_INSIDE_VPC
+        - LAMBDA_CONCURRENCY_CHECK
+      BuildProperties:
+        Minify: true
+        Target: es2020
+        Sourcemap: true
+        tsconfig: nhsNotifyLambda/tsconfig.json
+        packages: bundle
+        EntryPoints:
+          - nhsNotifyLambda/src/nhsNotifyLambda.ts
+
+  NotifyProcessorResources:
+    Type: AWS::Serverless::Application
+    Properties:
+      Location: lambda_resources.yaml
+      Parameters:
+        StackName: !Ref StackName
+        LambdaName: !Sub ${StackName}-NotifyProcessor
+        LambdaArn: !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:${StackName}-NotifyProcessor
+        LogRetentionInDays: !Ref LogRetentionInDays
+        CloudWatchKMSKeyId: !ImportValue account-resources:CloudwatchLogsKmsKeyArn
+        EnableSplunk: !Ref EnableSplunk
+        SplunkSubscriptionFilterRole: !ImportValue lambda-resources:SplunkSubscriptionFilterRole
+        SplunkDeliveryStreamArn: !ImportValue lambda-resources:SplunkDeliveryStream
+        IncludeAdditionalPolicies: true
+        AdditionalPolicies: !Join
+          - ","
+          - - Fn::ImportValue: !Sub ${StackName}-WriteNHSNotifyPrescriptionsSQSQueuePolicyArn
+            - Fn::ImportValue: !Sub ${StackName}-ReadNHSNotifyPrescriptionsSQSQueuePolicyArn
+            - Fn::ImportValue: !Sub ${StackName}-UseNotificationSQSQueueKMSKeyPolicyArn
+            - Fn::ImportValue: !Sub ${StackName}:tables:${PrescriptionNotificationStateTableName}:TableReadPolicyArn
+            - Fn::ImportValue: !Sub ${StackName}:tables:${PrescriptionNotificationStateTableName}:TableWritePolicyArn
+            - Fn::ImportValue: !Sub ${StackName}:tables:UsePrescriptionNotificationStateKMSKeyPolicyArn
+
 Outputs:
   UpdatePrescriptionStatusFunctionName:
     Description: The function name of the UpdatePrescriptionStatus lambda
@@ -378,3 +486,11 @@ Outputs:
       - ShouldDeployCheckPrescriptionStatusUpdate
       - !GetAtt CheckPrescriptionStatusUpdates.Arn
       - ""
+
+  NotifyProcessorFunctionName:
+    Description: The function name of the NHS Notify lambda
+    Value: !Ref NotifyProcessor
+
+  NotifyProcessorFunctionArn:
+    Description: The function ARN of the NHS Notify lambda
+    Value: !GetAtt NotifyProcessor.Arn

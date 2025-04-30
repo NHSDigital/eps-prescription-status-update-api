@@ -6,12 +6,14 @@
   "references": [
     {"path": "packages/common/testing"},
     {"path": "packages/common/middyErrorHandler"},
+    {"path": "packages/common/commonTypes"},
     {"path": "packages/gsul"},
     {"path": "packages/updatePrescriptionStatus"},
     {"path": "packages/sandbox"},
     {"path": "packages/statusLambda"},
     {"path": "packages/capabilityStatement"},
     {"path": "packages/cpsuLambda"},
-    {"path": "packages/checkPrescriptionStatusUpdates"}
+    {"path": "packages/checkPrescriptionStatusUpdates"},
+    {"path": "packages/nhsNotifyLambda"}
   ]
 }

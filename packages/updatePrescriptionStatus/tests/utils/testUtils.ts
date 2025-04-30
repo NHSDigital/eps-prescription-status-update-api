@@ -3,6 +3,7 @@
 import {APIGatewayProxyEvent} from "aws-lambda"
 import {jest} from "@jest/globals"
 import * as dynamo from "@aws-sdk/client-dynamodb"
+import * as sqs from "@aws-sdk/client-sqs"
 
 import {
   LINE_ITEM_ID_CODESYSTEM,
@@ -14,6 +15,7 @@ import {
 import {Task} from "fhir/r4"
 
 import valid from "../tasks/valid.json"
+import {DataItem} from "../../src/updatePrescriptionStatus"
 
 export const TASK_ID_0 = "4d70678c-81e4-4ff4-8c67-17596fd0aa46"
 export const TASK_ID_1 = "0ae4daf3-f24b-479d-b8fa-b69e2d873b60"
@@ -179,4 +181,35 @@ export function mockDynamoDBClient() {
     }
   })
   return {mockSend}
+}
+
+// Similarly mock the SQS client
+export function mockSQSClient() {
+  const mockSend = jest.fn()
+  jest.unstable_mockModule("@aws-sdk/client-sqs", () => {
+    return {
+      ...sqs,
+      SQSClient: jest.fn().mockImplementation(() => ({
+        send: mockSend
+      }))
+    }
+  })
+  return {mockSend}
+}
+
+export function createMockDataItem(overrides: Partial<DataItem>): DataItem {
+  return {
+    LastModified: "2023-01-02T00:00:00Z",
+    LineItemID: "spamandeggs",
+    PatientNHSNumber: "0123456789",
+    PharmacyODSCode: "ABC123",
+    PrescriptionID: "abcdef-ghijkl-mnopqr",
+    RequestID: "x-request-id",
+    Status: "ready to collect",
+    TaskID: "mnopqr-ghijkl-abcdef",
+    TerminalStatus: "ready to collect",
+    ApplicationName: "Jim's Pills",
+    ExpiryTime: 123,
+    ...overrides
+  }
 }

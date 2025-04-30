@@ -96,7 +96,8 @@ sam-deploy-package: guard-artifact_bucket guard-artifact_bucket_prefix guard-sta
 			  LogRetentionInDays=$$LOG_RETENTION_DAYS \
 			  Environment=$$TARGET_ENVIRONMENT \
 			  DeployCheckPrescriptionStatusUpdate=$$DEPLOY_CHECK_PRESCRIPTION_STATUS_UPDATE \
-			  EnableAlerts=$$ENABLE_ALERTS
+			  EnableAlerts=$$ENABLE_ALERTS \
+			  StateMachineLogLevel=$$STATE_MACHINE_LOG_LEVEL
 
 compile-node:
 	npx tsc --build tsconfig.build.json
@@ -115,8 +116,10 @@ lint-node: compile-node
 	npm run lint --workspace packages/capabilityStatement
 	npm run lint --workspace packages/cpsuLambda
 	npm run lint --workspace packages/checkPrescriptionStatusUpdates
+	npm run lint --workspace packages/nhsNotifyLambda
 	npm run lint --workspace packages/common/testing
 	npm run lint --workspace packages/common/middyErrorHandler
+	npm run lint --workspace packages/common/commonTypes
 
 lint-specification: compile-specification
 	npm run lint --workspace packages/specification
@@ -143,6 +146,7 @@ test: compile
 	npm run test --workspace packages/capabilityStatement
 	npm run test --workspace packages/cpsuLambda
 	npm run test --workspace packages/checkPrescriptionStatusUpdates
+	npm run test --workspace packages/nhsNotifyLambda
 	npm run test --workspace packages/common/middyErrorHandler
 
 clean:
@@ -158,9 +162,12 @@ clean:
 	rm -rf packages/capabilityStatement/lib
 	rm -rf packages/cpsuLambda/coverage
 	rm -rf packages/cpsuLambda/lib
+	rm -rf packages/nhsNotifyLambda/coverage
+	rm -rf packages/nhsNotifyLambda/lib
 	rm -rf packages/checkPrescriptionStatusUpdates/lib
 	rm -rf packages/common/testing/lib
 	rm -rf packages/common/middyErrorHandler/lib
+	rm -rf packages/common/commonTypes/lib
 	rm -rf .aws-sam
 
 deep-clean: clean

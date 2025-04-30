@@ -86,6 +86,16 @@ repos:
         files: ^packages\/checkPrescriptionStatusUpdates
         types_or: [ts, tsx, javascript, jsx, json]
         pass_filenames: false
+        
+      - id: lint-nhsNotifyLambda
+        name: Lint nhsNotifyLambda
+        entry: npm
+        args:
+          ["run", "--prefix=packages/nhsNotifyLambda", "lint"]
+        language: system
+        files: ^packages\/nhsNotifyLambda
+        types_or: [ts, tsx, javascript, jsx, json]
+        pass_filenames: false
 
       - id: lint-commonTesting
         name: Lint common/testing

@@ -2,14 +2,19 @@
 import {APIGatewayProxyEvent, APIGatewayProxyResult} from "aws-lambda"
 import {Logger} from "@aws-lambda-powertools/logger"
 import {injectLambdaContext} from "@aws-lambda-powertools/logger/middleware"
+import {TransactionCanceledException} from "@aws-sdk/client-dynamodb"
+
 import middy from "@middy/core"
 import inputOutputLogger from "@middy/input-output-logger"
-import errorHandler from "@nhs/fhir-middy-error-handler"
 import httpHeaderNormalizer from "@middy/http-header-normalizer"
+
+import errorHandler from "@nhs/fhir-middy-error-handler"
 import {Bundle, BundleEntry, Task} from "fhir/r4"
+
+import {transactionBundle, validateEntry} from "./validation/content"
 import {getPreviousItem, persistDataItems} from "./utils/databaseClient"
 import {jobWithTimeout, hasTimedOut} from "./utils/timeoutUtils"
-import {transactionBundle, validateEntry} from "./validation/content"
+import {pushPrescriptionToNotificationSQS} from "./utils/sqsClient"
 import {
   accepted,
   badRequest,
@@ -19,7 +24,6 @@ import {
   serverError,
   timeoutResponse
 } from "./utils/responses"
-import {TransactionCanceledException} from "@aws-sdk/client-dynamodb"
 import {
   InterceptionResult,
   testPrescription1Intercept,
@@ -157,6 +161,16 @@ const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPro
     logger.info("Forcing error for INT test prescription")
     responseEntries = [serverError()]
     return response(500, responseEntries)
+  }
+
+  // This prescription was handled successfully,
+  // so add a message to the notifications SQS
+  try {
+    const requestId = event.headers["x-request-id"] ?? "x-request-id-not-found"
+    await pushPrescriptionToNotificationSQS(requestId, dataItems, logger)
+  } catch (err) {
+    logger.error("Failed to push prescriptions to the notifications SQS", {err})
+    // DO NOT throw an error here, since we want to still return the update!
   }
 
   return response(201, responseEntries)

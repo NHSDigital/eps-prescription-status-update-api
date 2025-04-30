@@ -7,6 +7,8 @@ id-token: write
 --token="\$GITHUB-TOKEN"
 "accountId": "123456789012"
 accountId: "123456789012"
+"account": "123456789012"
+account: "123456789012"
 console\.log\(`access token : \${access_token}`\)
 .*CidrBlock.*
 .*Gemfile\.lock.*

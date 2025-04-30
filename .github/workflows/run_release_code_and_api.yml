@@ -61,12 +61,15 @@ on:
       DEPLOY_CHECK_PRESCRIPTION_STATUS_UPDATE:
         type: boolean
         default: false
-      REGRESSION_TESTS_PEM:
-        type: string
-        default: false
       ENABLE_ALERTS:
         type: boolean
         default: true
+      RUN_REGRESSION_TEST:
+        required: true
+        type: boolean
+      STATE_MACHINE_LOG_LEVEL:
+        required: true
+        type: string
     secrets:
       CLOUD_FORMATION_DEPLOY_ROLE:
         required: true
@@ -84,7 +87,7 @@ on:
         required: true
 jobs:
   release_code_and_api:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     environment: ${{ inputs.AWS_ENVIRONMENT }}
     permissions:
       id-token: write
@@ -150,6 +153,7 @@ jobs:
           DYNAMODB_AUTOSCALE: ${{ inputs.DYNAMODB_AUTOSCALE }}
           DEPLOY_CHECK_PRESCRIPTION_STATUS_UPDATE: ${{ inputs.DEPLOY_CHECK_PRESCRIPTION_STATUS_UPDATE }}
           ENABLE_ALERTS: ${{ inputs.ENABLE_ALERTS }}
+          STATE_MACHINE_LOG_LEVEL: ${{ inputs.STATE_MACHINE_LOG_LEVEL }}
         run: ./release_code.sh
 
       - name: get mtls secrets
@@ -255,6 +259,7 @@ jobs:
           parallel --retries 10 --delay 3 ::: "git pull --rebase && git push"
 
   regression_tests:
+    if: ${{ inputs.RUN_REGRESSION_TEST == true && always() && !failure() && !cancelled() }}
     name: Regression Tests
     uses: ./.github/workflows/run_regression_tests.yml
     needs: release_code_and_api

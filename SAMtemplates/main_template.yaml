@@ -86,6 +86,8 @@ Parameters:
     Description: When the database usage crosses this percentage of provisioned capacity, trigger an alarm
     Default: 90
 
+  StateMachineLogLevel:
+    Type: String
 
 Resources:
   Tables:
@@ -95,6 +97,13 @@ Resources:
       Parameters:
         StackName: !Ref AWS::StackName
         EnableDynamoDBAutoScaling: !Ref EnableDynamoDBAutoScaling
+
+  Messaging:
+    Type: AWS::Serverless::Application
+    Properties:
+      Location: messaging/main.yaml
+      Parameters:
+        StackName: !Ref AWS::StackName
 
   Apis:
     Type: AWS::Serverless::Application
@@ -125,6 +134,8 @@ Resources:
       Parameters:
         StackName: !Ref AWS::StackName
         PrescriptionStatusUpdatesTableName: !GetAtt Tables.Outputs.PrescriptionStatusUpdatesTableName
+        PrescriptionNotificationStateTableName: !GetAtt Tables.Outputs.PrescriptionNotificationStateTableName
+        NHSNotifyPrescriptionsSQSQueueUrl: !GetAtt Messaging.Outputs.NHSNotifyPrescriptionsSQSQueueUrl
         LogLevel: !Ref LogLevel
         LogRetentionInDays: !Ref LogRetentionInDays
         EnableSplunk: !Ref EnableSplunk
@@ -145,6 +156,7 @@ Resources:
         ConvertRequestToFhirFormatFunctionArn: !GetAtt Functions.Outputs.ConvertRequestToFhirFormatFunctionArn
         LogRetentionInDays: !Ref LogRetentionInDays
         EnableSplunk: !Ref EnableSplunk
+        StateMachineLogLevel: !Ref StateMachineLogLevel
 
   Alarms:
     Type: AWS::Serverless::Application

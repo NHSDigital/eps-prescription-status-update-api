@@ -19,12 +19,72 @@ Parameters:
     Type: Number
     Default: 600
 
+  MinWritePrescriptionNotificationStateCapacity:
+    Type: Number
+    Default: 50
+
+  MaxWritePrescriptionNotificationStateCapacity:
+    Type: Number
+    Default: 600
+
 Conditions:
   EnableDynamoDBAutoScalingCondition: !Equals
     - true
     - !Ref EnableDynamoDBAutoScaling
 
 Resources:
+
+#---------------------#
+#    Common things    #
+#---------------------#
+
+  DynamoDbScalingRolePolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      PolicyDocument: !Sub |
+        {
+            "Version": "2012-10-17",
+            "Statement": [
+                {
+                    "Effect": "Allow",
+                    "Action": [
+                        "dynamodb:DescribeTable",
+                        "dynamodb:UpdateTable"
+                    ],
+                    "Resource": "${PrescriptionStatusUpdatesTable.Arn}"
+                },
+                {
+                    "Effect": "Allow",
+                    "Action": [
+                        "cloudwatch:PutMetricAlarm",
+                        "cloudwatch:DescribeAlarms",
+                        "cloudwatch:DeleteAlarms"
+                    ],
+                    "Resource": "*"
+                }
+            ]
+        }
+
+  DynamoDbScalingRole:
+    Condition: EnableDynamoDBAutoScalingCondition
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              { "Service": ["dynamodb.application-autoscaling.amazonaws.com"] }
+            Action: ["sts:AssumeRole"]
+      Path: "/"
+      ManagedPolicyArns:
+        - !Ref DynamoDbScalingRolePolicy
+
+
+#-----------------------------------------#
+#    Prescription Status Updates Table    #
+#-----------------------------------------#
+
   PrescriptionStatusUpdatesKMSKey:
     Type: AWS::KMS::Key
     Properties:
@@ -149,48 +209,6 @@ Resources:
         StackName: !Ref StackName
         TableName: !Ref PrescriptionStatusUpdatesTable
         TableArn: !GetAtt PrescriptionStatusUpdatesTable.Arn
-
-  DynamoDbScalingRolePolicy:
-    Type: AWS::IAM::ManagedPolicy
-    Properties:
-      PolicyDocument: !Sub |
-        {
-            "Version": "2012-10-17",
-            "Statement": [
-                {
-                    "Effect": "Allow",
-                    "Action": [
-                        "dynamodb:DescribeTable",
-                        "dynamodb:UpdateTable"
-                    ],
-                    "Resource": "${PrescriptionStatusUpdatesTable.Arn}"
-                },
-                {
-                    "Effect": "Allow",
-                    "Action": [
-                        "cloudwatch:PutMetricAlarm",
-                        "cloudwatch:DescribeAlarms",
-                        "cloudwatch:DeleteAlarms"
-                    ],
-                    "Resource": "*"
-                }
-            ]
-        }
-
-  DynamoDbScalingRole:
-    Condition: EnableDynamoDBAutoScalingCondition
-    Type: AWS::IAM::Role
-    Properties:
-      AssumeRolePolicyDocument:
-        Version: "2012-10-17"
-        Statement:
-          - Effect: Allow
-            Principal:
-              { "Service": ["dynamodb.application-autoscaling.amazonaws.com"] }
-            Action: ["sts:AssumeRole"]
-      Path: "/"
-      ManagedPolicyArns:
-        - !Ref DynamoDbScalingRolePolicy
 
   PrescriptionStatusUpdatesTableWriteScalingTarget:
     Type: AWS::ApplicationAutoScaling::ScalableTarget
@@ -348,6 +366,217 @@ Resources:
         PredefinedMetricSpecification:
           PredefinedMetricType: DynamoDBReadCapacityUtilization
 
+
+#--------------------------------#
+#    Notification State Table    #
+#--------------------------------#
+
+  PrescriptionNotificationStateKMSKey:
+    Type: AWS::KMS::Key
+    Properties:
+      EnableKeyRotation: true
+      KeyPolicy:
+        Version: 2012-10-17
+        Id: key-s3
+        Statement:
+          - Sid: Enable IAM User Permissions
+            Effect: Allow
+            Principal:
+              AWS: !Sub "arn:aws:iam::${AWS::AccountId}:root"
+            Action:
+              - kms:*
+            Resource: "*"
+          - Sid: Enable read only decrypt
+            Effect: Allow
+            Principal:
+              AWS: "*"
+            Action:
+              - kms:DescribeKey
+              - kms:Decrypt
+            Resource: "*"
+            Condition:
+              ArnLike:
+                aws:PrincipalArn: !Sub "arn:aws:iam::${AWS::AccountId}:role/aws-reserved/sso.amazonaws.com/${AWS::Region}/AWSReservedSSO_ReadOnly*"
+
+  PrescriptionNotificationStateKMSKeyAlias:
+    Type: AWS::KMS::Alias
+    Properties:
+      AliasName: !Sub alias/${StackName}-PrescriptionNotificationStateKMSKeyAlias
+      TargetKeyId: !Ref PrescriptionNotificationStateKMSKey
+
+  UsePrescriptionNotificationStateKMSKeyPolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action:
+              - kms:DescribeKey
+              - kms:GenerateDataKey*
+              - kms:Encrypt
+              - kms:ReEncrypt*
+              - kms:Decrypt
+            Resource: !GetAtt PrescriptionStatusUpdatesKMSKey.Arn
+
+  PrescriptionNotificationStateTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub ${StackName}-PrescriptionNotificationState
+      PointInTimeRecoverySpecification:
+        PointInTimeRecoveryEnabled: true
+      AttributeDefinitions:
+        - AttributeName: PrescriptionID
+          AttributeType: S
+        - AttributeName: NHSNumber
+          AttributeType: S
+      KeySchema:
+        - AttributeName: PrescriptionID
+          KeyType: HASH
+      BillingMode: !If
+        - EnableDynamoDBAutoScalingCondition
+        - PROVISIONED
+        - PAY_PER_REQUEST
+      GlobalSecondaryIndexes:
+        - IndexName: NotificationNHSNumberIndex
+          KeySchema:
+            - AttributeName: NHSNumber
+              KeyType: HASH
+          Projection:
+            ProjectionType: ALL
+          ProvisionedThroughput: !If
+            - EnableDynamoDBAutoScalingCondition
+            - ReadCapacityUnits: 1
+              WriteCapacityUnits: !Ref MinWritePrescriptionNotificationStateCapacity
+            - !Ref "AWS::NoValue"
+      ProvisionedThroughput: !If
+        - EnableDynamoDBAutoScalingCondition
+        - ReadCapacityUnits: 1
+          WriteCapacityUnits: !Ref MinWritePrescriptionNotificationStateCapacity
+        - !Ref "AWS::NoValue"
+      SSESpecification:
+        KMSMasterKeyId: !Ref PrescriptionNotificationStateKMSKey
+        SSEEnabled: true
+        SSEType: KMS
+      TimeToLiveSpecification:
+        AttributeName: ExpiryTime
+        Enabled: true
+
+  PrescriptionNotificationStateResources:
+    Type: AWS::Serverless::Application
+    Properties:
+      Location: dynamodb_resources.yaml
+      Parameters:
+        StackName: !Ref StackName
+        TableName: !Ref PrescriptionNotificationStateTable
+        TableArn: !GetAtt PrescriptionNotificationStateTable.Arn
+
+  # Auto scaling for the table
+  PrescriptionNotificationStateTableWriteScalingTarget:
+    Type: AWS::ApplicationAutoScaling::ScalableTarget
+    DependsOn: PrescriptionNotificationStateTable
+    Condition: EnableDynamoDBAutoScalingCondition
+    Properties:
+      MinCapacity: !Ref MinWritePrescriptionNotificationStateCapacity
+      MaxCapacity: !Ref MaxWritePrescriptionNotificationStateCapacity
+      ResourceId: !Sub table/${PrescriptionNotificationStateTable}
+      RoleARN: !GetAtt DynamoDbScalingRole.Arn
+      ScalableDimension: "dynamodb:table:WriteCapacityUnits"
+      ServiceNamespace: dynamodb
+
+  PrescriptionNotificationStateTableWriteScalingPolicy:
+    Type: AWS::ApplicationAutoScaling::ScalingPolicy
+    Condition: EnableDynamoDBAutoScalingCondition
+    Properties:
+      PolicyName: PrescriptionNotificationStateTableWriteScalingPolicy
+      PolicyType: TargetTrackingScaling
+      ScalingTargetId: !Ref PrescriptionNotificationStateTableWriteScalingTarget
+      TargetTrackingScalingPolicyConfiguration:
+        TargetValue: 50
+        ScaleInCooldown: 600
+        ScaleOutCooldown: 0
+        PredefinedMetricSpecification:
+          PredefinedMetricType: DynamoDBWriteCapacityUtilization
+
+  PrescriptionNotificationStateTableReadScalingTarget:
+    Type: AWS::ApplicationAutoScaling::ScalableTarget
+    DependsOn: PrescriptionNotificationStateTable
+    Condition: EnableDynamoDBAutoScalingCondition
+    Properties:
+      MinCapacity: 1
+      MaxCapacity: 100
+      ResourceId: !Sub table/${PrescriptionNotificationStateTable}
+      RoleARN: !GetAtt DynamoDbScalingRole.Arn
+      ScalableDimension: "dynamodb:table:ReadCapacityUnits"
+      ServiceNamespace: dynamodb
+
+  PrescriptionNotificationStateTableReadScalingPolicy:
+    Type: AWS::ApplicationAutoScaling::ScalingPolicy
+    Condition: EnableDynamoDBAutoScalingCondition
+    Properties:
+      PolicyName: PrescriptionNotificationStateTableReadScalingPolicy
+      PolicyType: TargetTrackingScaling
+      ScalingTargetId: !Ref PrescriptionNotificationStateTableReadScalingTarget
+      TargetTrackingScalingPolicyConfiguration:
+        TargetValue: 70
+        ScaleInCooldown: 60
+        ScaleOutCooldown: 60
+        PredefinedMetricSpecification:
+          PredefinedMetricType: DynamoDBReadCapacityUtilization
+
+  # Scaling for the indexes
+  NotificationNHSNumberIndexScalingWriteTarget:
+    Type: AWS::ApplicationAutoScaling::ScalableTarget
+    DependsOn: PrescriptionNotificationStateTable
+    Condition: EnableDynamoDBAutoScalingCondition
+    Properties:
+      MinCapacity: !Ref MinWritePrescriptionNotificationStateCapacity
+      MaxCapacity: !Ref MaxWritePrescriptionNotificationStateCapacity
+      ResourceId: !Sub table/${PrescriptionNotificationStateTable}/index/NotificationNHSNumberIndex
+      RoleARN: !GetAtt DynamoDbScalingRole.Arn
+      ScalableDimension: "dynamodb:index:WriteCapacityUnits"
+      ServiceNamespace: dynamodb
+
+  NotificationNHSNumberIndexScalingWritePolicy:
+    Type: AWS::ApplicationAutoScaling::ScalingPolicy
+    Condition: EnableDynamoDBAutoScalingCondition
+    Properties:
+      PolicyName: NotificationNHSNumberIndexScalingWritePolicy
+      PolicyType: TargetTrackingScaling
+      ScalingTargetId: !Ref NotificationNHSNumberIndexScalingWriteTarget
+      TargetTrackingScalingPolicyConfiguration:
+        TargetValue: 50
+        ScaleInCooldown: 600
+        ScaleOutCooldown: 0
+        PredefinedMetricSpecification:
+          PredefinedMetricType: DynamoDBWriteCapacityUtilization
+
+  NotificationNHSNumberIndexScalingReadTarget:
+    Type: AWS::ApplicationAutoScaling::ScalableTarget
+    DependsOn: PrescriptionNotificationStateTable
+    Condition: EnableDynamoDBAutoScalingCondition
+    Properties:
+      MinCapacity: 1
+      MaxCapacity: 100
+      ResourceId: !Sub table/${PrescriptionNotificationStateTable}/index/NotificationNHSNumberIndex
+      RoleARN: !GetAtt DynamoDbScalingRole.Arn
+      ScalableDimension: "dynamodb:index:ReadCapacityUnits"
+      ServiceNamespace: dynamodb
+
+  NotificationNHSNumberIndexScalingReadPolicy:
+    Type: AWS::ApplicationAutoScaling::ScalingPolicy
+    Condition: EnableDynamoDBAutoScalingCondition
+    Properties:
+      PolicyName: NotificationNHSNumberIndexReadScalingPolicy
+      PolicyType: TargetTrackingScaling
+      ScalingTargetId: !Ref NotificationNHSNumberIndexScalingReadTarget
+      TargetTrackingScalingPolicyConfiguration:
+        TargetValue: 70
+        ScaleInCooldown: 60
+        ScaleOutCooldown: 60
+        PredefinedMetricSpecification:
+          PredefinedMetricType: DynamoDBReadCapacityUtilization
+
 Outputs:
   PrescriptionStatusUpdatesTableName:
     Description: PrescriptionStatusUpdates table name
@@ -356,9 +585,23 @@ Outputs:
   PrescriptionStatusUpdatesTableArn:
     Description: PrescriptionStatusUpdates table arn
     Value: !GetAtt PrescriptionStatusUpdatesTable.Arn
-
+    
   UsePrescriptionStatusUpdatesKMSKeyPolicyArn:
     Description: Use kms key policy arn
     Value: !GetAtt UsePrescriptionStatusUpdatesKMSKeyPolicy.PolicyArn
     Export:
       Name: !Sub ${StackName}:tables:UsePrescriptionStatusUpdatesKMSKeyPolicyArn
+
+  PrescriptionNotificationStateTableName:
+    Description: PrescriptionNotificationState table name
+    Value: !Ref PrescriptionNotificationStateTable
+
+  PrescriptionNotificationStateTableArn:
+    Description: PrescriptionNotificationState table ARN
+    Value: !GetAtt PrescriptionNotificationStateTable.Arn
+
+  UsePrescriptionNotificationStateKMSKeyPolicyArn:
+    Description: Use kms key policy arn
+    Value: !GetAtt UsePrescriptionNotificationStateKMSKeyPolicy.PolicyArn
+    Export:
+      Name: !Sub ${StackName}:tables:UsePrescriptionNotificationStateKMSKeyPolicyArn
