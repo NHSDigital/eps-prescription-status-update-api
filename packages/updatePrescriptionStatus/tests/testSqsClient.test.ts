@@ -75,7 +75,7 @@ describe("Unit tests for pushPrescriptionToNotificationSQS", () => {
 
   it("sends only 'ready to collect' messages and succeeds", async () => {
     const payload = [
-      createMockDataItem({Status: "ready to collect"}),
+      createMockDataItem({Status: "rEaDy To CoLlEcT"}), // Test case-insensitivity
       createMockDataItem({Status: "ready to collect - partial"}),
       createMockDataItem({Status: "a status that will never be real"})
     ]
