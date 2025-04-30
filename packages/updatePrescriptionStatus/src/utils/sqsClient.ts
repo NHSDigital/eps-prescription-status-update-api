@@ -8,7 +8,8 @@ import {PSUDataItem} from "@PrescriptionStatusUpdate_common/commonTypes"
 import {checkSiteOrSystemIsNotifyEnabled} from "../validation/notificationSiteAndSystemFilters"
 
 const sqsUrl: string | undefined = process.env.NHS_NOTIFY_PRESCRIPTIONS_SQS_QUEUE_URL
-const sqsSalt: string = process.env.SQS_SALT ?? "DEVSALT"
+const fallbackSalt = "DEV SALT"
+const sqsSalt: string = process.env.SQS_SALT ?? fallbackSalt
 
 // The AWS_REGION is always defined in lambda environments
 const sqs = new SQSClient({region: process.env.AWS_REGION})
@@ -36,7 +37,7 @@ function chunkArray<T>(arr: Array<T>, size: number): Array<Array<T>> {
  * @returns - A hex encoded string of the hash
  */
 export function saltedHash(input: string, hashFunction: string = "sha256"): string {
-  if (sqsSalt === "DEVSALT") {
+  if (sqsSalt === fallbackSalt) {
     console.warn("Using the fallback salt value - please update the environment variable `SQS_SALT` to a random value.")
   }
   return createHmac(hashFunction, sqsSalt)
