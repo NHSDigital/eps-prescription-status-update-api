@@ -35,15 +35,15 @@ Resources:
       Value: !If
         - IsProd
         - > # Prod notification enabled
-          Apotec Ltd - Apotec CRM - Production
-          CrxPatientApp
-          nhsPrescriptionApp
+          Apotec Ltd - Apotec CRM - Production,
+          CrxPatientApp,
+          nhsPrescriptionApp,
           Titan PSU Prod
         - > # Non-prod
-          Internal Test System
-          Apotec Ltd - Apotec CRM - Production
-          CrxPatientApp
-          nhsPrescriptionApp
+          Internal Test System,
+          Apotec Ltd - Apotec CRM - Production,
+          CrxPatientApp,
+          nhsPrescriptionApp,
           Titan PSU Prod
 
   BlockedSiteODSCodesParameter:
