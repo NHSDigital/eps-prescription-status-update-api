@@ -23,6 +23,7 @@ describe("Unit tests for pushPrescriptionToNotificationSQS", () => {
   let logger: Logger
   let infoSpy: SpiedFunction<(input: LogItemMessage, ...extraInput: LogItemExtraInput) => void>
   let errorSpy: SpiedFunction<(input: LogItemMessage, ...extraInput: LogItemExtraInput) => void>
+  let warnSpy: SpiedFunction<(input: LogItemMessage, ...extraInput: LogItemExtraInput) => void>
 
   beforeEach(() => {
     jest.resetModules()
@@ -35,6 +36,7 @@ describe("Unit tests for pushPrescriptionToNotificationSQS", () => {
     logger = new Logger({serviceName: "test-service"})
     infoSpy = jest.spyOn(logger, "info")
     errorSpy = jest.spyOn(logger, "error")
+    warnSpy = jest.spyOn(logger, "warn")
   })
 
   it("throws if the SQS URL is not configured", async () => {
@@ -106,7 +108,7 @@ describe("Unit tests for pushPrescriptionToNotificationSQS", () => {
       // FIFO params
       expect(entry.MessageGroupId).toBe("req-789")
       expect(entry.MessageDeduplicationId).toBe(
-        saltedHash(`${original.PatientNHSNumber}:${original.PharmacyODSCode}`)
+        saltedHash(logger, `${original.PatientNHSNumber}:${original.PharmacyODSCode}`)
       )
     })
 
@@ -151,6 +153,18 @@ describe("Unit tests for pushPrescriptionToNotificationSQS", () => {
 
     await pushPrescriptionToNotificationSQS("req-111", payload, logger)
     expect(mockSend).toHaveBeenCalledTimes(2)
+  })
+
+  it("Uses the fallback salt value but logs a warning about it", async () => {
+    process.env.SQS_SALT = undefined
+    const {saltedHash: tempFunc} = await import("../src/utils/sqsClient")
+
+    tempFunc(logger, "foobar")
+
+    expect(warnSpy)
+      .toHaveBeenLastCalledWith(
+        "Using the fallback salt value - please update the environment variable `SQS_SALT` to a random value."
+      )
   })
 })
 

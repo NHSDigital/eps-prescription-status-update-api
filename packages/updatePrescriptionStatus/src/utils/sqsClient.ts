@@ -36,9 +36,9 @@ function chunkArray<T>(arr: Array<T>, size: number): Array<Array<T>> {
  * @param hashFunction - Which hash function to use. HMAC compatible. Defaults to SHA-256
  * @returns - A hex encoded string of the hash
  */
-export function saltedHash(input: string, hashFunction: string = "sha256"): string {
+export function saltedHash(logger: Logger, input: string, hashFunction: string = "sha256"): string {
   if (sqsSalt === fallbackSalt) {
-    console.warn("Using the fallback salt value - please update the environment variable `SQS_SALT` to a random value.")
+    logger.warn("Using the fallback salt value - please update the environment variable `SQS_SALT` to a random value.")
   }
   return createHmac(hashFunction, sqsSalt)
     .update(input, "utf8")
@@ -92,7 +92,7 @@ export async function pushPrescriptionToNotificationSQS(
         MessageBody: JSON.stringify(item),
         // FIFO
         // We dedupe on both nhs number and ods code
-        MessageDeduplicationId: saltedHash(`${item.PatientNHSNumber}:${item.PharmacyODSCode}`),
+        MessageDeduplicationId: saltedHash(logger, `${item.PatientNHSNumber}:${item.PharmacyODSCode}`),
         MessageGroupId: requestId
       }))
     // We could do a round of deduplications here, but benefits would be minimal and AWS SQS will do it for us anyway.
