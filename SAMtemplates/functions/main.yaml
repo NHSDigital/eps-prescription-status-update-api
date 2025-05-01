@@ -386,7 +386,7 @@ Resources:
         ScheduleEvent:
           Type: ScheduleV2
           Properties:
-            Name: !Sub ${StackName}-NHSNotifySchedule
+            Name: !Sub ${StackName}-NotifySchedule
             ScheduleExpression: "rate(1 minute)"
             RoleArn: !GetAtt NotifyProcessorScheduleEventRole.Arn
     Metadata:
