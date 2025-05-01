@@ -18,6 +18,14 @@ export function mockSQSClient() {
   return {mockSend}
 }
 
+export function constructMessage(overrides: Partial<sqs.Message> = {}): sqs.Message {
+  return {
+    MessageId: "messageId",
+    Body: JSON.stringify(constructPSUDataItem()),
+    ...overrides
+  }
+}
+
 export function constructPSUDataItem(overrides: Partial<PSUDataItem> = {}): PSUDataItem {
   return {
     LastModified: "2023-01-02T00:00:00Z",

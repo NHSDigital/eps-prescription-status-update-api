@@ -6,8 +6,12 @@ import middy from "@middy/core"
 import inputOutputLogger from "@middy/input-output-logger"
 import errorHandler from "@nhs/fhir-middy-error-handler"
 
-import {PSUDataItem} from "@PrescriptionStatusUpdate_common/commonTypes"
-import {clearCompletedSQSMessages, drainQueue} from "./utils"
+import {
+  addPrescriptionMessagesToNotificationStateStore,
+  clearCompletedSQSMessages,
+  drainQueue,
+  PSUDataItemMessage
+} from "./utils"
 
 const logger = new Logger({serviceName: "nhsNotify"})
 
@@ -21,7 +25,7 @@ export const lambdaHandler = async (event: EventBridgeEvent<string, string>): Pr
 
   logger.info("NHS Notify lambda triggered by scheduler", {event})
 
-  let messages
+  let messages: Array<PSUDataItemMessage>
   try {
     messages = await drainQueue(logger, 100)
 
@@ -30,19 +34,9 @@ export const lambdaHandler = async (event: EventBridgeEvent<string, string>): Pr
       return
     }
 
-    // parse & log each PSUDataItem as a placeholder for now.
-    const items = messages.map((m) => {
-      try {
-        return JSON.parse(m.Body!) as PSUDataItem
-      } catch (err) {
-        logger.error("Failed to parse message body", {body: m.Body, error: err})
-        return null
-      }
-    }).filter((i): i is PSUDataItem => i !== null)
-
-    const toNotify = items.map((m) => ({
-      RequestID: m.RequestID,
-      TaskId: m.TaskID,
+    const toNotify = messages.map((m) => ({
+      RequestID: m.PSUDataItem.RequestID,
+      TaskId: m.PSUDataItem.TaskID,
       Message: "Notification Required"
     }))
     logger.info("Fetched prescription notification messages", {count: toNotify.length, toNotify})
@@ -56,6 +50,12 @@ export const lambdaHandler = async (event: EventBridgeEvent<string, string>): Pr
   } catch (err) {
     logger.error("Error while draining SQS queue", {error: err})
     throw err
+  }
+
+  try {
+    await addPrescriptionMessagesToNotificationStateStore(logger, messages)
+  } catch (err) {
+    logger.error("Error while pushing data to the PSU notification state data store", {err})
   }
 
   // By waiting until a message is successfully processed before deleting it from SQS,
