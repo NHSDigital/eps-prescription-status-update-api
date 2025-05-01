@@ -5,8 +5,8 @@ import {
   DeleteMessageBatchCommand,
   Message
 } from "@aws-sdk/client-sqs"
-// import {DynamoDBClient} from "@aws-sdk/client-dynamodb"
-// import {DynamoDBDocumentClient, PutCommand} from "@aws-sdk/lib-dynamodb"
+import {DynamoDBClient} from "@aws-sdk/client-dynamodb"
+import {DynamoDBDocumentClient, PutCommand} from "@aws-sdk/lib-dynamodb"
 
 import {PSUDataItem} from "@PrescriptionStatusUpdate_common/commonTypes"
 
@@ -15,8 +15,8 @@ const sqsUrl = process.env.NHS_NOTIFY_PRESCRIPTIONS_SQS_QUEUE_URL
 
 // AWS clients
 const sqs = new SQSClient({region: process.env.AWS_REGION})
-// const dynamo = new DynamoDBClient({region: process.env.AWS_REGION})
-// const docClient = DynamoDBDocumentClient.from(dynamo)
+const dynamo = new DynamoDBClient({region: process.env.AWS_REGION})
+const docClient = DynamoDBDocumentClient.from(dynamo)
 
 // This is an extension of the SQS message interface, which explicitly parses the PSUDataItem
 export interface PSUDataItemMessage extends Message {
@@ -46,9 +46,6 @@ export async function drainQueue(logger: Logger, maxTotal = 100): Promise<Array<
     })
 
     const {Messages} = await sqs.send(receiveCmd)
-
-    // FIXME: DELETE THIS
-    logger.info("Messages received", {Messages})
 
     // if the queue is now empty, then break the loop
     if (!Messages || Messages.length === 0) break
@@ -108,13 +105,14 @@ export async function clearCompletedSQSMessages(
 }
 
 export interface LastNotificationStateType {
-  RequestId: string // This is also the x-request-id header
-  MessageID: string // The SQS message ID
   NHSNumber: string
   ODSCode: string
+  RequestId: string // This is also the x-request-id header
+  MessageID: string // The SQS message ID
   PrescriptionStatus: string
   DeliveryStatus: string
   LastNotificationRequestTimestamp: Date
+  ExpiryTime: number
 }
 
 export async function addPrescriptionMessagesToNotificationStateStore(
@@ -126,31 +124,31 @@ export async function addPrescriptionMessagesToNotificationStateStore(
     throw new Error("TABLE_NAME not set")
   }
 
-  logger.info("Attempting to push data to DynamoDB", {count: dataArray.length, dataArray})
+  logger.info("Attempting to push data to DynamoDB", {count: dataArray.length})
 
-  // for (const data of dataArray) {
-  //   const item: LastNotificationStateType = {
-  //     ExpiryTime: 604800,
-  //     MessageBatchReference: data.,
-  //     MessageID: ,
-  //     NHSNumber: ,
-  //     ODSCode: ,
-  //     PrescriptionStatus: ,
-  //     DeliveryStatus: ,
-  //     LastNotificationRequestTimestamp: ,
-  //   }
+  for (const data of dataArray) {
+    const item: LastNotificationStateType = {
+      NHSNumber: data.PSUDataItem.PatientNHSNumber,
+      ODSCode: data.PSUDataItem.PharmacyODSCode,
+      RequestId: data.PSUDataItem.RequestID,
+      ExpiryTime: 604800,
+      MessageID: data.MessageId!,
+      PrescriptionStatus: data.PSUDataItem.Status,
+      DeliveryStatus: "requested",
+      LastNotificationRequestTimestamp: new Date()
+    }
 
-  //   try {
-  //     await docClient.send(new PutCommand({
-  //       TableName: dynamoTable,
-  //       Item: item
-  //     }))
-  //     logger.info("Upserted prescription")
-  //   } catch (err) {
-  //     logger.error("Failed to write to DynamoDB", {
-  //       error: err
-  //     })
-  //     throw err
-  //   }
-  // }
+    try {
+      await docClient.send(new PutCommand({
+        TableName: dynamoTable,
+        Item: item
+      }))
+      logger.info("Upserted prescription")
+    } catch (err) {
+      logger.error("Failed to write to DynamoDB", {
+        error: err
+      })
+      throw err
+    }
+  }
 }
