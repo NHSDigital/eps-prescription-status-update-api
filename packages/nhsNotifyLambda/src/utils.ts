@@ -47,6 +47,9 @@ export async function drainQueue(logger: Logger, maxTotal = 100): Promise<Array<
 
     const {Messages} = await sqs.send(receiveCmd)
 
+    // FIXME: DELETE THIS
+    logger.info("Messages received", {Messages})
+
     // if the queue is now empty, then break the loop
     if (!Messages || Messages.length === 0) break
 
@@ -105,7 +108,7 @@ export async function clearCompletedSQSMessages(
 }
 
 export interface LastNotificationStateType {
-  MessageBatchReference: string // This is also the x-request-id header
+  RequestId: string // This is also the x-request-id header
   MessageID: string // The SQS message ID
   NHSNumber: string
   ODSCode: string
