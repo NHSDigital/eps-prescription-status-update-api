@@ -423,6 +423,8 @@ Resources:
     Type: AWS::DynamoDB::Table
     Properties:
       TableName: !Sub ${StackName}-PrescriptionNotificationState
+      PointInTimeRecoverySpecification:
+        PointInTimeRecoveryEnabled: true
       AttributeDefinitions:
         - AttributeName: NHSNumber
           AttributeType: S
