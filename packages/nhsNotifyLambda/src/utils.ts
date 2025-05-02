@@ -10,6 +10,8 @@ import {DynamoDBDocumentClient, PutCommand} from "@aws-sdk/lib-dynamodb"
 
 import {PSUDataItem} from "@PrescriptionStatusUpdate_common/commonTypes"
 
+const TTL_DELTA = 60 * 60 * 24 * 7 // Keep records for a week
+
 const dynamoTable = process.env.TABLE_NAME
 const sqsUrl = process.env.NHS_NOTIFY_PRESCRIPTIONS_SQS_QUEUE_URL
 
@@ -144,11 +146,11 @@ export async function addPrescriptionMessagesToNotificationStateStore(
       NHSNumber: data.PSUDataItem.PatientNHSNumber,
       ODSCode: data.PSUDataItem.PharmacyODSCode,
       RequestId: data.PSUDataItem.RequestID,
-      ExpiryTime: 604800,
       MessageID: data.MessageId!,
       PrescriptionStatus: data.PSUDataItem.Status,
       DeliveryStatus: "requested",
-      LastNotificationRequestTimestamp: new Date().toISOString()
+      LastNotificationRequestTimestamp: new Date().toISOString(),
+      ExpiryTime: (Math.floor(+new Date() / 1000) + TTL_DELTA)
     }
 
     try {
