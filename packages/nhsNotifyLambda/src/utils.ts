@@ -50,6 +50,7 @@ export async function drainQueue(logger: Logger, maxTotal = 100): Promise<Array<
     // if the queue is now empty, then break the loop
     if (!Messages || Messages.length === 0) break
 
+    logger.info("Received some messages from the queue. Parsing them...", {Messages: Messages})
     const parsedMessages: Array<PSUDataItemMessage> = Messages.map((m) => {
       if (!m.Body) {
         logger.error("Failed to parse SQS message - aborting this notification processor check.", {offendingMessage: m})
@@ -111,7 +112,7 @@ export interface LastNotificationStateType {
   MessageID: string // The SQS message ID
   PrescriptionStatus: string
   DeliveryStatus: string
-  LastNotificationRequestTimestamp: Date
+  LastNotificationRequestTimestamp: string // ISO-8601 string
   ExpiryTime: number
 }
 
@@ -135,7 +136,7 @@ export async function addPrescriptionMessagesToNotificationStateStore(
       MessageID: data.MessageId!,
       PrescriptionStatus: data.PSUDataItem.Status,
       DeliveryStatus: "requested",
-      LastNotificationRequestTimestamp: new Date()
+      LastNotificationRequestTimestamp: new Date().toISOString()
     }
 
     try {
