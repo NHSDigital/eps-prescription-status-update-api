@@ -22,6 +22,7 @@ describe("NHS notify lambda helper functions", () => {
   describe("drainQueue", () => {
     let logger: Logger
     let errorSpy: SpiedFunction<(msg: string, ...meta: Array<unknown>) => void>
+    let infoSpy: SpiedFunction<(msg: string, ...meta: Array<unknown>) => void>
 
     beforeEach(() => {
       jest.resetModules()
@@ -30,6 +31,7 @@ describe("NHS notify lambda helper functions", () => {
       process.env = {...ORIGINAL_ENV}
       logger = new Logger({serviceName: "test-service"})
       errorSpy = jest.spyOn(logger, "error")
+      infoSpy = jest.spyOn(logger, "info")
     })
 
     it("Does not throw an error when the SQS fetch succeeds", async () => {
@@ -39,11 +41,32 @@ describe("NHS notify lambda helper functions", () => {
 
       const messages = await drainQueue(logger, 10)
       expect(sqsMockSend).toHaveBeenCalledTimes(1)
-      expect(messages.length).toStrictEqual(payload.Messages.length)
+      expect(messages).toHaveLength(10)
+      expect(infoSpy).toHaveBeenCalledWith(
+        "Received some messages from the queue. Parsing them...",
+        expect.objectContaining({pollingIteration: 1, MessageIDs: expect.any(Array)})
+      )
+    })
+
+    it("Batches multiple fetches until maxTotal is reached and stops on empty response", async () => {
+      // First fetch returns 5, second fetch returns 5, third fetch empty
+      const first = {Messages: Array.from({length: 5}, () => constructMessage())}
+      const second = {Messages: Array.from({length: 5}, () => constructMessage())}
+      const empty = {Messages: []}
+
+      sqsMockSend
+        .mockImplementationOnce(() => Promise.resolve(first))
+        .mockImplementationOnce(() => Promise.resolve(second))
+        .mockImplementationOnce(() => Promise.resolve(empty))
+
+      const messages = await drainQueue(logger, 15)
+      expect(sqsMockSend).toHaveBeenCalledTimes(3)
+      expect(messages).toHaveLength(10)
+      expect(infoSpy).toHaveBeenCalledTimes(2)
     })
 
     it("returns empty array if queue is empty on first fetch", async () => {
-      sqsMockSend.mockImplementation(() => Promise.resolve({Messages: []}))
+      sqsMockSend.mockImplementationOnce(() => Promise.resolve({Messages: []}))
 
       const messages = await drainQueue(logger, 5)
       expect(messages).toEqual([])
@@ -55,11 +78,25 @@ describe("NHS notify lambda helper functions", () => {
       await expect(drainQueue(logger, 10)).rejects.toThrow("Fetch failed")
     })
 
+    it("Throws an error if a message has no Body", async () => {
+      const badMsg = constructMessage({Body: undefined})
+      sqsMockSend.mockImplementationOnce(() => Promise.resolve({Messages: [badMsg]}))
+
+      await expect(drainQueue(logger, 1)).rejects.toThrow(
+        `Received an invalid SQS message. Message ID ${badMsg.MessageId}`
+      )
+      expect(errorSpy).toHaveBeenCalledWith(
+        "Failed to parse SQS message - aborting this notification processor check.",
+        {offendingMessage: badMsg}
+      )
+    })
+
     it("Throws an error if the SQS URL is not configured", async () => {
       delete process.env.NHS_NOTIFY_PRESCRIPTIONS_SQS_QUEUE_URL
-      const {drainQueue} = await import("../src/utils")
-
-      await expect(drainQueue(logger)).rejects.toThrow("NHS_NOTIFY_PRESCRIPTIONS_SQS_QUEUE_URL not set")
+      const {drainQueue: dq} = await import("../src/utils")
+      await expect(dq(logger)).rejects.toThrow(
+        "NHS_NOTIFY_PRESCRIPTIONS_SQS_QUEUE_URL not set"
+      )
       expect(errorSpy).toHaveBeenCalledWith("Notifications SQS URL not configured")
     })
   })
@@ -67,6 +104,7 @@ describe("NHS notify lambda helper functions", () => {
   describe("clearCompletedSQSMessages", () => {
     let logger: Logger
     let errorSpy: SpiedFunction<(msg: string, ...meta: Array<unknown>) => void>
+    let infoSpy: SpiedFunction<(msg: string, ...meta: Array<unknown>) => void>
 
     beforeEach(() => {
       jest.resetModules()
@@ -75,12 +113,13 @@ describe("NHS notify lambda helper functions", () => {
       process.env = {...ORIGINAL_ENV}
       logger = new Logger({serviceName: "test-service"})
       errorSpy = jest.spyOn(logger, "error")
+      infoSpy = jest.spyOn(logger, "info")
     })
 
-    it("deletes messages successfully without error", async () => {
+    it("deletes messages in a single batch successfully", async () => {
       const messages: Array<Message> = [
-        {MessageId: "msg1", ReceiptHandle: "rh1"},
-        {MessageId: "msg2", ReceiptHandle: "rh2"}
+        constructMessage({MessageId: "msg1", ReceiptHandle: "rh1"}),
+        constructMessage({MessageId: "msg2", ReceiptHandle: "rh2"})
       ]
 
       // successful delete (no .Failed)
@@ -102,14 +141,38 @@ describe("NHS notify lambda helper functions", () => {
           {Id: "msg2", ReceiptHandle: "rh2"}
         ]
       })
-
       expect(errorSpy).not.toHaveBeenCalled()
     })
 
+    it("splits into batches of 10 when over the SQS limit", async () => {
+      const messages: Array<Message> = Array.from({length: 12}, (_, i) =>
+        constructMessage({MessageId: `msg${i}`, ReceiptHandle: `rh${i}`})
+      )
+      // succeed both batches
+      sqsMockSend.mockImplementation(() => Promise.resolve({}))
+
+      await clearCompletedSQSMessages(logger, messages)
+      expect(sqsMockSend).toHaveBeenCalledTimes(2)
+
+      // first batch of 10
+      const firstCmd = sqsMockSend.mock.calls[0][0] as DeleteMessageBatchCommand
+      expect(firstCmd.input.Entries).toHaveLength(10)
+      // second batch of 2
+      const secondCmd = sqsMockSend.mock.calls[1][0] as DeleteMessageBatchCommand
+      expect(secondCmd.input.Entries).toHaveLength(2)
+
+      expect(infoSpy).toHaveBeenCalledWith(
+        "Deleting batch 1/2",
+        expect.objectContaining({batchSize: 10, messageIds: expect.any(Array)})
+      )
+      expect(infoSpy).toHaveBeenCalledWith(
+        "Deleting batch 2/2",
+        expect.objectContaining({batchSize: 2, messageIds: expect.any(Array)})
+      )
+    })
+
     it("logs and throws if some deletions fail", async () => {
-      const messages: Array<Message> = [
-        {MessageId: "msg1", ReceiptHandle: "rh1"}
-      ]
+      const messages: Array<Message> = [constructMessage({MessageId: "msg1", ReceiptHandle: "rh1"})]
       const failedEntries = [
         {Id: "msg1", SenderFault: true, Code: "Error", Message: "fail"}
       ]
@@ -119,21 +182,19 @@ describe("NHS notify lambda helper functions", () => {
 
       await expect(clearCompletedSQSMessages(logger, messages))
         .rejects
-        .toThrow("Failed to delete fetched messages from SQS")
+        .toThrow("Failed to delete 1 messages from SQS")
 
       expect(errorSpy).toHaveBeenCalledWith(
-        "Some messages failed to delete",
+        "Some messages failed to delete in this batch",
         {failed: failedEntries}
       )
     })
 
     it("Throws an error if the SQS URL is not configured", async () => {
       delete process.env.NHS_NOTIFY_PRESCRIPTIONS_SQS_QUEUE_URL
-      const {clearCompletedSQSMessages} = await import("../src/utils")
+      const {clearCompletedSQSMessages: clearFunc} = await import("../src/utils")
 
-      await expect(clearCompletedSQSMessages(logger, []))
-        .rejects
-        .toThrow("NHS_NOTIFY_PRESCRIPTIONS_SQS_QUEUE_URL not set")
+      await expect(clearFunc(logger, [])).rejects.toThrow("NHS_NOTIFY_PRESCRIPTIONS_SQS_QUEUE_URL not set")
       expect(errorSpy).toHaveBeenCalledWith("Notifications SQS URL not configured")
     })
   })
@@ -158,10 +219,10 @@ describe("NHS notify lambda helper functions", () => {
 
     it("throws and logs error if TABLE_NAME is not set", async () => {
       delete process.env.TABLE_NAME
-      const {addPrescriptionMessagesToNotificationStateStore} = await import("../src/utils")
+      const {addPrescriptionMessagesToNotificationStateStore: addFn} = await import("../src/utils")
 
       await expect(
-        addPrescriptionMessagesToNotificationStateStore(logger, [constructPSUDataItemMessage()])
+        addFn(logger, [constructPSUDataItemMessage()])
       ).rejects.toThrow("TABLE_NAME not set")
 
       expect(errorSpy).toHaveBeenCalledWith(
@@ -214,6 +275,13 @@ describe("NHS notify lambda helper functions", () => {
 
       // No errors
       expect(errorSpy).not.toHaveBeenCalled()
+    })
+
+    it("does nothing when passed an empty array", async () => {
+      await addPrescriptionMessagesToNotificationStateStore(logger, [])
+      expect(infoSpy).toHaveBeenCalledTimes(1)
+      expect(infoSpy).toHaveBeenCalledWith("No data to push into DynamoDB.")
+      expect(sendSpy).not.toHaveBeenCalled()
     })
   })
 })

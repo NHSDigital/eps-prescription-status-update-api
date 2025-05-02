@@ -170,7 +170,8 @@ export async function addPrescriptionMessagesToNotificationStateStore(
     throw new Error("TABLE_NAME not set")
   }
 
-  logger.info("Attempting to push data to DynamoDB", {count: dataArray.length})
+  if (dataArray.length) logger.info("Attempting to push data to DynamoDB", {count: dataArray.length})
+  else logger.info("No data to push into DynamoDB.")
 
   for (const data of dataArray) {
     const item: LastNotificationStateType = {
