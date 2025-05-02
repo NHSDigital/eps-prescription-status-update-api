@@ -97,6 +97,8 @@ export async function clearCompletedSQSMessages(
     ReceiptHandle: m.ReceiptHandle!
   }))
 
+  logger.info("Deleting the following messages from SQS", {messages: deleteMessages})
+
   const deleteCmd = new DeleteMessageBatchCommand({
     QueueUrl: sqsUrl,
     Entries: deleteMessages
