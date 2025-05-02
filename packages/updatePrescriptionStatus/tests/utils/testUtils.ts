@@ -15,7 +15,7 @@ import {
 import {Task} from "fhir/r4"
 
 import valid from "../tasks/valid.json"
-import {DataItem} from "../../src/updatePrescriptionStatus"
+import {PSUDataItem} from "@PrescriptionStatusUpdate_common/commonTypes"
 
 export const TASK_ID_0 = "4d70678c-81e4-4ff4-8c67-17596fd0aa46"
 export const TASK_ID_1 = "0ae4daf3-f24b-479d-b8fa-b69e2d873b60"
@@ -197,7 +197,7 @@ export function mockSQSClient() {
   return {mockSend}
 }
 
-export function createMockDataItem(overrides: Partial<DataItem>): DataItem {
+export function createMockDataItem(overrides: Partial<PSUDataItem>): PSUDataItem {
   return {
     LastModified: "2023-01-02T00:00:00Z",
     LineItemID: "spamandeggs",
@@ -208,7 +208,7 @@ export function createMockDataItem(overrides: Partial<DataItem>): DataItem {
     Status: "ready to collect",
     TaskID: "mnopqr-ghijkl-abcdef",
     TerminalStatus: "ready to collect",
-    ApplicationName: "Jim's Pills",
+    ApplicationName: "Internal Test System",
     ExpiryTime: 123,
     ...overrides
   }

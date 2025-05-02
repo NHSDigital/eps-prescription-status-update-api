@@ -11,15 +11,15 @@ import {
 } from "@aws-sdk/client-dynamodb"
 import {marshall, unmarshall} from "@aws-sdk/util-dynamodb"
 
-import {DataItem} from "../updatePrescriptionStatus"
+import {PSUDataItem} from "@PrescriptionStatusUpdate_common/commonTypes"
 import {Timeout} from "./timeoutUtils"
 
 const client = new DynamoDBClient()
 const tableName = process.env.TABLE_NAME ?? "PrescriptionStatusUpdates"
 
-function createTransactionCommand(dataItems: Array<DataItem>, logger: Logger): TransactWriteItemsCommand {
+function createTransactionCommand(dataItems: Array<PSUDataItem>, logger: Logger): TransactWriteItemsCommand {
   logger.info("Creating transaction command to write data items.")
-  const transactItems: Array<TransactWriteItem> = dataItems.map((d: DataItem): TransactWriteItem => {
+  const transactItems: Array<TransactWriteItem> = dataItems.map((d: PSUDataItem): TransactWriteItem => {
     return {
       Put: {
         TableName: tableName,
@@ -32,7 +32,7 @@ function createTransactionCommand(dataItems: Array<DataItem>, logger: Logger): T
   return new TransactWriteItemsCommand({TransactItems: transactItems})
 }
 
-export async function persistDataItems(dataItems: Array<DataItem>, logger: Logger): Promise<boolean | Timeout> {
+export async function persistDataItems(dataItems: Array<PSUDataItem>, logger: Logger): Promise<boolean | Timeout> {
   const transactionCommand = createTransactionCommand(dataItems, logger)
   try {
     logger.info("Sending TransactWriteItemsCommand to DynamoDB.", {command: transactionCommand})
@@ -72,7 +72,7 @@ export async function checkPrescriptionRecordExistence(
   }
 }
 
-export async function getPreviousItem(currentItem: DataItem): Promise<DataItem | undefined> {
+export async function getPreviousItem(currentItem: PSUDataItem): Promise<PSUDataItem | undefined> {
   const query: QueryCommandInput = {
     TableName: tableName,
     KeyConditions: {
@@ -90,7 +90,7 @@ export async function getPreviousItem(currentItem: DataItem): Promise<DataItem |
   }
 
   let lastEvaluatedKey
-  let items: Array<DataItem> = []
+  let items: Array<PSUDataItem> = []
   do {
     if (lastEvaluatedKey) {
       query.ExclusiveStartKey = lastEvaluatedKey
@@ -99,7 +99,7 @@ export async function getPreviousItem(currentItem: DataItem): Promise<DataItem |
     if (result.Items) {
       items = items.concat(
         result.Items
-          .map((item) => unmarshall(item) as DataItem)
+          .map((item) => unmarshall(item) as PSUDataItem)
           .filter((item) => item.TaskID !== currentItem.TaskID) // Can't do NE in the query so filter here
       )
     }

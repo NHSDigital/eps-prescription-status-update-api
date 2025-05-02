@@ -15,6 +15,7 @@ import {createMockDataItem, mockSQSClient} from "./utils/testUtils"
 const {mockSend} = mockSQSClient()
 
 const {pushPrescriptionToNotificationSQS, saltedHash} = await import("../src/utils/sqsClient")
+const {checkSiteOrSystemIsNotifyEnabled} = await import("../src/validation/notificationSiteAndSystemFilters")
 
 const ORIGINAL_ENV = {...process.env}
 
@@ -22,6 +23,7 @@ describe("Unit tests for pushPrescriptionToNotificationSQS", () => {
   let logger: Logger
   let infoSpy: SpiedFunction<(input: LogItemMessage, ...extraInput: LogItemExtraInput) => void>
   let errorSpy: SpiedFunction<(input: LogItemMessage, ...extraInput: LogItemExtraInput) => void>
+  let warnSpy: SpiedFunction<(input: LogItemMessage, ...extraInput: LogItemExtraInput) => void>
 
   beforeEach(() => {
     jest.resetModules()
@@ -34,6 +36,7 @@ describe("Unit tests for pushPrescriptionToNotificationSQS", () => {
     logger = new Logger({serviceName: "test-service"})
     infoSpy = jest.spyOn(logger, "info")
     errorSpy = jest.spyOn(logger, "error")
+    warnSpy = jest.spyOn(logger, "warn")
   })
 
   it("throws if the SQS URL is not configured", async () => {
@@ -72,7 +75,7 @@ describe("Unit tests for pushPrescriptionToNotificationSQS", () => {
 
   it("sends only 'ready to collect' messages and succeeds", async () => {
     const payload = [
-      createMockDataItem({Status: "ready to collect"}),
+      createMockDataItem({Status: "rEaDy To CoLlEcT"}), // Test case-insensitivity
       createMockDataItem({Status: "ready to collect - partial"}),
       createMockDataItem({Status: "a status that will never be real"})
     ]
@@ -105,7 +108,7 @@ describe("Unit tests for pushPrescriptionToNotificationSQS", () => {
       // FIFO params
       expect(entry.MessageGroupId).toBe("req-789")
       expect(entry.MessageDeduplicationId).toBe(
-        saltedHash(`${original.PatientNHSNumber}:${original.PharmacyODSCode}`)
+        saltedHash(logger, `${original.PatientNHSNumber}:${original.PharmacyODSCode}`)
       )
     })
 
@@ -144,11 +147,75 @@ describe("Unit tests for pushPrescriptionToNotificationSQS", () => {
       createMockDataItem({Status: "ready to collect"})
     )
 
-    mockSend.mockImplementationOnce(() => Promise.resolve({Successful: Array(10).fill({})}))
-    mockSend.mockImplementationOnce(() => Promise.resolve({Successful: Array(2).fill({})}))
+    mockSend
+      .mockImplementationOnce(() => Promise.resolve({Successful: Array(10).fill({})}))
+      .mockImplementationOnce(() => Promise.resolve({Successful: Array(2).fill({})}))
 
     await pushPrescriptionToNotificationSQS("req-111", payload, logger)
-
     expect(mockSend).toHaveBeenCalledTimes(2)
+  })
+
+  it("Uses the fallback salt value but logs a warning about it", async () => {
+    process.env.SQS_SALT = undefined
+    const {saltedHash: tempFunc} = await import("../src/utils/sqsClient")
+
+    tempFunc(logger, "foobar")
+
+    expect(warnSpy)
+      .toHaveBeenLastCalledWith(
+        "Using the fallback salt value - please update the environment variable `SQS_SALT` to a random value."
+      )
+  })
+})
+
+describe("Unit tests for checkSiteOrSystemIsNotifyEnabled", () => {
+  it("includes an item with an enabled ODS code", () => {
+    const item = createMockDataItem({
+      PharmacyODSCode: "FA565",
+      ApplicationName: "not a real test supplier"
+    })
+    const result = checkSiteOrSystemIsNotifyEnabled([item])
+    expect(result).toEqual([item])
+  })
+
+  it("includes an item with an enabled ApplicationName", () => {
+    const item = createMockDataItem({
+      PharmacyODSCode: "ZZZ999",
+      ApplicationName: "Internal Test System"
+    })
+    const result = checkSiteOrSystemIsNotifyEnabled([item])
+    expect(result).toEqual([item])
+  })
+
+  it("is case insensitive for both ODS code and ApplicationName", () => {
+    const item1 = createMockDataItem({
+      PharmacyODSCode: "fa565",
+      ApplicationName: "not a real test supplier"
+    })
+    const item2 = createMockDataItem({
+      PharmacyODSCode: "zzz999",
+      ApplicationName: "internal test SYSTEM"
+    })
+    const result = checkSiteOrSystemIsNotifyEnabled([item1, item2])
+    console.log(result)
+    expect(result).toEqual([item1, item2])
+  })
+
+  it("excludes an item when its ODS code is blocked, even if otherwise enabled", () => {
+    const item = createMockDataItem({
+      PharmacyODSCode: "a83008",
+      ApplicationName: "Internal Test System"
+    })
+    const result = checkSiteOrSystemIsNotifyEnabled([item])
+    expect(result).toEqual([])
+  })
+
+  it("excludes items that are neither enabled nor blocked", () => {
+    const item = createMockDataItem({
+      PharmacyODSCode: "NOTINLIST",
+      ApplicationName: "Some Other System"
+    })
+    const result = checkSiteOrSystemIsNotifyEnabled([item])
+    expect(result).toEqual([])
   })
 })
