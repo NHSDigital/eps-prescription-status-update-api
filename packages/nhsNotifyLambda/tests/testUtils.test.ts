@@ -65,6 +65,32 @@ describe("NHS notify lambda helper functions", () => {
       expect(infoSpy).toHaveBeenCalledTimes(2)
     })
 
+    it("Does not return more than the maximum number of messages, even if more are available", async () => {
+      sqsMockSend
+        .mockImplementation(
+          () => Promise.resolve({Messages: Array.from({length: 10}, () => constructMessage())})
+        )
+
+      const messages = await drainQueue(logger, 20)
+
+      expect(sqsMockSend).toHaveBeenCalledTimes(2)
+      expect(messages).toHaveLength(20)
+      expect(infoSpy).toHaveBeenCalledTimes(2)
+    })
+
+    it("Stops polling the queue if not enough messages are returned from the queue", async () => {
+      const first = {Messages: Array.from({length: 10}, () => constructMessage())}
+      const second = {Messages: Array.from({length: 4}, () => constructMessage())}
+
+      sqsMockSend
+        .mockImplementationOnce(() => Promise.resolve(first))
+        .mockImplementationOnce(() => Promise.resolve(second))
+
+      const messages = await drainQueue(logger, 20)
+      expect(sqsMockSend).toHaveBeenCalledTimes(2)
+      expect(messages).toHaveLength(14)
+    })
+
     it("returns empty array if queue is empty on first fetch", async () => {
       sqsMockSend.mockImplementationOnce(() => Promise.resolve({Messages: []}))
 

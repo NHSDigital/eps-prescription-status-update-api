@@ -97,6 +97,11 @@ export async function drainQueue(logger: Logger, maxTotal = 100): Promise<Array<
     })
     allMessages.push(...parsedMessages)
     receivedSoFar += Messages.length
+
+    // if the last batch of messages was small, then break the loop
+    // This is to prevent a slow-loris style breakdown if the queue has
+    // barely enough messages to keep the processors alive
+    if (!Messages || Messages.length < 5) break
   }
 
   return allMessages
