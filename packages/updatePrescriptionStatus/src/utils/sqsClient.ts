@@ -93,7 +93,13 @@ export async function pushPrescriptionToNotificationSQS(
         // FIFO
         // We dedupe on both nhs number and ods code
         MessageDeduplicationId: saltedHash(logger, `${item.PatientNHSNumber}:${item.PharmacyODSCode}`),
-        MessageGroupId: requestId
+        MessageGroupId: requestId,
+        MessageAttributes: {
+          RequestId: {
+            DataType: "String",
+            StringValue: requestId
+          }
+        }
       }))
     // We could do a round of deduplications here, but benefits would be minimal and AWS SQS will do it for us anyway.
 

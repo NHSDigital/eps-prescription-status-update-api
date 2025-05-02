@@ -20,6 +20,21 @@ const sqs = new SQSClient({region: process.env.AWS_REGION})
 const dynamo = new DynamoDBClient({region: process.env.AWS_REGION})
 const docClient = DynamoDBDocumentClient.from(dynamo)
 
+/**
+ * Returns the original array, chunked in batches of up to <size>
+ *
+ * @param arr - Array to be chunked
+ * @param size - The maximum size of each chunk. The final chunk may be smaller.
+ * @returns - an (N+1) dimensional array
+ */
+function chunkArray<T>(arr: Array<T>, size: number): Array<Array<T>> {
+  const chunks: Array<Array<T>> = []
+  for (let i = 0; i < arr.length; i += size) {
+    chunks.push(arr.slice(i, i + size))
+  }
+  return chunks
+}
+
 // This is an extension of the SQS message interface, which explicitly parses the PSUDataItem
 export interface PSUDataItemMessage extends Message {
   PSUDataItem: PSUDataItem
@@ -38,7 +53,10 @@ export async function drainQueue(logger: Logger, maxTotal = 100): Promise<Array<
     throw new Error("NHS_NOTIFY_PRESCRIPTIONS_SQS_QUEUE_URL not set")
   }
 
+  let pollingIteration = 0
   while (receivedSoFar < maxTotal) {
+    pollingIteration = pollingIteration + 1
+
     const toFetch = Math.min(10, maxTotal - receivedSoFar)
     const receiveCmd = new ReceiveMessageCommand({
       QueueUrl: sqsUrl,
@@ -59,6 +77,7 @@ export async function drainQueue(logger: Logger, maxTotal = 100): Promise<Array<
     logger.info(
       "Received some messages from the queue. Parsing them...",
       {
+        pollingIteration,
         MessageIDs: Messages.map((m) => m.MessageId)
       }
     )
@@ -84,10 +103,11 @@ export async function drainQueue(logger: Logger, maxTotal = 100): Promise<Array<
 }
 
 /**
- * For each message given, delete it from the notifications SQS. Throws an error if it fails
+ * For each message given, delete it from the notifications SQS in batches of up to 10.
+ * Throws an error if any batch fails, but previous batches will remain deleted.
  *
- * @param messages - The messages that were received from SQS, and are to be deleted.
  * @param logger - the logging object
+ * @param messages - The messages that were received from SQS, and are to be deleted.
  */
 export async function clearCompletedSQSMessages(
   logger: Logger,
@@ -98,25 +118,36 @@ export async function clearCompletedSQSMessages(
     throw new Error("NHS_NOTIFY_PRESCRIPTIONS_SQS_QUEUE_URL not set")
   }
 
-  const deleteMessages = messages.map((m) => ({
-    Id: m.MessageId!,
-    ReceiptHandle: m.ReceiptHandle!
-  }))
+  const batches = chunkArray(messages, 10)
 
-  logger.info("Deleting the following messages from SQS", {messages: deleteMessages})
+  for (let batchIndex = 0; batchIndex < batches.length; batchIndex++) {
+    const batch = batches[batchIndex]
+    const entries = batch.map((m) => ({
+      Id: m.MessageId!,
+      ReceiptHandle: m.ReceiptHandle!
+    }))
 
-  const deleteCmd = new DeleteMessageBatchCommand({
-    QueueUrl: sqsUrl,
-    Entries: deleteMessages
-  })
-  const delResult = await sqs.send(deleteCmd)
+    logger.info(`Deleting batch ${batchIndex + 1}/${batches.length}`, {
+      batchSize: entries.length,
+      messageIds: entries.map((e) => e.Id)
+    })
 
-  if (delResult.Failed) {
-    logger.error("Some messages failed to delete", {failed: delResult.Failed})
-    throw new Error("Failed to delete fetched messages from SQS")
+    const deleteCmd = new DeleteMessageBatchCommand({
+      QueueUrl: sqsUrl,
+      Entries: entries
+    })
+    const delResult = await sqs.send(deleteCmd)
+
+    if (delResult.Failed && delResult.Failed.length > 0) {
+      logger.error("Some messages failed to delete in this batch", {failed: delResult.Failed})
+      throw new Error(`Failed to delete ${delResult.Failed.length} messages from SQS`)
+    }
+
+    logger.info(`Successfully deleted batch ${batchIndex + 1}`, {
+      result: delResult,
+      messageIds: entries.map((e) => e.Id)
+    })
   }
-
-  logger.info("Successfully deleted messages from SQS", {result: delResult})
 }
 
 export interface LastNotificationStateType {
