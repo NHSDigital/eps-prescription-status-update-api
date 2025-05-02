@@ -86,7 +86,7 @@ describe("NHS notify lambda helper functions", () => {
       // successful delete (no .Failed)
       sqsMockSend.mockImplementationOnce(() => Promise.resolve({}))
 
-      await expect(clearCompletedSQSMessages(messages, logger))
+      await expect(clearCompletedSQSMessages(logger, messages))
         .resolves
         .toBeUndefined()
 
@@ -117,7 +117,7 @@ describe("NHS notify lambda helper functions", () => {
       // partial failure
       sqsMockSend.mockImplementationOnce(() => Promise.resolve({Failed: failedEntries}))
 
-      await expect(clearCompletedSQSMessages(messages, logger))
+      await expect(clearCompletedSQSMessages(logger, messages))
         .rejects
         .toThrow("Failed to delete fetched messages from SQS")
 
@@ -131,7 +131,7 @@ describe("NHS notify lambda helper functions", () => {
       delete process.env.NHS_NOTIFY_PRESCRIPTIONS_SQS_QUEUE_URL
       const {clearCompletedSQSMessages} = await import("../src/utils")
 
-      await expect(clearCompletedSQSMessages([], logger))
+      await expect(clearCompletedSQSMessages(logger, []))
         .rejects
         .toThrow("NHS_NOTIFY_PRESCRIPTIONS_SQS_QUEUE_URL not set")
       expect(errorSpy).toHaveBeenCalledWith("Notifications SQS URL not configured")

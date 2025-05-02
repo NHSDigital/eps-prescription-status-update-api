@@ -84,8 +84,8 @@ export async function drainQueue(logger: Logger, maxTotal = 100): Promise<Array<
  * @param logger - the logging object
  */
 export async function clearCompletedSQSMessages(
-  messages: Array<Message>,
-  logger: Logger
+  logger: Logger,
+  messages: Array<Message>
 ): Promise<void> {
   if (!sqsUrl) {
     logger.error("Notifications SQS URL not configured")

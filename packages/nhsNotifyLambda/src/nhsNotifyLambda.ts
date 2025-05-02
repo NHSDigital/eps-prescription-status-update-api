@@ -61,7 +61,7 @@ export const lambdaHandler = async (event: EventBridgeEvent<string, string>): Pr
   // By waiting until a message is successfully processed before deleting it from SQS,
   // failed messages will eventually be retried by subsequent notify consumers.
   try {
-    await clearCompletedSQSMessages(messages, logger)
+    await clearCompletedSQSMessages(logger, messages)
   } catch (err) {
     logger.error("Error while deleting successfully processed messages from SQS", {error: err})
     throw err
