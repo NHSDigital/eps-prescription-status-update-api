@@ -56,6 +56,7 @@ export const lambdaHandler = async (event: EventBridgeEvent<string, string>): Pr
     await addPrescriptionMessagesToNotificationStateStore(logger, messages)
   } catch (err) {
     logger.error("Error while pushing data to the PSU notification state data store", {err})
+    throw err
   }
 
   // By waiting until a message is successfully processed before deleting it from SQS,

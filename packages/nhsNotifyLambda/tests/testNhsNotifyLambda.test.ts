@@ -109,7 +109,21 @@ describe("Unit test for NHS Notify lambda handler", () => {
     )
   })
 
-  it("When drainQueue returns only valid JSON messages, all are processed", async () => {
+  it("Throws and logs if addPrescriptionMessagesToNotificationStateStore fails", async () => {
+    mockDrainQueue.mockImplementationOnce(() => Promise.resolve([constructPSUDataItemMessage()]))
+    const thrownError = new Error("Failed")
+    mockAddPrescriptionMessagesToNotificationStateStore.mockImplementationOnce(
+      () => Promise.reject(thrownError)
+    )
+
+    await expect(lambdaHandler(mockEventBridgeEvent)).rejects.toThrow("Failed")
+    expect(mockError).toHaveBeenCalledWith(
+      "Error while pushing data to the PSU notification state data store",
+      {err: thrownError}
+    )
+  })
+
+  it("When drainQueue returns only valid messages, all are processed", async () => {
     const validItem = constructPSUDataItem({
       PrescriptionID: "abc123",
       TaskID: "task-1",

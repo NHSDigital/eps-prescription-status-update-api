@@ -4,7 +4,10 @@ import type {JestConfigWithTsJest} from "ts-jest"
 const jestConfig: JestConfigWithTsJest = {
   ...defaultConfig,
   "rootDir": "./",
-  setupFiles: ["<rootDir>/.jest/setEnvVars.js"]
+  setupFiles: ["<rootDir>/.jest/setEnvVars.js"],
+  coveragePathIgnorePatterns: [
+    "<rootDir>/tests/"
+  ]
 }
 
 export default jestConfig
