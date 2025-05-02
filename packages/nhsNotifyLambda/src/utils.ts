@@ -102,7 +102,7 @@ export async function drainQueue(logger: Logger, maxTotal = 100): Promise<Array<
     // This is to prevent a slow-loris style breakdown if the queue has
     // barely enough messages to keep the processors alive
     if (!Messages || Messages.length < 5) {
-      logger.info("Received a small number of messages. Considering the queue drained.")
+      logger.info("Received a small number of messages. Considering the queue drained.", {batchLength: Messages.length})
       break
     }
   }
