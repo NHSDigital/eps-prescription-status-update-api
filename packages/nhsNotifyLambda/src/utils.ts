@@ -161,12 +161,12 @@ export async function clearCompletedSQSMessages(
 export interface LastNotificationStateType {
   NHSNumber: string
   ODSCode: string
-  RequestId: string // This is also the x-request-id header
+  RequestId: string // x-request-id header
   MessageID: string // The SQS message ID
   PrescriptionStatus: string
   DeliveryStatus: string
   LastNotificationRequestTimestamp: string // ISO-8601 string
-  ExpiryTime: number
+  ExpiryTime: number // DynamoDB expiration time (UNIX timestamp)
 }
 
 export async function addPrescriptionMessagesToNotificationStateStore(
