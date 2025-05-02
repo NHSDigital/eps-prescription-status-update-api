@@ -417,7 +417,7 @@ Resources:
               - kms:Encrypt
               - kms:ReEncrypt*
               - kms:Decrypt
-            Resource: !GetAtt PrescriptionStatusUpdatesKMSKey.Arn
+            Resource: !GetAtt PrescriptionNotificationStateKMSKey.Arn
 
   PrescriptionNotificationStateTable:
     Type: AWS::DynamoDB::Table

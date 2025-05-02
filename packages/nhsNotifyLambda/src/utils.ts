@@ -41,8 +41,12 @@ export async function drainQueue(logger: Logger, maxTotal = 100): Promise<Array<
     const receiveCmd = new ReceiveMessageCommand({
       QueueUrl: sqsUrl,
       MaxNumberOfMessages: toFetch,
-      WaitTimeSeconds: 0,
-      VisibilityTimeout: 30
+      WaitTimeSeconds: 20, // Use long polling to avoid getting empty responses when the queue is small
+      MessageAttributeNames: [
+        "MessageDeduplicationId",
+        "MessageGroupId",
+        "SequenceNumber"
+      ]
     })
 
     const {Messages} = await sqs.send(receiveCmd)
