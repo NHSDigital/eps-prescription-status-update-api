@@ -27,6 +27,7 @@ export const lambdaHandler = async (event: EventBridgeEvent<string, string>): Pr
   logger.info("NHS Notify lambda triggered by scheduler", {event})
 
   let messages: Array<PSUDataItemMessage>
+  let processed: Array<PSUDataItemMessage>
   try {
     messages = await drainQueue(logger, 100)
 
@@ -46,6 +47,24 @@ export const lambdaHandler = async (event: EventBridgeEvent<string, string>): Pr
       .filter((e) => e.allowed)
       .map((e) => e.message)
 
+    // Log the results of checking the cooldown
+    const suppressedCount = messages.length - toProcess.length
+    if (toProcess.length === 0) {
+      logger.info("All messages suppressed by cooldown; nothing to notify",
+        {
+          suppressedCount,
+          totalFetched: messages.length
+        })
+      return
+    } else if (suppressedCount > 0) {
+      logger.info(`Suppressed ${suppressedCount} messages due to cooldown`,
+        {
+          suppressedCount,
+          totalFetched: messages.length
+        }
+      )
+    }
+
     // Just for diagnostics for now
     const toNotify = toProcess
       .map((m) => ({
@@ -56,6 +75,7 @@ export const lambdaHandler = async (event: EventBridgeEvent<string, string>): Pr
     logger.info("Fetched prescription notification messages", {count: toNotify.length, toNotify})
 
     // TODO: Notifications request will be done here.
+    processed = toProcess
 
   } catch (err) {
     logger.error("Error while draining SQS queue", {error: err})
@@ -63,7 +83,7 @@ export const lambdaHandler = async (event: EventBridgeEvent<string, string>): Pr
   }
 
   try {
-    await addPrescriptionMessagesToNotificationStateStore(logger, messages)
+    await addPrescriptionMessagesToNotificationStateStore(logger, processed)
   } catch (err) {
     logger.error("Error while pushing data to the PSU notification state data store", {err})
     throw err
@@ -72,7 +92,7 @@ export const lambdaHandler = async (event: EventBridgeEvent<string, string>): Pr
   // By waiting until a message is successfully processed before deleting it from SQS,
   // failed messages will eventually be retried by subsequent notify consumers.
   try {
-    await clearCompletedSQSMessages(logger, messages)
+    await clearCompletedSQSMessages(logger, processed)
   } catch (err) {
     logger.error("Error while deleting successfully processed messages from SQS", {error: err})
     throw err
