@@ -7,15 +7,6 @@ const jestConfig: JestConfigWithTsJest = {
   setupFiles: ["<rootDir>/.jest/setEnvVars.js"],
   coveragePathIgnorePatterns: [
     "<rootDir>/tests/"
-  ],
-  collectCoverage: true,
-  coverageDirectory: "coverage",
-  // overwrite the default reporters to include our custom LCOV config
-  coverageReporters: [
-    "json",
-    "text",
-    ["lcov", {projectRoot: "<rootDir>"}],
-    "clover"
   ]
 }
 
