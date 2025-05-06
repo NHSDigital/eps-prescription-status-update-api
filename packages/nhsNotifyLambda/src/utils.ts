@@ -163,7 +163,7 @@ export interface LastNotificationStateType {
   ODSCode: string
   RequestId: string // x-request-id header
   MessageID: string // The SQS message ID
-  PrescriptionStatus: string
+  LastNotifiedPrescriptionStatus: string
   DeliveryStatus: string
   LastNotificationRequestTimestamp: string // ISO-8601 string
   ExpiryTime: number // DynamoDB expiration time (UNIX timestamp)
@@ -187,7 +187,7 @@ export async function addPrescriptionMessagesToNotificationStateStore(
       ODSCode: data.PSUDataItem.PharmacyODSCode,
       RequestId: data.PSUDataItem.RequestID,
       MessageID: data.MessageId!,
-      PrescriptionStatus: data.PSUDataItem.Status,
+      LastNotifiedPrescriptionStatus: data.PSUDataItem.Status,
       DeliveryStatus: "requested",
       LastNotificationRequestTimestamp: new Date().toISOString(),
       ExpiryTime: (Math.floor(+new Date() / 1000) + TTL_DELTA)
