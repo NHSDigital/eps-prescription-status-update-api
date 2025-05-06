@@ -3,10 +3,14 @@ import type {JestConfigWithTsJest} from "ts-jest"
 
 const jestConfig: JestConfigWithTsJest = {
   ...defaultConfig,
-  "rootDir": "./",
+  rootDir: "./",
   setupFiles: ["<rootDir>/.jest/setEnvVars.js"],
-  coveragePathIgnorePatterns: [
-    "<rootDir>/tests/"
+  coveragePathIgnorePatterns: ["<rootDir>/tests/"],
+  coverageReporters: [
+    "clover",
+    "json",
+    "text",
+    ["lcov", {projectRoot: "../../"}]
   ]
 }
 
