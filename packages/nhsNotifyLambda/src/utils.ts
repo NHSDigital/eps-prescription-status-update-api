@@ -107,6 +107,8 @@ export async function drainQueue(logger: Logger, maxTotal = 100): Promise<Array<
     }
   }
 
+  logger.info(`In sum, retrieved ${allMessages.length} messages from SQS`)
+
   return allMessages
 }
 
@@ -151,7 +153,7 @@ export async function clearCompletedSQSMessages(
       throw new Error(`Failed to delete ${delResult.Failed.length} messages from SQS`)
     }
 
-    logger.info(`Successfully deleted batch ${batchIndex + 1}`, {
+    logger.info(`Successfully deleted SQS message batch ${batchIndex + 1}`, {
       result: delResult,
       messageIds: entries.map((e) => e.Id)
     })
