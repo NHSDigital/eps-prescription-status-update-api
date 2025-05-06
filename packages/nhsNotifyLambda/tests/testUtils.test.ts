@@ -66,10 +66,8 @@ describe("NHS notify lambda helper functions", () => {
     })
 
     it("Does not return more than the maximum number of messages, even if more are available", async () => {
-      sqsMockSend
-        .mockImplementation(
-          () => Promise.resolve({Messages: Array.from({length: 10}, () => constructMessage())})
-        )
+      const mockQueue = () => Promise.resolve({Messages: Array.from({length: 10}, () => constructMessage())})
+      sqsMockSend.mockImplementation(mockQueue)
 
       const messages = await drainQueue(logger, 20)
 

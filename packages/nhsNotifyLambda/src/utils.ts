@@ -88,7 +88,7 @@ export async function drainQueue(logger: Logger, maxTotal = 100): Promise<Array<
         throw new Error(`Received an invalid SQS message. Message ID ${m.MessageId}`)
       }
 
-      const parsedBody: PSUDataItem = JSON.parse(m.Body!) as PSUDataItem
+      const parsedBody: PSUDataItem = JSON.parse(m.Body) as PSUDataItem
 
       return {
         ...m,
