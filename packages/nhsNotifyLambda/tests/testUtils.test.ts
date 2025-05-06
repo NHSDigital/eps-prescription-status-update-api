@@ -63,7 +63,7 @@ describe("NHS notify lambda helper functions", () => {
       const messages = await drainQueue(logger, 15)
       expect(sqsMockSend).toHaveBeenCalledTimes(3)
       expect(messages).toHaveLength(10)
-      expect(infoSpy).toHaveBeenCalledTimes(2)
+      expect(infoSpy).toHaveBeenCalledTimes(3)
     })
 
     it("Does not return more than the maximum number of messages, even if more are available", async () => {
@@ -75,7 +75,7 @@ describe("NHS notify lambda helper functions", () => {
 
       expect(sqsMockSend).toHaveBeenCalledTimes(2)
       expect(messages).toHaveLength(20)
-      expect(infoSpy).toHaveBeenCalledTimes(2)
+      expect(infoSpy).toHaveBeenCalledTimes(3)
     })
 
     it("Stops polling the queue if not enough messages are returned from the queue", async () => {

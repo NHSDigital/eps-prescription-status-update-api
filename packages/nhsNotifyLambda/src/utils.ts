@@ -223,11 +223,6 @@ export async function checkCooldownForUpdate(
   update: PSUDataItem,
   cooldownPeriod: number = 900
 ): Promise<boolean> {
-  logger.info("Checking if notification is within cooldown period", {
-    NHSNumber: update.PatientNHSNumber,
-    ODSCode: update.PharmacyODSCode,
-    cooldownPeriod
-  })
 
   if (!dynamoTable) {
     logger.error("DynamoDB table not configured")
@@ -257,10 +252,20 @@ export async function checkCooldownForUpdate(
     const secondsSince = Math.floor((nowTs - lastTs) / 1000)
 
     if (secondsSince > cooldownPeriod) {
-      logger.info("Cooldown period has passed. Notification allowed.", {secondsSince})
+      logger.info("Cooldown period has passed. Notification allowed.", {
+        NHSNumber: update.PatientNHSNumber,
+        ODSCode: update.PharmacyODSCode,
+        cooldownPeriod,
+        secondsSince
+      })
       return true
     } else {
-      logger.info("Within cooldown period. Notification suppressed.", {secondsSince})
+      logger.info("Within cooldown period. Notification suppressed.", {
+        NHSNumber: update.PatientNHSNumber,
+        ODSCode: update.PharmacyODSCode,
+        cooldownPeriod,
+        secondsSince
+      })
       return false
     }
   } catch (err) {
