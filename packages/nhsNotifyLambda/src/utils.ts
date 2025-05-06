@@ -6,7 +6,7 @@ import {
   Message
 } from "@aws-sdk/client-sqs"
 import {DynamoDBClient} from "@aws-sdk/client-dynamodb"
-import {DynamoDBDocumentClient, PutCommand} from "@aws-sdk/lib-dynamodb"
+import {DynamoDBDocumentClient, GetCommand, PutCommand} from "@aws-sdk/lib-dynamodb"
 
 import {PSUDataItem} from "@PrescriptionStatusUpdate_common/commonTypes"
 
@@ -205,5 +205,64 @@ export async function addPrescriptionMessagesToNotificationStateStore(
       })
       throw err
     }
+  }
+}
+
+/**
+ * Returns TRUE if the patient HAS NOT received a recent notification.
+ * Returns FALSE if the patient HAS received a recent notification
+ *
+ * @param logger - AWS logging object
+ * @param update - The Prescription Status Update that we are checking
+ * @param cooldownPeriod - Minimum time in seconds between notifications
+ */
+export async function checkCooldownForUpdate(
+  logger: Logger,
+  update: PSUDataItem,
+  cooldownPeriod: number = 900
+): Promise<boolean> {
+  logger.info("Checking if notification is within cooldown period", {
+    NHSNumber: update.PatientNHSNumber,
+    ODSCode: update.PharmacyODSCode,
+    cooldownPeriod
+  })
+
+  if (!dynamoTable) {
+    logger.error("DynamoDB table not configured")
+    throw new Error("TABLE_NAME not set")
+  }
+
+  try {
+    // Retrieve the last notification state for this patient/pharmacy combo
+    const getCmd = new GetCommand({
+      TableName: dynamoTable,
+      Key: {
+        NHSNumber: update.PatientNHSNumber,
+        ODSCode: update.PharmacyODSCode
+      }
+    })
+    const {Item} = await docClient.send(getCmd)
+
+    // If no previous record, we're okay to send a notification
+    if (!Item?.LastNotificationRequestTimestamp) {
+      logger.info("No previous notification state found. Notification allowed.")
+      return true
+    }
+
+    // Compute seconds since last notification
+    const lastTs = new Date(Item.LastNotificationRequestTimestamp).getTime()
+    const nowTs = Date.now()
+    const secondsSince = Math.floor((nowTs - lastTs) / 1000)
+
+    if (secondsSince > cooldownPeriod) {
+      logger.info("Cooldown period has passed. Notification allowed.", {secondsSince})
+      return true
+    } else {
+      logger.info("Within cooldown period. Notification suppressed.", {secondsSince})
+      return false
+    }
+  } catch (err) {
+    logger.error("Error checking cooldown state", {error: err})
+    throw err
   }
 }

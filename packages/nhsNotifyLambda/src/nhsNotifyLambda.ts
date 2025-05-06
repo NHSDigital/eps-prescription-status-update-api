@@ -8,6 +8,7 @@ import errorHandler from "@nhs/fhir-middy-error-handler"
 
 import {
   addPrescriptionMessagesToNotificationStateStore,
+  checkCooldownForUpdate,
   clearCompletedSQSMessages,
   drainQueue,
   PSUDataItemMessage
@@ -34,18 +35,27 @@ export const lambdaHandler = async (event: EventBridgeEvent<string, string>): Pr
       return
     }
 
-    const toNotify = messages.map((m) => ({
-      RequestID: m.PSUDataItem.RequestID,
-      TaskId: m.PSUDataItem.TaskID,
-      Message: "Notification Required"
-    }))
+    // Filter messages by checkCooldownForUpdate. This is done in two stages so we can check in parallel
+    const eligibility = await Promise.all(
+      messages.map(async (m) => ({
+        message: m,
+        allowed: await checkCooldownForUpdate(logger, m.PSUDataItem)
+      }))
+    )
+    const toProcess = eligibility
+      .filter((e) => e.allowed)
+      .map((e) => e.message)
+
+    // Just for diagnostics for now
+    const toNotify = toProcess
+      .map((m) => ({
+        RequestID: m.PSUDataItem.RequestID,
+        TaskId: m.PSUDataItem.TaskID,
+        Message: "Notification Required"
+      }))
     logger.info("Fetched prescription notification messages", {count: toNotify.length, toNotify})
 
-    // TODO: Notifications logic will be done here.
-    // - query PrescriptionNotificationState
-    // - process prescriptions, build NHS notify payload
-    // - Make NHS notify request
-    // Don't forget to make appropriate logs!
+    // TODO: Notifications request will be done here.
 
   } catch (err) {
     logger.error("Error while draining SQS queue", {error: err})

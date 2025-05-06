@@ -74,6 +74,7 @@
       "Codeable",
       "codeinline",
       "codesystem",
+      "Cooldown",
       "cpsu",
       "dbaeumer",
       "devcontainer",
