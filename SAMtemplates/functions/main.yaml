@@ -445,7 +445,7 @@ Resources:
     Properties:
       FunctionName: !Sub ${StackName}-NHSNotifyUpdateCallback
       CodeUri: ../../packages/
-      Handler: nhsNotifyUpdateCallback.lambdaHandler
+      Handler: lambdaHandler.handler
       Role: !GetAtt NHSNotifyUpdateCallbackResources.Outputs.LambdaRoleArn
       Environment:
         Variables:
