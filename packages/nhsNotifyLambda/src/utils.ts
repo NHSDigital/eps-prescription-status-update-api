@@ -10,6 +10,8 @@ import {DynamoDBDocumentClient, GetCommand, PutCommand} from "@aws-sdk/lib-dynam
 
 import {PSUDataItem} from "@PrescriptionStatusUpdate_common/commonTypes"
 
+import {v4} from "uuid"
+
 const TTL_DELTA = 60 * 60 * 24 * 7 // Keep records for a week
 
 const dynamoTable = process.env.TABLE_NAME
@@ -167,6 +169,7 @@ export interface LastNotificationStateType {
   MessageID: string // The SQS message ID
   LastNotifiedPrescriptionStatus: string
   DeliveryStatus: string
+  NotifyMessageID: string // The UUID we got back from Notify for the submitted message
   LastNotificationRequestTimestamp: string // ISO-8601 string
   ExpiryTime: number // DynamoDB expiration time (UNIX timestamp)
 }
@@ -191,6 +194,7 @@ export async function addPrescriptionMessagesToNotificationStateStore(
       MessageID: data.MessageId!,
       LastNotifiedPrescriptionStatus: data.PSUDataItem.Status,
       DeliveryStatus: "requested",
+      NotifyMessageID: v4(), // Dummy message ID
       LastNotificationRequestTimestamp: new Date().toISOString(),
       ExpiryTime: (Math.floor(+new Date() / 1000) + TTL_DELTA)
     }
