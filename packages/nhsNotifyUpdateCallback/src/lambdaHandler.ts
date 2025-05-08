@@ -9,7 +9,7 @@ import httpHeaderNormalizer from "@middy/http-header-normalizer"
 
 import errorHandler from "@nhs/fhir-middy-error-handler"
 
-import {createHmac} from "crypto"
+import {createHmac, timingSafeEqual} from "crypto"
 import {MessageStatusResponse} from "./types"
 
 export const logger = new Logger({serviceName: "nhsNotifyUpdateCallback"})
@@ -46,13 +46,28 @@ function checkSignature(event: APIGatewayProxyEvent) {
 
   // Compute the HMAC-SHA256 hash of the combination of the request body and the secret value
   const payload = event.body ?? ""
-  const expectedSignature = createHmac("sha256", secretValue)
-    .update(payload, "utf8")
-    .digest("hex")
 
-  const givenSignature = event.headers["x-hmac-sha256-signature"]
-  if (givenSignature !== expectedSignature) {
-    logger.error("Incorrect signature given", {expectedSignature, givenSignature})
+  // Compute the HMAC as a Buffer
+  const expectedSigBuf = createHmac("sha256", secretValue)
+    .update(payload, "utf8")
+    .digest() // Buffer
+
+  // Convert the incoming hex signature into a Buffer
+  let givenSigBuf: Buffer
+  try {
+    givenSigBuf = Buffer.from(signature, "hex")
+  } catch {
+    logger.error("Invalid hex in signature header", {givenSignature: signature})
+    return response(403, {message: "Malformed signature"})
+  }
+
+  // Must be same length for timingSafeEqual
+  if (givenSigBuf.length !== expectedSigBuf.length ||
+      !timingSafeEqual(expectedSigBuf, givenSigBuf)) {
+    logger.error("Incorrect signature given", {
+      expectedSignature: expectedSigBuf.toString("hex"),
+      givenSignature: signature
+    })
     return response(403, {message: "Incorrect signature"})
   }
 
