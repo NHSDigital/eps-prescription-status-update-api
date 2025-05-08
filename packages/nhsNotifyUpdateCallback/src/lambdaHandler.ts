@@ -47,6 +47,8 @@ function checkSignature(event: APIGatewayProxyEvent) {
   // Compute the HMAC-SHA256 hash of the combination of the request body and the secret value
   const payload = event.body ?? ""
 
+  logger.info("Creating a hash from the following", {secretValue, payload})
+
   // Compute the HMAC as a Buffer
   const expectedSigBuf = createHmac("sha256", secretValue)
     .update(payload, "utf8")
