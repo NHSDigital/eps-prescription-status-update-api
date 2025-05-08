@@ -28,6 +28,7 @@ const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPro
   // Check the request signature
   const isErr = checkSignature(logger, event)
   if (isErr) return isErr
+  logger.info("Signature OK!")
 
   // Parse out the request body
   if (!event.body) return response(400, {message: "No request body given"})

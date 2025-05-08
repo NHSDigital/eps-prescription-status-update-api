@@ -6,7 +6,7 @@ import {
   afterEach
 } from "@jest/globals"
 
-import {generateMockEvent} from "./testHelpers"
+import {generateMockEvent} from "./utilities"
 
 const mockInfo = jest.fn()
 const mockError = jest.fn()
