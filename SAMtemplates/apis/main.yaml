@@ -441,7 +441,7 @@ Resources:
       RestApiId: !Ref RestApiGateway
       ResourceId: !Ref NotificationDeliveryStatusCallbackResource
       HttpMethod: POST
-      AuthorizationType: NONE # TODO: They authenticate with a JWT header
+      AuthorizationType: NONE # They authenticate with a signature header
       Integration:
         Type: AWS_PROXY
         Credentials: !GetAtt RestApiGatewayResources.Outputs.ApiGwRoleArn
