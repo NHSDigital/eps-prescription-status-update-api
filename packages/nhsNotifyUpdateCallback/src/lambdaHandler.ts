@@ -42,12 +42,9 @@ function checkSignature(event: APIGatewayProxyEvent) {
     return response(401, {message: "No x-api-key header given"})
   }
 
-  const secretValue = `${APP_NAME}.${API_KEY}`
-
   // Compute the HMAC-SHA256 hash of the combination of the request body and the secret value
+  const secretValue = `${APP_NAME}.${API_KEY}`
   const payload = event.body ?? ""
-
-  logger.info("Creating a hash from the following", {secretValue, payload})
 
   // Compute the HMAC as a Buffer
   const expectedSigBuf = createHmac("sha256", secretValue)
