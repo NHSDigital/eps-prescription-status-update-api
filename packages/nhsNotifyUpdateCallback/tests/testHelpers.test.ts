@@ -208,6 +208,34 @@ describe("helpers.ts", () => {
       )
     })
 
+    it("warns when not every received message update had a pre-existing record in the table", async () => {
+      const mockResponse: MessageStatusResponse = generateMockMessageStatusResponse(
+        [
+          {attributes: {messageId: "msg-1"}},
+          {attributes: {messageId: "msg-2"}}
+        ],
+        2
+      )
+      const mockItem = {
+        NHSNumber: "NHS123",
+        ODSCode: "ODS1",
+        NotifyMessageID: "msg-1"
+      }
+      // QueryCommand returns only one item for both resources
+      sendSpy.mockImplementation(() => Promise.resolve({Items: [mockItem]}))
+
+      await updateNotificationsTable(logger, mockResponse)
+
+      // Warning logged for uneven matching
+      expect(logger.warn).toHaveBeenCalledWith(
+        "Not every received message update had a pre-existing record in the table.",
+        expect.objectContaining({
+          requestItemsLength: mockResponse.data.length,
+          tableQueryResultsLength: 1
+        })
+      )
+    })
+
     it("logs error and continues when query fails", async () => {
       // Simulate query failure
       const awsError = new Error("Failed")

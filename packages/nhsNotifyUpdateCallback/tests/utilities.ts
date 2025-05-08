@@ -42,10 +42,12 @@ type DeepPartial<T> = {
 /**
  * Generates a mock MessageStatusResponse for testing, with optional deep overrides.
  * @param dataOverrides Array of partial resource overrides to apply (one per data item).
- * Defaults to a single default resource when omitted.
+ *                        If you pass fewer overrides than numData, the rest will be empty.
+ * @param numData        Number of items to generate. Defaults to 1.
  */
 export function generateMockMessageStatusResponse(
-  dataOverrides: Array<DeepPartial<MessageStatusResource>> = [{}]
+  dataOverrides: Array<DeepPartial<MessageStatusResource>> = [],
+  numData: number = 1
 ): MessageStatusResponse {
   const defaultRoutingPlan: RoutingPlan = {
     id: "plan-1",
@@ -72,11 +74,13 @@ export function generateMockMessageStatusResponse(
     meta: {idempotencyKey: "idem-123"}
   }
 
-  const mergedData = dataOverrides.map((override) => {
-    // Safely extract the nested attributes override or empty object
+  // Build an array of exactly numData overrides, using {} when none provided
+  const overrides = Array.from({length: numData}, (_, i) => dataOverrides[i] ?? {})
+
+  const mergedData = overrides.map((override) => {
     const attrsOverride = override.attributes ?? {}
 
-    // Merge channels deeply: map each partial override onto a default channel
+    // Deep-merge channels
     const mergedChannels: Array<Channel> = Array.isArray(attrsOverride.channels)
       ? attrsOverride.channels.map((ch) => ({
         ...defaultChannels[0],
@@ -85,10 +89,8 @@ export function generateMockMessageStatusResponse(
       : defaultChannels
 
     const data: MessageStatusResource = {
-      // Top-level merge: override type, links, meta if provided
       ...defaultResource,
-      ...override,
-      // Deep-merge attributes, ensuring correct types
+      ...override, // top‐level overrides
       attributes: {
         ...defaultResource.attributes,
         ...attrsOverride,
@@ -98,7 +100,6 @@ export function generateMockMessageStatusResponse(
         },
         channels: mergedChannels
       },
-      // Deep-merge links and meta
       links: {...defaultResource.links, ...(override.links ?? {})},
       meta: {...defaultResource.meta, ...(override.meta ?? {})}
     }
