@@ -31,10 +31,16 @@ function response(statusCode: number, body: unknown = {}) {
  */
 function checkSignature(event: APIGatewayProxyEvent) {
   const signature = event.headers["x-hmac-sha256-signature"]
-  if (!signature) return response(401)
+  if (!signature) {
+    logger.error("No x-hmac-sha256-signature header given")
+    return response(401, {message: "No x-hmac-sha256-signature given"})
+  }
 
   const givenApiKey = event.headers["x-api-key"]
-  if (!givenApiKey) return response(401)
+  if (!givenApiKey) {
+    logger.error("No x-api-key header given")
+    return response(401, {message: "No x-api-key header given"})
+  }
 
   const secretValue = `${APP_NAME}.${API_KEY}`
 
@@ -45,7 +51,10 @@ function checkSignature(event: APIGatewayProxyEvent) {
     .digest("hex")
 
   const givenSignature = event.headers["x-hmac-sha256-signature"]
-  if (givenSignature !== expectedSignature) return response(403)
+  if (givenSignature !== expectedSignature) {
+    logger.error("Incorrect signature given")
+    return response(403, {message: "Incorrect signature"})
+  }
 
   return undefined
 }
@@ -59,13 +68,13 @@ const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPro
   logger.info("Lambda called with this event", {event})
 
   // Require a request ID
-  if (!event.headers["x-request-id"]) return response(401)
+  if (!event.headers["x-request-id"]) return response(401, {message: "No x-request-id given"})
 
   // Check the request signature
   const isErr = checkSignature(event)
   if (isErr) return isErr
 
-  if (!event.body) return response(401)
+  if (!event.body) return response(401, {message: "No request body given"})
   try {
     const payload: MessageStatusResponse = JSON.parse(event.body)
     logger.info("Payload parsed", {payload})
