@@ -10,6 +10,7 @@ import httpHeaderNormalizer from "@middy/http-header-normalizer"
 import errorHandler from "@nhs/fhir-middy-error-handler"
 
 import {createHmac} from "crypto"
+import {MessageStatusResponse} from "./types"
 
 export const logger = new Logger({serviceName: "nhsNotifyUpdateCallback"})
 
@@ -64,8 +65,16 @@ const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPro
   const isErr = checkSignature(event)
   if (isErr) return isErr
 
+  if (!event.body) return response(401)
+  try {
+    const payload: MessageStatusResponse = JSON.parse(event.body)
+    logger.info("Payload parsed", {payload})
+  } catch (error) {
+    logger.error("Failed to parse payload", {error, payload: event.body})
+  }
+
   return {
-    statusCode: 201,
+    statusCode: 202,
     body: "OK"
   }
 }
