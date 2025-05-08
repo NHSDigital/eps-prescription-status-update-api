@@ -1,10 +1,23 @@
 import {APIGatewayProxyEvent} from "aws-lambda"
 import {Logger} from "@aws-lambda-powertools/logger"
 
+import {DynamoDBClient} from "@aws-sdk/client-dynamodb"
+import {DynamoDBDocumentClient, UpdateCommand, QueryCommand} from "@aws-sdk/lib-dynamodb"
+
 import {createHmac, timingSafeEqual} from "crypto"
+
+import {MessageStatusResponse} from "./types"
 
 const APP_NAME = process.env.APP_NAME ?? "NO-APP-NAME"
 const API_KEY = process.env.API_KEY ?? "NO-API-KEY"
+
+// TTL is one week in seconds
+const TTL_DELTA = 60 * 60 * 24 * 7
+
+const dynamoTable = process.env.TABLE_NAME
+
+const dynamo = new DynamoDBClient({region: process.env.AWS_REGION})
+const docClient = DynamoDBDocumentClient.from(dynamo)
 
 export function response(statusCode: number, body: unknown = {}) {
   return {
@@ -60,4 +73,101 @@ export function checkSignature(logger: Logger, event: APIGatewayProxyEvent) {
   }
 
   return undefined
+}
+
+/**
+ * For each incoming NHS Notify message-status callback,
+ * find the matching record in DynamoDB by NotifyMessageID,
+ * and update it with the new delivery status, timestamp, and channels.
+ * Do that all in parallel.
+ */
+export async function updateNotificationsTable(
+  logger: Logger,
+  bodyData: MessageStatusResponse
+): Promise<void> {
+  // For each callback resource, return a promise
+  const callbackPromises = bodyData.data.map(async (resource) => {
+    const {messageId, messageStatus, timestamp} = resource.attributes
+
+    // Query matching records
+    let queryResult
+    try {
+      queryResult = await docClient.send(new QueryCommand({
+        TableName: dynamoTable,
+        IndexName: "NotifyMessageIDIndex",
+        KeyConditionExpression: "NotifyMessageID = :nm",
+        ExpressionAttributeValues: {
+          ":nm": messageId
+        }
+      }))
+    } catch (error) {
+      logger.error("Error querying by NotifyMessageID", {messageId, error})
+      return
+    }
+
+    const items = queryResult.Items ?? []
+    if (items.length === 0) {
+      logger.warn("No matching record found for NotifyMessageID", {messageId})
+      return
+    }
+    if (items.length !== bodyData.data.length) {
+      logger.warn("Not every received message update had a pre-existing record in the table.",
+        {
+          requestItemsLength: bodyData.data.length,
+          tableQueryResultsLength: items.length
+        }
+      )
+      // TODO: Elements without pre-existing records should have a new one created,
+      // but we don't have enough information to do that :(
+    }
+
+    const newExpiry = Math.floor(Date.now() / 1000) + TTL_DELTA
+
+    // For each match, update in parallel
+    const updatePromises = items.map(async item => {
+      const key = {
+        NHSNumber: item.NHSNumber,
+        ODSCode: item.ODSCode
+      }
+      try {
+        await docClient.send(new UpdateCommand({
+          TableName: dynamoTable,
+          Key: key,
+          UpdateExpression: [
+            "SET DeliveryStatus = :ds",
+            " , LastNotificationRequestTimestamp = :ts",
+            " , ExpiryTime = :et"
+          ].join(""),
+          ExpressionAttributeValues: {
+            ":ds": messageStatus,
+            ":ts": timestamp,
+            ":et": newExpiry
+          }
+        }))
+        logger.info(
+          "Updated notification state",
+          {
+            NotifyMessageID: item.NotifyMessageID,
+            newStatus: messageStatus,
+            newTimestamp: timestamp,
+            newExpiryTime: newExpiry
+          }
+        )
+      } catch (err) {
+        logger.error(
+          "Failed to update notification state",
+          {
+            NotifyMessageID: item.NotifyMessageID,
+            error: err
+          }
+        )
+      }
+    })
+
+    // wait for all updates for this callback
+    await Promise.all(updatePromises)
+  })
+
+  // wait for all callbacks to be processed
+  await Promise.all(callbackPromises)
 }

@@ -451,6 +451,8 @@ Resources:
         Variables:
           LOG_LEVEL: !Ref LogLevel
           TABLE_NAME: !Ref PrescriptionNotificationStateTableName
+          # APP_NAME: # TODO: fill these out
+          # API_KEY: something
     Metadata:
       BuildMethod: esbuild
       guard:

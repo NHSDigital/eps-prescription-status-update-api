@@ -10,7 +10,7 @@ import httpHeaderNormalizer from "@middy/http-header-normalizer"
 import errorHandler from "@nhs/fhir-middy-error-handler"
 
 import {MessageStatusResponse} from "./types"
-import {checkSignature, response} from "./helpers"
+import {checkSignature, response, updateNotificationsTable} from "./helpers"
 
 export const logger = new Logger({serviceName: "nhsNotifyUpdateCallback"})
 
@@ -23,19 +23,28 @@ const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPro
   logger.info("Lambda called with this event", {event})
 
   // Require a request ID
-  if (!event.headers["x-request-id"]) return response(401, {message: "No x-request-id given"})
+  if (!event.headers["x-request-id"]) return response(400, {message: "No x-request-id given"})
 
   // Check the request signature
   const isErr = checkSignature(logger, event)
   if (isErr) return isErr
 
   // Parse out the request body
-  if (!event.body) return response(401, {message: "No request body given"})
+  if (!event.body) return response(400, {message: "No request body given"})
+  let payload: MessageStatusResponse
   try {
-    const payload: MessageStatusResponse = JSON.parse(event.body)
+    payload = JSON.parse(event.body)
     logger.info("Payload parsed", {payload})
   } catch (error) {
     logger.error("Failed to parse payload", {error, payload: event.body})
+    return response(400, {message: "Request body failed to parse"})
+  }
+
+  try {
+    await updateNotificationsTable(logger, payload)
+  } catch (error) {
+    logger.info("Failed to push updates to the notification state table", {error})
+    return response(500, {message: "Failed to update the notification state table"})
   }
 
   // All's well that ends well
