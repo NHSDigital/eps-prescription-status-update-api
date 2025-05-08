@@ -52,7 +52,7 @@ function checkSignature(event: APIGatewayProxyEvent) {
 
   const givenSignature = event.headers["x-hmac-sha256-signature"]
   if (givenSignature !== expectedSignature) {
-    logger.error("Incorrect signature given")
+    logger.error("Incorrect signature given", {expectedSignature, givenSignature})
     return response(403, {message: "Incorrect signature"})
   }
 
