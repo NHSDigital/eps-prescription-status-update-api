@@ -94,6 +94,8 @@ Resources:
     Type: AWS::Serverless::Application
     Properties:
       Location: secrets/main.yaml
+      Parameters:
+        StackName: !Ref AWS::StackName
   
   Parameters:
     Type: AWS::Serverless::Application
