@@ -45,6 +45,7 @@ export function checkSignature(logger: Logger, event: APIGatewayProxyEvent) {
   }
 
   // Compute the HMAC-SHA256 hash of the combination of the request body and the secret value
+  logger.info("SECRET VALUES!!", {APP_NAME, API_KEY}) // TODO: Delete this line
   const secretValue = `${APP_NAME}.${API_KEY}`
   const payload = event.body ?? ""
 

@@ -42,6 +42,14 @@ Parameters:
   BlockedSiteODSCodesParam:
     Type: AWS::SSM::Parameter::Value<String>
     
+  NotifyCallbackAppName:
+    Type: String
+    Default: none
+
+  NotifyCallbackApiKey:
+    Type: String
+    Default: none
+
   LogLevel:
     Type: String
 
@@ -451,8 +459,8 @@ Resources:
         Variables:
           LOG_LEVEL: !Ref LogLevel
           TABLE_NAME: !Ref PrescriptionNotificationStateTableName
-          # APP_NAME: # TODO: fill these out
-          # API_KEY: something
+          APP_NAME: !Ref NotifyCallbackAppName
+          API_KEY: !Ref NotifyCallbackApiKey
     Metadata:
       BuildMethod: esbuild
       guard:

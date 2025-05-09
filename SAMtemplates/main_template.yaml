@@ -90,6 +90,11 @@ Parameters:
     Type: String
 
 Resources:
+  Secrets: 
+    Type: AWS::Serverless::Application
+    Properties:
+      Location: secrets/main.yaml
+  
   Parameters:
     Type: AWS::Serverless::Application
     Properties:
@@ -149,6 +154,8 @@ Resources:
         EnabledSiteODSCodesParam: !GetAtt Parameters.Outputs.EnabledSiteODSCodesParameterName
         EnabledSystemsParam: !GetAtt Parameters.Outputs.EnabledSystemsParameterName
         BlockedSiteODSCodesParam: !GetAtt Parameters.Outputs.BlockedSiteODSCodesParameterName
+        NotifyCallbackAppName: !GettAtt Secrets.Outputs.NotifyCallbackAppName
+        NotifyCallbackApiKey: !GettAtt Secrets.Outputs.NotifyCallbackApiKey
         LogLevel: !Ref LogLevel
         LogRetentionInDays: !Ref LogRetentionInDays
         EnableSplunk: !Ref EnableSplunk
