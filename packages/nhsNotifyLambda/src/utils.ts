@@ -64,8 +64,7 @@ export async function drainQueue(logger: Logger, maxTotal = 100): Promise<Array<
       WaitTimeSeconds: 20, // Use long polling to avoid getting empty responses when the queue is small
       MessageAttributeNames: [
         "MessageDeduplicationId",
-        "MessageGroupId",
-        "SequenceNumber"
+        "MessageGroupId"
       ]
     })
 
