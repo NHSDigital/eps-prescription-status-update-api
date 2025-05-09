@@ -48,7 +48,7 @@ export function checkSignature(logger: Logger, event: APIGatewayProxyEvent) {
   const secretValue = `${APP_NAME}.${API_KEY}`
   const payload = event.body ?? ""
 
-  // Compute the HMAC as a Buffer
+  // compare hashes as Buffers, rather than hex
   const expectedSigBuf = createHmac("sha256", secretValue)
     .update(payload, "utf8")
     .digest() // Buffer
