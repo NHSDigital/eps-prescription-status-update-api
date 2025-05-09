@@ -93,9 +93,24 @@ export async function pushPrescriptionToNotificationSQS(
         // FIFO
         // We dedupe on both nhs number and ods code
         MessageDeduplicationId: saltedHash(logger, `${item.PatientNHSNumber}:${item.PharmacyODSCode}`),
-        MessageGroupId: requestId
+        MessageGroupId: requestId,
+        MessageAttributes: {
+          RequestId: {
+            DataType: "String",
+            StringValue: requestId
+          }
+        }
       }))
     // We could do a round of deduplications here, but benefits would be minimal and AWS SQS will do it for us anyway.
+
+    logger.info(
+      "For this batch, this is the results of filtering out unwanted statuses and parsing to SQS message entries",
+      {
+        batchLength: batch.length,
+        entriesLength: entries.length,
+        entriesStatuses: batch.map((el) => el.Status)
+      }
+    )
 
     if (!entries.length) {
       // Carry on if we have no updates to make.

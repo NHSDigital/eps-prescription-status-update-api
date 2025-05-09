@@ -3,6 +3,7 @@ import {jest} from "@jest/globals"
 import * as sqs from "@aws-sdk/client-sqs"
 
 import {PSUDataItem} from "@PrescriptionStatusUpdate_common/commonTypes"
+import {PSUDataItemMessage} from "../src/utils"
 
 // Similarly mock the SQS client
 export function mockSQSClient() {
@@ -16,6 +17,22 @@ export function mockSQSClient() {
     }
   })
   return {mockSend}
+}
+
+export function constructMessage(overrides: Partial<sqs.Message> = {}): sqs.Message {
+  return {
+    MessageId: "messageId",
+    Body: JSON.stringify(constructPSUDataItem()),
+    ...overrides
+  }
+}
+
+export function constructPSUDataItemMessage(overrides: Partial<PSUDataItemMessage> = {}): PSUDataItemMessage {
+  return {
+    ...constructMessage(),
+    PSUDataItem: constructPSUDataItem(),
+    ...overrides
+  }
 }
 
 export function constructPSUDataItem(overrides: Partial<PSUDataItem> = {}): PSUDataItem {
