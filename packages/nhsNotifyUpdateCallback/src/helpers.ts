@@ -86,7 +86,6 @@ export async function updateNotificationsTable(
     // Query matching records
     let queryResult
     try {
-      logger.info("SENDING QUERY")
       queryResult = await docClient.send(new QueryCommand({
         TableName: dynamoTable,
         IndexName: "NotifyMessageIDIndex",
@@ -95,7 +94,6 @@ export async function updateNotificationsTable(
           ":nm": messageId
         }
       }))
-      logger.info("QUERY REPLY", {queryResult})
     } catch (error) {
       logger.error("Error querying by NotifyMessageID", {messageId, error})
       throw error
