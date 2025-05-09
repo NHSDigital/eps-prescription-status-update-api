@@ -33,6 +33,10 @@ Parameters:
     Type: String
     Default: none
 
+  SQSSaltSecret:
+    Type: String
+    Default: none
+
   EnabledSiteODSCodesParam:
     Type: AWS::SSM::Parameter::Value<String>
 
@@ -77,17 +81,6 @@ Conditions:
     - !Ref DeployCheckPrescriptionStatusUpdate
 
 Resources:
-  SQSSaltSecret:
-    Type: AWS::SecretsManager::Secret
-    Properties:
-      Name: !Sub ${StackName}-SqsSalt
-      Description: Auto-generated salt for SQS_SALT
-      GenerateSecretString:
-        SecretStringTemplate: "{}"
-        GenerateStringKey: salt
-        PasswordLength: 32
-        ExcludePunctuation: true
-
   UpdatePrescriptionStatus:
     Type: AWS::Serverless::Function
     Properties:
@@ -459,8 +452,8 @@ Resources:
         Variables:
           LOG_LEVEL: !Ref LogLevel
           TABLE_NAME: !Ref PrescriptionNotificationStateTableName
-          APP_NAME: !Ref NotifyCallbackAppName
-          API_KEY: !Ref NotifyCallbackApiKey
+          APP_NAME: !Sub "{{resolve:secretsmanager:${NotifyCallbackAppName}:SecretString}}"
+          API_KEY:  !Sub "{{resolve:secretsmanager:${NotifyCallbackApiKey}:SecretString}}"
     Metadata:
       BuildMethod: esbuild
       guard:
