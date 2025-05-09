@@ -416,5 +416,12 @@ describe("NHS notify lambda helper functions", () => {
         expect.objectContaining({error: awsErr})
       )
     })
+
+    it("does nothing when passed an empty array", async () => {
+      await addPrescriptionMessagesToNotificationStateStore(logger, [])
+      expect(infoSpy).toHaveBeenCalledTimes(1)
+      expect(infoSpy).toHaveBeenCalledWith("No data to push into DynamoDB.")
+      expect(sendSpy).not.toHaveBeenCalled()
+    })
   })
 })
