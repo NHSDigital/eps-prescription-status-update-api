@@ -33,6 +33,10 @@
       "path": "../packages/nhsNotifyLambda"
     },
     {
+      "name": "packages/nhsNotifyUpdateCallback",
+      "path": "../packages/nhsNotifyUpdateCallback"
+    },
+    {
       "name": "packages/capabilityStatement",
       "path": "../packages/capabilityStatement"
     },
@@ -74,6 +78,7 @@
       "Codeable",
       "codeinline",
       "codesystem",
+      "Cooldown",
       "cpsu",
       "dbaeumer",
       "devcontainer",
@@ -96,6 +101,7 @@
       "mermade",
       "milliliter",
       "mkhl",
+      "nhsapp",
       "nHSCHI",
       "NHSD",
       "nhsdlogin",
