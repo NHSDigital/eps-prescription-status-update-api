@@ -419,7 +419,7 @@ Resources:
               - kms:Decrypt
             Resource: !GetAtt PrescriptionNotificationStateKMSKey.Arn
 
-  PrescriptionNotificationStateTable:
+  PrescriptionNotificationStatesTable:
     Type: AWS::DynamoDB::Table
     Properties:
       TableName: !Sub ${StackName}-PrescriptionNotificationStates
