@@ -11,7 +11,7 @@ import {
   checkCooldownForUpdate,
   clearCompletedSQSMessages,
   drainQueue,
-  PSUDataItemMessage
+  NotifyDataItemMessage
 } from "./utils"
 
 const logger = new Logger({serviceName: "nhsNotify"})
@@ -26,8 +26,8 @@ export const lambdaHandler = async (event: EventBridgeEvent<string, string>): Pr
 
   logger.info("NHS Notify lambda triggered by scheduler", {event})
 
-  let messages: Array<PSUDataItemMessage>
-  let processed: Array<PSUDataItemMessage>
+  let messages: Array<NotifyDataItemMessage>
+  let processed: Array<NotifyDataItemMessage>
   try {
     messages = await drainQueue(logger, 100)
 
