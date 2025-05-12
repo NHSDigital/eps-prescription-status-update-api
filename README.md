@@ -9,7 +9,7 @@ Version release history can be found ot https://github.com/NHSDigital/eps-prescr
 We use eslint convention for commit messages for commits to main branch. Descriptions for the types of changes in a release can be found in the [contributing guidelines](./CONTRIBUTING.md)  
 Deployment history can be found at https://nhsdigital.github.io/eps-prescription-status-update-api/
 
-## Introduction
+## Introduction!
 
 This is the AWS layer that provides an API for EPS Prescription Status Update.
 
