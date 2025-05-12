@@ -192,8 +192,8 @@ export async function addPrescriptionMessagesToNotificationStateStore(
       RequestId: data.PSUDataItem.RequestID,
       MessageID: data.MessageId!,
       LastNotifiedPrescriptionStatus: data.PSUDataItem.Status,
-      DeliveryStatus: "requested",
-      NotifyMessageID: v4(), // Dummy message ID
+      DeliveryStatus: "requested", // TODO: This needs to be handled for the case where notify fails.
+      NotifyMessageID: v4(), // TODO: Dummy message ID
       LastNotificationRequestTimestamp: new Date().toISOString(),
       ExpiryTime: (Math.floor(+new Date() / 1000) + TTL_DELTA)
     }
