@@ -458,29 +458,29 @@ Resources:
       Location: dynamodb_resources.yaml
       Parameters:
         StackName: !Ref StackName
-        TableName: !Ref PrescriptionNotificationStateTable
-        TableArn: !GetAtt PrescriptionNotificationStateTable.Arn
+        TableName: !Ref PrescriptionNotificationStatesTable
+        TableArn: !GetAtt PrescriptionNotificationStatesTable.Arn
 
   # Auto scaling for the table
-  PrescriptionNotificationStateTableWriteScalingTarget:
+  PrescriptionNotificationStatesTableWriteScalingTarget:
     Type: AWS::ApplicationAutoScaling::ScalableTarget
-    DependsOn: PrescriptionNotificationStateTable
+    DependsOn: PrescriptionNotificationStatesTable
     Condition: EnableDynamoDBAutoScalingCondition
     Properties:
       MinCapacity: !Ref MinWritePrescriptionNotificationStateCapacity
       MaxCapacity: !Ref MaxWritePrescriptionNotificationStateCapacity
-      ResourceId: !Sub table/${PrescriptionNotificationStateTable}
+      ResourceId: !Sub table/${PrescriptionNotificationStatesTable}
       RoleARN: !GetAtt DynamoDbScalingRole.Arn
       ScalableDimension: "dynamodb:table:WriteCapacityUnits"
       ServiceNamespace: dynamodb
 
-  PrescriptionNotificationStateTableWriteScalingPolicy:
+  PrescriptionNotificationStatesTableWriteScalingPolicy:
     Type: AWS::ApplicationAutoScaling::ScalingPolicy
     Condition: EnableDynamoDBAutoScalingCondition
     Properties:
-      PolicyName: PrescriptionNotificationStateTableWriteScalingPolicy
+      PolicyName: PrescriptionNotificationStatesTableWriteScalingPolicy
       PolicyType: TargetTrackingScaling
-      ScalingTargetId: !Ref PrescriptionNotificationStateTableWriteScalingTarget
+      ScalingTargetId: !Ref PrescriptionNotificationStatesTableWriteScalingTarget
       TargetTrackingScalingPolicyConfiguration:
         TargetValue: 50
         ScaleInCooldown: 600
@@ -488,25 +488,25 @@ Resources:
         PredefinedMetricSpecification:
           PredefinedMetricType: DynamoDBWriteCapacityUtilization
 
-  PrescriptionNotificationStateTableReadScalingTarget:
+  PrescriptionNotificationStatesTableReadScalingTarget:
     Type: AWS::ApplicationAutoScaling::ScalableTarget
-    DependsOn: PrescriptionNotificationStateTable
+    DependsOn: PrescriptionNotificationStatesTable
     Condition: EnableDynamoDBAutoScalingCondition
     Properties:
       MinCapacity: 1
       MaxCapacity: 100
-      ResourceId: !Sub table/${PrescriptionNotificationStateTable}
+      ResourceId: !Sub table/${PrescriptionNotificationStatesTable}
       RoleARN: !GetAtt DynamoDbScalingRole.Arn
       ScalableDimension: "dynamodb:table:ReadCapacityUnits"
       ServiceNamespace: dynamodb
 
-  PrescriptionNotificationStateTableReadScalingPolicy:
+  PrescriptionNotificationStatesTableReadScalingPolicy:
     Type: AWS::ApplicationAutoScaling::ScalingPolicy
     Condition: EnableDynamoDBAutoScalingCondition
     Properties:
-      PolicyName: PrescriptionNotificationStateTableReadScalingPolicy
+      PolicyName: PrescriptionNotificationStatesTableReadScalingPolicy
       PolicyType: TargetTrackingScaling
-      ScalingTargetId: !Ref PrescriptionNotificationStateTableReadScalingTarget
+      ScalingTargetId: !Ref PrescriptionNotificationStatesTableReadScalingTarget
       TargetTrackingScalingPolicyConfiguration:
         TargetValue: 70
         ScaleInCooldown: 60
@@ -529,13 +529,13 @@ Outputs:
     Export:
       Name: !Sub ${StackName}:tables:UsePrescriptionStatusUpdatesKMSKeyPolicyArn
 
-  PrescriptionNotificationStateTableName:
+  PrescriptionNotificationStatesTableName:
     Description: PrescriptionNotificationState table name
-    Value: !Ref PrescriptionNotificationStateTable
+    Value: !Ref PrescriptionNotificationStatesTable
 
-  PrescriptionNotificationStateTableArn:
+  PrescriptionNotificationStatesTableArn:
     Description: PrescriptionNotificationState table ARN
-    Value: !GetAtt PrescriptionNotificationStateTable.Arn
+    Value: !GetAtt PrescriptionNotificationStatesTable.Arn
 
   UsePrescriptionNotificationStateKMSKeyPolicyArn:
     Description: Use kms key policy arn
