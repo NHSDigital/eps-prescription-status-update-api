@@ -2,7 +2,7 @@ import {jest} from "@jest/globals"
 import {SpiedFunction} from "jest-mock"
 
 import {Logger} from "@aws-lambda-powertools/logger"
-import {DynamoDBDocumentClient, PutCommand} from "@aws-sdk/lib-dynamodb"
+import {DynamoDBDocumentClient, GetCommand, PutCommand} from "@aws-sdk/lib-dynamodb"
 import {DeleteMessageBatchCommand, Message} from "@aws-sdk/client-sqs"
 
 import {constructMessage, constructPSUDataItemMessage, mockSQSClient} from "./testHelpers"
@@ -12,6 +12,7 @@ const {mockSend: sqsMockSend} = mockSQSClient()
 const {
   addPrescriptionMessagesToNotificationStateStore,
   clearCompletedSQSMessages,
+  checkCooldownForUpdate,
   drainQueue
 } = await import("../src/utils")
 
@@ -300,6 +301,120 @@ describe("NHS notify lambda helper functions", () => {
 
       // No errors
       expect(errorSpy).not.toHaveBeenCalled()
+    })
+
+    it("does nothing when passed an empty array", async () => {
+      await addPrescriptionMessagesToNotificationStateStore(logger, [])
+      expect(infoSpy).toHaveBeenCalledTimes(1)
+      expect(infoSpy).toHaveBeenCalledWith("No data to push into DynamoDB.")
+      expect(sendSpy).not.toHaveBeenCalled()
+    })
+  })
+
+  describe("checkCooldownForUpdate", () => {
+    let logger: Logger
+    let infoSpy: SpiedFunction<(msg: string, ...meta: Array<unknown>) => void>
+    let errorSpy: SpiedFunction<(msg: string, ...meta: Array<unknown>) => void>
+    let sendSpy: ReturnType<typeof jest.spyOn>
+
+    beforeEach(async () => {
+      jest.resetModules()
+      jest.clearAllMocks()
+
+      process.env = {...ORIGINAL_ENV, TABLE_NAME: "test-table"}
+
+      logger = new Logger({serviceName: "test-service"})
+      infoSpy = jest.spyOn(logger, "info")
+      errorSpy = jest.spyOn(logger, "error")
+      sendSpy = jest.spyOn(DynamoDBDocumentClient.prototype, "send")
+    })
+
+    afterAll(() => {
+      process.env = {...ORIGINAL_ENV}
+    })
+
+    it("throws if TABLE_NAME is not set", async () => {
+      delete process.env.TABLE_NAME
+      const {checkCooldownForUpdate: fn} = await import("../src/utils")
+      const update = constructPSUDataItemMessage().PSUDataItem
+
+      await expect(fn(logger, update)).rejects.toThrow("TABLE_NAME not set")
+      expect(errorSpy).toHaveBeenCalledWith("DynamoDB table not configured")
+    })
+
+    it("returns true if no previous record exists", async () => {
+      // send resolves with no item
+      sendSpy.mockImplementationOnce(() => Promise.resolve({}))
+
+      const update = constructPSUDataItemMessage().PSUDataItem
+      const result = await checkCooldownForUpdate(logger, update, 900)
+
+      expect(sendSpy).toHaveBeenCalledWith(expect.any(GetCommand))
+      expect(infoSpy).toHaveBeenCalledWith(
+        "No previous notification state found. Notification allowed."
+      )
+      expect(result).toBe(true)
+    })
+
+    it("returns true when last notification is older than default cooldown", async () => {
+      const pastTs = new Date(Date.now() - (1000 * 901)).toISOString() // 901s ago
+      sendSpy.mockImplementationOnce(() =>
+        Promise.resolve({Item: {LastNotificationRequestTimestamp: pastTs}})
+      )
+
+      const update = constructPSUDataItemMessage().PSUDataItem
+      const result = await checkCooldownForUpdate(logger, update, 900)
+
+      expect(infoSpy).toHaveBeenCalledWith(
+        "Cooldown period has passed. Notification allowed.",
+        expect.objectContaining({secondsSince: expect.any(Number)})
+      )
+      expect(result).toBe(true)
+    })
+
+    it("returns false when last notification is within default cooldown", async () => {
+      const recentTs = new Date(Date.now() - (1000 * 300)).toISOString() // 300s ago
+      sendSpy.mockImplementationOnce(() =>
+        Promise.resolve({Item: {LastNotificationRequestTimestamp: recentTs}})
+      )
+
+      const update = constructPSUDataItemMessage().PSUDataItem
+      const result = await checkCooldownForUpdate(logger, update, 900)
+
+      expect(infoSpy).toHaveBeenCalledWith(
+        "Within cooldown period. Notification suppressed.",
+        expect.objectContaining({secondsSince: expect.any(Number)})
+      )
+      expect(result).toBe(false)
+    })
+
+    it("honours a custom cooldownPeriod", async () => {
+      // custom cooldown = 60 seconds, but timestamp is only 30s ago
+      const recentTs = new Date(Date.now() - 30000).toISOString()
+      sendSpy.mockImplementationOnce(() =>
+        Promise.resolve({Item: {LastNotificationRequestTimestamp: recentTs}})
+      )
+
+      const update = constructPSUDataItemMessage().PSUDataItem
+      const result = await checkCooldownForUpdate(logger, update, 60)
+
+      expect(infoSpy).toHaveBeenCalledWith(
+        "Within cooldown period. Notification suppressed.",
+        expect.objectContaining({secondsSince: expect.any(Number)})
+      )
+      expect(result).toBe(false)
+    })
+
+    it("propagates and logs errors from DynamoDB", async () => {
+      const awsErr = new Error("DDB failure")
+      sendSpy.mockImplementationOnce(() => Promise.reject(awsErr))
+
+      const update = constructPSUDataItemMessage().PSUDataItem
+      await expect(checkCooldownForUpdate(logger, update)).rejects.toThrow("DDB failure")
+      expect(errorSpy).toHaveBeenCalledWith(
+        "Error checking cooldown state",
+        expect.objectContaining({error: awsErr})
+      )
     })
 
     it("does nothing when passed an empty array", async () => {
