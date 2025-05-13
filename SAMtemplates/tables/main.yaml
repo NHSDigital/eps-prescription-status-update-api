@@ -430,20 +430,6 @@ Resources:
           AttributeType: S
         - AttributeName: ODSCode
           AttributeType: S
-        - AttributeName: NotifyMessageID
-          AttributeType: S
-      GlobalSecondaryIndexes:
-        - IndexName: NotifyMessageIDIndex
-          KeySchema:
-            - AttributeName: NotifyMessageID
-              KeyType: HASH
-          Projection:
-            ProjectionType: ALL
-          ProvisionedThroughput: !If
-            - EnableDynamoDBAutoScalingCondition
-            - ReadCapacityUnits: 1
-              WriteCapacityUnits: !Ref MinWritePrescriptionNotificationStateCapacity
-            - !Ref "AWS::NoValue"
       KeySchema:
         - AttributeName: NHSNumber
           KeyType: HASH       # Partition key
