@@ -85,6 +85,11 @@ on:
         required: false
       REGRESSION_TESTS_PEM:
         required: true
+      # These are the secret values used for the NHS notify signature stuff
+      APP_NAME:
+        required: true
+      NOTIFY_API_KEY:
+        required: true
 jobs:
   release_code_and_api:
     runs-on: ubuntu-22.04
@@ -208,6 +213,55 @@ jobs:
           DEPLOY_CHECK_PRESCRIPTION_STATUS_UPDATE: ${{ inputs.DEPLOY_CHECK_PRESCRIPTION_STATUS_UPDATE }}
         run: ./deploy_api.sh
 
+      - name: Configure AWS Credentials for secret updates
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-region: eu-west-2
+          role-to-assume: ${{ secrets.CLOUD_FORMATION_DEPLOY_ROLE }}
+          role-session-name: psu-secret-update
+
+      - name: Retrieve secret ARNs
+        id: get_secret_arns
+        shell: bash
+        run: |
+          # get the two ARNs exported by CloudFormation
+          APP_NAME_ARN="$(aws cloudformation list-exports \
+            --region eu-west-2 \
+            --query "Exports[?Name=='${{ inputs.STACK_NAME }}-Application-Name'].Value" \
+            --output text)"
+          API_KEY_ARN="$(aws cloudformation list-exports \
+            --region eu-west-2 \
+            --query "Exports[?Name=='${{ inputs.STACK_NAME }}-API-Key'].Value" \
+            --output text)"
+
+          echo "APP_NAME_ARN=$APP_NAME_ARN" >> "$GITHUB_ENV"
+          echo "API_KEY_ARN=$API_KEY_ARN" >> "$GITHUB_ENV"
+
+      - name: Update Application Name and API Key
+        shell: bash
+        run: |
+          APP_NAME="${{ secrets.APP_NAME }}"
+          API_KEY="${{ secrets.NOTIFY_API_KEY }}"
+
+          # push into SecretsManager
+          if [[ -n "$APP_NAME_ARN" ]]; then
+            aws secretsmanager put-secret-value \
+              --secret-id "$APP_NAME_ARN" \
+              --secret-string "$APP_NAME"
+            echo "Updated ${inputs.STACK_NAME}-Application-Name"
+          else
+            echo "ERROR: No ARN found for ${inputs.STACK_NAME}-Application-Name"
+          fi
+
+          if [[ -n "$API_KEY_ARN" ]]; then
+            aws secretsmanager put-secret-value \
+              --secret-id "$API_KEY_ARN" \
+              --secret-string "$API_KEY"
+            echo "Updated ${inputs.STACK_NAME}-API-Key"
+          else
+            echo "ERROR: No ARN found for ${inputs.STACK_NAME}-API-Key"
+          fi
+        
       - name: create_int_release_notes
         uses: ./.github/actions/update_confluence_jira
         if: ${{ inputs.CREATE_INT_RELEASE_NOTES == true && always() && !failure() && !cancelled() }}

@@ -140,6 +140,8 @@ jobs:
       INT_CLOUD_FORMATION_CHECK_VERSION_ROLE: ${{ secrets.INT_CLOUD_FORMATION_CHECK_VERSION_ROLE }}
       PROD_CLOUD_FORMATION_CHECK_VERSION_ROLE: ${{ secrets.PROD_CLOUD_FORMATION_CHECK_VERSION_ROLE }}
       DEV_CLOUD_FORMATION_EXECUTE_LAMBDA_ROLE: ${{ secrets.DEV_CLOUD_FORMATION_EXECUTE_LAMBDA_ROLE }}
+      APP_NAME: ${{ secrets.TESTING_APP_NAME }}
+      NOTIFY_API_KEY: ${{ secrets.TESTING_NOTIFY_API_KEY }}
       PROXYGEN_ROLE: ${{ secrets.PROXYGEN_PTL_ROLE }}
       REGRESSION_TESTS_PEM: ${{ secrets.REGRESSION_TESTS_PEM }}
 
@@ -167,6 +169,8 @@ jobs:
       CLOUD_FORMATION_DEPLOY_ROLE: ${{ secrets.DEV_CLOUD_FORMATION_DEPLOY_ROLE }}
       PROXYGEN_ROLE: ${{ secrets.PROXYGEN_PTL_ROLE }}
       REGRESSION_TESTS_PEM: ${{ secrets.REGRESSION_TESTS_PEM }}
+      APP_NAME: ${{ secrets.TESTING_APP_NAME }}
+      NOTIFY_API_KEY: ${{ secrets.TESTING_NOTIFY_API_KEY }}
 
   release_ref:
     needs:
@@ -201,6 +205,8 @@ jobs:
       CLOUD_FORMATION_DEPLOY_ROLE: ${{ secrets.REF_CLOUD_FORMATION_DEPLOY_ROLE }}
       PROXYGEN_ROLE: ${{ secrets.PROXYGEN_PTL_ROLE }}
       REGRESSION_TESTS_PEM: ${{ secrets.REGRESSION_TESTS_PEM }}
+      APP_NAME: ${{ secrets.TESTING_APP_NAME }}
+      NOTIFY_API_KEY: ${{ secrets.TESTING_NOTIFY_API_KEY }}
 
   release_qa:
     needs:
@@ -235,6 +241,8 @@ jobs:
       CLOUD_FORMATION_DEPLOY_ROLE: ${{ secrets.QA_CLOUD_FORMATION_DEPLOY_ROLE }}
       PROXYGEN_ROLE: ${{ secrets.PROXYGEN_PTL_ROLE }}
       REGRESSION_TESTS_PEM: ${{ secrets.REGRESSION_TESTS_PEM }}
+      APP_NAME: ${{ secrets.TESTING_APP_NAME }}
+      NOTIFY_API_KEY: ${{ secrets.TESTING_NOTIFY_API_KEY }}
 
   release_int:
     needs: [tag_release, release_qa, package_code, get_commit_id]
@@ -268,6 +276,8 @@ jobs:
       DEV_CLOUD_FORMATION_EXECUTE_LAMBDA_ROLE: ${{ secrets.DEV_CLOUD_FORMATION_EXECUTE_LAMBDA_ROLE }}
       PROXYGEN_ROLE: ${{ secrets.PROXYGEN_PROD_ROLE }}
       REGRESSION_TESTS_PEM: ${{ secrets.REGRESSION_TESTS_PEM }}
+      APP_NAME: ${{ secrets.TESTING_APP_NAME }}
+      NOTIFY_API_KEY: ${{ secrets.TESTING_NOTIFY_API_KEY }}
 
   release_int_sandbox:
     needs: [tag_release, release_qa, package_code, get_commit_id]
@@ -293,6 +303,8 @@ jobs:
       CLOUD_FORMATION_DEPLOY_ROLE: ${{ secrets.INT_CLOUD_FORMATION_DEPLOY_ROLE }}
       PROXYGEN_ROLE: ${{ secrets.PROXYGEN_PROD_ROLE }}
       REGRESSION_TESTS_PEM: ${{ secrets.REGRESSION_TESTS_PEM }}
+      APP_NAME: ${{ secrets.TESTING_APP_NAME }}
+      NOTIFY_API_KEY: ${{ secrets.TESTING_NOTIFY_API_KEY }}
 
   release_prod:
     needs:
@@ -333,3 +345,5 @@ jobs:
       DEV_CLOUD_FORMATION_EXECUTE_LAMBDA_ROLE: ${{ secrets.DEV_CLOUD_FORMATION_EXECUTE_LAMBDA_ROLE }}
       PROXYGEN_ROLE: ${{ secrets.PROXYGEN_PROD_ROLE }}
       REGRESSION_TESTS_PEM: ${{ secrets.REGRESSION_TESTS_PEM }}
+      APP_NAME: ${{ secrets.PROD_APP_NAME }}
+      NOTIFY_API_KEY: ${{ secrets.PROD_NOTIFY_API_KEY }}
