@@ -25,9 +25,9 @@ Parameters:
     Type: String
     Default: none
 
-  # PrescriptionNotificationStateTableName:
-    # Type: String
-    # Default: none
+  # PrescriptionNotificationStatesTableName:
+  #   Type: String
+  #   Default: none
 
   NHSNotifyPrescriptionsSQSQueueUrl:
     Type: String
@@ -393,7 +393,7 @@ Resources:
         Variables:
           LOG_LEVEL: !Ref LogLevel
           NHS_NOTIFY_PRESCRIPTIONS_SQS_QUEUE_URL: !Ref NHSNotifyPrescriptionsSQSQueueUrl
-          # TABLE_NAME: !Ref PrescriptionNotificationStateTableName
+          # TABLE_NAME: !Ref PrescriptionNotificationStatesTableName
       Events:
         ScheduleEvent:
           Type: ScheduleV2
@@ -436,9 +436,9 @@ Resources:
           - - Fn::ImportValue: !Sub ${StackName}-WriteNHSNotifyPrescriptionsSQSQueuePolicyArn
             - Fn::ImportValue: !Sub ${StackName}-ReadNHSNotifyPrescriptionsSQSQueuePolicyArn
             - Fn::ImportValue: !Sub ${StackName}-UseNotificationSQSQueueKMSKeyPolicyArn
-            # - Fn::ImportValue: !Sub ${StackName}:tables:${PrescriptionNotificationStateTableName}:TableReadPolicyArn
-            # - Fn::ImportValue: !Sub ${StackName}:tables:${PrescriptionNotificationStateTableName}:TableWritePolicyArn
-            # - Fn::ImportValue: !Sub ${StackName}:tables:UsePrescriptionNotificationStateKMSKeyPolicyArn
+            # - Fn::ImportValue: !Sub ${StackName}:tables:${PrescriptionNotificationStatesTableName}:TableReadPolicyArn
+            # - Fn::ImportValue: !Sub ${StackName}:tables:${PrescriptionNotificationStatesTableName}:TableWritePolicyArn
+            # - Fn::ImportValue: !Sub ${StackName}:tables:UsePrescriptionNotificationStatesKMSKeyPolicyArn
 
 Outputs:
   UpdatePrescriptionStatusFunctionName:
