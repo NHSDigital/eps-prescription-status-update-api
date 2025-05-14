@@ -442,7 +442,7 @@ Resources:
           ProvisionedThroughput: !If
             - EnableDynamoDBAutoScalingCondition
             - ReadCapacityUnits: 1
-              WriteCapacityUnits: !Ref MinWritePrescriptionNotificationStateCapacity
+              WriteCapacityUnits: !Ref MinWritePrescriptionNotificationStatesCapacity
             - !Ref "AWS::NoValue"
       KeySchema:
         - AttributeName: NHSNumber
