@@ -393,7 +393,7 @@ Resources:
       Environment:
         Variables:
           LOG_LEVEL: !Ref LogLevel
-          NHS_NOTIFY_PRESCRIPTIONS_SQS_QUEUE_URL: !Ref NHSNotifyPrescriptionsSQSQueueUrl/
+          NHS_NOTIFY_PRESCRIPTIONS_SQS_QUEUE_URL: !Ref NHSNotifyPrescriptionsSQSQueueUrl
           TABLE_NAME: !Ref PrescriptionNotificationStatesTableName
       Events:
         ScheduleEvent:
@@ -451,7 +451,7 @@ Resources:
       Environment:
         Variables:
           LOG_LEVEL: !Ref LogLevel
-          TABLE_NAME: !Ref PrescriptionNotificationStateTableName
+          TABLE_NAME: !Ref PrescriptionNotificationStatesTableName
           APP_NAME: !Sub "{{resolve:secretsmanager:${NotifyCallbackAppName}:SecretString}}"
           API_KEY:  !Sub "{{resolve:secretsmanager:${NotifyCallbackApiKey}:SecretString}}"
     Metadata:
@@ -481,9 +481,9 @@ Resources:
         IncludeAdditionalPolicies: true
         AdditionalPolicies: !Join
           - ","
-          - - Fn::ImportValue: !Sub ${StackName}:tables:${PrescriptionNotificationStateTableName}:TableReadPolicyArn
-            - Fn::ImportValue: !Sub ${StackName}:tables:${PrescriptionNotificationStateTableName}:TableWritePolicyArn
-            - Fn::ImportValue: !Sub ${StackName}:tables:UsePrescriptionNotificationStateKMSKeyPolicyArn
+          - - Fn::ImportValue: !Sub ${StackName}:tables:${PrescriptionNotificationStatesTableName}:TableReadPolicyArn
+            - Fn::ImportValue: !Sub ${StackName}:tables:${PrescriptionNotificationStatesTableName}:TableWritePolicyArn
+            - Fn::ImportValue: !Sub ${StackName}:tables:UsePrescriptionNotificationStatesKMSKeyPolicyArn
         LogRetentionInDays: !Ref LogRetentionInDays
         CloudWatchKMSKeyId: !ImportValue account-resources:CloudwatchLogsKmsKeyArn
         EnableSplunk: !Ref EnableSplunk
