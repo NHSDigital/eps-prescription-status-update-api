@@ -8,8 +8,8 @@ import {createHmac, timingSafeEqual} from "crypto"
 
 import {MessageStatusResponse} from "./types"
 
-const APP_NAME = process.env.APP_NAME ?? "NO-APP-NAME"
-const API_KEY = process.env.API_KEY ?? "NO-API-KEY"
+const APP_NAME = process.env.APP_NAME
+const API_KEY = process.env.API_KEY
 
 // TTL is one week in seconds
 const TTL_DELTA = 60 * 60 * 24 * 7
@@ -32,6 +32,13 @@ export function response(statusCode: number, body: unknown = {}) {
  * If it's not okay, it returns the error response object.
  */
 export function checkSignature(logger: Logger, event: APIGatewayProxyEvent) {
+  if (!APP_NAME) {
+    throw new Error("APP_NAME environment variable is not set.")
+  }
+  if (!API_KEY) {
+    throw new Error("API_KEY environment variable is not set.")
+  }
+
   const signature = event.headers["x-hmac-sha256-signature"]
   if (!signature) {
     logger.error("No x-hmac-sha256-signature header given")
