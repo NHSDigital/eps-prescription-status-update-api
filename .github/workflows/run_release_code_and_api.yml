@@ -248,18 +248,18 @@ jobs:
             aws secretsmanager put-secret-value \
               --secret-id "$APP_NAME_ARN" \
               --secret-string "$APP_NAME"
-            echo "Updated ${inputs.STACK_NAME}-Application-Name"
+            echo "Updated ${{inputs.STACK_NAME}}-Application-Name"
           else
-            echo "ERROR: No ARN found for ${inputs.STACK_NAME}-Application-Name"
+            echo "ERROR: No ARN found for ${{inputs.STACK_NAME}}-Application-Name"
           fi
 
           if [[ -n "$API_KEY_ARN" ]]; then
             aws secretsmanager put-secret-value \
               --secret-id "$API_KEY_ARN" \
               --secret-string "$API_KEY"
-            echo "Updated ${inputs.STACK_NAME}-API-Key"
+            echo "Updated ${{inputs.STACK_NAME}}-API-Key"
           else
-            echo "ERROR: No ARN found for ${inputs.STACK_NAME}-API-Key"
+            echo "ERROR: No ARN found for ${{inputs.STACK_NAME}}-API-Key"
           fi
         
       - name: create_int_release_notes
