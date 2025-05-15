@@ -227,11 +227,11 @@ jobs:
           # get the two ARNs exported by CloudFormation
           APP_NAME_ARN="$(aws cloudformation list-exports \
             --region eu-west-2 \
-            --query "Exports[?Name=='${{ inputs.STACK_NAME }}-Application-Name'].Value" \
+            --query "Exports[?Name=='${{ inputs.STACK_NAME }}:NotifyCallbackApiKey'].Value" \
             --output text)"
           API_KEY_ARN="$(aws cloudformation list-exports \
             --region eu-west-2 \
-            --query "Exports[?Name=='${{ inputs.STACK_NAME }}-API-Key'].Value" \
+            --query "Exports[?Name=='${{ inputs.STACK_NAME }}:NotifyCallbackApiKey'].Value" \
             --output text)"
 
           echo "APP_NAME_ARN=$APP_NAME_ARN" >> "$GITHUB_ENV"
