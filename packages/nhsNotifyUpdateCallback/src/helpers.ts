@@ -118,8 +118,9 @@ export async function updateNotificationsTable(
           tableQueryResultsLength: items.length
         }
       )
-      // TODO: Elements without pre-existing records should have a new one created,
-      // but we don't have enough information to do that :(
+      // Elements without pre-existing records should, in theory, have a new one created.
+      // But we don't have enough information to do that so we ignore that edge case and
+      // count it as a success.
     }
 
     const newExpiry = Math.floor(Date.now() / 1000) + TTL_DELTA
