@@ -432,7 +432,7 @@ Resources:
           AttributeType: S
       KeySchema:
         - AttributeName: NHSNumber
-          KeyType: HASH       # Partition key
+          KeyType: HASH       # Partition key!
         - AttributeName: ODSCode
           KeyType: RANGE      # Sort key
       BillingMode: !If
