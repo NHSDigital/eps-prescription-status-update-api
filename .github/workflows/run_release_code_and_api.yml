@@ -85,11 +85,7 @@ on:
         required: false
       REGRESSION_TESTS_PEM:
         required: true
-      # These are the secret values used for the NHS notify signature stuff
-      APP_NAME:
-        required: true
-      NOTIFY_API_KEY:
-        required: true
+
 jobs:
   release_code_and_api:
     runs-on: ubuntu-22.04
