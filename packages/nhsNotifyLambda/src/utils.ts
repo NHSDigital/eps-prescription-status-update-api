@@ -12,6 +12,9 @@ import {NotifyDataItem} from "@PrescriptionStatusUpdate_common/commonTypes"
 
 import {v4} from "uuid"
 
+const NOTIFY_API_BASE_URL = process.env.NOTIFY_API_BASE_URL
+const NOTIFY_API_TOKEN = process.env.NOTIFY_API_TOKEN
+
 const TTL_DELTA = 60 * 60 * 24 * 7 // Keep records for a week
 
 const dynamoTable = process.env.TABLE_NAME
@@ -273,6 +276,66 @@ export async function checkCooldownForUpdate(
     }
   } catch (err) {
     logger.error("Error checking cooldown state", {error: err})
+    throw err
+  }
+}
+
+export async function makeBatchNotifyRequest(
+  logger: Logger,
+  routingPlanId: string,
+  data: Array<NotifyDataItem>
+): Promise<void> {
+  if (!NOTIFY_API_BASE_URL) throw new Error("NOTIFY_API_BASE_URL is not defined in the environment variables!")
+  if (!NOTIFY_API_TOKEN) throw new Error("NOTIFY_API_TOKEN is not defined in the environment variables!")
+
+  // Shared between all messages in this batch
+  const messageBatchReference = v4()
+
+  // Map the NotifyDataItems into the structure needed for notify
+  const messages = data.map(item => ({
+    messageReference: item.RequestID,
+    recipient: {nhsNumber: item.PatientNHSNumber},
+    originator: {odsCode: item.PharmacyODSCode},
+    personalisation: {
+      taskId: item.TaskID,
+      status: item.Status
+    }
+  }))
+
+  const body = {
+    data: {
+      type: "MessageBatch" as const,
+      attributes: {
+        routingPlanId,
+        messageBatchReference,
+        messages
+      }
+    }
+  }
+
+  const url = `${NOTIFY_API_BASE_URL}/v1/message-batches`
+
+  try {
+    const resp = await fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${NOTIFY_API_TOKEN}`
+      },
+      body: JSON.stringify(body)
+    })
+
+    if (!resp.ok) {
+      const body = await resp.json()
+      logger.error("Notify batch request failed", {
+        status: resp.status,
+        statusText: resp.statusText,
+        body: body
+      })
+      throw new Error(`Notify batch request failed with HTTP ${resp.status}`)
+    }
+  } catch (err) {
+    logger.error("Error sending notify batch", {error: err})
     throw err
   }
 }
