@@ -8,7 +8,12 @@ import {
 import {DynamoDBClient} from "@aws-sdk/client-dynamodb"
 import {DynamoDBDocumentClient, GetCommand, PutCommand} from "@aws-sdk/lib-dynamodb"
 
-import {PSUDataItem} from "@PrescriptionStatusUpdate_common/commonTypes"
+import {NotifyDataItem} from "@PrescriptionStatusUpdate_common/commonTypes"
+
+import {v4} from "uuid"
+
+const NOTIFY_API_BASE_URL = process.env.NOTIFY_API_BASE_URL
+const NOTIFY_API_TOKEN = process.env.NOTIFY_API_TOKEN
 
 const TTL_DELTA = 60 * 60 * 24 * 7 // Keep records for a week
 
@@ -36,17 +41,17 @@ function chunkArray<T>(arr: Array<T>, size: number): Array<Array<T>> {
 }
 
 // This is an extension of the SQS message interface, which explicitly parses the PSUDataItem
-export interface PSUDataItemMessage extends Message {
-  PSUDataItem: PSUDataItem
+export interface NotifyDataItemMessage extends Message {
+  PSUDataItem: NotifyDataItem
 }
 
 /**
  * Pulls up to `maxTotal` messages off the queue (in batches of up to 10),
  * logs them, and deletes them.
  */
-export async function drainQueue(logger: Logger, maxTotal = 100): Promise<Array<PSUDataItemMessage>> {
+export async function drainQueue(logger: Logger, maxTotal = 100): Promise<Array<NotifyDataItemMessage>> {
   let receivedSoFar = 0
-  const allMessages: Array<PSUDataItemMessage> = []
+  const allMessages: Array<NotifyDataItemMessage> = []
 
   if (!sqsUrl) {
     logger.error("Notifications SQS URL not configured")
@@ -81,13 +86,13 @@ export async function drainQueue(logger: Logger, maxTotal = 100): Promise<Array<
       }
     )
 
-    const parsedMessages: Array<PSUDataItemMessage> = Messages.map((m) => {
+    const parsedMessages: Array<NotifyDataItemMessage> = Messages.map((m) => {
       if (!m.Body) {
         logger.error("Failed to parse SQS message - aborting this notification processor check.", {offendingMessage: m})
         throw new Error(`Received an invalid SQS message. Message ID ${m.MessageId}`)
       }
 
-      const parsedBody: PSUDataItem = JSON.parse(m.Body) as PSUDataItem
+      const parsedBody: NotifyDataItem = JSON.parse(m.Body)
 
       return {
         ...m,
@@ -166,13 +171,14 @@ export interface LastNotificationStateType {
   MessageID: string // The SQS message ID
   LastNotifiedPrescriptionStatus: string
   DeliveryStatus: string
+  NotifyMessageID: string // The UUID we got back from Notify for the submitted message
   LastNotificationRequestTimestamp: string // ISO-8601 string
   ExpiryTime: number // DynamoDB expiration time (UNIX timestamp)
 }
 
 export async function addPrescriptionMessagesToNotificationStateStore(
   logger: Logger,
-  dataArray: Array<PSUDataItemMessage>
+  dataArray: Array<NotifyDataItemMessage>
 ) {
   if (!dynamoTable) {
     logger.error("DynamoDB table not configured")
@@ -189,7 +195,8 @@ export async function addPrescriptionMessagesToNotificationStateStore(
       RequestId: data.PSUDataItem.RequestID,
       MessageID: data.MessageId!,
       LastNotifiedPrescriptionStatus: data.PSUDataItem.Status,
-      DeliveryStatus: "requested",
+      DeliveryStatus: "requested", // TODO: This needs to be handled for the case where notify fails.
+      NotifyMessageID: v4(), // TODO: Dummy message ID
       LastNotificationRequestTimestamp: new Date().toISOString(),
       ExpiryTime: (Math.floor(+new Date() / 1000) + TTL_DELTA)
     }
@@ -219,7 +226,7 @@ export async function addPrescriptionMessagesToNotificationStateStore(
  */
 export async function checkCooldownForUpdate(
   logger: Logger,
-  update: PSUDataItem,
+  update: NotifyDataItem,
   cooldownPeriod: number = 900
 ): Promise<boolean> {
 
@@ -269,6 +276,66 @@ export async function checkCooldownForUpdate(
     }
   } catch (err) {
     logger.error("Error checking cooldown state", {error: err})
+    throw err
+  }
+}
+
+export async function makeBatchNotifyRequest(
+  logger: Logger,
+  routingPlanId: string,
+  data: Array<NotifyDataItem>
+): Promise<void> {
+  if (!NOTIFY_API_BASE_URL) throw new Error("NOTIFY_API_BASE_URL is not defined in the environment variables!")
+  if (!NOTIFY_API_TOKEN) throw new Error("NOTIFY_API_TOKEN is not defined in the environment variables!")
+
+  // Shared between all messages in this batch
+  const messageBatchReference = v4()
+
+  // Map the NotifyDataItems into the structure needed for notify
+  const messages = data.map(item => ({
+    messageReference: item.RequestID,
+    recipient: {nhsNumber: item.PatientNHSNumber},
+    originator: {odsCode: item.PharmacyODSCode},
+    personalisation: {
+      taskId: item.TaskID,
+      status: item.Status
+    }
+  }))
+
+  const body = {
+    data: {
+      type: "MessageBatch" as const,
+      attributes: {
+        routingPlanId,
+        messageBatchReference,
+        messages
+      }
+    }
+  }
+
+  const url = `${NOTIFY_API_BASE_URL}/v1/message-batches`
+
+  try {
+    const resp = await fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${NOTIFY_API_TOKEN}`
+      },
+      body: JSON.stringify(body)
+    })
+
+    if (!resp.ok) {
+      const body = await resp.json()
+      logger.error("Notify batch request failed", {
+        status: resp.status,
+        statusText: resp.statusText,
+        body: body
+      })
+      throw new Error(`Notify batch request failed with HTTP ${resp.status}`)
+    }
+  } catch (err) {
+    logger.error("Error sending notify batch", {error: err})
     throw err
   }
 }
