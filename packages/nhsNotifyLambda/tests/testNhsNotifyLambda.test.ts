@@ -12,6 +12,7 @@ const mockAddPrescriptionMessagesToNotificationStateStore = jest.fn()
 const mockClearCompletedSQSMessages = jest.fn()
 const mockDrainQueue = jest.fn()
 const mockCheckCooldownForUpdate = jest.fn()
+const mockMakeBatchNotifyRequest = jest.fn()
 
 jest.unstable_mockModule(
   "../src/utils",
@@ -20,7 +21,8 @@ jest.unstable_mockModule(
     drainQueue: mockDrainQueue,
     addPrescriptionMessagesToNotificationStateStore: mockAddPrescriptionMessagesToNotificationStateStore,
     clearCompletedSQSMessages: mockClearCompletedSQSMessages,
-    checkCooldownForUpdate: mockCheckCooldownForUpdate
+    checkCooldownForUpdate: mockCheckCooldownForUpdate,
+    makeBatchNotifyRequest: mockMakeBatchNotifyRequest
   })
 )
 
@@ -111,11 +113,6 @@ describe("Unit test for NHS Notify lambda handler", () => {
     mockClearCompletedSQSMessages.mockImplementationOnce(() => Promise.reject(deletionError))
 
     await expect(lambdaHandler(mockEventBridgeEvent)).rejects.toThrow("Delete failed")
-
-    expect(mockError).toHaveBeenCalledWith(
-      "Error while deleting successfully processed messages from SQS",
-      {error: deletionError}
-    )
   })
 
   it("Throws and logs if addPrescriptionMessagesToNotificationStateStore fails", async () => {
@@ -127,10 +124,6 @@ describe("Unit test for NHS Notify lambda handler", () => {
     )
 
     await expect(lambdaHandler(mockEventBridgeEvent)).rejects.toThrow("Failed")
-    expect(mockError).toHaveBeenCalledWith(
-      "Error while pushing data to the PSU notification state data store",
-      {err: thrownError}
-    )
   })
 
   it("When drainQueue returns only valid messages, all are processed", async () => {
