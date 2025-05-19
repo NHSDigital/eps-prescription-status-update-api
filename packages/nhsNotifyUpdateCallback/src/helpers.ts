@@ -51,9 +51,6 @@ export function checkSignature(logger: Logger, event: APIGatewayProxyEvent) {
     return response(401, {message: "No x-api-key header given"})
   }
 
-  // FIXME: Delete this line before PR
-  logger.info("Secret data", {APP_NAME, API_KEY})
-
   // Compute the HMAC-SHA256 hash of the combination of the request body and the secret value
   const secretValue = `${APP_NAME}.${API_KEY}`
   const payload = event.body ?? ""

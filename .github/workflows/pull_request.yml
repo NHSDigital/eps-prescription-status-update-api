@@ -18,8 +18,7 @@ jobs:
 
   get_issue_number:
     runs-on: ubuntu-22.04
-    # FIXME: Re-enable this before PR
-    # needs: quality_checks
+    needs: quality_checks
     outputs:
       issue_number: ${{steps.get_issue_number.outputs.result}}
 
