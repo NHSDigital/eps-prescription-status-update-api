@@ -8,6 +8,7 @@ import {
 } from "@jest/globals"
 import {createHmac} from "crypto"
 import {DynamoDBDocumentClient, QueryCommand, UpdateCommand} from "@aws-sdk/lib-dynamodb"
+import {SecretsManagerClient} from "@aws-sdk/client-secrets-manager"
 
 import {response, checkSignature, updateNotificationsTable} from "../src/helpers"
 import {Logger} from "@aws-lambda-powertools/logger"
@@ -44,8 +45,18 @@ describe("helpers.ts", () => {
 
   describe("checkSignature()", () => {
     let logger: Logger
-    let validHeaders: { "x-request-id": string; "x-api-key": string; "x-hmac-sha256-signature": string }
+    let validHeaders: Record<string, string>
+    let smSendSpy: jest.SpiedFunction<typeof SecretsManagerClient.prototype.send>
+
     beforeEach(() => {
+      // Stub SecretsManagerClient.send so we never call AWS in tests
+      smSendSpy = jest
+        .spyOn(SecretsManagerClient.prototype, "send")
+        // first call: APP_NAME
+        .mockImplementationOnce(() => Promise.resolve({SecretString: process.env.APP_NAME_SECRET_ARN!}))
+        // second call: API_KEY
+        .mockImplementationOnce(() => Promise.resolve({SecretString: process.env.API_KEY_SECRET_ARN!}))
+
       logger = new Logger({serviceName: "nhsNotifyUpdateCallback"})
       validHeaders = {
         "x-request-id": "requestid",
@@ -54,40 +65,48 @@ describe("helpers.ts", () => {
       }
     })
 
-    it("401 when missing signature header", () => {
-      const ev = generateMockEvent("{}", {"x-api-key": "foobar", "x-request-id": "rid"})
-      const resp = checkSignature(logger, ev)
+    afterEach(() => {
+      smSendSpy.mockRestore()
+    })
+
+    it("401 when missing signature header", async () => {
+      const ev = generateMockEvent("{}", {
+        "x-api-key": "foobar",
+        "x-request-id": "rid"
+      })
+      const resp = await checkSignature(logger, ev)
       expect(resp).toEqual({
         statusCode: 401,
         body: JSON.stringify({message: "No x-hmac-sha256-signature given"})
       })
     })
 
-    it("401 when missing API key header", () => {
-      const ev = generateMockEvent("{}", {"x-hmac-sha256-signature": "foobar", "x-request-id": "rid"})
-      const resp = checkSignature(logger, ev)
-
+    it("401 when missing API key header", async () => {
+      const ev = generateMockEvent("{}", {
+        "x-hmac-sha256-signature": "foobar",
+        "x-request-id": "rid"
+      })
+      const resp = await checkSignature(logger, ev)
       expect(resp).toEqual({
         statusCode: 401,
         body: JSON.stringify({message: "No x-api-key header given"})
       })
     })
 
-    it("403 when signature hex is malformed", () => {
+    it("403 when signature hex is malformed", async () => {
       const headers = {
         ...validHeaders,
         "x-hmac-sha256-signature": "not a hex string!@!#zzz"
       }
       const ev = generateMockEvent(JSON.stringify({message: "blah blah blah"}), headers)
-      const resp = checkSignature(logger, ev)
-
+      const resp = await checkSignature(logger, ev)
       expect(resp).toEqual({
         statusCode: 403,
         body: JSON.stringify({message: "Incorrect signature"})
       })
     })
 
-    it("403 when signature does not match HMAC", () => {
+    it("403 when signature does not match HMAC", async () => {
       const payload = "payload"
       const wrongSig = createHmac(
         "sha256",
@@ -100,17 +119,16 @@ describe("helpers.ts", () => {
         ...validHeaders,
         "x-hmac-sha256-signature": wrongSig
       })
-      const resp = checkSignature(logger, ev)
-
+      const resp = await checkSignature(logger, ev)
       expect(resp).toEqual({
         statusCode: 403,
         body: JSON.stringify({message: "Incorrect signature"})
       })
     })
 
-    it("returns undefined when signature is valid", () => {
+    it("returns undefined when signature is valid", async () => {
       const payload = "hi there"
-      const secret = `${process.env.APP_NAME}.${process.env.API_KEY}`
+      const secret = `${process.env.APP_NAME_SECRET_ARN}.${process.env.API_KEY_SECRET_ARN}`
       const goodSig = createHmac("sha256", secret)
         .update(payload, "utf8")
         .digest("hex")
@@ -119,13 +137,14 @@ describe("helpers.ts", () => {
         ...validHeaders,
         "x-hmac-sha256-signature": goodSig
       })
-      const resp = checkSignature(logger, ev)
+      const resp = await checkSignature(logger, ev)
       expect(resp).toBeUndefined()
     })
   })
 
   describe("updateNotificationsTable()", () => {
     let logger: Logger
+
     beforeEach(() => {
       logger = new Logger({serviceName: "nhsNotifyUpdateCallback"})
       jest.spyOn(logger, "error")
