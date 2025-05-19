@@ -444,11 +444,9 @@ Resources:
         Variables:
           LOG_LEVEL: !Ref LogLevel
           TABLE_NAME: !Ref PrescriptionNotificationStatesTableName
-        Secrets:
-          APP_NAME:
-            ValueFrom: !ImportValue secrets:PSUNotifyCallbackAppName
-          API_KEY:
-            ValueFrom: !ImportValue secrets:PSUNotifyCallbackApiKey
+          APP_NAME: !Sub "{{resolve:secretsmanager:PSUNotifyCallbackAppName:SecretString:AWSCURRENT}}"
+          API_KEY:  !Sub "{{resolve:secretsmanager:PSUNotifyCallbackApiKey:SecretString:AWSCURRENT}}"
+
     Metadata:
       BuildMethod: esbuild
       guard:
