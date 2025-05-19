@@ -444,8 +444,8 @@ Resources:
         Variables:
           LOG_LEVEL: !Ref LogLevel
           TABLE_NAME: !Ref PrescriptionNotificationStatesTableName
-          APP_NAME_SECRET_ARN: !ImportValue secrets:PSUNotifyCallbackAppName
-          API_KEY_SECRET_ARN:  !ImportValue secrets:PSUNotifyCallbackApiKey
+          APP_NAME: !ImportValue secrets:PSUNotifyCallbackAppName
+          API_KEY:  !ImportValue secrets:PSUNotifyCallbackApiKey
     Metadata:
       BuildMethod: esbuild
       guard:

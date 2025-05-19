@@ -26,7 +26,7 @@ const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPro
   if (!event.headers["x-request-id"]) return response(400, {message: "No x-request-id given"})
 
   // Check the request signature
-  const isErr = await checkSignature(logger, event)
+  const isErr = checkSignature(logger, event)
   if (isErr) return isErr
   logger.info("Signature OK!")
 

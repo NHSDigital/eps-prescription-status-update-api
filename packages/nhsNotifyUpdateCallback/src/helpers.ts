@@ -4,10 +4,12 @@ import {Logger} from "@aws-lambda-powertools/logger"
 import {DynamoDBClient} from "@aws-sdk/client-dynamodb"
 import {DynamoDBDocumentClient, UpdateCommand, QueryCommand} from "@aws-sdk/lib-dynamodb"
 
-import {SecretsManagerClient, GetSecretValueCommand} from "@aws-sdk/client-secrets-manager"
 import {createHmac, timingSafeEqual} from "crypto"
 
 import {MessageStatusResponse} from "./types"
+
+const APP_NAME = process.env.APP_NAME
+const API_KEY = process.env.API_KEY
 
 // TTL is one week in seconds
 const TTL_DELTA = 60 * 60 * 24 * 7
@@ -17,14 +19,6 @@ const dynamoTable = process.env.TABLE_NAME
 const dynamo = new DynamoDBClient({region: process.env.AWS_REGION})
 const docClient = DynamoDBDocumentClient.from(dynamo)
 
-// Do a bit of secret caching to help reduce the number of fetches.
-let cachedAppName: string | undefined
-let cachedApiKey: string | undefined
-
-const secretsClient = new SecretsManagerClient({
-  region: process.env.AWS_REGION
-})
-
 export function response(statusCode: number, body: unknown = {}) {
   return {
     statusCode,
@@ -32,51 +26,18 @@ export function response(statusCode: number, body: unknown = {}) {
   }
 }
 
-async function getSecretValue(secretArn: string): Promise<string> {
-  const cmd = new GetSecretValueCommand({SecretId: secretArn})
-  const resp = await secretsClient.send(cmd)
-
-  if (resp.SecretString) {
-    return resp.SecretString
-  }
-
-  throw new Error(`Secret ${secretArn} has no usable SecretString`)
-}
-
-/**
- * Loads both APP_NAME and API_KEY from Secrets Manager, if not already cached.
- * I'm loading these at runtime so that we can update the secret and have that change
- * reflected without the need for a full redeployment.
- */
-async function loadSecrets() {
-  if (cachedAppName && cachedApiKey) return
-
-  const appNameArn = process.env.APP_NAME_SECRET_ARN
-  const apiKeyArn = process.env.API_KEY_SECRET_ARN
-
-  if (!appNameArn) {
-    throw new Error("APP_NAME_SECRET_ARN environment variable is not set.")
-  }
-  if (!apiKeyArn) {
-    throw new Error("API_KEY_SECRET_ARN environment variable is not set.")
-  }
-
-  const [nameValue, keyValue] = await Promise.all([
-    getSecretValue(appNameArn),
-    getSecretValue(apiKeyArn)
-  ])
-
-  cachedAppName = nameValue.trim()
-  cachedApiKey = keyValue.trim()
-}
-
 /**
  * Checks the incoming NHS Notify request signature.
  * If it's okay, returns undefined.
  * If it's not okay, it returns the error response object.
  */
-export async function checkSignature(logger: Logger, event: APIGatewayProxyEvent) {
-  await loadSecrets()
+export function checkSignature(logger: Logger, event: APIGatewayProxyEvent) {
+  if (!APP_NAME) {
+    throw new Error("APP_NAME environment variable is not set.")
+  }
+  if (!API_KEY) {
+    throw new Error("API_KEY environment variable is not set.")
+  }
 
   const signature = event.headers["x-hmac-sha256-signature"]
   if (!signature) {
@@ -91,10 +52,10 @@ export async function checkSignature(logger: Logger, event: APIGatewayProxyEvent
   }
 
   // FIXME: Delete this line before PR
-  logger.info("Secret data", {cachedAppName, cachedApiKey})
+  logger.info("Secret data", {APP_NAME, API_KEY})
 
   // Compute the HMAC-SHA256 hash of the combination of the request body and the secret value
-  const secretValue = `${cachedAppName!}.${cachedApiKey!}`
+  const secretValue = `${APP_NAME}.${API_KEY}`
   const payload = event.body ?? ""
 
   // compare hashes as Buffers, rather than hex
