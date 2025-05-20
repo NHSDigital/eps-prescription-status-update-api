@@ -62,7 +62,7 @@ describe("Unit test for NHS Notify lambda handler", () => {
   })
 
   it("When drainQueue returns no messages, the request succeeds", async () => {
-    mockDrainQueue.mockImplementation(() => Promise.resolve([]))
+    mockDrainQueue.mockImplementation(() => Promise.resolve({messages: [], isEmpty: true}))
     await expect(lambdaHandler(mockEventBridgeEvent)).resolves.not.toThrow()
 
     expect(mockCheckCooldownForUpdate).not.toHaveBeenCalled()
@@ -74,16 +74,25 @@ describe("Unit test for NHS Notify lambda handler", () => {
     const item2 = constructPSUDataItem({TaskID: "t2", RequestID: "r2"})
     const msg1 = constructPSUDataItemMessage({PSUDataItem: item1})
     const msg2 = constructPSUDataItemMessage({PSUDataItem: item2})
+
     // drainQueue returns two messages
-    mockDrainQueue.mockImplementationOnce(() => Promise.resolve([msg1, msg2]))
+    mockDrainQueue.mockImplementationOnce(() => Promise.resolve({messages: [msg1, msg2], isEmpty: true}))
     // deletion succeeds
-    mockClearCompletedSQSMessages.mockImplementationOnce(() => Promise.resolve(undefined))
+    mockClearCompletedSQSMessages.mockImplementation(() => Promise.resolve())
     // Checking cooldown
     mockCheckCooldownForUpdate.mockImplementation(() => Promise.resolve(true))
+    // Notify request succeeds
+    mockMakeBatchNotifyRequest.mockImplementationOnce(() => Promise.resolve(
+      [
+        {...msg1, success: true, notifyMessageId: "message1"},
+        {...msg2, success: true, notifyMessageId: "message2"}
+      ]
+    ))
 
     await expect(lambdaHandler(mockEventBridgeEvent)).resolves.not.toThrow()
 
     expect(mockCheckCooldownForUpdate).toHaveBeenCalledTimes(2)
+    expect(mockMakeBatchNotifyRequest).toHaveBeenCalledTimes(1)
 
     // ensure we logged the fetched notifications
     expect(mockInfo).toHaveBeenCalledWith(
@@ -96,6 +105,7 @@ describe("Unit test for NHS Notify lambda handler", () => {
         ]
       }
     )
+
     // ensure clearCompletedSQSMessages was called with the original messages array
     expect(mockClearCompletedSQSMessages).toHaveBeenCalledWith(
       expect.any(Object), // the logger instance
@@ -117,8 +127,15 @@ describe("Unit test for NHS Notify lambda handler", () => {
   it("Throws and logs if clearCompletedSQSMessages fails", async () => {
     const item = constructPSUDataItem({TaskID: "tx", RequestID: "rx"})
     const msg = constructPSUDataItemMessage({PSUDataItem: item})
-    mockDrainQueue.mockImplementationOnce(() => Promise.resolve([msg]))
+    mockDrainQueue.mockImplementationOnce(() => Promise.resolve({messages: [msg], isEmpty: true}))
     mockCheckCooldownForUpdate.mockImplementation(() => Promise.resolve(true))
+
+    // Notify request succeeds
+    mockMakeBatchNotifyRequest.mockImplementationOnce(() => Promise.resolve(
+      [
+        {...msg, success: true, notifyMessageId: "message"}
+      ]
+    ))
 
     const deletionError = new Error("Delete failed")
     mockClearCompletedSQSMessages.mockImplementationOnce(() => Promise.reject(deletionError))
@@ -127,12 +144,20 @@ describe("Unit test for NHS Notify lambda handler", () => {
   })
 
   it("Throws and logs if addPrescriptionMessagesToNotificationStateStore fails", async () => {
-    mockDrainQueue.mockImplementationOnce(() => Promise.resolve([constructPSUDataItemMessage()]))
+    const msg = constructPSUDataItemMessage()
+    mockDrainQueue.mockImplementationOnce(
+      () => Promise.resolve({messages: [msg], isEmpty: true})
+    )
     mockCheckCooldownForUpdate.mockImplementation(() => Promise.resolve(true))
     const thrownError = new Error("Failed")
     mockAddPrescriptionMessagesToNotificationStateStore.mockImplementationOnce(
       () => Promise.reject(thrownError)
     )
+
+    // Notify request succeeds
+    mockMakeBatchNotifyRequest.mockImplementationOnce(() => Promise.resolve(
+      [{...msg, success: true, notifyMessageId: "message"}]
+    ))
 
     await expect(lambdaHandler(mockEventBridgeEvent)).rejects.toThrow("Failed")
   })
@@ -144,10 +169,17 @@ describe("Unit test for NHS Notify lambda handler", () => {
       RequestID: "req-1"
     })
     const message = constructPSUDataItemMessage({PSUDataItem: validItem})
-    mockDrainQueue.mockImplementation(() =>
-      Promise.resolve([message])
+    mockDrainQueue.mockImplementation(
+      () => Promise.resolve({messages: [message], isEmpty: true})
     )
     mockCheckCooldownForUpdate.mockImplementation(() => Promise.resolve(true))
+
+    // Notify request succeeds
+    mockMakeBatchNotifyRequest.mockImplementationOnce(() => Promise.resolve(
+      [
+        {...message, success: true, notifyMessageId: "message"}
+      ]
+    ))
 
     await expect(lambdaHandler(mockEventBridgeEvent)).resolves.not.toThrow()
 
@@ -173,13 +205,22 @@ describe("Unit test for NHS Notify lambda handler", () => {
     const msgFresh = constructPSUDataItemMessage({PSUDataItem: fresh})
     const msgStale = constructPSUDataItemMessage({PSUDataItem: stale})
 
-    mockDrainQueue.mockImplementation(() => Promise.resolve([msgFresh, msgStale]))
+    mockDrainQueue.mockImplementation(
+      () => Promise.resolve({messages: [msgFresh, msgStale], isEmpty: true})
+    )
 
     // returns true if the request ID is "fresh"
     mockCheckCooldownForUpdate.mockImplementation((logger, update) => {
       const u = update as { RequestID: string }
       return Promise.resolve(u.RequestID === "fresh")
     })
+
+    // Notify request succeeds
+    mockMakeBatchNotifyRequest.mockImplementationOnce(() => Promise.resolve(
+      [
+        {...msgFresh, success: true, notifyMessageId: "message"}
+      ]
+    ))
 
     mockClearCompletedSQSMessages.mockImplementation(() => Promise.resolve())
     mockAddPrescriptionMessagesToNotificationStateStore.mockImplementation(() => Promise.resolve())
@@ -220,7 +261,9 @@ describe("Unit test for NHS Notify lambda handler", () => {
     const stale = constructPSUDataItem({RequestID: "stale", TaskID: "t1"})
     const msgStale = constructPSUDataItemMessage({PSUDataItem: stale})
 
-    mockDrainQueue.mockImplementation(() => Promise.resolve([msgStale]))
+    mockDrainQueue.mockImplementation(
+      () => Promise.resolve({messages: [msgStale], isEmpty: true})
+    )
 
     // returns true if the request ID is "fresh"
     mockCheckCooldownForUpdate.mockImplementation((logger, update) => {
@@ -234,7 +277,10 @@ describe("Unit test for NHS Notify lambda handler", () => {
     await expect(lambdaHandler(mockEventBridgeEvent)).resolves.not.toThrow()
 
     expect(mockAddPrescriptionMessagesToNotificationStateStore).not.toHaveBeenCalled()
-    expect(mockClearCompletedSQSMessages).not.toHaveBeenCalled()
+    expect(mockClearCompletedSQSMessages).toHaveBeenCalledWith(
+      expect.any(Object),
+      [expect.objectContaining(msgStale)]
+    )
 
     // and log that everything was suppressed
     expect(mockInfo)

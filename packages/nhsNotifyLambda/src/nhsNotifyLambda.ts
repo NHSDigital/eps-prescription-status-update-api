@@ -72,8 +72,10 @@ export const lambdaHandler = async (event: EventBridgeEvent<string, string>): Pr
       )
     }
 
-    // Consider suppressed messages to have been processed and delete them from SQS
-    await clearCompletedSQSMessages(logger, suppressed)
+    if (suppressed.length) {
+      // Consider suppressed messages to have been processed and delete them from SQS
+      await clearCompletedSQSMessages(logger, suppressed)
+    }
 
     // Just for diagnostics for now
     const toNotify = toProcess
@@ -98,12 +100,14 @@ export const lambdaHandler = async (event: EventBridgeEvent<string, string>): Pr
       )
     }
 
-    // Processed messages are pushed to the database
-    await addPrescriptionMessagesToNotificationStateStore(logger, processed)
+    if (processed.length) {
+      // Processed messages are pushed to the database
+      await addPrescriptionMessagesToNotificationStateStore(logger, processed)
 
-    // By waiting until a message is successfully processed before deleting it from SQS,
-    // failed messages will eventually be retried by subsequent notify consumers.
-    await clearCompletedSQSMessages(logger, processed)
+      // By waiting until a message is successfully processed before deleting it from SQS,
+      // failed messages will eventually be retried by subsequent notify consumers.
+      await clearCompletedSQSMessages(logger, processed)
+    }
   }
 }
 

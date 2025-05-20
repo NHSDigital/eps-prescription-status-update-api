@@ -40,7 +40,8 @@ describe("NHS notify lambda helper functions", () => {
 
       sqsMockSend.mockImplementationOnce(() => Promise.resolve(payload))
 
-      const messages = await drainQueue(logger, 10)
+      const {messages, isEmpty} = await drainQueue(logger, 10)
+      expect(isEmpty).toBeFalsy()
       expect(sqsMockSend).toHaveBeenCalledTimes(1)
       expect(messages).toHaveLength(10)
       expect(infoSpy).toHaveBeenCalledWith(
@@ -60,10 +61,11 @@ describe("NHS notify lambda helper functions", () => {
         .mockImplementationOnce(() => Promise.resolve(second))
         .mockImplementationOnce(() => Promise.resolve(empty))
 
-      const messages = await drainQueue(logger, 15)
+      const {messages, isEmpty} = await drainQueue(logger, 15)
+      expect(isEmpty).toBeTruthy()
       expect(sqsMockSend).toHaveBeenCalledTimes(3)
       expect(messages).toHaveLength(10)
-      expect(infoSpy).toHaveBeenCalledTimes(3)
+      expect(infoSpy).toHaveBeenCalledTimes(4)
     })
 
     it("Does not return more than the maximum number of messages, even if more are available", async () => {
@@ -71,7 +73,8 @@ describe("NHS notify lambda helper functions", () => {
       const mockQueue = () => Promise.resolve(constructMessageArray)
       sqsMockSend.mockImplementation(mockQueue)
 
-      const messages = await drainQueue(logger, 20)
+      const {messages, isEmpty} = await drainQueue(logger, 20)
+      expect(isEmpty).toBeFalsy()
 
       expect(sqsMockSend).toHaveBeenCalledTimes(2)
       expect(messages).toHaveLength(20)
@@ -86,7 +89,8 @@ describe("NHS notify lambda helper functions", () => {
         .mockImplementationOnce(() => Promise.resolve(first))
         .mockImplementationOnce(() => Promise.resolve(second))
 
-      const messages = await drainQueue(logger, 20)
+      const {messages, isEmpty} = await drainQueue(logger, 20)
+      expect(isEmpty).toBeTruthy()
       expect(sqsMockSend).toHaveBeenCalledTimes(2)
       expect(messages).toHaveLength(14)
     })
@@ -94,7 +98,8 @@ describe("NHS notify lambda helper functions", () => {
     it("returns empty array if queue is empty on first fetch", async () => {
       sqsMockSend.mockImplementationOnce(() => Promise.resolve({Messages: []}))
 
-      const messages = await drainQueue(logger, 5)
+      const {messages, isEmpty} = await drainQueue(logger, 5)
+      expect(isEmpty).toBeTruthy()
       expect(messages).toEqual([])
       expect(sqsMockSend).toHaveBeenCalledTimes(1)
     })
