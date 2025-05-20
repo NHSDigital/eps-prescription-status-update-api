@@ -39,7 +39,7 @@ function chunkArray<T>(arr: Array<T>, size: number): Array<Array<T>> {
 export interface NotifyDataItemMessage extends Message {
   PSUDataItem: NotifyDataItem
   success?: boolean
-  messageId?: string
+  notifyMessageId?: string
 }
 
 /**
@@ -190,10 +190,10 @@ export async function addPrescriptionMessagesToNotificationStateStore(
       NHSNumber: data.PSUDataItem.PatientNHSNumber,
       ODSCode: data.PSUDataItem.PharmacyODSCode,
       RequestId: data.PSUDataItem.RequestID,
-      MessageID: data.MessageId!,
+      MessageID: data.MessageId ?? "no SQS message ID",
       LastNotifiedPrescriptionStatus: data.PSUDataItem.Status,
       DeliveryStatus: data.success ? "requested" : "notify request failed",
-      NotifyMessageID: data.messageId ?? "",
+      NotifyMessageID: data.notifyMessageId ?? "",
       LastNotificationRequestTimestamp: new Date().toISOString(),
       ExpiryTime: (Math.floor(+new Date() / 1000) + TTL_DELTA)
     }

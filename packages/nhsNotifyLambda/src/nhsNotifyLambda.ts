@@ -81,7 +81,7 @@ export const lambdaHandler = async (event: EventBridgeEvent<string, string>): Pr
       return {
         ...el,
         success: true,
-        messageId: v4()
+        notifyMessageId: v4()
       }
     })
 

@@ -101,12 +101,12 @@ describe("Unit test for NHS Notify lambda handler", () => {
         expect.objectContaining({
           ...msg1,
           success: true,
-          messageId: expect.any(String)
+          notifyMessageId: expect.any(String)
         }),
         expect.objectContaining({
           ...msg2,
           success: true,
-          messageId: expect.any(String)
+          notifyMessageId: expect.any(String)
         })
       ]
     )
@@ -200,7 +200,7 @@ describe("Unit test for NHS Notify lambda handler", () => {
           expect.objectContaining({
             ...msgFresh,
             success: true,
-            messageId: expect.any(String)
+            notifyMessageId: expect.any(String)
           })
         ]
       )
@@ -211,7 +211,7 @@ describe("Unit test for NHS Notify lambda handler", () => {
           expect.objectContaining({
             ...msgFresh,
             success: true,
-            messageId: expect.any(String)
+            notifyMessageId: expect.any(String)
           })
         ]
       )
