@@ -11,6 +11,7 @@ import {DynamoDBDocumentClient, GetCommand, PutCommand} from "@aws-sdk/lib-dynam
 import {NotifyDataItem} from "@PrescriptionStatusUpdate_common/commonTypes"
 
 import {v4} from "uuid"
+import {CreateMessageBatchResponse} from "./types"
 
 const NOTIFY_API_BASE_URL = process.env.NOTIFY_API_BASE_URL
 const NOTIFY_API_TOKEN = process.env.NOTIFY_API_TOKEN
@@ -43,6 +44,8 @@ function chunkArray<T>(arr: Array<T>, size: number): Array<Array<T>> {
 // This is an extension of the SQS message interface, which explicitly parses the PSUDataItem
 export interface NotifyDataItemMessage extends Message {
   PSUDataItem: NotifyDataItem
+  success?: boolean
+  notifyMessageId?: string
 }
 
 /**
@@ -205,10 +208,10 @@ export async function addPrescriptionMessagesToNotificationStateStore(
       NHSNumber: data.PSUDataItem.PatientNHSNumber,
       ODSCode: data.PSUDataItem.PharmacyODSCode,
       RequestId: data.PSUDataItem.RequestID,
-      MessageID: data.MessageId!,
+      MessageID: data.MessageId ?? "no SQS message ID",
       LastNotifiedPrescriptionStatus: data.PSUDataItem.Status,
-      DeliveryStatus: "requested", // TODO: This needs to be handled for the case where notify fails.
-      NotifyMessageID: v4(), // TODO: Dummy message ID
+      DeliveryStatus: data.success ? "requested" : "notify request failed",
+      NotifyMessageID: data.notifyMessageId ?? "",
       LastNotificationRequestTimestamp: new Date().toISOString(),
       ExpiryTime: (Math.floor(+new Date() / 1000) + TTL_DELTA)
     }
@@ -292,11 +295,18 @@ export async function checkCooldownForUpdate(
   }
 }
 
+/**
+ * Returns the original data, updated with the status returned by NHS notify.
+ *
+ * @param logger AWS logging object
+ * @param routingPlanId The Notify routing plan ID with which to process the data
+ * @param data The details for the notification
+ */
 export async function makeBatchNotifyRequest(
   logger: Logger,
   routingPlanId: string,
   data: Array<NotifyDataItem>
-): Promise<void> {
+): Promise<Array<NotifyDataItemMessage>> {
   if (!NOTIFY_API_BASE_URL) throw new Error("NOTIFY_API_BASE_URL is not defined in the environment variables!")
   if (!NOTIFY_API_TOKEN) throw new Error("NOTIFY_API_TOKEN is not defined in the environment variables!")
 
@@ -337,17 +347,41 @@ export async function makeBatchNotifyRequest(
       body: JSON.stringify(body)
     })
 
-    if (!resp.ok) {
-      const body = await resp.json()
+    if (resp.ok) {
+      const respBody = (await resp.json()) as CreateMessageBatchResponse
+      const returnedMessages = respBody.data.attributes.messages
+
+      // Map each input item to a NotifyDataItemMessage, marking success and attaching the notify ID
+      return data.map(item => {
+        const match = returnedMessages.find(
+          m => m.messageReference === item.RequestID
+        )
+
+        return {
+          PSUDataItem: item,
+          success: !!match,
+          notifyMessageId: match?.id
+        }
+      })
+    } else {
       logger.error("Notify batch request failed", {
         status: resp.status,
-        statusText: resp.statusText,
-        body: body
+        statusText: resp.statusText
       })
-      throw new Error(`Notify batch request failed with HTTP ${resp.status}`)
+
+      return data.map(item => ({
+        PSUDataItem: item,
+        success: false,
+        notifyMessageId: undefined
+      }))
     }
   } catch (err) {
     logger.error("Error sending notify batch", {error: err})
-    throw err
+
+    return data.map(item => ({
+      PSUDataItem: item,
+      success: false,
+      notifyMessageId: undefined
+    }))
   }
 }
