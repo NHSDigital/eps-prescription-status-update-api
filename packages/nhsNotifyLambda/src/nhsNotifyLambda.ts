@@ -29,71 +29,74 @@ export const lambdaHandler = async (event: EventBridgeEvent<string, string>): Pr
 
   logger.info("NHS Notify lambda triggered by scheduler", {event})
 
-  let messages: Array<NotifyDataItemMessage>
-  let processed: Array<NotifyDataItemMessage> = []
+  let queueDrained = false
+  const processed: Array<NotifyDataItemMessage> = []
 
-  // TODO: Loop this while there are significant numbers of messages on the queue. At least 30?
-  messages = await drainQueue(logger, 100)
+  // keep pulling until drainQueue tells us the queue is effectively empty
+  while (!queueDrained) {
+    const {messages, isEmpty} = await drainQueue(logger, 100)
+    queueDrained = isEmpty
 
-  if (messages.length === 0) {
-    logger.info("No messages to process")
-    return
-  }
+    if (messages.length === 0) {
+      logger.info("No messages to process")
+      return
+    }
 
-  // Filter messages by checkCooldownForUpdate. This is done in two stages so we can check in parallel
-  const eligibility = await Promise.all(
-    messages.map(async (m) => ({
-      message: m,
-      allowed: await checkCooldownForUpdate(logger, m.PSUDataItem)
-    }))
-  )
-  const toProcess = eligibility
-    .filter((e) => e.allowed)
-    .map((e) => e.message)
-
-  // Log the results of checking the cooldown
-  const suppressedCount = messages.length - toProcess.length
-  if (toProcess.length === 0) {
-    logger.info("All messages suppressed by cooldown; nothing to notify",
-      {
-        suppressedCount,
-        totalFetched: messages.length
-      })
-    return
-  } else if (suppressedCount > 0) {
-    logger.info(`Suppressed ${suppressedCount} messages due to cooldown`,
-      {
-        suppressedCount,
-        totalFetched: messages.length
-      }
+    // Filter messages by checkCooldownForUpdate. This is done in two stages so we can check in parallel
+    const eligibility = await Promise.all(
+      messages.map(async (m) => ({
+        message: m,
+        allowed: await checkCooldownForUpdate(logger, m.PSUDataItem)
+      }))
     )
+    const toProcess = eligibility
+      .filter((e) => e.allowed)
+      .map((e) => e.message)
+
+    // Log the results of checking the cooldown
+    const suppressedCount = messages.length - toProcess.length
+    if (toProcess.length === 0) {
+      logger.info("All messages suppressed by cooldown; nothing to notify",
+        {
+          suppressedCount,
+          totalFetched: messages.length
+        })
+      continue
+    } else if (suppressedCount > 0) {
+      logger.info(`Suppressed ${suppressedCount} messages due to cooldown`,
+        {
+          suppressedCount,
+          totalFetched: messages.length
+        }
+      )
+    }
+
+    // Just for diagnostics for now
+    const toNotify = toProcess
+      .map((m) => ({
+        RequestID: m.PSUDataItem.RequestID,
+        TaskId: m.PSUDataItem.TaskID,
+        Message: "Notification Required"
+      }))
+    logger.info("Fetched prescription notification messages", {count: toNotify.length, toNotify})
+
+    // Make the request. If it's successful, add the relevant messages to the list of processed messages.
+    if (!NHS_NOTIFY_ROUTING_ID) throw new Error("NHS_NOTIFY_ROUTING_ID environment variable not set.")
+    try {
+      await makeBatchNotifyRequest(
+        logger, NHS_NOTIFY_ROUTING_ID, toProcess.map((el) => el.PSUDataItem)
+      )
+      processed.push(...toProcess)
+    } catch (error) {
+      logger.error("Failed to make notification requests for these these messages:", {error, failedMessages: toProcess})
+    }
+
+    await addPrescriptionMessagesToNotificationStateStore(logger, processed)
+
+    // By waiting until a message is successfully processed before deleting it from SQS,
+    // failed messages will eventually be retried by subsequent notify consumers.
+    await clearCompletedSQSMessages(logger, processed)
   }
-
-  // Just for diagnostics for now
-  const toNotify = toProcess
-    .map((m) => ({
-      RequestID: m.PSUDataItem.RequestID,
-      TaskId: m.PSUDataItem.TaskID,
-      Message: "Notification Required"
-    }))
-  logger.info("Fetched prescription notification messages", {count: toNotify.length, toNotify})
-
-  // Make the request. If it's successful, add the relevant messages to the list of processed messages.
-  if (!NHS_NOTIFY_ROUTING_ID) throw new Error("NHS_NOTIFY_ROUTING_ID environment variable not set.")
-  try {
-    await makeBatchNotifyRequest(
-      logger, NHS_NOTIFY_ROUTING_ID, toProcess.map((el) => el.PSUDataItem)
-    )
-    processed = processed.concat(toProcess)
-  } catch (error) {
-    logger.error("Failed to make notification requests for these these messages:", {error, failedMessages: toProcess})
-  }
-
-  await addPrescriptionMessagesToNotificationStateStore(logger, processed)
-
-  // By waiting until a message is successfully processed before deleting it from SQS,
-  // failed messages will eventually be retried by subsequent notify consumers.
-  await clearCompletedSQSMessages(logger, processed)
 }
 
 export const handler = middy(lambdaHandler)

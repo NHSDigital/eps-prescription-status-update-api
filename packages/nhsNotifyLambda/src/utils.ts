@@ -47,18 +47,25 @@ export interface NotifyDataItemMessage extends Message {
 
 /**
  * Pulls up to `maxTotal` messages off the queue (in batches of up to 10),
- * logs them, and deletes them.
+ * logs them, and returns:
+ *  - messages: the array of parsed NotifyDataItemMessage
+ *  - isEmpty: true if the last receive returned fewer than 5 messages (or none),
+ *             indicating the queue is effectively drained.
  */
-export async function drainQueue(logger: Logger, maxTotal = 100): Promise<Array<NotifyDataItemMessage>> {
-  let receivedSoFar = 0
-  const allMessages: Array<NotifyDataItemMessage> = []
-
+export async function drainQueue(
+  logger: Logger,
+  maxTotal = 100
+): Promise<{ messages: Array<NotifyDataItemMessage>; isEmpty: boolean }> {
   if (!sqsUrl) {
     logger.error("Notifications SQS URL not configured")
     throw new Error("NHS_NOTIFY_PRESCRIPTIONS_SQS_QUEUE_URL not set")
   }
 
+  const allMessages: Array<NotifyDataItemMessage> = []
+  let receivedSoFar = 0
+  let isEmpty = false
   let pollingIteration = 0
+
   while (receivedSoFar < maxTotal) {
     pollingIteration = pollingIteration + 1
 
@@ -76,7 +83,11 @@ export async function drainQueue(logger: Logger, maxTotal = 100): Promise<Array<
     const {Messages} = await sqs.send(receiveCmd)
 
     // if the queue is now empty, then break the loop
-    if (!Messages || Messages.length === 0) break
+    if (!Messages || Messages.length === 0) {
+      isEmpty = true
+      logger.info("No messages received; marking queue as empty", {pollingIteration})
+      break
+    }
 
     logger.info(
       "Received some messages from the queue. Parsing them...",
@@ -106,6 +117,7 @@ export async function drainQueue(logger: Logger, maxTotal = 100): Promise<Array<
     // This is to prevent a slow-loris style breakdown if the queue has
     // barely enough messages to keep the processors alive
     if (!Messages || Messages.length < 5) {
+      isEmpty = true
       logger.info("Received a small number of messages. Considering the queue drained.", {batchLength: Messages.length})
       break
     }
@@ -113,7 +125,7 @@ export async function drainQueue(logger: Logger, maxTotal = 100): Promise<Array<
 
   logger.info(`In sum, retrieved ${allMessages.length} messages from SQS`)
 
-  return allMessages
+  return {messages: allMessages, isEmpty}
 }
 
 /**
