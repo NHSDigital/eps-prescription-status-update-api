@@ -429,4 +429,119 @@ describe("NHS notify lambda helper functions", () => {
       expect(sendSpy).not.toHaveBeenCalled()
     })
   })
+
+  // TODO: Update the code and tests to have the API key and domain stored in env variables.
+  describe("makeBatchNotifyRequest", () => {
+    let logger: Logger
+    let errorSpy: SpiedFunction<(msg: string, ...meta: Array<unknown>) => void>
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let fetchMock: jest.Mock<any>
+
+    beforeEach(() => {
+      jest.resetModules()
+      jest.clearAllMocks()
+
+      // Mock global.fetch for the calls
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      fetchMock = jest.fn() as jest.Mock<any>
+      global.fetch = fetchMock
+
+      logger = new Logger({serviceName: "test-service"})
+      errorSpy = jest.spyOn(logger, "error")
+    })
+
+    it("sends a batch and maps successful messages correctly", async () => {
+      const data = [
+        {RequestID: "r1", PatientNHSNumber: "n1", PharmacyODSCode: "o1", TaskID: "t1", Status: "s1"},
+        {RequestID: "r2", PatientNHSNumber: "n2", PharmacyODSCode: "o2", TaskID: "t2", Status: "s2"}
+      ]
+
+      const returnedMessages = [
+        {messageReference: "r1", id: "msg-id-1"}
+      ]
+
+      fetchMock.mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve({data: {attributes: {messages: returnedMessages}}})
+      })
+
+      const {makeBatchNotifyRequest} = await import("../src/utils")
+      const result = await makeBatchNotifyRequest(logger, "plan-123", data)
+
+      // Ensure fetch was called with correct URL and options
+      expect(fetchMock).toHaveBeenCalledWith(
+        expect.any(String),
+        expect.objectContaining({
+          method: "POST",
+          headers: expect.objectContaining({Authorization: expect.stringContaining("Bearer")}),
+          body: expect.any(String)
+        })
+      )
+
+      // Should return one success and one failure
+      expect(result).toHaveLength(2)
+      expect(result[0]).toEqual({
+        PSUDataItem: data[0],
+        success: true,
+        notifyMessageId: "msg-id-1"
+      })
+      expect(result[1]).toEqual({
+        PSUDataItem: data[1],
+        success: false,
+        notifyMessageId: undefined
+      })
+    })
+
+    it("handles non-ok response by marking all as failed", async () => {
+      const data = [
+        {RequestID: "rA", PatientNHSNumber: "nx", PharmacyODSCode: "ox", TaskID: "tx", Status: "st"}
+      ]
+
+      fetchMock.mockResolvedValueOnce({
+        ok: false,
+        status: 500,
+        statusText: "Internal Server Error"
+      })
+
+      const {makeBatchNotifyRequest} = await import("../src/utils")
+      const result = await makeBatchNotifyRequest(logger, "plan-xyz", data)
+
+      // All messages should be marked as failed
+      expect(result).toHaveLength(1)
+      expect(result[0]).toEqual({
+        PSUDataItem: data[0],
+        success: false,
+        notifyMessageId: undefined
+      })
+      // Should log an error about the batch request failure
+      expect(errorSpy).toHaveBeenCalledWith(
+        "Notify batch request failed",
+        expect.objectContaining({status: 500, statusText: "Internal Server Error"})
+      )
+    })
+
+    it("handles fetch exceptions by marking all as failed and logging error", async () => {
+      const data = [
+        {RequestID: "rX", PatientNHSNumber: "ny", PharmacyODSCode: "oy", TaskID: "ty", Status: "st"},
+        {RequestID: "rY", PatientNHSNumber: "nz", PharmacyODSCode: "oz", TaskID: "tz", Status: "sx"}
+      ]
+      const fetchError = new Error("Network failure")
+      fetchMock.mockRejectedValueOnce(fetchError)
+
+      const {makeBatchNotifyRequest} = await import("../src/utils")
+      const result = await makeBatchNotifyRequest(logger, "plan-error", data)
+
+      // All messages should be marked as failed
+      expect(result).toHaveLength(2)
+      result.forEach(res =>
+        expect(res).toEqual(expect.objectContaining({success: false, notifyMessageId: undefined}))
+      )
+      // Should log the catch error
+      expect(errorSpy).toHaveBeenCalledWith(
+        "Error sending notify batch",
+        expect.objectContaining({error: fetchError})
+      )
+    })
+  })
+
 })

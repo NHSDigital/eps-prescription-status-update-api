@@ -310,6 +310,10 @@ export async function makeBatchNotifyRequest(
   if (!NOTIFY_API_BASE_URL) throw new Error("NOTIFY_API_BASE_URL is not defined in the environment variables!")
   if (!NOTIFY_API_TOKEN) throw new Error("NOTIFY_API_TOKEN is not defined in the environment variables!")
 
+  // TODO: If the data is greater 45000 elements, or if the request is greater than 5MB,
+  // split the data in half and make two new batch request calls. Return the union of
+  // them afterwards.
+
   // Shared between all messages in this batch
   const messageBatchReference = v4()
 
