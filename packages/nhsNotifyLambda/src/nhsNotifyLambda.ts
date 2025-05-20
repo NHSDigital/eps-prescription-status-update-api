@@ -6,6 +6,8 @@ import middy from "@middy/core"
 import inputOutputLogger from "@middy/input-output-logger"
 import errorHandler from "@nhs/fhir-middy-error-handler"
 
+import {v4} from "uuid"
+
 import {
   addPrescriptionMessagesToNotificationStateStore,
   checkCooldownForUpdate,
@@ -91,11 +93,29 @@ export const lambdaHandler = async (event: EventBridgeEvent<string, string>): Pr
       await makeBatchNotifyRequest(
         logger, NHS_NOTIFY_ROUTING_ID, toProcess.map((el) => el.PSUDataItem)
       )
-      processed.push(...toProcess)
+      processed.push(
+        ...toProcess.map((el) => {
+          return {
+            ...el,
+            success: true,
+            notifyMessageId: v4() // TODO: Use the response from Notify here
+          }
+        })
+      )
     } catch (error) {
       logger.error("Failed to make notification requests for these these messages:", {error, failedMessages: toProcess})
+      processed.push(
+        ...toProcess.map((el) => {
+          return {
+            ...el,
+            success: false,
+            notifyMessageId: undefined
+          }
+        })
+      )
     }
 
+    // Processed messages are pushed to the database
     await addPrescriptionMessagesToNotificationStateStore(logger, processed)
 
     // By waiting until a message is successfully processed before deleting it from SQS,

@@ -148,7 +148,7 @@ describe("helpers.ts", () => {
       expect(sendSpy).toHaveBeenCalledWith(expect.any(QueryCommand))
       // Warning logged
       expect(logger.warn).toHaveBeenCalledWith(
-        "No matching record found for NotifyMessageID",
+        "No matching record found for NotifyMessageID. Counting this as a successful update.",
         expect.objectContaining({messageId: responsePayload.data[0].attributes.messageId})
       )
     })

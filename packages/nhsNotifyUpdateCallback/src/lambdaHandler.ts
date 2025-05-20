@@ -18,7 +18,7 @@ const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPro
   logger.appendKeys({
     "x-correlation-id": event.headers["x-correlation-id"],
     "apigw-request-id": event.headers["apigw-request-id"],
-    "x-request-id": event.headers["x-request-id"] ?? "x-request-id-not-given"
+    "x-request-id": event.headers["x-request-id"]
   })
   logger.info("Lambda called with this event", {event})
 

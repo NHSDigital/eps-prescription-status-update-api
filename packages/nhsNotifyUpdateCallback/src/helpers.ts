@@ -108,7 +108,7 @@ export async function updateNotificationsTable(
 
     const items = queryResult.Items ?? []
     if (items.length === 0) {
-      logger.warn("No matching record found for NotifyMessageID", {messageId})
+      logger.warn("No matching record found for NotifyMessageID. Counting this as a successful update.", {messageId})
       return
     }
     if (items.length !== bodyData.data.length) {

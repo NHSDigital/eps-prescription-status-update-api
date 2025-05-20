@@ -1,10 +1,10 @@
 {
   "info": {
-    "_postman_id": "6bf19388-94df-435c-8c93-6a2d4e47b669",
+    "_postman_id": "e0f5757a-8d67-4381-8e48-f73541719b48",
     "name": "Internal Collection",
     "description": "This collection provides endpoints for interacting with the Prescription Status Update API across multiple environments. It is designed for use by developers and testers, encompassing calls to all endpoints.\n\nThe collection is configured through the Digital Onboarding Services using the appropriate environment for the Apigee host, with access enabled for the APIs you intend to use. For Pull Request deployments, make sure to add the APIs specific to the relevant pull request.\n\nThe collection includes the following folders:\n\n- `Custom Stack Deployment` Direct API calls to all endpoints on AWS\n    \n- `Pull Request Deployment` API calls to endpoints on both Apigee and AWS\n    \n\n### Setup Instructions\n\nTo use this collection, you should define the following variables at a global level:\n\n- `host`\n    \n- `status_api_key` Obtain this from the APIM team\n    \n\nTo use the requests in the \"Pull Request Deployment\" folder, you should create a variable called `aws_pull_request_id` that represents the number of the pull request.\n\nTo use the requests in the \"Custom Stack Deployment\" folder, you should create a variable called `custom_stack_name` that represents the name of the stack you have defined.\n\n### Authentication Setup\n\nThere is a pre-request script at the top level that automates the authentication process. You must set the following variables for this to work. These should be set at an environment level as they differ between each environment.\n\n- `host`\n    \n- `api_key`\n    \n- `cpsu_api_key` Used for Custom Prescription Status Update\n    \n- `private_key`\n    \n- `kid`\n    \n\n### Host Configuration\n\nThe `host` should be set to the base Apigee URL, depending on the environment you're working with. Below is a table detailing the URLs, their corresponding environments, and the Digital Onboarding Service registration links.\n\n**Note:** Sandbox environments should be named so that they end with `sandbox`.\n\n| **Apigee URL** | **Environment** | **Digital Onboarding Service** |\n| --- | --- | --- |\n| `internal-dev.api.service.nhs.uk` | Development (dev) | [Digital Onboarding Service PTL](https://dos-internal.ptl.api.platform.nhs.uk/) |\n| `internal-dev-sandbox.api.service.nhs.uk` | Development (dev sandbox) | [Digital Onboarding Service PTL](https://dos-internal.ptl.api.platform.nhs.uk/) |\n| `int.api.service.nhs.uk` | Integration Test (int) | [Digital Onboarding Service PROD](https://onboarding.prod.api.platform.nhs.uk/) |\n| `sandbox.api.service.nhs.uk` | Sandbox (int sandbox) | [Digital Onboarding Service PROD](https://onboarding.prod.api.platform.nhs.uk/) |\n| `internal-qa.api.service.nhs.uk` | Production (qa) | [Digital Onboarding Service PTL](https://dos-internal.ptl.api.platform.nhs.uk/) |\n| `internal-qa.api.service.nhs.uk` | Production (ref) | [Digital Onboarding Service PTL](https://dos-internal.ptl.api.platform.nhs.uk/) |\n\n### API Key and JWT Setup\n\nFollow the instructions at [NHS Developer Documentation](https://digital.nhs.uk/developer/guides-and-documentation/security-and-authorisation/application-restricted-restful-apis-signed-jwt-authentication#step-1-register-your-application-on-the-api-platform) to get an API key and create a public/private key pair, which you need to upload to the JWKS server.\n\n- `api_key` Should be set to the Apigee API key for your application\n    \n- `private_key` Should be your private key that you have created for the environment\n    \n- `kid` Should be the KID that you used when creating the JWKS",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-    "_exporter_id": "24760919"
+    "_exporter_id": "35340912"
   },
   "item": [
     {
@@ -52,7 +52,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"resourceType\": \"Bundle\",\n  \"type\": \"transaction\",\n  \"entry\": [\n    {\n      \"fullUrl\": \"urn:uuid:{{task_identifier}}\",\n      \"resource\": {\n        \"resourceType\": \"Task\",\n        \"id\": \"{{task_identifier}}\",\n        \"basedOn\": [\n          {\n            \"identifier\": {\n              \"system\": \"https://fhir.nhs.uk/Id/prescription-order-number\",\n              \"value\": \"16B2E0-A83008-81C13H\"\n            }\n          }\n        ],\n        \"status\": \"completed\",\n        \"businessStatus\": {\n          \"coding\": [\n            {\n              \"system\": \"https://fhir.nhs.uk/CodeSystem/task-businessStatus-nppt\",\n              \"code\": \"dispatched\"\n            }\n          ]\n        },\n        \"intent\": \"order\",\n        \"focus\": {\n          \"identifier\": {\n            \"system\": \"https://fhir.nhs.uk/Id/prescription-order-item-number\",\n            \"value\": \"6989b7bd-8db6-428c-a593-4022e3044c00\"\n          }\n        },\n        \"for\": {\n          \"identifier\": {\n            \"system\": \"https://fhir.nhs.uk/Id/nhs-number\",\n            \"value\": \"9449304130\"\n          }\n        },\n        \"lastModified\": \"2023-10-11T10:11:12Z\",\n        \"owner\": {\n          \"identifier\": {\n            \"system\": \"https://fhir.nhs.uk/Id/ods-organization-code\",\n            \"value\": \"C9Z1O\"\n          }\n        }\n      },\n      \"request\": {\n        \"method\": \"POST\",\n        \"url\": \"Task\"\n      }\n    }\n  ]\n}\n",
+              "raw": "{\n  \"resourceType\": \"Bundle\",\n  \"type\": \"transaction\",\n  \"entry\": [\n    {\n      \"fullUrl\": \"urn:uuid:{{task_identifier}}\",\n      \"resource\": {\n        \"resourceType\": \"Task\",\n        \"id\": \"{{task_identifier}}\",\n        \"basedOn\": [\n          {\n            \"identifier\": {\n              \"system\": \"https://fhir.nhs.uk/Id/prescription-order-number\",\n              \"value\": \"16B2E0-A83008-81C13H\"\n            }\n          }\n        ],\n        \"status\": \"completed\",\n        \"businessStatus\": {\n          \"coding\": [\n            {\n              \"system\": \"https://fhir.nhs.uk/CodeSystem/task-businessStatus-nppt\",\n              \"code\": \"ready to collect\"\n            }\n          ]\n        },\n        \"intent\": \"order\",\n        \"focus\": {\n          \"identifier\": {\n            \"system\": \"https://fhir.nhs.uk/Id/prescription-order-item-number\",\n            \"value\": \"6989b7be-8db6-428c-a593-4022e3044c00\"\n          }\n        },\n        \"for\": {\n          \"identifier\": {\n            \"system\": \"https://fhir.nhs.uk/Id/nhs-number\",\n            \"value\": \"8308227929\"\n          }\n        },\n        \"lastModified\": \"2023-10-11T10:11:12Z\",\n        \"owner\": {\n          \"identifier\": {\n            \"system\": \"https://fhir.nhs.uk/Id/ods-organization-code\",\n            \"value\": \"FA565\"\n          }\n        }\n      },\n      \"request\": {\n        \"method\": \"POST\",\n        \"url\": \"Task\"\n      }\n    }\n  ]\n}\n",
               "options": {
                 "raw": {
                   "language": "json"
@@ -62,8 +62,17 @@
             "url": {
               "raw": "https://psu-pr-{{aws_pull_request_id}}.dev.eps.national.nhs.uk/",
               "protocol": "https",
-              "host": ["psu-pr-{{aws_pull_request_id}}", "dev", "eps", "national", "nhs", "uk"],
-              "path": [""]
+              "host": [
+                "psu-pr-{{aws_pull_request_id}}",
+                "dev",
+                "eps",
+                "national",
+                "nhs",
+                "uk"
+              ],
+              "path": [
+                ""
+              ]
             }
           },
           "response": []
@@ -120,8 +129,17 @@
             "url": {
               "raw": "https://psu-pr-{{aws_pull_request_id}}.dev.eps.national.nhs.uk/format-1",
               "protocol": "https",
-              "host": ["psu-pr-{{aws_pull_request_id}}", "dev", "eps", "national", "nhs", "uk"],
-              "path": ["format-1"]
+              "host": [
+                "psu-pr-{{aws_pull_request_id}}",
+                "dev",
+                "eps",
+                "national",
+                "nhs",
+                "uk"
+              ],
+              "path": [
+                "format-1"
+              ]
             }
           },
           "response": []
@@ -146,8 +164,17 @@
             "url": {
               "raw": "https://psu-pr-{{aws_pull_request_id}}.dev.eps.national.nhs.uk/_status",
               "protocol": "https",
-              "host": ["psu-pr-{{aws_pull_request_id}}", "dev", "eps", "national", "nhs", "uk"],
-              "path": ["_status"]
+              "host": [
+                "psu-pr-{{aws_pull_request_id}}",
+                "dev",
+                "eps",
+                "national",
+                "nhs",
+                "uk"
+              ],
+              "path": [
+                "_status"
+              ]
             }
           },
           "response": []
@@ -197,8 +224,17 @@
             "url": {
               "raw": "https://psu-pr-{{aws_pull_request_id}}.dev.eps.national.nhs.uk/checkprescriptionstatusupdates",
               "protocol": "https",
-              "host": ["psu-pr-{{aws_pull_request_id}}", "dev", "eps", "national", "nhs", "uk"],
-              "path": ["checkprescriptionstatusupdates"],
+              "host": [
+                "psu-pr-{{aws_pull_request_id}}",
+                "dev",
+                "eps",
+                "national",
+                "nhs",
+                "uk"
+              ],
+              "path": [
+                "checkprescriptionstatusupdates"
+              ],
               "query": [
                 {
                   "key": "odscode",
@@ -215,6 +251,89 @@
                   "value": "16B2E0-A83008-81C13H",
                   "disabled": true
                 }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "AWS PULL REQUEST Notify Callback",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "const appName = pm.environment.get(\"APP_NAME\");\r",
+                  "const apiKey  = pm.environment.get(\"API_KEY\");\r",
+                  "\r",
+                  "if (!appName || !apiKey) {\r",
+                  "  console.error(\"Missing APP_NAME or API_KEY in environment!\");\r",
+                  "}\r",
+                  "\r",
+                  "const secret = `${appName}.${apiKey}`;\r",
+                  "\r",
+                  "let body = \"\";\r",
+                  "if (pm.request.body && pm.request.body.mode === \"raw\") {\r",
+                  "  const raw = pm.request.body.raw;\r",
+                  "  body = pm.variables.replaceIn(raw);\r",
+                  "  // need to make sure the body is synced later\r",
+                  "  pm.request.body = body\r",
+                  "}\r",
+                  "\r",
+                  "const signature = CryptoJS.HmacSHA256(body, secret).toString(CryptoJS.enc.Hex);\r",
+                  "\r",
+                  "// Expects both the siganture and the api key. The app name is secret?\r",
+                  "pm.request.headers.upsert({\r",
+                  "  key: \"x-hmac-sha256-signature\",\r",
+                  "  value: signature\r",
+                  "});\r",
+                  "pm.request.headers.upsert({\r",
+                  "    key: \"x-api-key\",\r",
+                  "    value: apiKey\r",
+                  "});\r",
+                  ""
+                ],
+                "type": "text/javascript",
+                "packages": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "x-request-id",
+                "value": "{{$guid}}",
+                "type": "text"
+              },
+              {
+                "key": "x-correlation-id",
+                "value": "{{$guid}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"data\": [\r\n    {\r\n      \"type\": \"MessageStatus\",\r\n      \"attributes\": {\r\n        \"messageId\": \"{{messageID}}\",\r\n        \"messageReference\": \"REF-ABC-123\",\r\n        \"messageStatus\": \"delivered\",\r\n        \"messageStatusDescription\": \"Message has been delivered\",\r\n        \"channels\": [\r\n          {\r\n            \"type\": \"nhsapp\",\r\n            \"channelStatus\": \"delivered\"\r\n          }\r\n        ],\r\n        \"timestamp\": \"{{$isoTimestamp}}\",\r\n        \"routingPlan\": {\r\n          \"id\": \"example-plan\",\r\n          \"name\": \"Example Template\",\r\n          \"version\": \"v1.0.0\",\r\n          \"createdDate\": \"2025-01-01T12:00:00Z\"\r\n        }\r\n      },\r\n      \"links\": {\r\n        \"message\": \"https://api.nhs.example.com/messages/{{messageID}}\"\r\n      },\r\n      \"meta\": {\r\n        \"idempotencyKey\": \"idemp-001-abc\"\r\n      }\r\n    }\r\n  ]\r\n}\r\n",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "https://psu-pr-{{aws_pull_request_id}}.dev.eps.national.nhs.uk/notification-delivery-status-callback",
+              "protocol": "https",
+              "host": [
+                "psu-pr-{{aws_pull_request_id}}",
+                "dev",
+                "eps",
+                "national",
+                "nhs",
+                "uk"
+              ],
+              "path": [
+                "notification-delivery-status-callback"
               ]
             }
           },
@@ -240,8 +359,17 @@
             "url": {
               "raw": "https://psu-pr-{{aws_pull_request_id}}.dev.eps.national.nhs.uk/metadata",
               "protocol": "https",
-              "host": ["psu-pr-{{aws_pull_request_id}}", "dev", "eps", "national", "nhs", "uk"],
-              "path": ["metadata"]
+              "host": [
+                "psu-pr-{{aws_pull_request_id}}",
+                "dev",
+                "eps",
+                "national",
+                "nhs",
+                "uk"
+              ],
+              "path": [
+                "metadata"
+              ]
             }
           },
           "response": []
@@ -305,8 +433,13 @@
             "url": {
               "raw": "https://{{host}}/prescription-status-update-pr-{{aws_pull_request_id}}/",
               "protocol": "https",
-              "host": ["{{host}}"],
-              "path": ["prescription-status-update-pr-{{aws_pull_request_id}}", ""]
+              "host": [
+                "{{host}}"
+              ],
+              "path": [
+                "prescription-status-update-pr-{{aws_pull_request_id}}",
+                ""
+              ]
             }
           },
           "response": []
@@ -371,8 +504,13 @@
             "url": {
               "raw": "https://{{host}}/custom-prescription-status-update-pr-{{aws_pull_request_id}}/format-1",
               "protocol": "https",
-              "host": ["{{host}}"],
-              "path": ["custom-prescription-status-update-pr-{{aws_pull_request_id}}", "format-1"]
+              "host": [
+                "{{host}}"
+              ],
+              "path": [
+                "custom-prescription-status-update-pr-{{aws_pull_request_id}}",
+                "format-1"
+              ]
             }
           },
           "response": []
@@ -409,8 +547,13 @@
             "url": {
               "raw": "https://{{host}}/prescription-status-update-pr-{{aws_pull_request_id}}/_status",
               "protocol": "https",
-              "host": ["{{host}}"],
-              "path": ["prescription-status-update-pr-{{aws_pull_request_id}}", "_status"]
+              "host": [
+                "{{host}}"
+              ],
+              "path": [
+                "prescription-status-update-pr-{{aws_pull_request_id}}",
+                "_status"
+              ]
             }
           },
           "response": []
@@ -447,8 +590,13 @@
             "url": {
               "raw": "https://{{host}}/custom-prescription-status-update-pr-{{aws_pull_request_id}}/_status",
               "protocol": "https",
-              "host": ["{{host}}"],
-              "path": ["custom-prescription-status-update-pr-{{aws_pull_request_id}}", "_status"]
+              "host": [
+                "{{host}}"
+              ],
+              "path": [
+                "custom-prescription-status-update-pr-{{aws_pull_request_id}}",
+                "_status"
+              ]
             }
           },
           "response": []
@@ -495,8 +643,13 @@
             "url": {
               "raw": "https://{{host}}/prescription-status-update-pr-{{aws_pull_request_id}}/checkprescriptionstatusupdates",
               "protocol": "https",
-              "host": ["{{host}}"],
-              "path": ["prescription-status-update-pr-{{aws_pull_request_id}}", "checkprescriptionstatusupdates"],
+              "host": [
+                "{{host}}"
+              ],
+              "path": [
+                "prescription-status-update-pr-{{aws_pull_request_id}}",
+                "checkprescriptionstatusupdates"
+              ],
               "query": [
                 {
                   "key": "odscode",
@@ -538,8 +691,13 @@
             "url": {
               "raw": "https://{{host}}/prescription-status-update-pr-{{aws_pull_request_id}}/_ping",
               "protocol": "https",
-              "host": ["{{host}}"],
-              "path": ["prescription-status-update-pr-{{aws_pull_request_id}}", "_ping"]
+              "host": [
+                "{{host}}"
+              ],
+              "path": [
+                "prescription-status-update-pr-{{aws_pull_request_id}}",
+                "_ping"
+              ]
             }
           },
           "response": []
@@ -571,8 +729,13 @@
             "url": {
               "raw": "https://{{host}}/prescription-status-update-pr-{{aws_pull_request_id}}/metadata",
               "protocol": "https",
-              "host": ["{{host}}"],
-              "path": ["prescription-status-update-pr-{{aws_pull_request_id}}", "metadata"]
+              "host": [
+                "{{host}}"
+              ],
+              "path": [
+                "prescription-status-update-pr-{{aws_pull_request_id}}",
+                "metadata"
+              ]
             }
           },
           "response": []
@@ -625,8 +788,17 @@
             "url": {
               "raw": "https://{{custom_stack_name}}.dev.eps.national.nhs.uk/",
               "protocol": "https",
-              "host": ["{{custom_stack_name}}", "dev", "eps", "national", "nhs", "uk"],
-              "path": [""]
+              "host": [
+                "{{custom_stack_name}}",
+                "dev",
+                "eps",
+                "national",
+                "nhs",
+                "uk"
+              ],
+              "path": [
+                ""
+              ]
             }
           },
           "response": []
@@ -674,8 +846,17 @@
             "url": {
               "raw": "https://{{custom_stack_name}}.dev.eps.national.nhs.uk/format-1",
               "protocol": "https",
-              "host": ["{{custom_stack_name}}", "dev", "eps", "national", "nhs", "uk"],
-              "path": ["format-1"]
+              "host": [
+                "{{custom_stack_name}}",
+                "dev",
+                "eps",
+                "national",
+                "nhs",
+                "uk"
+              ],
+              "path": [
+                "format-1"
+              ]
             }
           },
           "response": []
@@ -700,8 +881,17 @@
             "url": {
               "raw": "https://{{custom_stack_name}}.dev.eps.national.nhs.uk/_status",
               "protocol": "https",
-              "host": ["{{custom_stack_name}}", "dev", "eps", "national", "nhs", "uk"],
-              "path": ["_status"]
+              "host": [
+                "{{custom_stack_name}}",
+                "dev",
+                "eps",
+                "national",
+                "nhs",
+                "uk"
+              ],
+              "path": [
+                "_status"
+              ]
             }
           },
           "response": []
@@ -751,8 +941,17 @@
             "url": {
               "raw": "https://{{custom_stack_name}}.dev.eps.national.nhs.uk/checkprescriptionstatusupdates",
               "protocol": "https",
-              "host": ["{{custom_stack_name}}", "dev", "eps", "national", "nhs", "uk"],
-              "path": ["checkprescriptionstatusupdates"],
+              "host": [
+                "{{custom_stack_name}}",
+                "dev",
+                "eps",
+                "national",
+                "nhs",
+                "uk"
+              ],
+              "path": [
+                "checkprescriptionstatusupdates"
+              ],
               "query": [
                 {
                   "key": "odscode",
@@ -794,8 +993,17 @@
             "url": {
               "raw": "https://{{custom_stack_name}}.dev.eps.national.nhs.uk/metadata",
               "protocol": "https",
-              "host": ["{{custom_stack_name}}", "dev", "eps", "national", "nhs", "uk"],
-              "path": ["metadata"]
+              "host": [
+                "{{custom_stack_name}}",
+                "dev",
+                "eps",
+                "national",
+                "nhs",
+                "uk"
+              ],
+              "path": [
+                "metadata"
+              ]
             }
           },
           "response": []
@@ -860,8 +1068,13 @@
         "url": {
           "raw": "https://{{host}}/prescription-status-update/",
           "protocol": "https",
-          "host": ["{{host}}"],
-          "path": ["prescription-status-update", ""]
+          "host": [
+            "{{host}}"
+          ],
+          "path": [
+            "prescription-status-update",
+            ""
+          ]
         }
       },
       "response": []
@@ -924,8 +1137,13 @@
         "url": {
           "raw": "https://{{host}}/custom-prescription-status-update/format-1",
           "protocol": "https",
-          "host": ["{{host}}"],
-          "path": ["custom-prescription-status-update", "format-1"]
+          "host": [
+            "{{host}}"
+          ],
+          "path": [
+            "custom-prescription-status-update",
+            "format-1"
+          ]
         }
       },
       "response": []
@@ -972,8 +1190,13 @@
         "url": {
           "raw": "https://{{host}}/prescription-status-update/checkprescriptionstatusupdates",
           "protocol": "https",
-          "host": ["{{host}}"],
-          "path": ["prescription-status-update", "checkprescriptionstatusupdates"],
+          "host": [
+            "{{host}}"
+          ],
+          "path": [
+            "prescription-status-update",
+            "checkprescriptionstatusupdates"
+          ],
           "query": [
             {
               "key": "odscode",
@@ -1015,8 +1238,13 @@
         "url": {
           "raw": "https://{{host}}/prescription-status-update/_ping",
           "protocol": "https",
-          "host": ["{{host}}"],
-          "path": ["prescription-status-update", "_ping"]
+          "host": [
+            "{{host}}"
+          ],
+          "path": [
+            "prescription-status-update",
+            "_ping"
+          ]
         }
       },
       "response": []
@@ -1048,8 +1276,13 @@
         "url": {
           "raw": "https://{{host}}/prescription-status-update/metadata",
           "protocol": "https",
-          "host": ["{{host}}"],
-          "path": ["prescription-status-update", "metadata"]
+          "host": [
+            "{{host}}"
+          ],
+          "path": [
+            "prescription-status-update",
+            "metadata"
+          ]
         }
       },
       "response": []
@@ -1086,8 +1319,13 @@
         "url": {
           "raw": "https://{{host}}/prescription-status-update/_status",
           "protocol": "https",
-          "host": ["{{host}}"],
-          "path": ["prescription-status-update", "_status"]
+          "host": [
+            "{{host}}"
+          ],
+          "path": [
+            "prescription-status-update",
+            "_status"
+          ]
         }
       },
       "response": []
@@ -1124,8 +1362,13 @@
         "url": {
           "raw": "https://{{host}}/custom-prescription-status-update/_status",
           "protocol": "https",
-          "host": ["{{host}}"],
-          "path": ["custom-prescription-status-update", "_status"]
+          "host": [
+            "{{host}}"
+          ],
+          "path": [
+            "custom-prescription-status-update",
+            "_status"
+          ]
         }
       },
       "response": []
@@ -1138,7 +1381,6 @@
         "type": "text/javascript",
         "packages": {},
         "exec": [
-          "\r",
           "const uuid = require('uuid')\r",
           "\r",
           "const privateKey = pm.environment.get('private_key') || ''\r",
@@ -1274,7 +1516,9 @@
       "script": {
         "type": "text/javascript",
         "packages": {},
-        "exec": [""]
+        "exec": [
+          ""
+        ]
       }
     }
   ]

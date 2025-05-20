@@ -444,8 +444,9 @@ Resources:
         Variables:
           LOG_LEVEL: !Ref LogLevel
           TABLE_NAME: !Ref PrescriptionNotificationStatesTableName
-          APP_NAME: !ImportValue account-resources:PSUNotifyCallbackAppName
-          API_KEY:  !ImportValue account-resources:PSUNotifyCallbackApiKey
+          APP_NAME: !Sub "{{resolve:secretsmanager:secrets-PSU-Notify-Application-Name}}"
+          API_KEY:  !Sub "{{resolve:secretsmanager:secrets-PSU-Notify-API-Key}}"
+
     Metadata:
       BuildMethod: esbuild
       guard:

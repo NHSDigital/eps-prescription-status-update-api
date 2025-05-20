@@ -99,7 +99,18 @@ describe("Unit test for NHS Notify lambda handler", () => {
     // ensure clearCompletedSQSMessages was called with the original messages array
     expect(mockClearCompletedSQSMessages).toHaveBeenCalledWith(
       expect.any(Object), // the logger instance
-      [msg1, msg2]
+      [
+        expect.objectContaining({
+          ...msg1,
+          success: true,
+          notifyMessageId: expect.any(String)
+        }),
+        expect.objectContaining({
+          ...msg2,
+          success: true,
+          notifyMessageId: expect.any(String)
+        })
+      ]
     )
   })
 
@@ -177,10 +188,26 @@ describe("Unit test for NHS Notify lambda handler", () => {
 
     // we should only persist & delete the fresh one
     expect(mockAddPrescriptionMessagesToNotificationStateStore)
-      .toHaveBeenCalledWith(expect.any(Object), [msgFresh])
+      .toHaveBeenCalledWith(expect.any(Object),
+        [
+          expect.objectContaining({
+            ...msgFresh,
+            success: true,
+            notifyMessageId: expect.any(String)
+          })
+        ]
+      )
 
     expect(mockClearCompletedSQSMessages)
-      .toHaveBeenCalledWith(expect.any(Object), [msgFresh])
+      .toHaveBeenCalledWith(expect.any(Object),
+        [
+          expect.objectContaining({
+            ...msgFresh,
+            success: true,
+            notifyMessageId: expect.any(String)
+          })
+        ]
+      )
 
     // and log how many were suppressed
     expect(mockInfo).toHaveBeenCalledWith(
