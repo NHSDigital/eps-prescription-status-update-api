@@ -6,6 +6,8 @@ import middy from "@middy/core"
 import inputOutputLogger from "@middy/input-output-logger"
 import errorHandler from "@nhs/fhir-middy-error-handler"
 
+import {v4} from "uuid"
+
 import {
   addPrescriptionMessagesToNotificationStateStore,
   checkCooldownForUpdate,
@@ -75,7 +77,13 @@ export const lambdaHandler = async (event: EventBridgeEvent<string, string>): Pr
     logger.info("Fetched prescription notification messages", {count: toNotify.length, toNotify})
 
     // TODO: Notifications request will be done here.
-    processed = toProcess
+    processed = toProcess.map((el) => {
+      return {
+        ...el,
+        success: true,
+        messageId: v4()
+      }
+    })
 
   } catch (err) {
     logger.error("Error while draining SQS queue", {error: err})

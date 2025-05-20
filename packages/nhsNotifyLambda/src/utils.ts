@@ -10,8 +10,6 @@ import {DynamoDBDocumentClient, GetCommand, PutCommand} from "@aws-sdk/lib-dynam
 
 import {NotifyDataItem} from "@PrescriptionStatusUpdate_common/commonTypes"
 
-import {v4} from "uuid"
-
 const TTL_DELTA = 60 * 60 * 24 * 7 // Keep records for a week
 
 const dynamoTable = process.env.TABLE_NAME
@@ -40,6 +38,8 @@ function chunkArray<T>(arr: Array<T>, size: number): Array<Array<T>> {
 // This is an extension of the SQS message interface, which explicitly parses the PSUDataItem
 export interface NotifyDataItemMessage extends Message {
   PSUDataItem: NotifyDataItem
+  success?: boolean
+  messageId?: string
 }
 
 /**
@@ -192,8 +192,8 @@ export async function addPrescriptionMessagesToNotificationStateStore(
       RequestId: data.PSUDataItem.RequestID,
       MessageID: data.MessageId!,
       LastNotifiedPrescriptionStatus: data.PSUDataItem.Status,
-      DeliveryStatus: "requested", // TODO: This needs to be handled for the case where notify fails.
-      NotifyMessageID: v4(), // TODO: Dummy message ID
+      DeliveryStatus: data.success ? "requested" : "notify request failed",
+      NotifyMessageID: data.messageId ?? "",
       LastNotificationRequestTimestamp: new Date().toISOString(),
       ExpiryTime: (Math.floor(+new Date() / 1000) + TTL_DELTA)
     }
