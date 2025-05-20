@@ -13,8 +13,8 @@ import {NotifyDataItem} from "@PrescriptionStatusUpdate_common/commonTypes"
 import {v4} from "uuid"
 import {CreateMessageBatchResponse} from "./types"
 
-const NOTIFY_API_BASE_URL = process.env.NOTIFY_API_BASE_URL
-const NOTIFY_API_TOKEN = process.env.NOTIFY_API_TOKEN
+const NOTIFY_API_BASE_URL = "https://sandbox.api.service.nhs.uk/comms" // process.env.NOTIFY_API_BASE_URL
+const NOTIFY_API_TOKEN = "g1112R_ccQ1Ebbb4gtHBP1aaaNM" // process.env.NOTIFY_API_TOKEN
 
 const TTL_DELTA = 60 * 60 * 24 * 7 // Keep records for a week
 
