@@ -30,7 +30,6 @@ export const lambdaHandler = async (event: EventBridgeEvent<string, string>): Pr
   logger.info("NHS Notify lambda triggered by scheduler", {event})
 
   let queueDrained = false
-  const processed: Array<NotifyDataItemMessage> = []
 
   // keep pulling until drainQueue tells us the queue is effectively empty
   while (!queueDrained) {
@@ -52,16 +51,18 @@ export const lambdaHandler = async (event: EventBridgeEvent<string, string>): Pr
     const toProcess = eligibility
       .filter((e) => e.allowed)
       .map((e) => e.message)
+    const suppressed = eligibility
+      .filter((e) => !e.allowed)
+      .map((e) => e.message)
 
     // Log the results of checking the cooldown
-    const suppressedCount = messages.length - toProcess.length
+    const suppressedCount = suppressed.length
     if (toProcess.length === 0) {
       logger.info("All messages suppressed by cooldown; nothing to notify",
         {
           suppressedCount,
           totalFetched: messages.length
         })
-      continue
     } else if (suppressedCount > 0) {
       logger.info(`Suppressed ${suppressedCount} messages due to cooldown`,
         {
@@ -70,6 +71,9 @@ export const lambdaHandler = async (event: EventBridgeEvent<string, string>): Pr
         }
       )
     }
+
+    // Consider suppressed messages to have been processed and delete them from SQS
+    await clearCompletedSQSMessages(logger, suppressed)
 
     // Just for diagnostics for now
     const toNotify = toProcess
@@ -81,6 +85,7 @@ export const lambdaHandler = async (event: EventBridgeEvent<string, string>): Pr
     logger.info("Fetched prescription notification messages", {count: toNotify.length, toNotify})
 
     // Make the request. If it's successful, add the relevant messages to the list of processed messages.
+    const processed: Array<NotifyDataItemMessage> = []
     if (!NHS_NOTIFY_ROUTING_ID) throw new Error("NHS_NOTIFY_ROUTING_ID environment variable not set.")
     try {
       await makeBatchNotifyRequest(
