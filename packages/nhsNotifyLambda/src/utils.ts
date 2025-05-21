@@ -183,7 +183,7 @@ export interface LastNotificationStateType {
   NHSNumber: string
   ODSCode: string
   RequestId: string // x-request-id header
-  MessageID: string // The SQS message ID
+  SQSMessageID: string // The SQS message ID
   LastNotifiedPrescriptionStatus: string
   DeliveryStatus: string
   NotifyMessageID: string // The UUID we got back from Notify for the submitted message
@@ -210,7 +210,7 @@ export async function addPrescriptionMessagesToNotificationStateStore(
       NHSNumber: data.PSUDataItem.PatientNHSNumber,
       ODSCode: data.PSUDataItem.PharmacyODSCode,
       RequestId: data.PSUDataItem.RequestID,
-      MessageID: data.MessageId ?? "no SQS message ID",
+      SQSMessageID: data.MessageId ?? "no SQS message ID",
       LastNotifiedPrescriptionStatus: data.PSUDataItem.Status,
       DeliveryStatus: data.success ? "requested" : "notify request failed",
       NotifyMessageID: data.notifyMessageId ?? "",
@@ -311,6 +311,10 @@ export async function makeBatchNotifyRequest(
 ): Promise<Array<NotifyDataItemMessage>> {
   if (!NOTIFY_API_BASE_URL) throw new Error("NOTIFY_API_BASE_URL is not defined in the environment variables!")
   if (!API_KEY) throw new Error("API_KEY is not defined in the environment variables!")
+
+  if (data.length === 0) {
+    return []
+  }
 
   const MAX_ITEMS = 45000
   const MAX_BYTES = 5 * 1024 * 1024 // 5 MB
