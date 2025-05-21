@@ -70,8 +70,7 @@ describe("NHS notify lambda helper functions", () => {
     })
 
     it("Does not return more than the maximum number of messages, even if more are available", async () => {
-      const constructMessageArray = {Messages: Array.from({length: 10}, () => constructMessage())}
-      const mockQueue = () => Promise.resolve(constructMessageArray)
+      const mockQueue = () => Promise.resolve({Messages: Array.from({length: 10}, () => constructMessage())})
       sqsMockSend.mockImplementation(mockQueue)
 
       const {messages, isEmpty} = await drainQueue(logger, 20)
@@ -550,6 +549,7 @@ describe("NHS notify lambda helper functions", () => {
     })
 
     it("splits very large payloads into two recursive batch requests", async () => {
+      // TODO: For this test, we need to suppress logger console messages.
       // create data of length 45001 to trigger split by count
       const data = Array.from({length: 45001}, (_, i) => (
         constructPSUDataItemMessage(
