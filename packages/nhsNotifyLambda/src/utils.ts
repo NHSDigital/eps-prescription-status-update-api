@@ -13,8 +13,8 @@ import {NotifyDataItem} from "@PrescriptionStatusUpdate_common/commonTypes"
 import {v4} from "uuid"
 import {CreateMessageBatchResponse} from "./types"
 
-const NOTIFY_API_BASE_URL = "https://sandbox.api.service.nhs.uk/comms" // process.env.NOTIFY_API_BASE_URL
-const NOTIFY_API_TOKEN = "g1112R_ccQ1Ebbb4gtHBP1aaaNM" // process.env.NOTIFY_API_TOKEN
+const NOTIFY_API_BASE_URL = process.env.NOTIFY_API_BASE_URL
+const NOTIFY_API_TOKEN = process.env.NOTIFY_API_TOKEN
 
 const TTL_DELTA = 60 * 60 * 24 * 7 // Keep records for a week
 
@@ -310,9 +310,27 @@ export async function makeBatchNotifyRequest(
   if (!NOTIFY_API_BASE_URL) throw new Error("NOTIFY_API_BASE_URL is not defined in the environment variables!")
   if (!NOTIFY_API_TOKEN) throw new Error("NOTIFY_API_TOKEN is not defined in the environment variables!")
 
-  // TODO: If the data is greater 45000 elements, or if the request is greater than 5MB,
-  // split the data in half and make two new batch request calls. Return the union of
-  // them afterwards.
+  const MAX_ITEMS = 45000
+  const MAX_BYTES = 5 * 1024 * 1024 // 5 MB
+
+  // Estimate payload size
+  // Rough estimate based on JSON length of the items array
+  const estimateSize = (items: Array<NotifyDataItem>) => {
+    return Buffer.byteLength(JSON.stringify(items), "utf8")
+  }
+
+  // Recursive split if too large
+  if (data.length > MAX_ITEMS || estimateSize(data) > MAX_BYTES) {
+    const mid = Math.floor(data.length / 2)
+    const firstHalf = data.slice(0, mid)
+    const secondHalf = data.slice(mid)
+    // send both halves in parallel
+    const [res1, res2] = await Promise.all([
+      makeBatchNotifyRequest(logger, routingPlanId, firstHalf),
+      makeBatchNotifyRequest(logger, routingPlanId, secondHalf)
+    ])
+    return [...res1, ...res2]
+  }
 
   // Shared between all messages in this batch
   const messageBatchReference = v4()

@@ -13,7 +13,8 @@ const {
   addPrescriptionMessagesToNotificationStateStore,
   clearCompletedSQSMessages,
   checkCooldownForUpdate,
-  drainQueue
+  drainQueue,
+  makeBatchNotifyRequest
 } = await import("../src/utils")
 
 const ORIGINAL_ENV = {...process.env}
@@ -326,7 +327,7 @@ describe("NHS notify lambda helper functions", () => {
       jest.resetModules()
       jest.clearAllMocks()
 
-      process.env = {...ORIGINAL_ENV, TABLE_NAME: "test-table"}
+      process.env = {...ORIGINAL_ENV}
 
       logger = new Logger({serviceName: "test-service"})
       infoSpy = jest.spyOn(logger, "info")
@@ -430,7 +431,6 @@ describe("NHS notify lambda helper functions", () => {
     })
   })
 
-  // TODO: Update the code and tests to have the API key and domain stored in env variables.
   describe("makeBatchNotifyRequest", () => {
     let logger: Logger
     let errorSpy: SpiedFunction<(msg: string, ...meta: Array<unknown>) => void>
@@ -438,6 +438,8 @@ describe("NHS notify lambda helper functions", () => {
     let fetchMock: jest.Mock<any>
 
     beforeEach(() => {
+      process.env = {...ORIGINAL_ENV}
+
       jest.resetModules()
       jest.clearAllMocks()
 
@@ -450,6 +452,10 @@ describe("NHS notify lambda helper functions", () => {
       errorSpy = jest.spyOn(logger, "error")
     })
 
+    afterAll(() => {
+      process.env = {...ORIGINAL_ENV}
+    })
+
     it("sends a batch and maps successful messages correctly", async () => {
       const data = [
         {RequestID: "r1", PatientNHSNumber: "n1", PharmacyODSCode: "o1", TaskID: "t1", Status: "s1"},
@@ -460,12 +466,11 @@ describe("NHS notify lambda helper functions", () => {
         {messageReference: "r1", id: "msg-id-1"}
       ]
 
-      fetchMock.mockResolvedValueOnce({
+      fetchMock.mockImplementationOnce(() => Promise.resolve({
         ok: true,
         json: () => Promise.resolve({data: {attributes: {messages: returnedMessages}}})
-      })
+      }))
 
-      const {makeBatchNotifyRequest} = await import("../src/utils")
       const result = await makeBatchNotifyRequest(logger, "plan-123", data)
 
       // Ensure fetch was called with correct URL and options
@@ -497,13 +502,12 @@ describe("NHS notify lambda helper functions", () => {
         {RequestID: "rA", PatientNHSNumber: "nx", PharmacyODSCode: "ox", TaskID: "tx", Status: "st"}
       ]
 
-      fetchMock.mockResolvedValueOnce({
+      fetchMock.mockImplementationOnce(() => Promise.resolve({
         ok: false,
         status: 500,
         statusText: "Internal Server Error"
-      })
+      }))
 
-      const {makeBatchNotifyRequest} = await import("../src/utils")
       const result = await makeBatchNotifyRequest(logger, "plan-xyz", data)
 
       // All messages should be marked as failed
@@ -526,9 +530,8 @@ describe("NHS notify lambda helper functions", () => {
         {RequestID: "rY", PatientNHSNumber: "nz", PharmacyODSCode: "oz", TaskID: "tz", Status: "sx"}
       ]
       const fetchError = new Error("Network failure")
-      fetchMock.mockRejectedValueOnce(fetchError)
+      fetchMock.mockImplementationOnce(() => Promise.reject(fetchError))
 
-      const {makeBatchNotifyRequest} = await import("../src/utils")
       const result = await makeBatchNotifyRequest(logger, "plan-error", data)
 
       // All messages should be marked as failed
@@ -542,6 +545,32 @@ describe("NHS notify lambda helper functions", () => {
         expect.objectContaining({error: fetchError})
       )
     })
-  })
 
+    it("splits very large payloads into two recursive batch requests", async () => {
+      // create data of length 45001 to trigger split by count
+      const data = Array.from({length: 45001}, (_, i) => ({
+        RequestID: `r${i}`,
+        PatientNHSNumber: `n${i}`,
+        PharmacyODSCode: `o${i}`,
+        TaskID: `t${i}`,
+        Status: `s${i}`
+      }))
+
+      const minimalResponse = {
+        ok: true,
+        json: () => Promise.resolve({data: {attributes: {messages: []}}})
+      }
+
+      fetchMock.mockImplementation(() => Promise.resolve(minimalResponse))
+
+      const result = await makeBatchNotifyRequest(logger, "plan-large", data)
+
+      // expect two recursive calls to fetch
+      expect(fetchMock).toHaveBeenCalledTimes(2)
+
+      // result should combine both halves
+      expect(result).toHaveLength(45001)
+      expect(errorSpy).not.toHaveBeenCalled()
+    })
+  })
 })

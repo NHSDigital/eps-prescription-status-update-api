@@ -17,7 +17,7 @@ import {
 
 const logger = new Logger({serviceName: "nhsNotify"})
 
-const NHS_NOTIFY_ROUTING_ID = "b838b13c-f98c-4def-93f0-515d4e4f4ee1" // process.env.NHS_NOTIFY_ROUTING_ID
+const NHS_NOTIFY_ROUTING_ID = process.env.NHS_NOTIFY_ROUTING_ID
 
 /**
  * Handler for the scheduled trigger.
