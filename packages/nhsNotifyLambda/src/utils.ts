@@ -204,6 +204,8 @@ export async function addPrescriptionMessagesToNotificationStateStore(
   else logger.info("No data to push into DynamoDB.")
 
   for (const data of dataArray) {
+    // TODO: Delete this log message
+    logger.info("Updating item:", {data})
     const item: LastNotificationStateType = {
       NHSNumber: data.PSUDataItem.PatientNHSNumber,
       ODSCode: data.PSUDataItem.PharmacyODSCode,
