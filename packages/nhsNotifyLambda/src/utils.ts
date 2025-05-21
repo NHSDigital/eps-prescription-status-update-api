@@ -65,6 +65,7 @@ export async function drainQueue(
   }
 
   const allMessages: Array<NotifyDataItemMessage> = []
+  const seenDeduplicationIds = new Set<string>()
   let receivedSoFar = 0
   let isEmpty = false
   let pollingIteration = 0
@@ -115,6 +116,26 @@ export async function drainQueue(
     })
     allMessages.push(...parsedMessages)
     receivedSoFar += Messages.length
+
+    // Ensure each message has a unique, populated deduplication ID
+    const uniqueMessages: Array<NotifyDataItemMessage> = []
+    for (const msg of parsedMessages) {
+      const dedupId = msg.Attributes?.MessageDeduplicationId
+      if (!dedupId) {
+        logger.error("SQS message missing MessageDeduplicationId. Skipping this message",
+          {messageId: msg.MessageId, message: msg})
+        continue
+      }
+      if (seenDeduplicationIds.has(dedupId)) {
+        logger.warn("Duplicate MessageDeduplicationId encountered; skipping duplicate",
+          {messageId: msg.MessageId, deduplicationId: dedupId})
+        continue
+      }
+      seenDeduplicationIds.add(dedupId)
+      uniqueMessages.push(msg)
+    }
+    allMessages.push(...uniqueMessages)
+    receivedSoFar += uniqueMessages.length
 
     // if the last batch of messages was small, then break the loop
     // This is to prevent a slow-loris style breakdown if the queue has
