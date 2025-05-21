@@ -549,7 +549,10 @@ describe("NHS notify lambda helper functions", () => {
     })
 
     it("splits very large payloads into two recursive batch requests", async () => {
-      // TODO: For this test, we need to suppress logger console messages.
+      // suppress console output from the logger in this test
+      jest.spyOn(console, "info").mockImplementation(() => {})
+      jest.spyOn(console, "error").mockImplementation(() => {})
+
       // create data of length 45001 to trigger split by count
       const data = Array.from({length: 45001}, (_, i) => (
         constructPSUDataItemMessage(

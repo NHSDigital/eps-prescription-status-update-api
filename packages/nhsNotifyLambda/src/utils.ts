@@ -78,10 +78,9 @@ export async function drainQueue(
       QueueUrl: sqsUrl,
       MaxNumberOfMessages: toFetch,
       WaitTimeSeconds: 20, // Use long polling to avoid getting empty responses when the queue is small
-      MessageAttributeNames: [
-        "MessageId",
-        "MessageDeduplicationId"
-      ]
+      // Request the deduplication ID as system attributes:
+      MessageSystemAttributeNames: ["MessageDeduplicationId"],
+      MessageAttributeNames: ["All"]
     })
 
     const {Messages} = await sqs.send(receiveCmd)
@@ -121,7 +120,7 @@ export async function drainQueue(
       const dedupId = msg.Attributes?.MessageDeduplicationId
       if (!dedupId) {
         logger.error("SQS message missing MessageDeduplicationId. Skipping this message",
-          {messageId: msg.MessageId, message: msg})
+          {messageId: msg.MessageId, badMessage: msg})
         continue
       }
       if (seenDeduplicationIds.has(dedupId)) {
