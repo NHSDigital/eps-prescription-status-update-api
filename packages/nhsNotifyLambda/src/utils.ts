@@ -78,7 +78,8 @@ export async function drainQueue(
       MaxNumberOfMessages: toFetch,
       WaitTimeSeconds: 20, // Use long polling to avoid getting empty responses when the queue is small
       MessageAttributeNames: [
-        "MessageId"
+        "MessageId",
+        "MessageDeduplicationId"
       ]
     })
 
@@ -203,8 +204,6 @@ export async function addPrescriptionMessagesToNotificationStateStore(
   else logger.info("No data to push into DynamoDB.")
 
   for (const data of dataArray) {
-    // TODO: Delete this log message
-    logger.info("Updating item:", {data})
     const item: LastNotificationStateType = {
       NHSNumber: data.PSUDataItem.PatientNHSNumber,
       ODSCode: data.PSUDataItem.PharmacyODSCode,
@@ -337,18 +336,17 @@ export async function makeBatchNotifyRequest(
     return [...res1, ...res2]
   }
 
+  logger.info("Making a request for notifications to NHS notify", {count: data.length, routingPlanId})
+
   // Shared between all messages in this batch
   const messageBatchReference = v4()
 
   // Map the NotifyDataItems into the structure needed for notify
   const messages = data.map(item => ({
-    messageReference: item.RequestID,
+    messageReference: item.TaskID,
     recipient: {nhsNumber: item.PatientNHSNumber},
     originator: {odsCode: item.PharmacyODSCode},
-    personalisation: {
-      taskId: item.TaskID,
-      status: item.Status
-    }
+    personalisation: {}
   }))
 
   const body = {
@@ -365,6 +363,7 @@ export async function makeBatchNotifyRequest(
   const url = `${NOTIFY_API_BASE_URL}/v1/message-batches`
 
   try {
+    logger.info("Making NHS Notify request", {body})
     const resp = await fetch(url, {
       method: "POST",
       headers: {
@@ -377,13 +376,12 @@ export async function makeBatchNotifyRequest(
     if (resp.ok) {
       const respBody = (await resp.json()) as CreateMessageBatchResponse
       const returnedMessages = respBody.data.attributes.messages
-      // TODO: Delete the response content from this log message
       logger.info("Requested notifications OK!", {respBody})
 
       // Map each input item to a NotifyDataItemMessage, marking success and attaching the notify ID
       return data.map(item => {
         const match = returnedMessages.find(
-          m => m.messageReference === item.RequestID
+          m => m.messageReference === item.TaskID
         )
 
         return {
