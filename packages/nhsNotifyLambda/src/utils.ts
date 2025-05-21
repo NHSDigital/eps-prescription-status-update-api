@@ -210,7 +210,7 @@ export async function addPrescriptionMessagesToNotificationStateStore(
       NHSNumber: data.PSUDataItem.PatientNHSNumber,
       ODSCode: data.PSUDataItem.PharmacyODSCode,
       RequestId: data.PSUDataItem.RequestID,
-      SQSMessageID: data.MessageId ?? "no SQS message ID",
+      SQSMessageID: data.MessageId!,
       LastNotifiedPrescriptionStatus: data.PSUDataItem.Status,
       DeliveryStatus: data.success ? "requested" : "notify request failed",
       NotifyMessageID: data.notifyMessageId ?? "",
