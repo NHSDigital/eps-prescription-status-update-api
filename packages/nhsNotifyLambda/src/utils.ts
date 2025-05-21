@@ -114,8 +114,6 @@ export async function drainQueue(
         PSUDataItem: parsedBody
       }
     })
-    allMessages.push(...parsedMessages)
-    receivedSoFar += Messages.length
 
     // Ensure each message has a unique, populated deduplication ID
     const uniqueMessages: Array<NotifyDataItemMessage> = []
