@@ -78,8 +78,7 @@ export async function drainQueue(
       MaxNumberOfMessages: toFetch,
       WaitTimeSeconds: 20, // Use long polling to avoid getting empty responses when the queue is small
       MessageAttributeNames: [
-        "MessageDeduplicationId",
-        "MessageGroupId"
+        "MessageId"
       ]
     })
 
@@ -210,7 +209,7 @@ export async function addPrescriptionMessagesToNotificationStateStore(
       NHSNumber: data.PSUDataItem.PatientNHSNumber,
       ODSCode: data.PSUDataItem.PharmacyODSCode,
       RequestId: data.PSUDataItem.RequestID,
-      SQSMessageID: data.MessageId!,
+      SQSMessageID: data.MessageId ?? "",
       LastNotifiedPrescriptionStatus: data.PSUDataItem.Status,
       DeliveryStatus: data.success ? "requested" : "notify request failed",
       NotifyMessageID: data.notifyMessageId ?? "",
