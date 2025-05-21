@@ -372,6 +372,8 @@ export async function makeBatchNotifyRequest(
     if (resp.ok) {
       const respBody = (await resp.json()) as CreateMessageBatchResponse
       const returnedMessages = respBody.data.attributes.messages
+      // TODO: Delete the response content from this log message
+      logger.info("Requested notifications OK!", {resp})
 
       // Map each input item to a NotifyDataItemMessage, marking success and attaching the notify ID
       return data.map(item => {
