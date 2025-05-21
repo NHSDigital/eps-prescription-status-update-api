@@ -199,10 +199,8 @@ Resources:
               WriteCapacityUnits: !Ref MinWritePrescriptionStatusUpdatesCapacity
             - !Ref "AWS::NoValue"
       Tags:
-        - Key: "enable"
+        - Key: "NHSE-Enable-Backup"
           Value: "True"
-        - Key: "selection-tag"
-          Value: "NHSE-Enable-Backup"
 
   PrescriptionStatusUpdatesResources:
     Type: AWS::Serverless::Application
@@ -468,10 +466,8 @@ Resources:
         AttributeName: ExpiryTime
         Enabled: true
       Tags:
-        - Key: "enable"
+        - Key: "NHSE-Enable-Backup"
           Value: "True"
-        - Key: "selection-tag"
-          Value: "NHSE-Enable-Backup"
 
   PrescriptionNotificationStatesResources:
     Type: AWS::Serverless::Application
