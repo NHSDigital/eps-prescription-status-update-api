@@ -389,6 +389,7 @@ Resources:
           TABLE_NAME: !Ref PrescriptionNotificationStatesTableName
           NHS_NOTIFY_ROUTING_ID: "b838b13c-f98c-4def-93f0-515d4e4f4ee1"
           NOTIFY_API_BASE_URL: "https://sandbox.api.service.nhs.uk/comms"
+          API_KEY:  !Sub "{{resolve:secretsmanager:secrets-PSU-Notify-API-Key}}"
       Events:
         ScheduleEvent:
           Type: ScheduleV2

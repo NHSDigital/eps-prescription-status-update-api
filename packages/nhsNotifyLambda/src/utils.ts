@@ -308,7 +308,7 @@ export async function makeBatchNotifyRequest(
   data: Array<NotifyDataItem>
 ): Promise<Array<NotifyDataItemMessage>> {
   if (!NOTIFY_API_BASE_URL) throw new Error("NOTIFY_API_BASE_URL is not defined in the environment variables!")
-  if (!API_KEY) throw new Error("API_TOKEN is not defined in the environment variables!")
+  if (!API_KEY) throw new Error("API_KEY is not defined in the environment variables!")
 
   const MAX_ITEMS = 45000
   const MAX_BYTES = 5 * 1024 * 1024 // 5 MB
