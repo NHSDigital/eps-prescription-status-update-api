@@ -9,7 +9,7 @@ import {
 import {constructPSUDataItem, constructPSUDataItemMessage} from "./testHelpers"
 
 const mockAddPrescriptionMessagesToNotificationStateStore = jest.fn()
-const mockClearCompletedSQSMessages = jest.fn()
+const mockRemoveSQSMessages = jest.fn()
 const mockDrainQueue = jest.fn()
 const mockCheckCooldownForUpdate = jest.fn()
 const mockMakeBatchNotifyRequest = jest.fn()
@@ -20,7 +20,7 @@ jest.unstable_mockModule(
     __esModule: true,
     drainQueue: mockDrainQueue,
     addPrescriptionMessagesToNotificationStateStore: mockAddPrescriptionMessagesToNotificationStateStore,
-    clearCompletedSQSMessages: mockClearCompletedSQSMessages,
+    removeSQSMessages: mockRemoveSQSMessages,
     checkCooldownForUpdate: mockCheckCooldownForUpdate,
     makeBatchNotifyRequest: mockMakeBatchNotifyRequest
   })
@@ -78,7 +78,7 @@ describe("Unit test for NHS Notify lambda handler", () => {
     // drainQueue returns two messages
     mockDrainQueue.mockImplementationOnce(() => Promise.resolve({messages: [msg1, msg2], isEmpty: true}))
     // deletion succeeds
-    mockClearCompletedSQSMessages.mockImplementation(() => Promise.resolve())
+    mockRemoveSQSMessages.mockImplementation(() => Promise.resolve())
     // Checking cooldown
     mockCheckCooldownForUpdate.mockImplementation(() => Promise.resolve(true))
     // Notify request succeeds
@@ -106,8 +106,8 @@ describe("Unit test for NHS Notify lambda handler", () => {
       }
     )
 
-    // ensure clearCompletedSQSMessages was called with the original messages array
-    expect(mockClearCompletedSQSMessages).toHaveBeenCalledWith(
+    // ensure removeSQSMessages was called with the original messages array
+    expect(mockRemoveSQSMessages).toHaveBeenCalledWith(
       expect.any(Object), // the logger instance
       [
         expect.objectContaining({
@@ -124,7 +124,7 @@ describe("Unit test for NHS Notify lambda handler", () => {
     )
   })
 
-  it("Throws and logs if clearCompletedSQSMessages fails", async () => {
+  it("Throws and logs if removeSQSMessages fails", async () => {
     const item = constructPSUDataItem({TaskID: "tx", RequestID: "rx"})
     const msg = constructPSUDataItemMessage({PSUDataItem: item})
     mockDrainQueue.mockImplementationOnce(() => Promise.resolve({messages: [msg], isEmpty: true}))
@@ -138,7 +138,7 @@ describe("Unit test for NHS Notify lambda handler", () => {
     ))
 
     const deletionError = new Error("Delete failed")
-    mockClearCompletedSQSMessages.mockImplementationOnce(() => Promise.reject(deletionError))
+    mockRemoveSQSMessages.mockImplementationOnce(() => Promise.reject(deletionError))
 
     await expect(lambdaHandler(mockEventBridgeEvent)).rejects.toThrow("Delete failed")
   })
@@ -222,7 +222,7 @@ describe("Unit test for NHS Notify lambda handler", () => {
       ]
     ))
 
-    mockClearCompletedSQSMessages.mockImplementation(() => Promise.resolve())
+    mockRemoveSQSMessages.mockImplementation(() => Promise.resolve())
     mockAddPrescriptionMessagesToNotificationStateStore.mockImplementation(() => Promise.resolve())
 
     await expect(lambdaHandler(mockEventBridgeEvent)).resolves.not.toThrow()
@@ -239,7 +239,7 @@ describe("Unit test for NHS Notify lambda handler", () => {
         ]
       )
 
-    expect(mockClearCompletedSQSMessages)
+    expect(mockRemoveSQSMessages)
       .toHaveBeenCalledWith(expect.any(Object),
         [
           expect.objectContaining({
@@ -271,13 +271,13 @@ describe("Unit test for NHS Notify lambda handler", () => {
       return Promise.resolve(u.RequestID === "fresh")
     })
 
-    mockClearCompletedSQSMessages.mockImplementation(() => Promise.resolve())
+    mockRemoveSQSMessages.mockImplementation(() => Promise.resolve())
     mockAddPrescriptionMessagesToNotificationStateStore.mockImplementation(() => Promise.resolve())
 
     await expect(lambdaHandler(mockEventBridgeEvent)).resolves.not.toThrow()
 
     expect(mockAddPrescriptionMessagesToNotificationStateStore).not.toHaveBeenCalled()
-    expect(mockClearCompletedSQSMessages).toHaveBeenCalledWith(
+    expect(mockRemoveSQSMessages).toHaveBeenCalledWith(
       expect.any(Object),
       [expect.objectContaining(msgStale)]
     )

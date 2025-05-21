@@ -9,7 +9,7 @@ import errorHandler from "@nhs/fhir-middy-error-handler"
 import {
   addPrescriptionMessagesToNotificationStateStore,
   checkCooldownForUpdate,
-  clearCompletedSQSMessages,
+  removeSQSMessages,
   drainQueue,
   makeBatchNotifyRequest,
   NotifyDataItemMessage
@@ -74,7 +74,7 @@ export const lambdaHandler = async (event: EventBridgeEvent<string, string>): Pr
 
     if (suppressed.length) {
       // Consider suppressed messages to have been processed and delete them from SQS
-      await clearCompletedSQSMessages(logger, suppressed)
+      await removeSQSMessages(logger, suppressed)
     }
 
     // Just for diagnostics for now
@@ -91,7 +91,7 @@ export const lambdaHandler = async (event: EventBridgeEvent<string, string>): Pr
     if (!NHS_NOTIFY_ROUTING_ID) throw new Error("NHS_NOTIFY_ROUTING_ID environment variable not set.")
     try {
       const results = await makeBatchNotifyRequest(
-        logger, NHS_NOTIFY_ROUTING_ID, toProcess.map((el) => el.PSUDataItem)
+        logger, NHS_NOTIFY_ROUTING_ID, toProcess
       )
       processed.push(...results)
     } catch (error) {
@@ -106,7 +106,7 @@ export const lambdaHandler = async (event: EventBridgeEvent<string, string>): Pr
 
       // By waiting until a message is successfully processed before deleting it from SQS,
       // failed messages will eventually be retried by subsequent notify consumers.
-      await clearCompletedSQSMessages(logger, processed)
+      await removeSQSMessages(logger, processed)
     }
   }
 }

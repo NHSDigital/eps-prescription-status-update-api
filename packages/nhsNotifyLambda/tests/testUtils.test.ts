@@ -11,7 +11,7 @@ const {mockSend: sqsMockSend} = mockSQSClient()
 
 const {
   addPrescriptionMessagesToNotificationStateStore,
-  clearCompletedSQSMessages,
+  removeSQSMessages: clearCompletedSQSMessages,
   checkCooldownForUpdate,
   drainQueue,
   makeBatchNotifyRequest
@@ -212,9 +212,7 @@ describe("NHS notify lambda helper functions", () => {
       // partial failure
       sqsMockSend.mockImplementationOnce(() => Promise.resolve({Failed: failedEntries}))
 
-      await expect(clearCompletedSQSMessages(logger, messages))
-        .rejects
-        .toThrow("Failed to delete 1 messages from SQS")
+      await expect(clearCompletedSQSMessages(logger, messages)).resolves
 
       expect(errorSpy).toHaveBeenCalledWith(
         "Some messages failed to delete in this batch",
@@ -224,7 +222,7 @@ describe("NHS notify lambda helper functions", () => {
 
     it("Throws an error if the SQS URL is not configured", async () => {
       delete process.env.NHS_NOTIFY_PRESCRIPTIONS_SQS_QUEUE_URL
-      const {clearCompletedSQSMessages: clearFunc} = await import("../src/utils")
+      const {removeSQSMessages: clearFunc} = await import("../src/utils")
 
       await expect(clearFunc(logger, [])).rejects.toThrow("NHS_NOTIFY_PRESCRIPTIONS_SQS_QUEUE_URL not set")
       expect(errorSpy).toHaveBeenCalledWith("Notifications SQS URL not configured")
@@ -458,12 +456,14 @@ describe("NHS notify lambda helper functions", () => {
 
     it("sends a batch and maps successful messages correctly", async () => {
       const data = [
-        {RequestID: "r1", PatientNHSNumber: "n1", PharmacyODSCode: "o1", TaskID: "t1", Status: "s1"},
-        {RequestID: "r2", PatientNHSNumber: "n2", PharmacyODSCode: "o2", TaskID: "t2", Status: "s2"}
+        constructPSUDataItemMessage(
+          {PSUDataItem: {RequestID: "r1", PatientNHSNumber: "n1", PharmacyODSCode: "o1", TaskID: "t1", Status: "s1"}}),
+        constructPSUDataItemMessage(
+          {PSUDataItem: {RequestID: "r2", PatientNHSNumber: "n2", PharmacyODSCode: "o2", TaskID: "t2", Status: "s2"}})
       ]
 
       const returnedMessages = [
-        {messageReference: "r1", id: "msg-id-1"}
+        {messageReference: data[0].Attributes?.MessageDeduplicationId, id: "msg-id-1"}
       ]
 
       fetchMock.mockImplementationOnce(() => Promise.resolve({
@@ -486,12 +486,12 @@ describe("NHS notify lambda helper functions", () => {
       // Should return one success and one failure
       expect(result).toHaveLength(2)
       expect(result[0]).toEqual({
-        PSUDataItem: data[0],
+        PSUDataItem: data[0].PSUDataItem,
         success: true,
         notifyMessageId: "msg-id-1"
       })
       expect(result[1]).toEqual({
-        PSUDataItem: data[1],
+        PSUDataItem: data[1].PSUDataItem,
         success: false,
         notifyMessageId: undefined
       })
@@ -499,7 +499,8 @@ describe("NHS notify lambda helper functions", () => {
 
     it("handles non-ok response by marking all as failed", async () => {
       const data = [
-        {RequestID: "rA", PatientNHSNumber: "nx", PharmacyODSCode: "ox", TaskID: "tx", Status: "st"}
+        constructPSUDataItemMessage(
+          {PSUDataItem: {RequestID: "rA", PatientNHSNumber: "nx", PharmacyODSCode: "ox", TaskID: "tx", Status: "st"}})
       ]
 
       fetchMock.mockImplementationOnce(() => Promise.resolve({
@@ -513,7 +514,7 @@ describe("NHS notify lambda helper functions", () => {
       // All messages should be marked as failed
       expect(result).toHaveLength(1)
       expect(result[0]).toEqual({
-        PSUDataItem: data[0],
+        PSUDataItem: data[0].PSUDataItem,
         success: false,
         notifyMessageId: undefined
       })
@@ -526,8 +527,10 @@ describe("NHS notify lambda helper functions", () => {
 
     it("handles fetch exceptions by marking all as failed and logging error", async () => {
       const data = [
-        {RequestID: "rX", PatientNHSNumber: "ny", PharmacyODSCode: "oy", TaskID: "ty", Status: "st"},
-        {RequestID: "rY", PatientNHSNumber: "nz", PharmacyODSCode: "oz", TaskID: "tz", Status: "sx"}
+        constructPSUDataItemMessage(
+          {PSUDataItem: {RequestID: "rX", PatientNHSNumber: "ny", PharmacyODSCode: "oy", TaskID: "ty", Status: "st"}}),
+        constructPSUDataItemMessage(
+          {PSUDataItem: {RequestID: "rY", PatientNHSNumber: "nz", PharmacyODSCode: "oz", TaskID: "tz", Status: "sx"}})
       ]
       const fetchError = new Error("Network failure")
       fetchMock.mockImplementationOnce(() => Promise.reject(fetchError))
@@ -548,13 +551,19 @@ describe("NHS notify lambda helper functions", () => {
 
     it("splits very large payloads into two recursive batch requests", async () => {
       // create data of length 45001 to trigger split by count
-      const data = Array.from({length: 45001}, (_, i) => ({
-        RequestID: `r${i}`,
-        PatientNHSNumber: `n${i}`,
-        PharmacyODSCode: `o${i}`,
-        TaskID: `t${i}`,
-        Status: `s${i}`
-      }))
+      const data = Array.from({length: 45001}, (_, i) => (
+        constructPSUDataItemMessage(
+          {
+            PSUDataItem: {
+              RequestID: `r${i}`,
+              PatientNHSNumber: `n${i}`,
+              PharmacyODSCode: `o${i}`,
+              TaskID: `t${i}`,
+              Status: `s${i}`
+            }
+          }
+        )
+      ))
 
       const minimalResponse = {
         ok: true,
@@ -565,7 +574,7 @@ describe("NHS notify lambda helper functions", () => {
 
       const result = await makeBatchNotifyRequest(logger, "plan-large", data)
 
-      // expect two recursive calls to fetch
+      // expect 2 recursive calls to fetch
       expect(fetchMock).toHaveBeenCalledTimes(2)
 
       // result should combine both halves

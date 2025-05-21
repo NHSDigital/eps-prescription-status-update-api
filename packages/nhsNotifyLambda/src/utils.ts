@@ -133,12 +133,12 @@ export async function drainQueue(
 
 /**
  * For each message given, delete it from the notifications SQS in batches of up to 10.
- * Throws an error if any batch fails, but previous batches will remain deleted.
+ * If a batch fails to delete, the error is logged but execution continues.
  *
  * @param logger - the logging object
  * @param messages - The messages that were received from SQS, and are to be deleted.
  */
-export async function clearCompletedSQSMessages(
+export async function removeSQSMessages(
   logger: Logger,
   messages: Array<Message>
 ): Promise<void> {
@@ -169,13 +169,12 @@ export async function clearCompletedSQSMessages(
 
     if (delResult.Failed && delResult.Failed.length > 0) {
       logger.error("Some messages failed to delete in this batch", {failed: delResult.Failed})
-      throw new Error(`Failed to delete ${delResult.Failed.length} messages from SQS`)
+    } else {
+      logger.info(`Successfully deleted SQS message batch ${batchIndex + 1}`, {
+        result: delResult,
+        messageIds: entries.map((e) => e.Id)
+      })
     }
-
-    logger.info(`Successfully deleted SQS message batch ${batchIndex + 1}`, {
-      result: delResult,
-      messageIds: entries.map((e) => e.Id)
-    })
   }
 }
 
@@ -210,7 +209,7 @@ export async function addPrescriptionMessagesToNotificationStateStore(
       RequestId: data.PSUDataItem.RequestID,
       SQSMessageID: data.MessageId ?? "",
       LastNotifiedPrescriptionStatus: data.PSUDataItem.Status,
-      DeliveryStatus: data.success ? "requested" : "notify request failed",
+      DeliveryStatus: data.success ? "requested" : "request error",
       NotifyMessageID: data.notifyMessageId ?? "",
       LastNotificationRequestTimestamp: new Date().toISOString(),
       ExpiryTime: (Math.floor(+new Date() / 1000) + TTL_DELTA)
@@ -305,7 +304,7 @@ export async function checkCooldownForUpdate(
 export async function makeBatchNotifyRequest(
   logger: Logger,
   routingPlanId: string,
-  data: Array<NotifyDataItem>
+  data: Array<NotifyDataItemMessage>
 ): Promise<Array<NotifyDataItemMessage>> {
   if (!NOTIFY_API_BASE_URL) throw new Error("NOTIFY_API_BASE_URL is not defined in the environment variables!")
   if (!API_KEY) throw new Error("API_KEY is not defined in the environment variables!")
@@ -317,35 +316,16 @@ export async function makeBatchNotifyRequest(
   const MAX_ITEMS = 45000
   const MAX_BYTES = 5 * 1024 * 1024 // 5 MB
 
-  // Estimate payload size
-  // Rough estimate based on JSON length of the items array
-  const estimateSize = (items: Array<NotifyDataItem>) => {
-    return Buffer.byteLength(JSON.stringify(items), "utf8")
-  }
-
-  // Recursive split if too large
-  if (data.length > MAX_ITEMS || estimateSize(data) > MAX_BYTES) {
-    const mid = Math.floor(data.length / 2)
-    const firstHalf = data.slice(0, mid)
-    const secondHalf = data.slice(mid)
-    // send both halves in parallel
-    const [res1, res2] = await Promise.all([
-      makeBatchNotifyRequest(logger, routingPlanId, firstHalf),
-      makeBatchNotifyRequest(logger, routingPlanId, secondHalf)
-    ])
-    return [...res1, ...res2]
-  }
-
-  logger.info("Making a request for notifications to NHS notify", {count: data.length, routingPlanId})
-
   // Shared between all messages in this batch
   const messageBatchReference = v4()
 
   // Map the NotifyDataItems into the structure needed for notify
   const messages = data.map(item => ({
-    messageReference: item.TaskID,
-    recipient: {nhsNumber: item.PatientNHSNumber},
-    originator: {odsCode: item.PharmacyODSCode},
+    // The message reference has to be unique for all messages in the batch.
+    // The dedupe ID should work here.
+    messageReference: item.Attributes?.MessageDeduplicationId,
+    recipient: {nhsNumber: item.PSUDataItem.PatientNHSNumber},
+    originator: {odsCode: item.PSUDataItem.PharmacyODSCode},
     personalisation: {}
   }))
 
@@ -360,10 +340,32 @@ export async function makeBatchNotifyRequest(
     }
   }
 
+  const estimateSize = (obj: unknown) => {
+    return Buffer.byteLength(JSON.stringify(obj), "utf8")
+  }
+
+  // Recursive split if too large
+  if (data.length >= MAX_ITEMS || estimateSize(body) > MAX_BYTES) {
+    logger.info("Received a large payload - splitting in half and trying again",
+      {messageCount: data.length, estimatedSize: estimateSize(body)}
+    )
+    const mid = Math.floor(data.length / 2)
+    const firstHalf = data.slice(0, mid)
+    const secondHalf = data.slice(mid)
+    // send both halves in parallel
+    const [res1, res2] = await Promise.all([
+      makeBatchNotifyRequest(logger, routingPlanId, firstHalf),
+      makeBatchNotifyRequest(logger, routingPlanId, secondHalf)
+    ])
+    return [...res1, ...res2]
+  }
+
+  logger.info("Making a request for notifications to NHS notify", {count: data.length, routingPlanId})
+
   const url = `${NOTIFY_API_BASE_URL}/v1/message-batches`
 
   try {
-    logger.info("Making NHS Notify request", {body})
+    logger.info("Making NHS Notify request", {})
     const resp = await fetch(url, {
       method: "POST",
       headers: {
@@ -376,16 +378,22 @@ export async function makeBatchNotifyRequest(
     if (resp.ok) {
       const respBody = (await resp.json()) as CreateMessageBatchResponse
       const returnedMessages = respBody.data.attributes.messages
-      logger.info("Requested notifications OK!", {respBody})
+      logger.info("Requested notifications OK!",
+        {
+          messageBatchReference,
+          messageReferences: messages.map(e => e.messageReference),
+          success: "Requested Success"
+        }
+      )
 
       // Map each input item to a NotifyDataItemMessage, marking success and attaching the notify ID
       return data.map(item => {
         const match = returnedMessages.find(
-          m => m.messageReference === item.TaskID
+          m => m.messageReference === item.Attributes?.MessageDeduplicationId
         )
 
         return {
-          PSUDataItem: item,
+          PSUDataItem: item.PSUDataItem,
           success: !!match,
           notifyMessageId: match?.id
         }
@@ -393,11 +401,14 @@ export async function makeBatchNotifyRequest(
     } else {
       logger.error("Notify batch request failed", {
         status: resp.status,
-        statusText: resp.statusText
+        statusText: resp.statusText,
+        messageBatchReference,
+        messageReferences: messages.map(e => e.messageReference),
+        success: "Requested Failed"
       })
 
       return data.map(item => ({
-        PSUDataItem: item,
+        PSUDataItem: item.PSUDataItem,
         success: false,
         notifyMessageId: undefined
       }))
@@ -406,7 +417,7 @@ export async function makeBatchNotifyRequest(
     logger.error("Error sending notify batch", {error: err})
 
     return data.map(item => ({
-      PSUDataItem: item,
+      PSUDataItem: item.PSUDataItem,
       success: false,
       notifyMessageId: undefined
     }))
