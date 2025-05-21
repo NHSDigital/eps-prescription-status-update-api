@@ -33,10 +33,9 @@ Conditions:
     - !Ref EnableDynamoDBAutoScaling
 
 Resources:
-
-#---------------------#
-#    Common things    #
-#---------------------#
+  #---------------------#
+  #    Common things    #
+  #---------------------#
 
   DynamoDbScalingRolePolicy:
     Type: AWS::IAM::ManagedPolicy
@@ -80,10 +79,9 @@ Resources:
       ManagedPolicyArns:
         - !Ref DynamoDbScalingRolePolicy
 
-
-#-----------------------------------------#
-#    Prescription Status Updates Table    #
-#-----------------------------------------#
+  #-----------------------------------------#
+  #    Prescription Status Updates Table    #
+  #-----------------------------------------#
 
   PrescriptionStatusUpdatesKMSKey:
     Type: AWS::KMS::Key
@@ -200,6 +198,11 @@ Resources:
             - ReadCapacityUnits: 1
               WriteCapacityUnits: !Ref MinWritePrescriptionStatusUpdatesCapacity
             - !Ref "AWS::NoValue"
+      Tags:
+        - Key: "enable"
+          Value: "True"
+        - Key: "selection-tag"
+          Value: "NHSE-Enable-Backup"
 
   PrescriptionStatusUpdatesResources:
     Type: AWS::Serverless::Application
@@ -366,10 +369,9 @@ Resources:
         PredefinedMetricSpecification:
           PredefinedMetricType: DynamoDBReadCapacityUtilization
 
-
-#--------------------------------#
-#    Notification State Table    #
-#--------------------------------#
+  #--------------------------------#
+  #    Notification State Table    #
+  #--------------------------------#
 
   PrescriptionNotificationStatesKMSKey:
     Type: AWS::KMS::Key
@@ -446,9 +448,9 @@ Resources:
             - !Ref "AWS::NoValue"
       KeySchema:
         - AttributeName: NHSNumber
-          KeyType: HASH       # Partition key!
+          KeyType: HASH # Partition key!
         - AttributeName: ODSCode
-          KeyType: RANGE      # Sort key
+          KeyType: RANGE # Sort key
       BillingMode: !If
         - EnableDynamoDBAutoScalingCondition
         - PROVISIONED
@@ -465,6 +467,11 @@ Resources:
       TimeToLiveSpecification:
         AttributeName: ExpiryTime
         Enabled: true
+      Tags:
+        - Key: "enable"
+          Value: "True"
+        - Key: "selection-tag"
+          Value: "NHSE-Enable-Backup"
 
   PrescriptionNotificationStatesResources:
     Type: AWS::Serverless::Application
@@ -536,7 +543,7 @@ Outputs:
   PrescriptionStatusUpdatesTableArn:
     Description: PrescriptionStatusUpdates table arn
     Value: !GetAtt PrescriptionStatusUpdatesTable.Arn
-    
+
   UsePrescriptionStatusUpdatesKMSKeyPolicyArn:
     Description: Use kms key policy arn
     Value: !GetAtt UsePrescriptionStatusUpdatesKMSKeyPolicy.PolicyArn
