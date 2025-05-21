@@ -14,7 +14,7 @@ import {v4} from "uuid"
 import {CreateMessageBatchResponse} from "./types"
 
 const NOTIFY_API_BASE_URL = process.env.NOTIFY_API_BASE_URL
-const NOTIFY_API_TOKEN = process.env.NOTIFY_API_TOKEN
+const API_KEY = process.env.API_KEY
 
 const TTL_DELTA = 60 * 60 * 24 * 7 // Keep records for a week
 
@@ -308,7 +308,7 @@ export async function makeBatchNotifyRequest(
   data: Array<NotifyDataItem>
 ): Promise<Array<NotifyDataItemMessage>> {
   if (!NOTIFY_API_BASE_URL) throw new Error("NOTIFY_API_BASE_URL is not defined in the environment variables!")
-  if (!NOTIFY_API_TOKEN) throw new Error("NOTIFY_API_TOKEN is not defined in the environment variables!")
+  if (!API_KEY) throw new Error("API_TOKEN is not defined in the environment variables!")
 
   const MAX_ITEMS = 45000
   const MAX_BYTES = 5 * 1024 * 1024 // 5 MB
@@ -364,7 +364,7 @@ export async function makeBatchNotifyRequest(
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${NOTIFY_API_TOKEN}`
+        Authorization: `Bearer ${API_KEY}`
       },
       body: JSON.stringify(body)
     })
