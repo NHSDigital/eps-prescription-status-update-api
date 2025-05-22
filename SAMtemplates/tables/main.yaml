@@ -246,7 +246,7 @@ Resources:
       Path: /
       # IMPORTANT - UPDATE PERMISSIONS TO ALIGN TO YOUR RESTORE TESTING
       ManagedPolicyArns:
-        - arn:aws:iam::aws:policy/AWSBackupServiceRolePolicyForRestores
+        - arn:aws:iam::aws:policy/service-role/AWSBackupServiceRolePolicyForRestores
         - !Ref RestoreTestingPolicy
 
   PrescriptionStatusUpdatesTableTestingPlan:
