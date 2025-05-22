@@ -446,7 +446,7 @@ Resources:
   PsuRestoreValidationPolicy:
     Type: AWS::IAM::ManagedPolicy
     Properties:
-      ManagedPolicyName: !Sub ${StackName}-NHSNotifyPrescriptionsSendMessagePolicy
+      ManagedPolicyName: !Sub ${StackName}-PsuRestoreValidationPolicy
       PolicyDocument:
         Version: "2012-10-17"
         Statement:
