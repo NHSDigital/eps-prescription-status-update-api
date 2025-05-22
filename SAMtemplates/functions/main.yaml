@@ -41,7 +41,7 @@ Parameters:
 
   BlockedSiteODSCodesParam:
     Type: AWS::SSM::Parameter::Value<String>
-    
+
   LogLevel:
     Type: String
 
@@ -61,6 +61,9 @@ Parameters:
     Type: String
 
   Environment:
+    Type: String
+
+  PrescriptionStatusUpdatesTableTestingPlanArn:
     Type: String
 
 Conditions:
@@ -405,9 +408,9 @@ Resources:
       BuildMethod: esbuild
       guard:
         SuppressedRules:
-        - LAMBDA_DLQ_CHECK
-        - LAMBDA_INSIDE_VPC
-        - LAMBDA_CONCURRENCY_CHECK
+          - LAMBDA_DLQ_CHECK
+          - LAMBDA_INSIDE_VPC
+          - LAMBDA_CONCURRENCY_CHECK
       BuildProperties:
         Minify: true
         Target: es2020
@@ -439,6 +442,91 @@ Resources:
             # - Fn::ImportValue: !Sub ${StackName}:tables:${PrescriptionNotificationStatesTableName}:TableReadPolicyArn
             # - Fn::ImportValue: !Sub ${StackName}:tables:${PrescriptionNotificationStatesTableName}:TableWritePolicyArn
             # - Fn::ImportValue: !Sub ${StackName}:tables:UsePrescriptionNotificationStatesKMSKeyPolicyArn
+
+  PsuRestoreValidationPolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      ManagedPolicyName: !Sub ${StackName}-NHSNotifyPrescriptionsSendMessagePolicy
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Action:
+              - backup:PutRestoreValidationResult
+            Resource: "*"
+
+  PsuRestoreValidation:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub ${StackName}-PsuRestoreValidation
+      CodeUri: ../../packages/
+      Handler: psuRestoreValidationLambda.handler
+      Role: !GetAtt PsuRestoreValidationResources.Outputs.LambdaRoleArn
+      Environment:
+        Variables:
+          LOG_LEVEL: !Ref LogLevel
+    Metadata:
+      BuildMethod: esbuild
+      guard:
+        SuppressedRules:
+          - LAMBDA_DLQ_CHECK
+          - LAMBDA_INSIDE_VPC
+          - LAMBDA_CONCURRENCY_CHECK
+      BuildProperties:
+        Minify: true
+        Target: es2020
+        Sourcemap: true
+        tsconfig: psuRestoreValidationLambda/tsconfig.json
+        packages: bundle
+        EntryPoints:
+          - psuRestoreValidationLambda/src/handler.ts
+
+  PsuRestoreValidationResources:
+    Type: AWS::Serverless::Application
+    Properties:
+      Location: lambda_resources.yaml
+      Parameters:
+        StackName: !Ref StackName
+        LambdaName: !Sub ${StackName}-PsuRestoreValidation
+        LambdaArn: !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:${StackName}-PsuRestoreValidation
+        LogRetentionInDays: !Ref LogRetentionInDays
+        CloudWatchKMSKeyId: !ImportValue account-resources:CloudwatchLogsKmsKeyArn
+        EnableSplunk: !Ref EnableSplunk
+        SplunkSubscriptionFilterRole: !ImportValue lambda-resources:SplunkSubscriptionFilterRole
+        SplunkDeliveryStreamArn: !ImportValue lambda-resources:SplunkDeliveryStream
+        IncludeAdditionalPolicies: true
+        AdditionalPolicies: !Join
+          - ","
+          - - !Ref PsuRestoreValidationPolicy
+
+  PsuRestoreValidationLambdaInvokePermission:
+    DependsOn:
+      - BackupRestoreJobStateChangeRule
+      - RestoreTestingValidationLambda
+    Type: "AWS::Lambda::Permission"
+    Properties:
+      Action: "lambda:InvokeFunction"
+      FunctionName: !GetAtt PsuRestoreValidation.Arn
+      Principal: "events.amazonaws.com"
+      SourceArn: !GetAtt PsuBackupRestoreJobStateChangeRule.Arn
+
+  # EventBridge Rule for Backup Restore Job State Change
+  PsuBackupRestoreJobStateChangeRule:
+    Type: "AWS::Events::Rule"
+    Properties:
+      EventPattern:
+        source:
+          - "aws.backup"
+        detail-type:
+          - "Restore Job State Change"
+        detail:
+          resourceType:
+            - "DynamoDB"
+          status:
+            - "COMPLETED"
+      Targets:
+        - Arn: !GetAtt PsuRestoreValidation.Arn
+          Id: "RestoreTestingValidationFunction"
 
 Outputs:
   UpdatePrescriptionStatusFunctionName:

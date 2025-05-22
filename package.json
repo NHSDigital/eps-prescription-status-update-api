@@ -23,6 +23,7 @@
     "packages/cpsuLambda",
     "packages/checkPrescriptionStatusUpdates",
     "packages/nhsNotifyLambda",
+    "packages/psuRestoreValidationLambda",
     "packages/common/testing",
     "packages/common/middyErrorHandler",
     "packages/common/commonTypes"

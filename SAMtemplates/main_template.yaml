@@ -153,7 +153,8 @@ Resources:
         VersionNumber: !Ref VersionNumber
         CommitId: !Ref CommitId
         DeployCheckPrescriptionStatusUpdate: !Ref DeployCheckPrescriptionStatusUpdate
-        Environment: !Ref Environment
+        Environment: !Ref
+        PrescriptionStatusUpdatesTableTestingPlanArn: !GetAtt Tables.Outputs.PrescriptionStatusUpdatesTableTestingPlanArn
 
   StateMachines:
     Type: AWS::Serverless::Application
