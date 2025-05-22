@@ -259,7 +259,7 @@ Resources:
         RecoveryPointTypes:
           - SNAPSHOT
       RestoreTestingPlanName: PrescriptionStatusUpdatesBackupRestoreTest
-      ScheduleExpression: 0 5 ? * * *
+      ScheduleExpression: cron(10 41 * * ? *)
 
   PrescriptionStatusUpdatesTableTestingSelection:
     Type: AWS::Backup::RestoreTestingSelection
