@@ -258,7 +258,7 @@ Resources:
           - "*"
         RecoveryPointTypes:
           - SNAPSHOT
-      RestoreTestingPlanName: !Sub ${StackName}-PrescriptionStatusUpdates
+      RestoreTestingPlanName: PrescriptionStatusUpdatesBackupRestoreTest
       ScheduleExpression: 0 5 ? * * *
 
   PrescriptionStatusUpdatesTableTestingSelection:
@@ -275,7 +275,7 @@ Resources:
             Value: PrescriptionStatusUpdates
       ProtectedResourceType: DynamoDB
       RestoreTestingPlanName: !Ref PrescriptionStatusUpdatesTableTestingPlan
-      RestoreTestingSelectionName: !Sub ${StackName}-PrescriptionStatusUpdates-Selection
+      RestoreTestingSelectionName: PrescriptionStatusUpdatesBackupRestoreTestSelection
       ValidationWindowHours: 12
 
   PrescriptionStatusUpdatesResources:
