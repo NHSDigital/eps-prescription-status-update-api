@@ -259,7 +259,7 @@ Resources:
         RecoveryPointTypes:
           - SNAPSHOT
       RestoreTestingPlanName: PrescriptionStatusUpdatesBackupRestoreTest
-      ScheduleExpression: cron(51 10 * * ? *)
+      ScheduleExpression: cron(00 14 * * ? *)
 
   PrescriptionStatusUpdatesTableTestingSelection:
     Type: AWS::Backup::RestoreTestingSelection
@@ -275,7 +275,7 @@ Resources:
             Value: PrescriptionStatusUpdates
       ProtectedResourceType: DynamoDB
       RestoreTestingPlanName: !Ref PrescriptionStatusUpdatesTableTestingPlan
-      RestoreTestingSelectionName: PrescriptionStatusUpdatesBackupRestoreTestSelection
+      RestoreTestingSelectionName: PSUBackupRestoreTestSelection
       ValidationWindowHours: 12
 
   PrescriptionStatusUpdatesResources:
