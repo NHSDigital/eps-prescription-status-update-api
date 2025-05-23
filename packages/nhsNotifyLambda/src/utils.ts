@@ -16,7 +16,7 @@ import {CreateMessageBatchResponse} from "./types"
 const NOTIFY_API_BASE_URL = process.env.NOTIFY_API_BASE_URL
 const API_KEY = process.env.API_KEY
 
-const TTL_DELTA = 60 * 60 * 24 * 7 // Keep records for a week
+const TTL_DELTA = 60 * 60 * 24 * 14 // Keep records for 2 weeks
 
 const dynamoTable = process.env.TABLE_NAME
 const sqsUrl = process.env.NHS_NOTIFY_PRESCRIPTIONS_SQS_QUEUE_URL
@@ -42,6 +42,7 @@ function chunkArray<T>(arr: Array<T>, size: number): Array<Array<T>> {
 }
 
 // This is an extension of the SQS message interface, which explicitly parses the PSUDataItem
+// and helps track the nhs notify results
 export interface NotifyDataItemMessage extends Message {
   PSUDataItem: NotifyDataItem
   success?: boolean
@@ -49,9 +50,11 @@ export interface NotifyDataItemMessage extends Message {
 }
 
 /**
- * Pulls up to `maxTotal` messages off the queue (in batches of up to 10),
- * logs them, and returns:
- *  - messages: the array of parsed NotifyDataItemMessage
+ * Pulls up to `maxTotal` messages off the queue (in batches of up to 10) and bundles them together.
+ * @param logger - The AWS logging object
+ * @param maxTotal - The maximum number of messages to fetch. Guaranteed to be less than this.
+ * @returns
+ *  - messages the array of parsed NotifyDataItemMessage
  *  - isEmpty: true if the last receive returned fewer than 5 messages (or none),
  *             indicating the queue is effectively drained.
  */
@@ -77,8 +80,11 @@ export async function drainQueue(
     const receiveCmd = new ReceiveMessageCommand({
       QueueUrl: sqsUrl,
       MaxNumberOfMessages: toFetch,
-      WaitTimeSeconds: 20, // Use long polling to avoid getting empty responses when the queue is small
-      // Request the deduplication ID as system attributes:
+      // Use long polling to avoid getting empty responses when the queue is small
+      // If the queue is large enough to easily supply the requested number of messages,
+      // the fetch does not wait the whole 20 seconds, so this is not a bottleneck for high
+      // traffic periods.
+      WaitTimeSeconds: 20,
       MessageSystemAttributeNames: ["MessageDeduplicationId"],
       MessageAttributeNames: ["All"]
     })
@@ -115,6 +121,10 @@ export async function drainQueue(
     })
 
     // Ensure each message has a unique, populated deduplication ID
+    // Where two messages have the same deduplication ID (i.e. they have the same
+    // NHS number and ODS code), only keep the first one.
+    // Note that this may happen for cases where the queue is not processed for over 5
+    // minutes, and two updates are submitted for a patient after that time has passed.
     const uniqueMessages: Array<NotifyDataItemMessage> = []
     for (const msg of parsedMessages) {
       const dedupId = msg.Attributes?.MessageDeduplicationId
@@ -312,6 +322,13 @@ export async function checkCooldownForUpdate(
   }
 }
 
+const estimateSize = (obj: unknown) => {
+  return Buffer.byteLength(JSON.stringify(obj), "utf8")
+}
+
+const MAX_ITEMS = 45000
+const MAX_BYTES = 5 * 1024 * 1024 // 5 MB
+
 /**
  * Returns the original data, updated with the status returned by NHS notify.
  *
@@ -330,9 +347,6 @@ export async function makeBatchNotifyRequest(
   if (data.length === 0) {
     return []
   }
-
-  const MAX_ITEMS = 45000
-  const MAX_BYTES = 5 * 1024 * 1024 // 5 MB
 
   // Shared between all messages in this batch
   const messageBatchReference = v4()
@@ -358,10 +372,6 @@ export async function makeBatchNotifyRequest(
     }
   }
 
-  const estimateSize = (obj: unknown) => {
-    return Buffer.byteLength(JSON.stringify(obj), "utf8")
-  }
-
   // Recursive split if too large
   if (data.length >= MAX_ITEMS || estimateSize(body) > MAX_BYTES) {
     logger.info("Received a large payload - splitting in half and trying again",
@@ -383,7 +393,6 @@ export async function makeBatchNotifyRequest(
   const url = `${NOTIFY_API_BASE_URL}/v1/message-batches`
 
   try {
-    logger.info("Making NHS Notify request", {})
     const resp = await fetch(url, {
       method: "POST",
       headers: {
@@ -416,6 +425,16 @@ export async function makeBatchNotifyRequest(
           notifyMessageId: match?.id
         }
       })
+
+    } else if (resp.status === 425 || resp.status === 429) {
+      const retryAfter = parseInt(resp.headers.get("Retry-After") ?? "30") * 1000
+      logger.warn("Received rate limit; retrying after delay", {retryAfter})
+      // When recursion is confirmed to be working, I'll uncomment this chunk. But not until I've checked it works!
+      // await new Promise(resolve => setTimeout(resolve, retryAfter))
+      // logger.info("Delay done, retrying now", {retryAfter})
+      const newRequest = await makeBatchNotifyRequest(logger, routingPlanId, data)
+      return newRequest
+
     } else {
       logger.error("Notify batch request failed", {
         status: resp.status,
@@ -424,12 +443,7 @@ export async function makeBatchNotifyRequest(
         messageReferences: messages.map(e => e.messageReference),
         success: "Requested Failed"
       })
-
-      return data.map(item => ({
-        PSUDataItem: item.PSUDataItem,
-        success: false,
-        notifyMessageId: undefined
-      }))
+      throw new Error("Notify batch request failed")
     }
   } catch (err) {
     logger.error("Error sending notify batch", {error: err})

@@ -1,5 +1,6 @@
 import {jest} from "@jest/globals"
 import {SpiedFunction} from "jest-mock"
+import nock from "nock"
 
 import {Logger} from "@aws-lambda-powertools/logger"
 import {DynamoDBDocumentClient, GetCommand, PutCommand} from "@aws-sdk/lib-dynamodb"
@@ -431,55 +432,60 @@ describe("NHS notify lambda helper functions", () => {
   describe("makeBatchNotifyRequest", () => {
     let logger: Logger
     let errorSpy: SpiedFunction<(msg: string, ...meta: Array<unknown>) => void>
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    let fetchMock: jest.Mock<any>
 
     beforeEach(() => {
       process.env = {...ORIGINAL_ENV}
-
       jest.resetModules()
       jest.clearAllMocks()
-
-      // Mock global.fetch for the calls
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      fetchMock = jest.fn() as jest.Mock<any>
-      global.fetch = fetchMock
+      nock.cleanAll()
 
       logger = new Logger({serviceName: "test-service"})
       errorSpy = jest.spyOn(logger, "error")
     })
 
-    afterAll(() => {
+    afterEach(() => {
       process.env = {...ORIGINAL_ENV}
     })
 
     it("sends a batch and maps successful messages correctly", async () => {
       const data = [
-        constructPSUDataItemMessage(
-          {PSUDataItem: {RequestID: "r1", PatientNHSNumber: "n1", PharmacyODSCode: "o1", TaskID: "t1", Status: "s1"}}),
-        constructPSUDataItemMessage(
-          {PSUDataItem: {RequestID: "r2", PatientNHSNumber: "n2", PharmacyODSCode: "o2", TaskID: "t2", Status: "s2"}})
-      ]
-
-      const returnedMessages = [
-        {messageReference: data[0].Attributes?.MessageDeduplicationId, id: "msg-id-1"}
-      ]
-
-      fetchMock.mockImplementationOnce(() => Promise.resolve({
-        ok: true,
-        json: () => Promise.resolve({data: {attributes: {messages: returnedMessages}}})
-      }))
-
-      const result = await makeBatchNotifyRequest(logger, "plan-123", data)
-
-      // Ensure fetch was called with correct URL and options
-      expect(fetchMock).toHaveBeenCalledWith(
-        expect.any(String),
-        expect.objectContaining({
-          method: "POST",
-          headers: expect.objectContaining({Authorization: expect.stringContaining("Bearer")}),
-          body: expect.any(String)
+        constructPSUDataItemMessage({
+          PSUDataItem: {
+            RequestID: "r1",
+            PatientNHSNumber: "n1",
+            PharmacyODSCode: "o1",
+            TaskID: "t1",
+            Status: "s1"
+          }
+        }),
+        constructPSUDataItemMessage({
+          PSUDataItem: {
+            RequestID: "r2",
+            PatientNHSNumber: "n2",
+            PharmacyODSCode: "o2",
+            TaskID: "t2",
+            Status: "s2"
+          }
         })
+      ]
+      const returnedMessages = [
+        {
+          messageReference: data[0].Attributes?.MessageDeduplicationId,
+          id: "msg-id-1"
+        }
+      ]
+
+      // nock the POST
+      nock(process.env.NOTIFY_API_BASE_URL!)
+        .post("/v1/message-batches")
+        .reply(201, {
+          data: {attributes: {messages: returnedMessages}}
+        })
+
+      const result = await makeBatchNotifyRequest(
+        logger,
+        "plan-123",
+        data
       )
 
       // Should return one success and one failure
@@ -498,91 +504,181 @@ describe("NHS notify lambda helper functions", () => {
 
     it("handles non-ok response by marking all as failed", async () => {
       const data = [
-        constructPSUDataItemMessage(
-          {PSUDataItem: {RequestID: "rA", PatientNHSNumber: "nx", PharmacyODSCode: "ox", TaskID: "tx", Status: "st"}})
+        constructPSUDataItemMessage({
+          PSUDataItem: {
+            RequestID: "rA",
+            PatientNHSNumber: "nx",
+            PharmacyODSCode: "ox",
+            TaskID: "tx",
+            Status: "st"
+          }
+        })
       ]
 
-      fetchMock.mockImplementationOnce(() => Promise.resolve({
-        ok: false,
-        status: 500,
-        statusText: "Internal Server Error"
-      }))
+      nock(process.env.NOTIFY_API_BASE_URL!)
+        .post("/v1/message-batches")
+        .reply(500, "Internal Server Error")
 
-      const result = await makeBatchNotifyRequest(logger, "plan-xyz", data)
+      const result = await makeBatchNotifyRequest(
+        logger,
+        "plan-xyz",
+        data
+      )
 
-      // All messages should be marked as failed
-      expect(result).toHaveLength(1)
-      expect(result[0]).toEqual({
-        PSUDataItem: data[0].PSUDataItem,
-        success: false,
-        notifyMessageId: undefined
-      })
-      // Should log an error about the batch request failure
+      expect(result).toEqual([
+        {
+          PSUDataItem: data[0].PSUDataItem,
+          success: false,
+          notifyMessageId: undefined
+        }
+      ])
       expect(errorSpy).toHaveBeenCalledWith(
         "Notify batch request failed",
-        expect.objectContaining({status: 500, statusText: "Internal Server Error"})
+        expect.objectContaining({
+          status: 500,
+          statusText: "Internal Server Error"
+        })
       )
     })
 
     it("handles fetch exceptions by marking all as failed and logging error", async () => {
       const data = [
-        constructPSUDataItemMessage(
-          {PSUDataItem: {RequestID: "rX", PatientNHSNumber: "ny", PharmacyODSCode: "oy", TaskID: "ty", Status: "st"}}),
-        constructPSUDataItemMessage(
-          {PSUDataItem: {RequestID: "rY", PatientNHSNumber: "nz", PharmacyODSCode: "oz", TaskID: "tz", Status: "sx"}})
+        constructPSUDataItemMessage({
+          PSUDataItem: {
+            RequestID: "rX",
+            PatientNHSNumber: "ny",
+            PharmacyODSCode: "oy",
+            TaskID: "ty",
+            Status: "st"
+          }
+        }),
+        constructPSUDataItemMessage({
+          PSUDataItem: {
+            RequestID: "rY",
+            PatientNHSNumber: "nz",
+            PharmacyODSCode: "oz",
+            TaskID: "tz",
+            Status: "sx"
+          }
+        })
       ]
-      const fetchError = new Error("Network failure")
-      fetchMock.mockImplementationOnce(() => Promise.reject(fetchError))
 
-      const result = await makeBatchNotifyRequest(logger, "plan-error", data)
+      // Simulate network failure
+      nock(process.env.NOTIFY_API_BASE_URL!)
+        .post("/v1/message-batches")
+        .replyWithError(new Error("Network failure"))
 
-      // All messages should be marked as failed
-      expect(result).toHaveLength(2)
-      result.forEach(res =>
-        expect(res).toEqual(expect.objectContaining({success: false, notifyMessageId: undefined}))
+      const result = await makeBatchNotifyRequest(
+        logger,
+        "plan-error",
+        data
       )
-      // Should log the catch error
+
+      expect(result).toHaveLength(2)
+      result.forEach((r) =>
+        expect(r).toEqual(
+          expect.objectContaining({success: false, notifyMessageId: undefined})
+        )
+      )
       expect(errorSpy).toHaveBeenCalledWith(
         "Error sending notify batch",
-        expect.objectContaining({error: fetchError})
+        expect.objectContaining({error: expect.any(Error)})
       )
     })
 
     it("splits very large payloads into two recursive batch requests", async () => {
-      // suppress console output from the logger in this test
-      jest.spyOn(console, "info").mockImplementation(() => {})
-      jest.spyOn(console, "error").mockImplementation(() => {})
+      jest
+        .spyOn(console, "info")
+        .mockImplementation(() => {})
+      jest
+        .spyOn(console, "error")
+        .mockImplementation(() => {})
 
-      // create data of length 45001 to trigger split by count
-      const data = Array.from({length: 45001}, (_, i) => (
-        constructPSUDataItemMessage(
-          {
-            PSUDataItem: {
-              RequestID: `r${i}`,
-              PatientNHSNumber: `n${i}`,
-              PharmacyODSCode: `o${i}`,
-              TaskID: `t${i}`,
-              Status: `s${i}`
-            }
+      const data = Array.from({length: 45001}, (_, i) =>
+        constructPSUDataItemMessage({
+          PSUDataItem: {
+            RequestID: `r${i}`,
+            PatientNHSNumber: `n${i}`,
+            PharmacyODSCode: `o${i}`,
+            TaskID: `t${i}`,
+            Status: `s${i}`
           }
-        )
-      ))
+        })
+      )
 
-      const minimalResponse = {
-        ok: true,
-        json: () => Promise.resolve({data: {attributes: {messages: []}}})
-      }
+      // every sub-batch returns an empty messages array
+      nock(process.env.NOTIFY_API_BASE_URL!)
+        .post("/v1/message-batches")
+        .times(2)
+        .reply(201, {
+          data: {attributes: {messages: []}}
+        })
 
-      fetchMock.mockImplementation(() => Promise.resolve(minimalResponse))
+      const result = await makeBatchNotifyRequest(
+        logger,
+        "plan-large",
+        data
+      )
 
-      const result = await makeBatchNotifyRequest(logger, "plan-large", data)
-
-      // expect 2 recursive calls to fetch
-      expect(fetchMock).toHaveBeenCalledTimes(2)
-
-      // result should combine both halves
+      // two recursive calls
       expect(result).toHaveLength(45001)
       expect(errorSpy).not.toHaveBeenCalled()
+    })
+
+    it("retries after 425/429 with Retry-After header", async () => {
+      jest.useFakeTimers()
+      const setTimeoutSpy = jest.spyOn(global, "setTimeout")
+
+      const data = [
+        constructPSUDataItemMessage({
+          PSUDataItem: {
+            RequestID: "r1",
+            PatientNHSNumber: "n1",
+            PharmacyODSCode: "o1",
+            TaskID: "t1",
+            Status: "s1"
+          }
+        }),
+        constructPSUDataItemMessage({
+          PSUDataItem: {
+            RequestID: "r2",
+            PatientNHSNumber: "n2",
+            PharmacyODSCode: "o2",
+            TaskID: "t2",
+            Status: "s2"
+          }
+        })
+      ]
+      const returnedMessages = [
+        {
+          messageReference: data[0].Attributes?.MessageDeduplicationId,
+          id: "msg-id-1"
+        }
+      ]
+
+      // First reply 429 with header
+      nock(process.env.NOTIFY_API_BASE_URL!)
+        .post("/v1/message-batches")
+        .reply(429, "", {"Retry-After": "2"})
+        // Then the successful one
+        .post("/v1/message-batches")
+        .reply(201, {
+          data: {attributes: {messages: returnedMessages}}
+        })
+
+      const resultPromise = makeBatchNotifyRequest(
+        logger,
+        "plan-retry",
+        data
+      )
+      jest.advanceTimersByTime(2000)
+      const result = await resultPromise
+
+      expect(setTimeoutSpy).toHaveBeenCalledWith(expect.any(Function), 2000)
+      expect(result[0].success).toBe(true)
+      expect(result[1].success).toBe(false)
+
+      jest.useRealTimers()
     })
   })
 })

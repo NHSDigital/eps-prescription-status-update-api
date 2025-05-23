@@ -19,11 +19,12 @@
     "@aws-lambda-powertools/parameters": "^2.20.0",
     "@middy/core": "^6.2.3",
     "@middy/input-output-logger": "^6.3.0",
-    "@nhs/fhir-middy-error-handler": "^2.1.31",
+    "@nhs/fhir-middy-error-handler": "^2.1.32",
     "axios": "^1.8.4"
   },
   "devDependencies": {
     "@PrescriptionStatusUpdate_common/testing": "^1.0.0",
-    "axios-mock-adapter": "^2.1.0"
+    "axios-mock-adapter": "^2.1.0",
+    "nock": "^14.0.4"
   }
 }
