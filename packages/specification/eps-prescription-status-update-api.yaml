@@ -294,8 +294,9 @@ paths:
   /notification-delivery-status-callback:
     post:
       operationId: prescription-status-update-notification-delivery-status-callback
-      summary: Prescription status update notification delivery status callback
+      summary: "[Internal] Prescription status update notification delivery status callback"
       description: |
+        ## This endpoint is for internal usage only
         ## Overview
         This endpoint provides a callback for the NHS notifications service to update the
         Prescription Status Update API on the delivery status of requested notifications.
@@ -321,12 +322,17 @@ paths:
       responses:
         "202":
           description: Successfully updated notification delivery status
-        "401":
-          description: Unauthorised
-        "403":
-          description: Forbidden
-        "429":
-          description: Rate limit - request for the client to slow down.
+        4XX:
+          description: |
+            An error occurred as follows:
+            | HTTP status | Error code          | Description                                                                                                                               |
+            | ----------- | ------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
+            | 401         | `unauthorised`      | Missing or invalid OAuth 2.0 bearer token in request,                                                                                     |
+            | 403         | `forbidden`         | Supplied signature was incorrect.                                                                                                         |
+            | 429         | `throttled`         | You have exceeded your application's [rate limit](https://digital.nhs.uk/developer/guides-and-documentation/reference-guide#rate-limits). |
+
+      security:
+        - app-level3: []
 
 components:
   securitySchemes:
