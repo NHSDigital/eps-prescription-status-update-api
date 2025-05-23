@@ -327,7 +327,7 @@ paths:
             An error occurred as follows:
             | HTTP status | Error code          | Description                                                                                                                               |
             | ----------- | ------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
-            | 401         | `unauthorised`      | Missing or invalid OAuth 2.0 bearer token in request,                                                                                     |
+            | 401         | `unauthorised`      | Missing or invalid OAuth 2.0 bearer token in request                                                                                      |
             | 403         | `forbidden`         | Supplied signature was incorrect.                                                                                                         |
             | 429         | `throttled`         | You have exceeded your application's [rate limit](https://digital.nhs.uk/developer/guides-and-documentation/reference-guide#rate-limits). |
 
