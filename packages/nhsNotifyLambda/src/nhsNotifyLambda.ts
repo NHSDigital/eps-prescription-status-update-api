@@ -77,15 +77,6 @@ export const lambdaHandler = async (event: EventBridgeEvent<string, string>): Pr
       await removeSQSMessages(logger, suppressed)
     }
 
-    // Just for diagnostics for now
-    const toNotify = toProcess
-      .map((m) => ({
-        RequestID: m.PSUDataItem.RequestID,
-        TaskId: m.PSUDataItem.TaskID,
-        Message: "Notification Required"
-      }))
-    logger.info("Fetched prescription notification messages", {count: toNotify.length, toNotify})
-
     // Make the request. If it's successful, add the relevant messages to the list of processed messages.
     const processed: Array<NotifyDataItemMessage> = []
     if (!NHS_NOTIFY_ROUTING_ID) throw new Error("NHS_NOTIFY_ROUTING_ID environment variable not set.")

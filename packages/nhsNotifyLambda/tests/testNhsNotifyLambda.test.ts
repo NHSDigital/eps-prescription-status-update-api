@@ -94,18 +94,6 @@ describe("Unit test for NHS Notify lambda handler", () => {
     expect(mockCheckCooldownForUpdate).toHaveBeenCalledTimes(2)
     expect(mockMakeBatchNotifyRequest).toHaveBeenCalledTimes(1)
 
-    // ensure we logged the fetched notifications
-    expect(mockInfo).toHaveBeenCalledWith(
-      "Fetched prescription notification messages",
-      {
-        count: 2,
-        toNotify: [
-          {RequestID: "r1", TaskId: "t1", Message: "Notification Required"},
-          {RequestID: "r2", TaskId: "t2", Message: "Notification Required"}
-        ]
-      }
-    )
-
     // ensure removeSQSMessages was called with the original messages array
     expect(mockRemoveSQSMessages).toHaveBeenCalledWith(
       expect.any(Object), // the logger instance
@@ -184,19 +172,6 @@ describe("Unit test for NHS Notify lambda handler", () => {
     await expect(lambdaHandler(mockEventBridgeEvent)).resolves.not.toThrow()
 
     expect(mockError).not.toHaveBeenCalled()
-    expect(mockInfo).toHaveBeenCalledWith(
-      "Fetched prescription notification messages",
-      {
-        count: 1,
-        toNotify: [
-          {
-            RequestID: "req-1",
-            TaskId: "task-1",
-            Message: "Notification Required"
-          }
-        ]
-      }
-    )
   })
 
   it("Filters out messages inside cooldown", async () => {

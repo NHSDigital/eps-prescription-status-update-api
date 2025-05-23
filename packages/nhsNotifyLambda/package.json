@@ -24,6 +24,7 @@
   },
   "devDependencies": {
     "@PrescriptionStatusUpdate_common/testing": "^1.0.0",
-    "axios-mock-adapter": "^2.1.0"
+    "axios-mock-adapter": "^2.1.0",
+    "nock": "^14.0.4"
   }
 }
