@@ -200,6 +200,8 @@ Resources:
             - !Ref "AWS::NoValue"
       Tags:
         - Key: "EPS-Tablename"
+          Value: "PrescriptionStatusUpdates"
+        - Key: "NHSE-Enable-Backup"
           Value: "True"
 
   RestoreTestingPolicy:
