@@ -1,21 +1,22 @@
 {
-  "name": "@PrescriptionStatusUpdate_common/middyErrorHandler",
+  "name": "psuRestoreValidationLambda",
   "version": "1.0.0",
-  "description": "Common module for a partial middyErrorHandler",
+  "description": "lambda code for validating psu restore",
   "author": "NHS Digital",
   "license": "MIT",
   "main": "lib/src/index.js",
   "type": "module",
   "scripts": {
     "unit": "POWERTOOLS_DEV=true NODE_OPTIONS=--experimental-vm-modules jest --no-cache --coverage",
-    "lint": "eslint  --max-warnings 0 --fix --config ../../../eslint.config.mjs .",
+    "lint": "eslint  --max-warnings 0 --fix --config ../../eslint.config.mjs .",
     "compile": "tsc",
     "test": "npm run compile && npm run unit",
     "check-licenses": "license-checker --failOn GPL --failOn LGPL --start ../.."
   },
   "dependencies": {
     "@aws-lambda-powertools/logger": "^2.20.0",
-    "@aws-sdk/client-backup": "^3.812.0"
+    "@aws-sdk/client-backup": "^3.812.0",
+    "@PrescriptionStatusUpdate_common/middyErrorHandler": "^1.0.0"
   },
   "devDependencies": {
     "@middy/core": "^6.2.3",
