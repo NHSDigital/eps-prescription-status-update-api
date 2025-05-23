@@ -2,8 +2,10 @@ import {jest} from "@jest/globals"
 
 import * as sqs from "@aws-sdk/client-sqs"
 
+import {v4} from "uuid"
+
 import {PSUDataItem} from "@PrescriptionStatusUpdate_common/commonTypes"
-import {PSUDataItemMessage} from "../src/utils"
+import {NotifyDataItemMessage} from "../src/utils"
 
 // Similarly mock the SQS client
 export function mockSQSClient() {
@@ -22,12 +24,15 @@ export function mockSQSClient() {
 export function constructMessage(overrides: Partial<sqs.Message> = {}): sqs.Message {
   return {
     MessageId: "messageId",
+    Attributes: {
+      MessageDeduplicationId: v4()
+    },
     Body: JSON.stringify(constructPSUDataItem()),
     ...overrides
   }
 }
 
-export function constructPSUDataItemMessage(overrides: Partial<PSUDataItemMessage> = {}): PSUDataItemMessage {
+export function constructPSUDataItemMessage(overrides: Partial<NotifyDataItemMessage> = {}): NotifyDataItemMessage {
   return {
     ...constructMessage(),
     PSUDataItem: constructPSUDataItem(),
