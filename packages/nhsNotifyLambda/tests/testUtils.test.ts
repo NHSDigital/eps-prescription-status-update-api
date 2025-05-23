@@ -437,14 +437,13 @@ describe("NHS notify lambda helper functions", () => {
       process.env = {...ORIGINAL_ENV}
       jest.resetModules()
       jest.clearAllMocks()
+      nock.cleanAll()
 
       logger = new Logger({serviceName: "test-service"})
       errorSpy = jest.spyOn(logger, "error")
     })
 
     afterEach(() => {
-    // clean up all nock interceptors
-      nock.cleanAll()
       process.env = {...ORIGINAL_ENV}
     })
 
@@ -479,7 +478,7 @@ describe("NHS notify lambda helper functions", () => {
       // nock the POST
       nock(process.env.NOTIFY_API_BASE_URL!)
         .post("/v1/message-batches")
-        .reply(200, {
+        .reply(201, {
           data: {attributes: {messages: returnedMessages}}
         })
 
@@ -611,7 +610,7 @@ describe("NHS notify lambda helper functions", () => {
       nock(process.env.NOTIFY_API_BASE_URL!)
         .post("/v1/message-batches")
         .times(2)
-        .reply(200, {
+        .reply(201, {
           data: {attributes: {messages: []}}
         })
 
@@ -661,10 +660,9 @@ describe("NHS notify lambda helper functions", () => {
       nock(process.env.NOTIFY_API_BASE_URL!)
         .post("/v1/message-batches")
         .reply(429, "", {"Retry-After": "2"})
-      // Then the successful one
-      nock(process.env.NOTIFY_API_BASE_URL!)
+        // Then the successful one
         .post("/v1/message-batches")
-        .reply(200, {
+        .reply(201, {
           data: {attributes: {messages: returnedMessages}}
         })
 
@@ -673,10 +671,7 @@ describe("NHS notify lambda helper functions", () => {
         "plan-retry",
         data
       )
-
-      // fast-forward
       jest.advanceTimersByTime(2000)
-
       const result = await resultPromise
 
       expect(setTimeoutSpy).toHaveBeenCalledWith(expect.any(Function), 2000)

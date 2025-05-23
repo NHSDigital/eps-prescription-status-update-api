@@ -393,7 +393,6 @@ export async function makeBatchNotifyRequest(
   const url = `${NOTIFY_API_BASE_URL}/v1/message-batches`
 
   try {
-    logger.info("Making NHS Notify request", {})
     const resp = await fetch(url, {
       method: "POST",
       headers: {
@@ -426,15 +425,16 @@ export async function makeBatchNotifyRequest(
           notifyMessageId: match?.id
         }
       })
+
     } else if (resp.status === 425 || resp.status === 429) {
-      // We're making requests too fast. Notify will request a retry delay, so respect that.
-      const retryAfter = parseInt(resp.headers.get("Retry-After") ?? "300", 10) * 1000
-      logger.warn("Received rate limit / too early response; will retry after delay",
-        {status: resp.status, retryAfterMilliseconds: retryAfter}
-      )
-      await new Promise(resolve => setTimeout(resolve, retryAfter))
-      logger.info("Retrying NHS Notify request", {routingPlanId, retryAfterMilliseconds: retryAfter})
-      return makeBatchNotifyRequest(logger, routingPlanId, data)
+      const retryAfter = parseInt(resp.headers.get("Retry-After") ?? "30") * 1000
+      logger.warn("Received rate limit; retrying after delay", {retryAfter})
+      // When recursion is confirmed to be working, I'll uncomment this chunk. But not until I've checked it works!
+      // await new Promise(resolve => setTimeout(resolve, retryAfter))
+      // logger.info("Delay done, retrying now", {retryAfter})
+      const newRequest = await makeBatchNotifyRequest(logger, routingPlanId, data)
+      return newRequest
+
     } else {
       logger.error("Notify batch request failed", {
         status: resp.status,
@@ -443,12 +443,7 @@ export async function makeBatchNotifyRequest(
         messageReferences: messages.map(e => e.messageReference),
         success: "Requested Failed"
       })
-
-      return data.map(item => ({
-        PSUDataItem: item.PSUDataItem,
-        success: false,
-        notifyMessageId: undefined
-      }))
+      throw new Error("Notify batch request failed")
     }
   } catch (err) {
     logger.error("Error sending notify batch", {error: err})
