@@ -460,7 +460,7 @@ Resources:
     Properties:
       FunctionName: !Sub ${StackName}-PsuRestoreValidation
       CodeUri: ../../packages/
-      Handler: psuRestoreValidationLambda.handler
+      Handler: handler.handler
       Role: !GetAtt PsuRestoreValidationResources.Outputs.LambdaRoleArn
       Environment:
         Variables:

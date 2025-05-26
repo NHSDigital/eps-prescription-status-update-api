@@ -40,4 +40,4 @@ export const handler = middy(lambdaHandler)
       }
     })
   )
-  .use(middyErrorHandler({logger: logger}))
+  .use(middyErrorHandler.errorHandler({logger: logger}))
