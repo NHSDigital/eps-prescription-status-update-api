@@ -459,7 +459,7 @@ Resources:
               - dynamodb:Query
               - dynamodb:ConditionCheckItem
               - dynamodb:DescribeTable
-            Resource: "awsbackup-restore-test-*"
+            Resource: !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/awsbackup-restore-test-*
 
   PsuRestoreValidation:
     Type: AWS::Serverless::Function
