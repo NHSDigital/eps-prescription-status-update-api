@@ -204,82 +204,6 @@ Resources:
         - Key: "NHSE-Enable-Backup"
           Value: "True"
 
-  RestoreTestingPolicy:
-    Type: AWS::IAM::ManagedPolicy
-    Properties:
-      ManagedPolicyName: !Sub ${StackName}-RestoreTestingPolicy
-      PolicyDocument:
-        Version: "2012-10-17"
-        Statement:
-          - Sid: BackupActions
-            Effect: Allow
-            Action:
-              - backup:DescribeRecoveryPoint
-              - backup:DescribeRestoreJob
-              - backup:DescribeProtectedResource
-              - backup:GetRecoveryPointRestoreMetadata
-              - backup:ListBackupVaults
-              - backup:ListProtectedResources
-              - backup:ListRecoveryPointsByBackupVault
-              - backup:StartRestoreJob
-            Resource: "*"
-          - Sid: IamPassRole
-            Effect: Allow
-            Action: iam:PassRole
-            Resource: "*"
-            Condition:
-              StringEquals:
-                iam:PassedToService: backup.amazonaws.com
-
-  RestoreTestingRole:
-    Type: "AWS::IAM::Role"
-    Properties:
-      Description: Allows AWS Backup to access AWS services for restore testing.
-      AssumeRolePolicyDocument:
-        Version: 2012-10-17
-        Statement:
-          - Effect: Allow
-            Principal:
-              Service:
-                - restore-testing.backup.amazonaws.com
-                - backup.amazonaws.com
-            Action:
-              - "sts:AssumeRole"
-      Path: /
-      # IMPORTANT - UPDATE PERMISSIONS TO ALIGN TO YOUR RESTORE TESTING
-      ManagedPolicyArns:
-        - arn:aws:iam::aws:policy/service-role/AWSBackupServiceRolePolicyForRestores
-        - !Ref RestoreTestingPolicy
-
-  PrescriptionStatusUpdatesTableTestingPlan:
-    Type: AWS::Backup::RestoreTestingPlan
-    Properties:
-      RecoveryPointSelection:
-        Algorithm: LATEST_WITHIN_WINDOW
-        IncludeVaults:
-          - "*"
-        RecoveryPointTypes:
-          - SNAPSHOT
-      RestoreTestingPlanName: PrescriptionStatusUpdatesBackupRestoreTest
-      ScheduleExpression: cron(00 14 * * ? *)
-
-  PrescriptionStatusUpdatesTableTestingSelection:
-    Type: AWS::Backup::RestoreTestingSelection
-    Properties:
-      IamRoleArn: !GetAtt RestoreTestingRole.Arn
-      ProtectedResourceArns:
-        - "*"
-      ProtectedResourceConditions:
-        StringEquals:
-          - Key: !Sub "aws:ResourceTag/NHSE-Enable-Backup"
-            Value: True
-          - Key: !Sub "aws:ResourceTag/EPS-Tablename"
-            Value: PrescriptionStatusUpdates
-      ProtectedResourceType: DynamoDB
-      RestoreTestingPlanName: !Ref PrescriptionStatusUpdatesTableTestingPlan
-      RestoreTestingSelectionName: PSUBackupRestoreTestSelection
-      ValidationWindowHours: 12
-
   PrescriptionStatusUpdatesResources:
     Type: AWS::Serverless::Application
     Properties:
@@ -637,7 +561,3 @@ Outputs:
     Value: !GetAtt UsePrescriptionNotificationStatesKMSKeyPolicy.PolicyArn
     Export:
       Name: !Sub ${StackName}:tables:UsePrescriptionNotificationStatesKMSKeyPolicyArn
-
-  PrescriptionStatusUpdatesTableTestingPlanArn:
-    Description: Arn of the psu testing plan
-    Value: !GetAtt PrescriptionStatusUpdatesTableTestingPlan.RestoreTestingPlanArn

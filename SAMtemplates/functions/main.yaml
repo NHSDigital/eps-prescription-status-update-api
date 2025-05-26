@@ -63,9 +63,6 @@ Parameters:
   Environment:
     Type: String
 
-  PrescriptionStatusUpdatesTableTestingPlanArn:
-    Type: String
-
 Conditions:
   ShouldDeployCheckPrescriptionStatusUpdate: !Equals
     - true
@@ -454,6 +451,15 @@ Resources:
             Action:
               - backup:PutRestoreValidationResult
             Resource: "*"
+          - Effect: Allow
+            Action:
+              - dynamodb:GetItem
+              - dynamodb:BatchGetItem
+              - dynamodb:Scan
+              - dynamodb:Query
+              - dynamodb:ConditionCheckItem
+              - dynamodb:DescribeTable
+            Resource: "awsbackup-restore-test-*"
 
   PsuRestoreValidation:
     Type: AWS::Serverless::Function
@@ -498,6 +504,8 @@ Resources:
         AdditionalPolicies: !Join
           - ","
           - - !Ref PsuRestoreValidationPolicy
+            - Fn::ImportValue: !Sub ${StackName}:tables:${PrescriptionStatusUpdatesTableName}:TableReadPolicyArn
+            - Fn::ImportValue: !Sub ${StackName}:tables:UsePrescriptionStatusUpdatesKMSKeyPolicyArn
 
   PsuRestoreValidationLambdaInvokePermission:
     DependsOn:
@@ -521,9 +529,11 @@ Resources:
           - "Restore Job State Change"
         detail:
           resourceType:
-            - "DynamoDB"
+            - "DynamoDB.FullyManaged"
           status:
             - "COMPLETED"
+          sourceResourceArn:
+            - !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${PrescriptionStatusUpdatesTableName}
       Targets:
         - Arn: !GetAtt PsuRestoreValidation.Arn
           Id: "RestoreTestingValidationFunction"
