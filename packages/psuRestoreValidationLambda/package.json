@@ -17,6 +17,7 @@
     "@aws-lambda-powertools/logger": "^2.20.0",
     "@aws-sdk/client-backup": "^3.812.0",
     "@aws-sdk/client-dynamodb": "^3.817.0",
+    "@middy/input-output-logger": "^6.3.0",
     "@PrescriptionStatusUpdate_common/middyErrorHandler": "^1.0.0"
   },
   "devDependencies": {
