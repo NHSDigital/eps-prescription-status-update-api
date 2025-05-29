@@ -33,6 +33,8 @@ function createTransactionCommand(dataItems: Array<PSUDataItem>, logger: Logger)
 }
 
 export async function persistDataItems(dataItems: Array<PSUDataItem>, logger: Logger): Promise<boolean | Timeout> {
+  // break the array of data items into batches less than 100
+  // to prevent dynamodb error with too many items
   const chunkSize = 99
   const transactionCommands = []
   for (let i = 0; i < dataItems.length; i += chunkSize) {
