@@ -33,19 +33,39 @@ function createTransactionCommand(dataItems: Array<PSUDataItem>, logger: Logger)
 }
 
 export async function persistDataItems(dataItems: Array<PSUDataItem>, logger: Logger): Promise<boolean | Timeout> {
-  const transactionCommand = createTransactionCommand(dataItems, logger)
-  try {
-    logger.info("Sending TransactWriteItemsCommand to DynamoDB.", {command: transactionCommand})
-    await client.send(transactionCommand)
-    logger.info("TransactWriteItemsCommand sent to DynamoDB successfully.", {command: transactionCommand})
-    return true
-  } catch (e) {
-    if (e instanceof TransactionCanceledException) {
-      logger.error("DynamoDB transaction cancelled due to conditional check failure.", {reasons: e.CancellationReasons})
-      throw e
+  const chunkSize = 99
+  const transactionCommands = []
+  for (let i = 0; i < dataItems.length; i += chunkSize) {
+    const chunk = dataItems.slice(i, i + chunkSize)
+    const transactionCommand = createTransactionCommand(chunk, logger)
+    transactionCommands.push(transactionCommand)
+  }
+  const results = await Promise.all(transactionCommands.map(async transactionCommand => {
+    try {
+      logger.info("Sending TransactWriteItemsCommand to DynamoDB.", {command: transactionCommand})
+      await client.send(transactionCommand)
+      logger.info("TransactWriteItemsCommand sent to DynamoDB successfully.", {command: transactionCommand})
+      return {success: true}
+    } catch (e) {
+      if (e instanceof TransactionCanceledException) {
+        logger.error(
+          "DynamoDB transaction cancelled due to conditional check failure.", {reasons: e.CancellationReasons})
+        return {success: false, errorMessage: "conditional check failure", error: e}
+      } else {
+        logger.error("Error sending TransactWriteItemsCommand to DynamoDB.", {error: e})
+      }
+      return {success: false, errorMessage: "other error", error: e}
     }
-    logger.error("Error sending TransactWriteItemsCommand to DynamoDB.", {error: e})
+  }))
+  const failed = results.filter(r => !r.success)
+  if (failed.length > 0) {
+    const conditionalCheckFailures = failed.filter(r=> r.errorMessage === "conditional check failure")
+    if (conditionalCheckFailures.length > 0) {
+      throw(conditionalCheckFailures[0].error)
+    }
     return false
+  } else {
+    return true
   }
 }
 

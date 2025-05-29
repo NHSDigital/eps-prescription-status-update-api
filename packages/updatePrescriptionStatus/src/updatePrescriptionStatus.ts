@@ -191,17 +191,17 @@ export function validateEntries(requestEntries: Array<BundleEntry>, responseEntr
   let valid = true
   for (const entry of requestEntries) {
     const fullUrl = entry.fullUrl!
-    logger.info("Validating entry.", {entry: entry, id: entry.fullUrl})
+    logger.debug("Validating entry.", {entry: entry, id: entry.fullUrl})
 
     const validationOutcome = validateEntry(entry)
 
     let responseEntry: BundleEntry
     if (validationOutcome.valid) {
-      logger.info("Entry validated successfully.", {entry: entry, id: entry.fullUrl})
+      logger.debug("Entry validated successfully.", {entry: entry, id: entry.fullUrl})
       responseEntry = accepted(fullUrl)
     } else {
       const errorMessage = validationOutcome.issues!
-      logger.info(`Entry failed validation. ${errorMessage}`, {entry: entry, id: entry.fullUrl})
+      logger.warn(`Entry failed validation. ${errorMessage}`, {entry: entry, id: entry.fullUrl})
       valid = false
       responseEntry = badRequest(errorMessage, fullUrl)
     }
@@ -252,7 +252,7 @@ export function buildDataItems(
 
   for (const requestEntry of requestEntries) {
     const task = requestEntry.resource as Task
-    logger.info("Building data item for task.", {task: task, id: task.id})
+    logger.debug("Building data item for task.", {task: task, id: task.id})
 
     const repeatNo = task.input?.[0]?.valueInteger
 
