@@ -6,12 +6,14 @@ import middy from "@middy/core"
 import inputOutputLogger from "@middy/input-output-logger"
 import errorHandler from "@nhs/fhir-middy-error-handler"
 
+import {v4} from "uuid"
+
 import {
   addPrescriptionMessagesToNotificationStateStore,
   checkCooldownForUpdate,
   clearCompletedSQSMessages,
   drainQueue,
-  PSUDataItemMessage
+  NotifyDataItemMessage
 } from "./utils"
 
 const logger = new Logger({serviceName: "nhsNotify"})
@@ -26,8 +28,8 @@ export const lambdaHandler = async (event: EventBridgeEvent<string, string>): Pr
 
   logger.info("NHS Notify lambda triggered by scheduler", {event})
 
-  let messages: Array<PSUDataItemMessage>
-  let processed: Array<PSUDataItemMessage>
+  let messages: Array<NotifyDataItemMessage>
+  let processed: Array<NotifyDataItemMessage>
   try {
     messages = await drainQueue(logger, 100)
 
@@ -75,7 +77,13 @@ export const lambdaHandler = async (event: EventBridgeEvent<string, string>): Pr
     logger.info("Fetched prescription notification messages", {count: toNotify.length, toNotify})
 
     // TODO: Notifications request will be done here.
-    processed = toProcess
+    processed = toProcess.map((el) => {
+      return {
+        ...el,
+        success: true,
+        notifyMessageId: v4()
+      }
+    })
 
   } catch (err) {
     logger.error("Error while draining SQS queue", {error: err})

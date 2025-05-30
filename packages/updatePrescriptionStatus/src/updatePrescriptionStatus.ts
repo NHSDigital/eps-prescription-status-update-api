@@ -223,7 +223,7 @@ export function handleTransactionCancelledException(
       const conflictedEntry = conflictDuplicate(taskId)
 
       const index = responseEntries.findIndex((entry) => {
-        const entryTaskId = entry.response?.location?.split("/").pop() || entry.fullUrl?.split(":").pop()
+        const entryTaskId = entry.response?.location?.split("/").pop() ?? entry.fullUrl?.split(":").pop()
         return entryTaskId === taskId
       })
 
