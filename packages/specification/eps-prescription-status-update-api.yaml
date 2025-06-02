@@ -434,15 +434,18 @@ components:
     CheckPrescriptionStatusUpdates:
       $ref: schemas/resources/CheckPrescriptionStatusUpdates.yaml
 security:
+  - app-level0: []
   - app-level3: []
 x-nhsd-apim:
   temporary: false
   monitoring: true
   access:
+    - title: User Restricted
+      grants:
+        app-level0: []
     - title: Application Restricted
       grants:
         app-level3: []
-        app-level0: []
   target:
     type: external
     healthcheck: /_status
