@@ -17,9 +17,9 @@
     "@aws-lambda-powertools/commons": "^2.17.0",
     "@aws-lambda-powertools/logger": "^2.20.0",
     "@aws-lambda-powertools/parameters": "^2.20.0",
-    "@middy/core": "^6.2.3",
-    "@middy/input-output-logger": "^6.3.0",
-    "@nhs/fhir-middy-error-handler": "^2.1.32",
+    "@middy/core": "^6.3.1",
+    "@middy/input-output-logger": "^6.3.1",
+    "@nhs/fhir-middy-error-handler": "^2.1.33",
     "axios": "^1.8.4"
   },
   "devDependencies": {
