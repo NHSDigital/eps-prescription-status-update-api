@@ -294,7 +294,7 @@ paths:
   /notification-delivery-status-callback:
     post:
       operationId: prescription-status-update-notification-delivery-status-callback
-      summary: "[Internal] Prescription status update notification delivery status callback"
+      summary: "(Internal) Prescription status update notification delivery status callback"
       description: |
         ## This endpoint is for internal usage only
         ## Overview
@@ -311,14 +311,6 @@ paths:
           schema:
             type: string
           example: 9ee8c6aab877a97600e5c0cd8419f52d3dcdc45002e35220873d11123db6486f
-        - in: header
-          name: x-api-key
-          required: true
-          description: |
-            Contains the pre-agreed API key.
-          schema:
-            type: string
-          example: 0bb04a0e-d005-42dd-8993-dacf37410a12
       responses:
         "202":
           description: Successfully updated notification delivery status
