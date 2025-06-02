@@ -442,6 +442,7 @@ x-nhsd-apim:
     - title: Application Restricted
       grants:
         app-level3: []
+        app-level0: []
   target:
     type: external
     healthcheck: /_status
