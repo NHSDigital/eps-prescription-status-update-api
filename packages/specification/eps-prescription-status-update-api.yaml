@@ -434,7 +434,6 @@ components:
     CheckPrescriptionStatusUpdates:
       $ref: schemas/resources/CheckPrescriptionStatusUpdates.yaml
 security:
-  - app-level0: []
   - app-level3: []
 x-nhsd-apim:
   temporary: false
