@@ -341,7 +341,7 @@ components:
     app-level3:
       $ref: https://proxygen.prod.api.platform.nhs.uk/components/securitySchemes/app-level3
   parameters:
-    ApiKey:
+    apiKey:
       in: header
       name: x-api-key
       required: true
