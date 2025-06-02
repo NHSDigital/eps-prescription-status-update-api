@@ -291,10 +291,11 @@ paths:
 
       security:
         - app-level3: []
+
   /notification-delivery-status-callback:
     post:
       operationId: prescription-status-update-notification-delivery-status-callback
-      summary: "(Internal) Prescription status update notification delivery status callback"
+      summary: "Internal: Prescription status update notification delivery status callback"
       description: |
         ## This endpoint is for internal usage only
         ## Overview
