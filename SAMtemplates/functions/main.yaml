@@ -446,7 +446,15 @@ Resources:
           TABLE_NAME: !Ref PrescriptionNotificationStatesTableName
           APP_NAME_SECRET: secrets-PSU-Notify-Application-Name
           API_KEY_SECRET:  secrets-PSU-Notify-API-Key
-
+      Policies:
+        - Version: '2012-10-17'
+          Statement:
+            - Effect: Allow
+              Action:
+                - secretsmanager:GetSecretValue
+              Resource: 
+                - !Sub arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:secrets-PSU-Notify-API-Key*
+                - !Sub arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:secrets-PSU-Notify-Application-Name*
     Metadata:
       BuildMethod: esbuild
       guard:
@@ -477,7 +485,6 @@ Resources:
           - - Fn::ImportValue: !Sub ${StackName}:tables:${PrescriptionNotificationStatesTableName}:TableReadPolicyArn
             - Fn::ImportValue: !Sub ${StackName}:tables:${PrescriptionNotificationStatesTableName}:TableWritePolicyArn
             - Fn::ImportValue: !Sub ${StackName}:tables:UsePrescriptionNotificationStatesKMSKeyPolicyArn
-            - secretsmanager:GetSecretValue
         LogRetentionInDays: !Ref LogRetentionInDays
         CloudWatchKMSKeyId: !ImportValue account-resources:CloudwatchLogsKmsKeyArn
         EnableSplunk: !Ref EnableSplunk
