@@ -52,18 +52,18 @@ export async function fetchSecrets(logger: Logger): Promise<void> {
   logger.info("Fetched secrets", {APP_NAME_SECRET, appNameValue, API_KEY_SECRET, apiKeyValue})
 
   if (
-    !appNameValue
-    || !apiKeyValue
+    appNameValue === undefined
+    || apiKeyValue === undefined
     || appNameValue instanceof Uint8Array
     || apiKeyValue instanceof Uint8Array
-    || appNameValue === undefined
-    || apiKeyValue === undefined
+    || !appNameValue?.toString()
+    || !apiKeyValue?.toString()
   ) {
     throw new Error("Failed to get secret values from the AWS secret manager")
   }
 
-  APP_NAME = appNameValue // "undefined"
-  API_KEY = apiKeyValue
+  APP_NAME = appNameValue.toString()
+  API_KEY = apiKeyValue.toString()
 
   // Check again to catch empty strings
   if (!appNameValue || !apiKeyValue) {
