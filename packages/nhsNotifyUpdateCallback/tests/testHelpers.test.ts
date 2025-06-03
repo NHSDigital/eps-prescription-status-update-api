@@ -301,38 +301,40 @@ describe("helpers.ts", () => {
   })
 
   describe("fetchSecrets()", () => {
+    let logger: Logger
     beforeEach(() => {
       jest.resetModules()
       jest.clearAllMocks()
       process.env = {...ORIGINAL_ENV}
+      logger = new Logger({serviceName: "nhsNotifyUpdateCallback"})
     })
 
     it("throws if APP_NAME_SECRET env var is not set", async () => {
       delete process.env.APP_NAME_SECRET
 
       const {fetchSecrets: fn} = await import("../src/helpers")
-      await expect(fn()).rejects.toThrow("APP_NAME_SECRET environment variable is not set.")
+      await expect(fn(logger)).rejects.toThrow("APP_NAME_SECRET environment variable is not set.")
     })
 
     it("throws if API_KEY_SECRET env var is not set", async () => {
       delete process.env.API_KEY_SECRET
 
       const {fetchSecrets: fn} = await import("../src/helpers")
-      await expect(fn()).rejects.toThrow("API_KEY_SECRET environment variable is not set.")
+      await expect(fn(logger)).rejects.toThrow("API_KEY_SECRET environment variable is not set.")
     })
 
     it("throws if getting either secret returns a falsy value", async () => {
       process.env.APP_NAME = ""
 
       const {fetchSecrets: fn} = await import("../src/helpers")
-      await expect(fn()).rejects.toThrow(
+      await expect(fn(logger)).rejects.toThrow(
         "Failed to get secret values from the AWS secret manager"
       )
     })
 
     it("fetches both secrets successfully", async () => {
       const {fetchSecrets: fn} = await import("../src/helpers")
-      await expect(fn()).resolves.toBeUndefined()
+      await expect(fn(logger)).resolves.toBeUndefined()
 
       expect(mockGetSecret).toHaveBeenCalledWith(process.env.APP_NAME_SECRET)
       expect(mockGetSecret).toHaveBeenCalledWith(process.env.API_KEY_SECRET)
