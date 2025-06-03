@@ -444,8 +444,8 @@ Resources:
         Variables:
           LOG_LEVEL: !Ref LogLevel
           TABLE_NAME: !Ref PrescriptionNotificationStatesTableName
-          APP_NAME: !Sub "{{resolve:secretsmanager:secrets-PSU-Notify-Application-Name}}"
-          API_KEY:  !Sub "{{resolve:secretsmanager:secrets-PSU-Notify-API-Key}}"
+          APP_NAME: !Sub "{{resolve:secretsmanager:secrets-PSU-Notify-Application-Name:AWSCURRENT}}"
+          API_KEY:  !Sub "{{resolve:secretsmanager:secrets-PSU-Notify-API-Key:AWSCURRENT}}"
 
     Metadata:
       BuildMethod: esbuild
