@@ -8,7 +8,6 @@ import {getSecret} from "@aws-lambda-powertools/parameters/secrets"
 import {createHmac, timingSafeEqual} from "crypto"
 
 import {MessageStatusResponse} from "./types"
-import {logger} from "./lambdaHandler"
 
 const APP_NAME_SECRET = process.env.APP_NAME_SECRET
 const API_KEY_SECRET = process.env.API_KEY_SECRET
@@ -49,8 +48,6 @@ export async function fetchSecrets(logger: Logger): Promise<void> {
     getSecret(API_KEY_SECRET)
   ])
 
-  logger.info("Fetched secrets", {APP_NAME_SECRET, appNameValue, API_KEY_SECRET, apiKeyValue})
-
   if (
     appNameValue === undefined
     || apiKeyValue === undefined
@@ -70,6 +67,7 @@ export async function fetchSecrets(logger: Logger): Promise<void> {
     throw new Error("Failed to get secret values from the AWS secret manager")
   }
 
+  logger.info("Fetched secrets OK")
 }
 
 /**
@@ -77,8 +75,13 @@ export async function fetchSecrets(logger: Logger): Promise<void> {
  * If it's okay, returns undefined.
  * If it's not okay, it returns the error response object.
  */
-export function checkSignature(logger: Logger, event: APIGatewayProxyEvent) {
-  fetchSecrets(logger)
+export async function checkSignature(logger: Logger, event: APIGatewayProxyEvent) {
+  try {
+    await fetchSecrets(logger)
+  } catch (err) {
+    logger.error("Failed to get secret values", {err})
+    return response(500, "Internal Server Error")
+  }
 
   const signature = event.headers["x-hmac-sha256-signature"]
   if (!signature) {

@@ -76,18 +76,18 @@ describe("helpers.ts", () => {
       }
     })
 
-    it("401 when missing signature header", () => {
+    it("401 when missing signature header", async () => {
       const ev = generateMockEvent("{}", {"x-api-key": "foobar", "x-request-id": "rid"})
-      const resp = checkSignature(logger, ev)
+      const resp = await checkSignature(logger, ev)
       expect(resp).toEqual({
         statusCode: 401,
         body: JSON.stringify({message: "No x-hmac-sha256-signature given"})
       })
     })
 
-    it("401 when missing API key header", () => {
+    it("401 when missing API key header", async () => {
       const ev = generateMockEvent("{}", {"x-hmac-sha256-signature": "foobar", "x-request-id": "rid"})
-      const resp = checkSignature(logger, ev)
+      const resp = await checkSignature(logger, ev)
 
       expect(resp).toEqual({
         statusCode: 401,
@@ -95,13 +95,13 @@ describe("helpers.ts", () => {
       })
     })
 
-    it("403 when signature hex is malformed", () => {
+    it("403 when signature hex is malformed", async () => {
       const headers = {
         ...validHeaders,
         "x-hmac-sha256-signature": "not a hex string!@!#zzz"
       }
       const ev = generateMockEvent(JSON.stringify({message: "blah blah blah"}), headers)
-      const resp = checkSignature(logger, ev)
+      const resp = await checkSignature(logger, ev)
 
       expect(resp).toEqual({
         statusCode: 403,
@@ -109,7 +109,7 @@ describe("helpers.ts", () => {
       })
     })
 
-    it("403 when signature does not match HMAC", () => {
+    it("403 when signature does not match HMAC", async () => {
       const payload = "payload"
       const wrongSig = createHmac(
         "sha256",
@@ -122,7 +122,7 @@ describe("helpers.ts", () => {
         ...validHeaders,
         "x-hmac-sha256-signature": wrongSig
       })
-      const resp = checkSignature(logger, ev)
+      const resp = await checkSignature(logger, ev)
 
       expect(resp).toEqual({
         statusCode: 403,
@@ -130,7 +130,7 @@ describe("helpers.ts", () => {
       })
     })
 
-    it("returns undefined when signature is valid", () => {
+    it("returns undefined when signature is valid", async () => {
       const payload = "hi there"
       const secret = `${process.env.APP_NAME}.${process.env.API_KEY}`
       const goodSig = createHmac("sha256", secret)
@@ -141,7 +141,7 @@ describe("helpers.ts", () => {
         ...validHeaders,
         "x-hmac-sha256-signature": goodSig
       })
-      const resp = checkSignature(logger, ev)
+      const resp = await checkSignature(logger, ev)
       expect(resp).toBeUndefined()
     })
   })
