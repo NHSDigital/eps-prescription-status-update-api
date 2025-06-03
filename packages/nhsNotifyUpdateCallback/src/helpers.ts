@@ -3,13 +3,18 @@ import {Logger} from "@aws-lambda-powertools/logger"
 
 import {DynamoDBClient} from "@aws-sdk/client-dynamodb"
 import {DynamoDBDocumentClient, UpdateCommand, QueryCommand} from "@aws-sdk/lib-dynamodb"
+import {getSecret} from "@aws-lambda-powertools/parameters/secrets"
 
 import {createHmac, timingSafeEqual} from "crypto"
 
 import {MessageStatusResponse} from "./types"
 
-const APP_NAME = process.env.APP_NAME
-const API_KEY = process.env.API_KEY
+const APP_NAME_SECRET = process.env.APP_NAME_SECRET
+const API_KEY_SECRET = process.env.API_KEY_SECRET
+
+// Actual secret values
+let APP_NAME: string | undefined
+let API_KEY: string | undefined
 
 // TTL is one week in seconds
 const TTL_DELTA = 60 * 60 * 24 * 7
@@ -24,6 +29,31 @@ export function response(statusCode: number, body: unknown = {}) {
     statusCode,
     body: JSON.stringify(body)
   }
+}
+
+/**
+ * Fetches all secret values from the AWS Secrets Manager
+ */
+export async function fetchSecrets(): Promise<void> {
+  if (!APP_NAME_SECRET) {
+    throw new Error("APP_NAME_SECRET environment variable is not set.")
+  }
+  if (!API_KEY_SECRET) {
+    throw new Error("API_KEY_SECRET environment variable is not set.")
+  }
+
+  // Fetch both secrets in parallel
+  const [appNameValue, apiKeyValue] = await Promise.all([
+    getSecret(APP_NAME_SECRET),
+    getSecret(API_KEY_SECRET)
+  ])
+
+  if (!appNameValue || !apiKeyValue) {
+    throw new Error("Failed to get secret values from the AWS secret manager")
+  }
+
+  APP_NAME = appNameValue?.toString()
+  API_KEY = apiKeyValue?.toString()
 }
 
 /**
@@ -54,6 +84,8 @@ export function checkSignature(logger: Logger, event: APIGatewayProxyEvent) {
   // Compute the HMAC-SHA256 hash of the combination of the request body and the secret value
   const secretValue = `${APP_NAME}.${API_KEY}`
   const payload = event.body ?? ""
+
+  logger.info("Secret Value", {secretValue})
 
   // compare hashes as Buffers, rather than hex
   const expectedSigBuf = createHmac("sha256", secretValue)
@@ -173,3 +205,6 @@ export async function updateNotificationsTable(
   // wait for all callbacks to be processed
   await Promise.all(callbackPromises)
 }
+
+// On module load, fetch the secret values
+fetchSecrets()
