@@ -35,7 +35,7 @@ export function response(statusCode: number, body: unknown = {}) {
 /**
  * Fetches all secret values from the AWS Secrets Manager
  */
-export async function fetchSecrets(): Promise<void> {
+export async function fetchSecrets(logger: Logger): Promise<void> {
   if (!APP_NAME_SECRET) {
     throw new Error("APP_NAME_SECRET environment variable is not set.")
   }
@@ -78,7 +78,7 @@ export async function fetchSecrets(): Promise<void> {
  * If it's not okay, it returns the error response object.
  */
 export function checkSignature(logger: Logger, event: APIGatewayProxyEvent) {
-  fetchSecrets()
+  fetchSecrets(logger)
 
   const signature = event.headers["x-hmac-sha256-signature"]
   if (!signature) {
