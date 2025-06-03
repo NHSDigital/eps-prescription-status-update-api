@@ -48,14 +48,23 @@ export async function fetchSecrets(): Promise<void> {
     getSecret(API_KEY_SECRET)
   ])
 
-  console.log(`${appNameValue} - ${apiKeyValue}`)
+  if (
+    !appNameValue
+    || !apiKeyValue
+    || appNameValue instanceof Uint8Array
+    || apiKeyValue instanceof Uint8Array
+  ) {
+    throw new Error("Failed to get secret values from the AWS secret manager")
+  }
 
+  APP_NAME = appNameValue
+  API_KEY = apiKeyValue
+
+  // Check again to catch empty strings
   if (!appNameValue || !apiKeyValue) {
     throw new Error("Failed to get secret values from the AWS secret manager")
   }
 
-  APP_NAME = appNameValue?.toString()
-  API_KEY = apiKeyValue?.toString()
 }
 
 /**
