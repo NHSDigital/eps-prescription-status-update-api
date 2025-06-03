@@ -8,6 +8,7 @@ import {getSecret} from "@aws-lambda-powertools/parameters/secrets"
 import {createHmac, timingSafeEqual} from "crypto"
 
 import {MessageStatusResponse} from "./types"
+import {logger} from "./lambdaHandler"
 
 const APP_NAME_SECRET = process.env.APP_NAME_SECRET
 const API_KEY_SECRET = process.env.API_KEY_SECRET
@@ -48,16 +49,20 @@ export async function fetchSecrets(): Promise<void> {
     getSecret(API_KEY_SECRET)
   ])
 
+  logger.info("Fetched secrets", {APP_NAME_SECRET, appNameValue, API_KEY_SECRET, apiKeyValue})
+
   if (
     !appNameValue
     || !apiKeyValue
     || appNameValue instanceof Uint8Array
     || apiKeyValue instanceof Uint8Array
+    || appNameValue === undefined
+    || apiKeyValue === undefined
   ) {
     throw new Error("Failed to get secret values from the AWS secret manager")
   }
 
-  APP_NAME = appNameValue
+  APP_NAME = appNameValue // "undefined"
   API_KEY = apiKeyValue
 
   // Check again to catch empty strings
