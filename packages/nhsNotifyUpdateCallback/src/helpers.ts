@@ -48,6 +48,8 @@ export async function fetchSecrets(): Promise<void> {
     getSecret(API_KEY_SECRET)
   ])
 
+  console.log(`${appNameValue} - ${apiKeyValue}`)
+
   if (!appNameValue || !apiKeyValue) {
     throw new Error("Failed to get secret values from the AWS secret manager")
   }
@@ -62,12 +64,7 @@ export async function fetchSecrets(): Promise<void> {
  * If it's not okay, it returns the error response object.
  */
 export function checkSignature(logger: Logger, event: APIGatewayProxyEvent) {
-  if (!APP_NAME) {
-    throw new Error("APP_NAME environment variable is not set.")
-  }
-  if (!API_KEY) {
-    throw new Error("API_KEY environment variable is not set.")
-  }
+  fetchSecrets()
 
   const signature = event.headers["x-hmac-sha256-signature"]
   if (!signature) {
@@ -205,6 +202,3 @@ export async function updateNotificationsTable(
   // wait for all callbacks to be processed
   await Promise.all(callbackPromises)
 }
-
-// On module load, fetch the secret values
-fetchSecrets()

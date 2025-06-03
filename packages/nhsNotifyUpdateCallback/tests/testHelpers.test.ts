@@ -7,12 +7,34 @@ import {
   expect
 } from "@jest/globals"
 import {createHmac} from "crypto"
-import {DynamoDBDocumentClient, QueryCommand, UpdateCommand} from "@aws-sdk/lib-dynamodb"
 
-import {response, checkSignature, updateNotificationsTable} from "../src/helpers"
+// Mock the getSecret call
+const mockGetSecret = jest.fn((secretName: string) => {
+  if (secretName === process.env.APP_NAME_SECRET) {
+    return Promise.resolve(process.env.APP_NAME)
+  }
+  if (secretName === process.env.API_KEY_SECRET) {
+    return Promise.resolve(process.env.API_KEY)
+  }
+  return Promise.reject(new Error("Unexpected secret"))
+})
+jest.unstable_mockModule("@aws-lambda-powertools/parameters/secrets", async () => ({
+  __esModule: true,
+  getSecret: mockGetSecret
+}))
+
+import {DynamoDBDocumentClient, QueryCommand, UpdateCommand} from "@aws-sdk/lib-dynamodb"
 import {Logger} from "@aws-lambda-powertools/logger"
 import {MessageStatusResponse} from "../src/types"
 import {generateMockEvent, generateMockMessageStatusResponse} from "./utilities"
+
+const {
+  response,
+  checkSignature,
+  updateNotificationsTable
+} = await import("../src/helpers")
+
+const ORIGINAL_ENV = {...process.env}
 
 describe("helpers.ts", () => {
   let sendSpy: jest.SpiedFunction<typeof DynamoDBDocumentClient.prototype.send>
@@ -275,6 +297,45 @@ describe("helpers.ts", () => {
           error: awsError
         })
       )
+    })
+  })
+
+  describe("fetchSecrets()", () => {
+    beforeEach(() => {
+      jest.resetModules()
+      jest.clearAllMocks()
+      process.env = {...ORIGINAL_ENV}
+    })
+
+    it("throws if APP_NAME_SECRET env var is not set", async () => {
+      delete process.env.APP_NAME_SECRET
+
+      const {fetchSecrets: fn} = await import("../src/helpers")
+      await expect(fn()).rejects.toThrow("APP_NAME_SECRET environment variable is not set.")
+    })
+
+    it("throws if API_KEY_SECRET env var is not set", async () => {
+      delete process.env.API_KEY_SECRET
+
+      const {fetchSecrets: fn} = await import("../src/helpers")
+      await expect(fn()).rejects.toThrow("API_KEY_SECRET environment variable is not set.")
+    })
+
+    it("throws if getting either secret returns a falsy value", async () => {
+      process.env.APP_NAME = ""
+
+      const {fetchSecrets: fn} = await import("../src/helpers")
+      await expect(fn()).rejects.toThrow(
+        "Failed to get secret values from the AWS secret manager"
+      )
+    })
+
+    it("fetches both secrets successfully", async () => {
+      const {fetchSecrets: fn} = await import("../src/helpers")
+      await expect(fn()).resolves.toBeUndefined()
+
+      expect(mockGetSecret).toHaveBeenCalledWith(process.env.APP_NAME_SECRET)
+      expect(mockGetSecret).toHaveBeenCalledWith(process.env.API_KEY_SECRET)
     })
   })
 })
