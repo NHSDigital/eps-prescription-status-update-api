@@ -83,19 +83,33 @@ export async function drainQueue(logger: Logger, maxTotal = 100): Promise<Array<
       }
     )
 
-    const parsedMessages: Array<NotifyDataItemMessage> = Messages.map((m) => {
+    // flatmap causes the [] to be filtered out, since nothing is there to be flattened
+    const parsedMessages: Array<NotifyDataItemMessage> = Messages.flatMap((m) => {
       if (!m.Body) {
-        logger.error("Failed to parse SQS message - aborting this notification processor check.", {offendingMessage: m})
-        throw new Error(`Received an invalid SQS message. Message ID ${m.MessageId}`)
+        logger.error(
+          "Received an invalid SQS message (missing Body) - omitting from processing.",
+          {offendingMessage: m}
+        )
+        return []
       }
-
-      const parsedBody: NotifyDataItem = JSON.parse(m.Body)
-
-      return {
-        ...m,
-        PSUDataItem: parsedBody
+      try {
+        const parsedBody: NotifyDataItem = JSON.parse(m.Body)
+        // This is an array of one element, which will be extracted by the flatmap
+        return [
+          {
+            ...m,
+            PSUDataItem: parsedBody
+          }
+        ]
+      } catch (error) {
+        logger.error(
+          "Failed to parse SQS message body as JSON - omitting from processing.",
+          {offendingMessage: m, parseError: error}
+        )
+        return []
       }
     })
+
     allMessages.push(...parsedMessages)
     receivedSoFar += Messages.length
 

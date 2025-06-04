@@ -104,15 +104,13 @@ describe("NHS notify lambda helper functions", () => {
       await expect(drainQueue(logger, 10)).rejects.toThrow("Fetch failed")
     })
 
-    it("Throws an error if a message has no Body", async () => {
+    it("Throws no error if a message has no Body", async () => {
       const badMsg = constructMessage({Body: undefined})
       sqsMockSend.mockImplementationOnce(() => Promise.resolve({Messages: [badMsg]}))
 
-      await expect(drainQueue(logger, 1)).rejects.toThrow(
-        `Received an invalid SQS message. Message ID ${badMsg.MessageId}`
-      )
+      await drainQueue(logger, 1)
       expect(errorSpy).toHaveBeenCalledWith(
-        "Failed to parse SQS message - aborting this notification processor check.",
+        "Received an invalid SQS message (missing Body) - omitting from processing.",
         {offendingMessage: badMsg}
       )
     })
