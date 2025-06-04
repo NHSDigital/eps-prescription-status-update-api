@@ -14,6 +14,7 @@
     {"path": "packages/capabilityStatement"},
     {"path": "packages/cpsuLambda"},
     {"path": "packages/checkPrescriptionStatusUpdates"},
-    {"path": "packages/nhsNotifyLambda"}
+    {"path": "packages/nhsNotifyLambda"},
+    {"path": "packages/nhsNotifyUpdateCallback"}
   ]
 }

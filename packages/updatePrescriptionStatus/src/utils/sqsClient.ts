@@ -3,7 +3,7 @@ import {SQSClient, SendMessageBatchCommand} from "@aws-sdk/client-sqs"
 
 import {createHmac} from "crypto"
 
-import {PSUDataItem} from "@PrescriptionStatusUpdate_common/commonTypes"
+import {PSUDataItem, NotifyDataItem} from "@PrescriptionStatusUpdate_common/commonTypes"
 
 import {checkSiteOrSystemIsNotifyEnabled} from "../validation/notificationSiteAndSystemFilters"
 
@@ -89,7 +89,8 @@ export async function pushPrescriptionToNotificationSQS(
       // Build SQS batch entries with FIFO parameters
       .map((item, idx) => ({
         Id: idx.toString(),
-        MessageBody: JSON.stringify(item),
+        // Only post the required information to SQS
+        MessageBody: JSON.stringify(item as NotifyDataItem),
         // FIFO
         // We dedupe on both nhs number and ods code
         MessageDeduplicationId: saltedHash(logger, `${item.PatientNHSNumber}:${item.PharmacyODSCode}`),

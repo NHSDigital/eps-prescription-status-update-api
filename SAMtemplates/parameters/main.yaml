@@ -55,9 +55,9 @@ Resources:
       Value: !If
         - IsProd
         - > # Prod notification disabled
-          A83008
+          B3J1Z
         - > # Non-prod
-          A83008
+          B3J1Z
 
 Outputs:
   EnabledSiteODSCodesParameterName:

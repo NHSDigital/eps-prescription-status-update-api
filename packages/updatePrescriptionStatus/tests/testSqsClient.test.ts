@@ -203,7 +203,7 @@ describe("Unit tests for checkSiteOrSystemIsNotifyEnabled", () => {
 
   it("excludes an item when its ODS code is blocked, even if otherwise enabled", () => {
     const item = createMockDataItem({
-      PharmacyODSCode: "a83008",
+      PharmacyODSCode: "b3j1z",
       ApplicationName: "Internal Test System"
     })
     const result = checkSiteOrSystemIsNotifyEnabled([item])
