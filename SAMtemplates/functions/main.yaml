@@ -444,8 +444,8 @@ Resources:
         Variables:
           LOG_LEVEL: !Ref LogLevel
           TABLE_NAME: !Ref PrescriptionNotificationStatesTableName
-          APP_NAME_SECRET: secrets-PSU-Notify-Application-Name
-          API_KEY_SECRET:  secrets-PSU-Notify-API-Key
+          APP_NAME_SECRET: account-resources-PSU-Notify-Application-Name
+          API_KEY_SECRET:  account-resources-PSU-Notify-API-Key
     Metadata:
       BuildMethod: esbuild
       guard:
@@ -476,6 +476,7 @@ Resources:
           - - Fn::ImportValue: !Sub ${StackName}:tables:${PrescriptionNotificationStatesTableName}:TableReadPolicyArn
             - Fn::ImportValue: !Sub ${StackName}:tables:${PrescriptionNotificationStatesTableName}:TableWritePolicyArn
             - Fn::ImportValue: !Sub ${StackName}:tables:UsePrescriptionNotificationStatesKMSKeyPolicyArn
+            - Fn::ImportValue: account-resources-GetNotifySecretsManagedPolicy
         LogRetentionInDays: !Ref LogRetentionInDays
         CloudWatchKMSKeyId: !ImportValue account-resources:CloudwatchLogsKmsKeyArn
         EnableSplunk: !Ref EnableSplunk
