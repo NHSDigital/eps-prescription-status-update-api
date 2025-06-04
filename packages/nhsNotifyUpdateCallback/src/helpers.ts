@@ -99,8 +99,6 @@ export async function checkSignature(logger: Logger, event: APIGatewayProxyEvent
   const secretValue = `${APP_NAME}.${API_KEY}`
   const payload = event.body ?? ""
 
-  logger.info("Secret Value", {secretValue})
-
   // compare hashes as Buffers, rather than hex
   const expectedSigBuf = createHmac("sha256", secretValue)
     .update(payload, "utf8")
