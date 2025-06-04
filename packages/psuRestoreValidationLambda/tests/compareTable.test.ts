@@ -13,6 +13,13 @@ const mockLogger: Partial<Logger> = {
   error: jest.fn(),
   warn: jest.fn()
 }
+
+const SOURCE_ITEM = {
+  LastModified: {S: "2024-08-19T16:11:13Z"},
+  PrescriptionID: "dummy_prescription",
+  TaskID: "dummy_task"
+}
+
 const {compareTables} = await import("../src/compareTable")
 
 describe("Compare table function", () => {
@@ -22,107 +29,51 @@ describe("Compare table function", () => {
     jest.resetAllMocks()
   })
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  function setupMockResponses(sourceItems: Array<any>, restoredItems?: Array<any>) {
+    const responses = [
+      {scan: "source_table"}, // describe table 1
+      {scan: "restored table"}, // describe table 2
+      {Items: sourceItems} // scan source table
+    ]
+
+    // Only push restored items if provided
+    if (restoredItems !== undefined) {
+      responses.push({Items: restoredItems}) // query restored table
+    }
+
+    responses.forEach(res => mockSend.mockImplementationOnce(() => res))
+  }
+
   it("returns success when everything matches", async () => {
-    mockSend
-      .mockImplementationOnce(() => { // first describe table command
-        return {scan: "source_table"}
-      })
-      .mockImplementationOnce(() => { // second describe table command
-        return {scan: "restored table"}
-      })
-      .mockImplementationOnce(() => { // scan of source table
-        return {Items: [
-          {
-            LastModified: {"S": "2024-08-19T16:11:13Z"},
-            PrescriptionID: "dummy_prescription",
-            TaskID: "dummy_task"
-          }
-        ]}
-      })
-      .mockImplementationOnce(() => { // query of restored table
-        return {Items: [
-          {
-            LastModified: {"S": "2024-08-19T16:11:13Z"},
-            PrescriptionID: "dummy_prescription",
-            TaskID: "dummy_task"
-          }
-        ]}
-      })
+    setupMockResponses([SOURCE_ITEM], [SOURCE_ITEM])
     const result = await compareTables("table1", "table2", mockDocumentClient, mockLogger as Logger)
     expect(result).toBeTruthy()
   })
 
   it("returns failure when there is a difference", async () => {
-    mockSend
-      .mockImplementationOnce(() => { // first describe table command
-        return {scan: "source_table"}
-      })
-      .mockImplementationOnce(() => { // second describe table command
-        return {scan: "restored table"}
-      })
-      .mockImplementationOnce(() => { // scan of source table
-        return {Items: [
-          {
-            LastModified: {"S": "2024-08-19T16:11:13Z"},
-            PrescriptionID: "dummy_prescription",
-            TaskID: "dummy_task"
-          }
-        ]}
-      })
-      .mockImplementationOnce(() => { // query of restored table
-        return {Items: [
-          {
-            LastModified: {"S": "2024-08-19T16:11:13Z"},
-            PrescriptionID: "not_a_dummy_prescription",
-            TaskID: "dummy_task"
-          }
-        ]}
-      })
+    const modifiedItem = {
+      ...SOURCE_ITEM,
+      PrescriptionID: "not_a_dummy_prescription"
+    }
+    setupMockResponses([SOURCE_ITEM], [modifiedItem])
     const result = await compareTables("table1", "table2", mockDocumentClient, mockLogger as Logger)
     expect(result).toBeFalsy()
   })
 
   it("returns success when there is only a new record", async () => {
-    mockSend
-      .mockImplementationOnce(() => { // first describe table command
-        return {scan: "source_table"}
-      })
-      .mockImplementationOnce(() => { // second describe table command
-        return {scan: "restored table"}
-      })
-      .mockImplementationOnce(() => { // scan of source table
-        return {Items: [
-          {
-            LastModified: {"S": `${new Date()}`},
-            PrescriptionID: "dummy_prescription",
-            TaskID: "dummy_task"
-          }
-        ]}
-      })
+    const newItem = {
+      LastModified: {S: `${new Date()}`},
+      PrescriptionID: "dummy_prescription",
+      TaskID: "dummy_task"
+    }
+    setupMockResponses([newItem]) // no restored table records
     const result = await compareTables("table1", "table2", mockDocumentClient, mockLogger as Logger)
     expect(result).toBeTruthy()
   })
 
   it("returns failure when no rows returned from restored table", async () => {
-    mockSend
-      .mockImplementationOnce(() => { // first describe table command
-        return {scan: "source_table"}
-      })
-      .mockImplementationOnce(() => { // second describe table command
-        return {scan: "restored table"}
-      })
-      .mockImplementationOnce(() => { // scan of source table
-        return {Items: [
-          {
-            LastModified: {"S": "2024-08-19T16:11:13Z"},
-            PrescriptionID: "dummy_prescription",
-            TaskID: "dummy_task"
-          }
-        ]}
-      })
-      .mockImplementationOnce(() => { // query of restored table
-        return {Items: []}
-      })
+    setupMockResponses([SOURCE_ITEM], [])
     const result = await compareTables("table1", "table2", mockDocumentClient, mockLogger as Logger)
     expect(result).toBeFalsy()
   })
