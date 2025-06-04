@@ -1,8 +1,8 @@
 {
   "info": {
-    "_postman_id": "e0f5757a-8d67-4381-8e48-f73541719b48",
+    "_postman_id": "4462fdb6-2fa1-495c-8416-6e40d6acdd20",
     "name": "Internal Collection",
-    "description": "This collection provides endpoints for interacting with the Prescription Status Update API across multiple environments. It is designed for use by developers and testers, encompassing calls to all endpoints.\n\nThe collection is configured through the Digital Onboarding Services using the appropriate environment for the Apigee host, with access enabled for the APIs you intend to use. For Pull Request deployments, make sure to add the APIs specific to the relevant pull request.\n\nThe collection includes the following folders:\n\n- `Custom Stack Deployment` Direct API calls to all endpoints on AWS\n    \n- `Pull Request Deployment` API calls to endpoints on both Apigee and AWS\n    \n\n### Setup Instructions\n\nTo use this collection, you should define the following variables at a global level:\n\n- `host`\n    \n- `status_api_key` Obtain this from the APIM team\n    \n\nTo use the requests in the \"Pull Request Deployment\" folder, you should create a variable called `aws_pull_request_id` that represents the number of the pull request.\n\nTo use the requests in the \"Custom Stack Deployment\" folder, you should create a variable called `custom_stack_name` that represents the name of the stack you have defined.\n\n### Authentication Setup\n\nThere is a pre-request script at the top level that automates the authentication process. You must set the following variables for this to work. These should be set at an environment level as they differ between each environment.\n\n- `host`\n    \n- `api_key`\n    \n- `cpsu_api_key` Used for Custom Prescription Status Update\n    \n- `private_key`\n    \n- `kid`\n    \n\n### Host Configuration\n\nThe `host` should be set to the base Apigee URL, depending on the environment you're working with. Below is a table detailing the URLs, their corresponding environments, and the Digital Onboarding Service registration links.\n\n**Note:** Sandbox environments should be named so that they end with `sandbox`.\n\n| **Apigee URL** | **Environment** | **Digital Onboarding Service** |\n| --- | --- | --- |\n| `internal-dev.api.service.nhs.uk` | Development (dev) | [Digital Onboarding Service PTL](https://dos-internal.ptl.api.platform.nhs.uk/) |\n| `internal-dev-sandbox.api.service.nhs.uk` | Development (dev sandbox) | [Digital Onboarding Service PTL](https://dos-internal.ptl.api.platform.nhs.uk/) |\n| `int.api.service.nhs.uk` | Integration Test (int) | [Digital Onboarding Service PROD](https://onboarding.prod.api.platform.nhs.uk/) |\n| `sandbox.api.service.nhs.uk` | Sandbox (int sandbox) | [Digital Onboarding Service PROD](https://onboarding.prod.api.platform.nhs.uk/) |\n| `internal-qa.api.service.nhs.uk` | Production (qa) | [Digital Onboarding Service PTL](https://dos-internal.ptl.api.platform.nhs.uk/) |\n| `internal-qa.api.service.nhs.uk` | Production (ref) | [Digital Onboarding Service PTL](https://dos-internal.ptl.api.platform.nhs.uk/) |\n\n### API Key and JWT Setup\n\nFollow the instructions at [NHS Developer Documentation](https://digital.nhs.uk/developer/guides-and-documentation/security-and-authorisation/application-restricted-restful-apis-signed-jwt-authentication#step-1-register-your-application-on-the-api-platform) to get an API key and create a public/private key pair, which you need to upload to the JWKS server.\n\n- `api_key` Should be set to the Apigee API key for your application\n    \n- `private_key` Should be your private key that you have created for the environment\n    \n- `kid` Should be the KID that you used when creating the JWKS\n    \n\n### NHS Notify setup\n\nIn order to make calls the the innternal NHS notify callback endpoint, two additional variables must be present in your environment configuration.\n\n- `NOTIFY_APP_NAME` - the application name for the notify integration.\n    \n- `NOTIFY_API_KEY` - the API key from the application above\n    \n\nBoth from the digital onboarding service. Note that these should be available in the AWS secrets manager, with the names `PSU-Notify-API-Key` and `PSU-Notify-App-Name`.",
+    "description": "This collection provides endpoints for interacting with the Prescription Status Update API across multiple environments. It is designed for use by developers and testers, encompassing calls to all endpoints.\n\nThe collection is configured through the Digital Onboarding Services using the appropriate environment for the Apigee host, with access enabled for the APIs you intend to use. For Pull Request deployments, make sure to add the APIs specific to the relevant pull request.\n\nThe collection includes the following folders:\n\n- `Custom Stack Deployment` Direct API calls to all endpoints on AWS\n    \n- `Pull Request Deployment` API calls to endpoints on both Apigee and AWS\n    \n\n### Setup Instructions\n\nTo use this collection, you should define the following variables at a global level:\n\n- `host`\n    \n- `status_api_key` Obtain this from the APIM team\n    \n\nTo use the requests in the \"Pull Request Deployment\" folder, you should create a variable called `aws_pull_request_id` that represents the number of the pull request.\n\nTo use the requests in the \"Custom Stack Deployment\" folder, you should create a variable called `custom_stack_name` that represents the name of the stack you have defined.\n\n### Authentication Setup\n\nThere is a pre-request script at the top level that automates the authentication process. You must set the following variables for this to work. These should be set at an environment level as they differ between each environment.\n\n- `host`\n    \n- `api_key`\n    \n- `cpsu_api_key` Used for Custom Prescription Status Update\n    \n- `private_key`\n    \n- `kid`\n    \n\n### Host Configuration\n\nThe `host` should be set to the base Apigee URL, depending on the environment you're working with. Below is a table detailing the URLs, their corresponding environments, and the Digital Onboarding Service registration links.\n\n**Note:** Sandbox environments should be named so that they end with `sandbox`.\n\n| **Apigee URL** | **Environment** | **Digital Onboarding Service** |\n| --- | --- | --- |\n| `internal-dev.api.service.nhs.uk` | Development (dev) | [Digital Onboarding Service PTL](https://dos-internal.ptl.api.platform.nhs.uk/) |\n| `internal-dev-sandbox.api.service.nhs.uk` | Development (dev sandbox) | [Digital Onboarding Service PTL](https://dos-internal.ptl.api.platform.nhs.uk/) |\n| `int.api.service.nhs.uk` | Integration Test (int) | [Digital Onboarding Service PROD](https://onboarding.prod.api.platform.nhs.uk/) |\n| `sandbox.api.service.nhs.uk` | Sandbox (int sandbox) | [Digital Onboarding Service PROD](https://onboarding.prod.api.platform.nhs.uk/) |\n| `internal-qa.api.service.nhs.uk` | Production (qa) | [Digital Onboarding Service PTL](https://dos-internal.ptl.api.platform.nhs.uk/) |\n| `internal-qa.api.service.nhs.uk` | Production (ref) | [Digital Onboarding Service PTL](https://dos-internal.ptl.api.platform.nhs.uk/) |\n\n### API Key and JWT Setup\n\nFollow the instructions at [NHS Developer Documentation](https://digital.nhs.uk/developer/guides-and-documentation/security-and-authorisation/application-restricted-restful-apis-signed-jwt-authentication#step-1-register-your-application-on-the-api-platform) to get an API key and create a public/private key pair, which you need to upload to the JWKS server.\n\n- `api_key` Should be set to the Apigee API key for your application\n    \n- `private_key` Should be your private key that you have created for the environment\n    \n- `kid` Should be the KID that you used when creating the JWKS",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
     "_exporter_id": "35340912"
   },
@@ -52,7 +52,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"resourceType\": \"Bundle\",\n  \"type\": \"transaction\",\n  \"entry\": [\n    {\n      \"fullUrl\": \"urn:uuid:{{task_identifier}}\",\n      \"resource\": {\n        \"resourceType\": \"Task\",\n        \"id\": \"{{task_identifier}}\",\n        \"basedOn\": [\n          {\n            \"identifier\": {\n              \"system\": \"https://fhir.nhs.uk/Id/prescription-order-number\",\n              \"value\": \"16B2E0-A83008-81C13H\"\n            }\n          }\n        ],\n        \"status\": \"completed\",\n        \"businessStatus\": {\n          \"coding\": [\n            {\n              \"system\": \"https://fhir.nhs.uk/CodeSystem/task-businessStatus-nppt\",\n              \"code\": \"ready to collect\"\n            }\n          ]\n        },\n        \"intent\": \"order\",\n        \"focus\": {\n          \"identifier\": {\n            \"system\": \"https://fhir.nhs.uk/Id/prescription-order-item-number\",\n            \"value\": \"6989b7be-8db6-428c-a593-4022e3044c00\"\n          }\n        },\n        \"for\": {\n          \"identifier\": {\n            \"system\": \"https://fhir.nhs.uk/Id/nhs-number\",\n            \"value\": \"7688071291\"\n          }\n        },\n        \"lastModified\": \"2023-10-11T10:11:12Z\",\n        \"owner\": {\n          \"identifier\": {\n            \"system\": \"https://fhir.nhs.uk/Id/ods-organization-code\",\n            \"value\": \"FA565\"\n          }\n        }\n      },\n      \"request\": {\n        \"method\": \"POST\",\n        \"url\": \"Task\"\n      }\n    }\n  ]\n}\n",
+              "raw": "{\n  \"resourceType\": \"Bundle\",\n  \"type\": \"transaction\",\n  \"entry\": [\n    {\n      \"fullUrl\": \"urn:uuid:{{task_identifier}}\",\n      \"resource\": {\n        \"resourceType\": \"Task\",\n        \"id\": \"{{task_identifier}}\",\n        \"basedOn\": [\n          {\n            \"identifier\": {\n              \"system\": \"https://fhir.nhs.uk/Id/prescription-order-number\",\n              \"value\": \"16B2E0-A83008-81C13H\"\n            }\n          }\n        ],\n        \"status\": \"completed\",\n        \"businessStatus\": {\n          \"coding\": [\n            {\n              \"system\": \"https://fhir.nhs.uk/CodeSystem/task-businessStatus-nppt\",\n              \"code\": \"ready to collect\"\n            }\n          ]\n        },\n        \"intent\": \"order\",\n        \"focus\": {\n          \"identifier\": {\n            \"system\": \"https://fhir.nhs.uk/Id/prescription-order-item-number\",\n            \"value\": \"6989b7be-8db6-428c-a593-4022e3044c00\"\n          }\n        },\n        \"for\": {\n          \"identifier\": {\n            \"system\": \"https://fhir.nhs.uk/Id/nhs-number\",\n            \"value\": \"8308227929\"\n          }\n        },\n        \"lastModified\": \"2023-10-11T10:11:12Z\",\n        \"owner\": {\n          \"identifier\": {\n            \"system\": \"https://fhir.nhs.uk/Id/ods-organization-code\",\n            \"value\": \"FA565\"\n          }\n        }\n      },\n      \"request\": {\n        \"method\": \"POST\",\n        \"url\": \"Task\"\n      }\n    }\n  ]\n}\n",
               "options": {
                 "raw": {
                   "language": "json"
@@ -263,65 +263,57 @@
               "listen": "prerequest",
               "script": {
                 "exec": [
+                  "const crypto = pm.require('npm:crypto-js@4.2.0')\r",
+                  "\r",
                   "const appName = pm.environment.get(\"NOTIFY_APP_NAME\");\r",
                   "const apiKey  = pm.environment.get(\"NOTIFY_API_KEY\");\r",
                   "\r",
                   "if (!appName || !apiKey) {\r",
-                  "  console.error(\"Missing NOTIFY_APP_NAME or NOTIFY_API_KEY in environment!\");\r",
+                  "  console.error(\"Missing APP_NAME or API_KEY in environment!\");\r",
                   "}\r",
                   "\r",
                   "const secret = `${appName}.${apiKey}`;\r",
                   "\r",
                   "let body = \"\";\r",
-                  "if (pm.request.body && pm.request.body.mode === \"raw\") {\r",
-                  "  const raw = pm.request.body.raw;\r",
-                  "  body = pm.variables.replaceIn(raw);\r",
-                  "  // need to make sure the body is synced later\r",
-                  "  pm.request.body = body\r",
-                  "}\r",
+                  "const raw = pm.request.body.raw;\r",
+                  "body = pm.variables.replaceIn(raw);\r",
+                  "// need to make sure the body is synced later\r",
+                  "pm.request.body = body\r",
                   "\r",
-                  "(async () => {\r",
-                  "  // 1. encode secret and import as HMAC key\r",
-                  "  const textEncoder = new TextEncoder();\r",
-                  "  const keyData = textEncoder.encode(secret);\r",
-                  "  const cryptoKey = await crypto.subtle.importKey(\r",
-                  "    \"raw\",\r",
-                  "    keyData,\r",
-                  "    { name: \"HMAC\", hash: \"SHA-256\" },\r",
-                  "    false,\r",
-                  "    [\"sign\"]\r",
-                  "  );\r",
+                  "const signature = crypto.HmacSHA256(body, secret).toString(crypto.enc.Hex);\r",
                   "\r",
-                  "  // 2. sign the body\r",
-                  "  const signatureBuffer = await crypto.subtle.sign(\r",
-                  "    \"HMAC\",\r",
-                  "    cryptoKey,\r",
-                  "    textEncoder.encode(body)\r",
-                  "  );\r",
-                  "\r",
-                  "  // 3. convert ArrayBuffer to hex string\r",
-                  "  const hashArray = Array.from(new Uint8Array(signatureBuffer));\r",
-                  "  const signature = hashArray\r",
-                  "    .map(b => b.toString(16).padStart(2, \"0\"))\r",
-                  "    .join(\"\");\r",
-                  "\r",
-                  "  // 4. upsert headers\r",
-                  "  pm.request.headers.upsert({\r",
-                  "    key: \"x-hmac-sha256-signature\",\r",
-                  "    value: signature\r",
-                  "  });\r",
-                  "  pm.request.headers.upsert({\r",
-                  "    key: \"x-api-key\",\r",
-                  "    value: apiKey\r",
-                  "  });\r",
-                  "})();"
+                  "// Expects both the siganture and the api key. The app name is secret?\r",
+                  "pm.request.headers.upsert({\r",
+                  "  key: \"x-hmac-sha256-signature\",\r",
+                  "  value: signature\r",
+                  "});\r",
+                  ""
                 ],
                 "type": "text/javascript",
-                "packages": {}
+                "packages": {
+                  "npm:crypto-js@4.2.0": {
+                    "id": "npm:crypto-js@4.2.0"
+                  }
+                }
               }
             }
           ],
           "request": {
+            "auth": {
+              "type": "apikey",
+              "apikey": [
+                {
+                  "key": "value",
+                  "value": "{{NOTIFY_API_KEY}}",
+                  "type": "string"
+                },
+                {
+                  "key": "key",
+                  "value": "x-api-key",
+                  "type": "string"
+                }
+              ]
+            },
             "method": "POST",
             "header": [
               {
@@ -337,7 +329,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\r\n  \"data\": [\r\n    {\r\n      \"type\": \"MessageStatus\",\r\n      \"attributes\": {\r\n        \"messageId\": \"{{notifyMessageID}}\",\r\n        \"messageReference\": \"REF-ABC-123\",\r\n        \"messageStatus\": \"delivered\",\r\n        \"messageStatusDescription\": \"Message has been delivered\",\r\n        \"channels\": [\r\n          {\r\n            \"type\": \"nhsapp\",\r\n            \"channelStatus\": \"delivered\"\r\n          }\r\n        ],\r\n        \"timestamp\": \"{{$isoTimestamp}}\",\r\n        \"routingPlan\": {\r\n          \"id\": \"example-plan\",\r\n          \"name\": \"Example Template\",\r\n          \"version\": \"v1.0.0\",\r\n          \"createdDate\": \"2025-01-01T12:00:00Z\"\r\n        }\r\n      },\r\n      \"links\": {\r\n        \"message\": \"https://api.nhs.example.com/messages/{{notifyMessageID}}\"\r\n      },\r\n      \"meta\": {\r\n        \"idempotencyKey\": \"idemp-001-abc\"\r\n      }\r\n    }\r\n  ]\r\n}\r\n",
+              "raw": "{\r\n  \"data\": [\r\n    {\r\n      \"type\": \"MessageStatus\",\r\n      \"attributes\": {\r\n        \"messageId\": \"{{messageID}}\",\r\n        \"messageReference\": \"REF-ABC-123\",\r\n        \"messageStatus\": \"delivered\",\r\n        \"messageStatusDescription\": \"Message has been delivered\",\r\n        \"channels\": [\r\n          {\r\n            \"type\": \"nhsapp\",\r\n            \"channelStatus\": \"delivered\"\r\n          }\r\n        ],\r\n        \"timestamp\": \"{{$isoTimestamp}}\",\r\n        \"routingPlan\": {\r\n          \"id\": \"example-plan\",\r\n          \"name\": \"Example Template\",\r\n          \"version\": \"v1.0.0\",\r\n          \"createdDate\": \"2025-01-01T12:00:00Z\"\r\n        }\r\n      },\r\n      \"links\": {\r\n        \"message\": \"https://api.nhs.example.com/messages/{{messageID}}\"\r\n      },\r\n      \"meta\": {\r\n        \"idempotencyKey\": \"idemp-001-abc\"\r\n      }\r\n    }\r\n  ]\r\n}\r\n",
               "options": {
                 "raw": {
                   "language": "json"
