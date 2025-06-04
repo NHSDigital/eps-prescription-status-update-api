@@ -4,7 +4,7 @@ import {injectLambdaContext} from "@aws-lambda-powertools/logger/middleware"
 import middy from "@middy/core"
 import inputOutputLogger from "@middy/input-output-logger"
 import {MiddyErrorHandler} from "@PrescriptionStatusUpdate_common/middyErrorHandler"
-import {DynamoDBClient, DescribeTableCommand, DescribeTableInput} from "@aws-sdk/client-dynamodb"
+import {compareTables} from "./compareTable"
 
 const logger = new Logger({serviceName: "psuRestoreValidationLambda"})
 const errorResponseBody = {
@@ -13,30 +13,31 @@ const errorResponseBody = {
 
 const middyErrorHandler = new MiddyErrorHandler(errorResponseBody)
 
-const client = new DynamoDBClient()
 const lambdaHandler = async (event) => {
   const sourceTableArn = event.detail.sourceResourceArn
-  const createdTableArn = event.detail.createdResourceArn
-  logger.debug("Use the following arn for verification", {sourceTableArn, createdTableArn})
-  const sourceTableQuery: DescribeTableInput = {
-    TableName: sourceTableArn
-  }
-  const createdTableQuery: DescribeTableInput = {
-    TableName: createdTableArn
-  }
-  // Backup validation result
+  const restoredTableArn = event.detail.createdResourceArn
+  logger.debug("Use the following arn for verification", {sourceTableArn, restoredTableArn})
   const backup = new Backup()
+  const result = await compareTables(sourceTableArn, restoredTableArn, logger)
   try {
-    const sourceTableResult = await client.send(new DescribeTableCommand(sourceTableQuery))
-    const createdTableResult = await client.send(new DescribeTableCommand(createdTableQuery))
-    logger.info("Source table info", {sourceTableResult})
-    logger.info("Created table info", {createdTableResult})
-    const response = await backup.putRestoreValidationResult({
-      RestoreJobId: event.detail.restoreJobId,
-      ValidationStatus: "SUCCESSFUL",
-      ValidationStatusMessage: "Resource validation succeeded"
-    })
-    logger.info("PutRestoreValidationResult: ", {response})
+    if(result) {
+      logger.info("Compare tables successful")
+      const response = await backup.putRestoreValidationResult({
+        RestoreJobId: event.detail.restoreJobId,
+        ValidationStatus: "SUCCESSFUL",
+        ValidationStatusMessage: "Resource validation succeeded"
+      })
+      logger.info("PutRestoreValidationResult: ", {response})
+    } else {
+      logger.info("Compare tables failed")
+      const response = await backup.putRestoreValidationResult({
+        RestoreJobId: event.detail.restoreJobId,
+        ValidationStatus: "FAILED",
+        ValidationStatusMessage: "Resource validation succeeded"
+      })
+      logger.info("PutRestoreValidationResult: ", {response})
+
+    }
   } catch (error) {
     logger.error("Error putting restore validation result: ", {error})
     throw error
