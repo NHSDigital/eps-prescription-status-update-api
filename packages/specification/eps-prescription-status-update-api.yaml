@@ -291,11 +291,13 @@ paths:
 
       security:
         - app-level3: []
+
   /notification-delivery-status-callback:
     post:
       operationId: prescription-status-update-notification-delivery-status-callback
-      summary: Prescription status update notification delivery status callback
+      summary: "Internal: Prescription status update notification delivery status callback"
       description: |
+        ## This endpoint is for internal usage only
         ## Overview
         This endpoint provides a callback for the NHS notifications service to update the
         Prescription Status Update API on the delivery status of requested notifications.
@@ -310,29 +312,37 @@ paths:
           schema:
             type: string
           example: 9ee8c6aab877a97600e5c0cd8419f52d3dcdc45002e35220873d11123db6486f
-        - in: header
-          name: x-api-key
-          required: true
-          description: |
-            Contains the pre-agreed API key.
-          schema:
-            type: string
-          example: 0bb04a0e-d005-42dd-8993-dacf37410a12
       responses:
         "202":
           description: Successfully updated notification delivery status
-        "401":
-          description: Unauthorised
-        "403":
-          description: Forbidden
-        "429":
-          description: Rate limit - request for the client to slow down.
+        4XX:
+          description: |
+            An error occurred as follows:
+            | HTTP status | Error code          | Description                                                                                                                               |
+            | ----------- | ------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
+            | 401         | `unauthorised`      | Missing or invalid OAuth 2.0 bearer token in request                                                                                      |
+            | 403         | `forbidden`         | Supplied signature was incorrect.                                                                                                         |
+            | 429         | `throttled`         | You have exceeded your application's [rate limit](https://digital.nhs.uk/developer/guides-and-documentation/reference-guide#rate-limits). |
+
+      security:
+        - app-level0: []
 
 components:
   securitySchemes:
+    app-level0:
+      $ref: https://proxygen.prod.api.platform.nhs.uk/components/securitySchemes/app-level0
     app-level3:
       $ref: https://proxygen.prod.api.platform.nhs.uk/components/securitySchemes/app-level3
   parameters:
+    ApiKey:
+      in: header
+      name: x-api-key
+      required: true
+      description: |
+        Contains the pre-agreed API key.
+      schema:
+        type: string
+        example: 0bb04a0e-d005-42dd-8993-dacf37410a12
     BearerAuthorisation:
       in: header
       name: Authorization

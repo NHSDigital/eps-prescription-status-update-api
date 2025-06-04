@@ -1,6 +1,6 @@
 {
   "info": {
-    "_postman_id": "e0f5757a-8d67-4381-8e48-f73541719b48",
+    "_postman_id": "4462fdb6-2fa1-495c-8416-6e40d6acdd20",
     "name": "Internal Collection",
     "description": "This collection provides endpoints for interacting with the Prescription Status Update API across multiple environments. It is designed for use by developers and testers, encompassing calls to all endpoints.\n\nThe collection is configured through the Digital Onboarding Services using the appropriate environment for the Apigee host, with access enabled for the APIs you intend to use. For Pull Request deployments, make sure to add the APIs specific to the relevant pull request.\n\nThe collection includes the following folders:\n\n- `Custom Stack Deployment` Direct API calls to all endpoints on AWS\n    \n- `Pull Request Deployment` API calls to endpoints on both Apigee and AWS\n    \n\n### Setup Instructions\n\nTo use this collection, you should define the following variables at a global level:\n\n- `host`\n    \n- `status_api_key` Obtain this from the APIM team\n    \n\nTo use the requests in the \"Pull Request Deployment\" folder, you should create a variable called `aws_pull_request_id` that represents the number of the pull request.\n\nTo use the requests in the \"Custom Stack Deployment\" folder, you should create a variable called `custom_stack_name` that represents the name of the stack you have defined.\n\n### Authentication Setup\n\nThere is a pre-request script at the top level that automates the authentication process. You must set the following variables for this to work. These should be set at an environment level as they differ between each environment.\n\n- `host`\n    \n- `api_key`\n    \n- `cpsu_api_key` Used for Custom Prescription Status Update\n    \n- `private_key`\n    \n- `kid`\n    \n\n### Host Configuration\n\nThe `host` should be set to the base Apigee URL, depending on the environment you're working with. Below is a table detailing the URLs, their corresponding environments, and the Digital Onboarding Service registration links.\n\n**Note:** Sandbox environments should be named so that they end with `sandbox`.\n\n| **Apigee URL** | **Environment** | **Digital Onboarding Service** |\n| --- | --- | --- |\n| `internal-dev.api.service.nhs.uk` | Development (dev) | [Digital Onboarding Service PTL](https://dos-internal.ptl.api.platform.nhs.uk/) |\n| `internal-dev-sandbox.api.service.nhs.uk` | Development (dev sandbox) | [Digital Onboarding Service PTL](https://dos-internal.ptl.api.platform.nhs.uk/) |\n| `int.api.service.nhs.uk` | Integration Test (int) | [Digital Onboarding Service PROD](https://onboarding.prod.api.platform.nhs.uk/) |\n| `sandbox.api.service.nhs.uk` | Sandbox (int sandbox) | [Digital Onboarding Service PROD](https://onboarding.prod.api.platform.nhs.uk/) |\n| `internal-qa.api.service.nhs.uk` | Production (qa) | [Digital Onboarding Service PTL](https://dos-internal.ptl.api.platform.nhs.uk/) |\n| `internal-qa.api.service.nhs.uk` | Production (ref) | [Digital Onboarding Service PTL](https://dos-internal.ptl.api.platform.nhs.uk/) |\n\n### API Key and JWT Setup\n\nFollow the instructions at [NHS Developer Documentation](https://digital.nhs.uk/developer/guides-and-documentation/security-and-authorisation/application-restricted-restful-apis-signed-jwt-authentication#step-1-register-your-application-on-the-api-platform) to get an API key and create a public/private key pair, which you need to upload to the JWKS server.\n\n- `api_key` Should be set to the Apigee API key for your application\n    \n- `private_key` Should be your private key that you have created for the environment\n    \n- `kid` Should be the KID that you used when creating the JWKS",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
@@ -263,8 +263,10 @@
               "listen": "prerequest",
               "script": {
                 "exec": [
-                  "const appName = pm.environment.get(\"APP_NAME\");\r",
-                  "const apiKey  = pm.environment.get(\"API_KEY\");\r",
+                  "const crypto = pm.require('npm:crypto-js@4.2.0')\r",
+                  "\r",
+                  "const appName = pm.environment.get(\"NOTIFY_APP_NAME\");\r",
+                  "const apiKey  = pm.environment.get(\"NOTIFY_API_KEY\");\r",
                   "\r",
                   "if (!appName || !apiKey) {\r",
                   "  console.error(\"Missing APP_NAME or API_KEY in environment!\");\r",
@@ -273,32 +275,45 @@
                   "const secret = `${appName}.${apiKey}`;\r",
                   "\r",
                   "let body = \"\";\r",
-                  "if (pm.request.body && pm.request.body.mode === \"raw\") {\r",
-                  "  const raw = pm.request.body.raw;\r",
-                  "  body = pm.variables.replaceIn(raw);\r",
-                  "  // need to make sure the body is synced later\r",
-                  "  pm.request.body = body\r",
-                  "}\r",
+                  "const raw = pm.request.body.raw;\r",
+                  "body = pm.variables.replaceIn(raw);\r",
+                  "// need to make sure the body is synced later\r",
+                  "pm.request.body = body\r",
                   "\r",
-                  "const signature = CryptoJS.HmacSHA256(body, secret).toString(CryptoJS.enc.Hex);\r",
+                  "const signature = crypto.HmacSHA256(body, secret).toString(crypto.enc.Hex);\r",
                   "\r",
                   "// Expects both the siganture and the api key. The app name is secret?\r",
                   "pm.request.headers.upsert({\r",
                   "  key: \"x-hmac-sha256-signature\",\r",
                   "  value: signature\r",
                   "});\r",
-                  "pm.request.headers.upsert({\r",
-                  "    key: \"x-api-key\",\r",
-                  "    value: apiKey\r",
-                  "});\r",
                   ""
                 ],
                 "type": "text/javascript",
-                "packages": {}
+                "packages": {
+                  "npm:crypto-js@4.2.0": {
+                    "id": "npm:crypto-js@4.2.0"
+                  }
+                }
               }
             }
           ],
           "request": {
+            "auth": {
+              "type": "apikey",
+              "apikey": [
+                {
+                  "key": "value",
+                  "value": "{{NOTIFY_API_KEY}}",
+                  "type": "string"
+                },
+                {
+                  "key": "key",
+                  "value": "x-api-key",
+                  "type": "string"
+                }
+              ]
+            },
             "method": "POST",
             "header": [
               {

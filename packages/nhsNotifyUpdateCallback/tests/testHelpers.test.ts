@@ -7,12 +7,34 @@ import {
   expect
 } from "@jest/globals"
 import {createHmac} from "crypto"
-import {DynamoDBDocumentClient, QueryCommand, UpdateCommand} from "@aws-sdk/lib-dynamodb"
 
-import {response, checkSignature, updateNotificationsTable} from "../src/helpers"
+// Mock the getSecret call
+const mockGetSecret = jest.fn((secretName: string) => {
+  if (secretName === process.env.APP_NAME_SECRET) {
+    return Promise.resolve(process.env.APP_NAME)
+  }
+  if (secretName === process.env.API_KEY_SECRET) {
+    return Promise.resolve(process.env.API_KEY)
+  }
+  return Promise.reject(new Error("Unexpected secret"))
+})
+jest.unstable_mockModule("@aws-lambda-powertools/parameters/secrets", async () => ({
+  __esModule: true,
+  getSecret: mockGetSecret
+}))
+
+import {DynamoDBDocumentClient, QueryCommand, UpdateCommand} from "@aws-sdk/lib-dynamodb"
 import {Logger} from "@aws-lambda-powertools/logger"
 import {MessageStatusResponse} from "../src/types"
 import {generateMockEvent, generateMockMessageStatusResponse} from "./utilities"
+
+const {
+  response,
+  checkSignature,
+  updateNotificationsTable
+} = await import("../src/helpers")
+
+const ORIGINAL_ENV = {...process.env}
 
 describe("helpers.ts", () => {
   let sendSpy: jest.SpiedFunction<typeof DynamoDBDocumentClient.prototype.send>
@@ -54,18 +76,18 @@ describe("helpers.ts", () => {
       }
     })
 
-    it("401 when missing signature header", () => {
+    it("401 when missing signature header", async () => {
       const ev = generateMockEvent("{}", {"x-api-key": "foobar", "x-request-id": "rid"})
-      const resp = checkSignature(logger, ev)
+      const resp = await checkSignature(logger, ev)
       expect(resp).toEqual({
         statusCode: 401,
         body: JSON.stringify({message: "No x-hmac-sha256-signature given"})
       })
     })
 
-    it("401 when missing API key header", () => {
+    it("401 when missing API key header", async () => {
       const ev = generateMockEvent("{}", {"x-hmac-sha256-signature": "foobar", "x-request-id": "rid"})
-      const resp = checkSignature(logger, ev)
+      const resp = await checkSignature(logger, ev)
 
       expect(resp).toEqual({
         statusCode: 401,
@@ -73,13 +95,13 @@ describe("helpers.ts", () => {
       })
     })
 
-    it("403 when signature hex is malformed", () => {
+    it("403 when signature hex is malformed", async () => {
       const headers = {
         ...validHeaders,
         "x-hmac-sha256-signature": "not a hex string!@!#zzz"
       }
       const ev = generateMockEvent(JSON.stringify({message: "blah blah blah"}), headers)
-      const resp = checkSignature(logger, ev)
+      const resp = await checkSignature(logger, ev)
 
       expect(resp).toEqual({
         statusCode: 403,
@@ -87,7 +109,7 @@ describe("helpers.ts", () => {
       })
     })
 
-    it("403 when signature does not match HMAC", () => {
+    it("403 when signature does not match HMAC", async () => {
       const payload = "payload"
       const wrongSig = createHmac(
         "sha256",
@@ -100,7 +122,7 @@ describe("helpers.ts", () => {
         ...validHeaders,
         "x-hmac-sha256-signature": wrongSig
       })
-      const resp = checkSignature(logger, ev)
+      const resp = await checkSignature(logger, ev)
 
       expect(resp).toEqual({
         statusCode: 403,
@@ -108,7 +130,7 @@ describe("helpers.ts", () => {
       })
     })
 
-    it("returns undefined when signature is valid", () => {
+    it("returns undefined when signature is valid", async () => {
       const payload = "hi there"
       const secret = `${process.env.APP_NAME}.${process.env.API_KEY}`
       const goodSig = createHmac("sha256", secret)
@@ -119,7 +141,7 @@ describe("helpers.ts", () => {
         ...validHeaders,
         "x-hmac-sha256-signature": goodSig
       })
-      const resp = checkSignature(logger, ev)
+      const resp = await checkSignature(logger, ev)
       expect(resp).toBeUndefined()
     })
   })
@@ -275,6 +297,47 @@ describe("helpers.ts", () => {
           error: awsError
         })
       )
+    })
+  })
+
+  describe("fetchSecrets()", () => {
+    let logger: Logger
+    beforeEach(() => {
+      jest.resetModules()
+      jest.clearAllMocks()
+      process.env = {...ORIGINAL_ENV}
+      logger = new Logger({serviceName: "nhsNotifyUpdateCallback"})
+    })
+
+    it("throws if APP_NAME_SECRET env var is not set", async () => {
+      delete process.env.APP_NAME_SECRET
+
+      const {fetchSecrets: fn} = await import("../src/helpers")
+      await expect(fn(logger)).rejects.toThrow("APP_NAME_SECRET environment variable is not set.")
+    })
+
+    it("throws if API_KEY_SECRET env var is not set", async () => {
+      delete process.env.API_KEY_SECRET
+
+      const {fetchSecrets: fn} = await import("../src/helpers")
+      await expect(fn(logger)).rejects.toThrow("API_KEY_SECRET environment variable is not set.")
+    })
+
+    it("throws if getting either secret returns a falsy value", async () => {
+      process.env.APP_NAME = ""
+
+      const {fetchSecrets: fn} = await import("../src/helpers")
+      await expect(fn(logger)).rejects.toThrow(
+        "Failed to get secret values from the AWS secret manager"
+      )
+    })
+
+    it("fetches both secrets successfully", async () => {
+      const {fetchSecrets: fn} = await import("../src/helpers")
+      await expect(fn(logger)).resolves.toBeUndefined()
+
+      expect(mockGetSecret).toHaveBeenCalledWith(process.env.APP_NAME_SECRET)
+      expect(mockGetSecret).toHaveBeenCalledWith(process.env.API_KEY_SECRET)
     })
   })
 })

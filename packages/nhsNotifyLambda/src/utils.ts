@@ -106,17 +106,30 @@ export async function drainQueue(
       }
     )
 
-    const parsedMessages: Array<NotifyDataItemMessage> = Messages.map((m) => {
+    // flatmap causes the [] to be filtered out, since nothing is there to be flattened
+    const parsedMessages: Array<NotifyDataItemMessage> = Messages.flatMap((m) => {
       if (!m.Body) {
-        logger.error("Failed to parse SQS message - aborting this notification processor check.", {offendingMessage: m})
-        throw new Error(`Received an invalid SQS message. Message ID ${m.MessageId}`)
+        logger.error(
+          "Received an invalid SQS message (missing Body) - omitting from processing.",
+          {offendingMessage: m}
+        )
+        return []
       }
-
-      const parsedBody: NotifyDataItem = JSON.parse(m.Body)
-
-      return {
-        ...m,
-        PSUDataItem: parsedBody
+      try {
+        const parsedBody: NotifyDataItem = JSON.parse(m.Body)
+        // This is an array of one element, which will be extracted by the flatmap
+        return [
+          {
+            ...m,
+            PSUDataItem: parsedBody
+          }
+        ]
+      } catch (error) {
+        logger.error(
+          "Failed to parse SQS message body as JSON - omitting from processing.",
+          {offendingMessage: m, parseError: error}
+        )
+        return []
       }
     })
 
@@ -235,9 +248,9 @@ export async function addPrescriptionMessagesToNotificationStateStore(
       NHSNumber: data.PSUDataItem.PatientNHSNumber,
       ODSCode: data.PSUDataItem.PharmacyODSCode,
       RequestId: data.PSUDataItem.RequestID,
-      SQSMessageID: data.MessageId ?? "",
+      SQSMessageID: data.MessageId ?? "no SQS message ID",
       LastNotifiedPrescriptionStatus: data.PSUDataItem.Status,
-      DeliveryStatus: data.success ? "requested" : "request error",
+      DeliveryStatus: data.success ? "requested" : "notify request failed",
       NotifyMessageID: data.notifyMessageId ?? "",
       LastNotificationRequestTimestamp: new Date().toISOString(),
       ExpiryTime: (Math.floor(+new Date() / 1000) + TTL_DELTA)
