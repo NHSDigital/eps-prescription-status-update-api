@@ -120,6 +120,7 @@ lint-node: compile-node
 	npm run lint --workspace packages/common/testing
 	npm run lint --workspace packages/common/middyErrorHandler
 	npm run lint --workspace packages/common/commonTypes
+	npm run lint --workspace packages/psuRestoreValidationLambda
 
 lint-specification: compile-specification
 	npm run lint --workspace packages/specification
@@ -148,6 +149,7 @@ test: compile
 	npm run test --workspace packages/checkPrescriptionStatusUpdates
 	npm run test --workspace packages/nhsNotifyLambda
 	npm run test --workspace packages/common/middyErrorHandler
+	npm run test --workspace packages/psuRestoreValidationLambda
 
 clean:
 	rm -rf packages/updatePrescriptionStatus/coverage

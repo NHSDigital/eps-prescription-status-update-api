@@ -1,4 +1,4 @@
-import {DynamoDBDocumentClient, PutCommand, GetCommand} from "@aws-sdk/lib-dynamodb"
+import {DynamoDBDocumentClient} from "@aws-sdk/lib-dynamodb"
 import {jest} from "@jest/globals"
 import {Logger} from "@aws-lambda-powertools/logger"
 

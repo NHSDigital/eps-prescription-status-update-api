@@ -1,6 +1,8 @@
 import {Backup} from "@aws-sdk/client-backup"
 import {Logger} from "@aws-lambda-powertools/logger"
 import {injectLambdaContext} from "@aws-lambda-powertools/logger/middleware"
+import {DynamoDBClient} from "@aws-sdk/client-dynamodb"
+import {DynamoDBDocumentClient} from "@aws-sdk/lib-dynamodb"
 import middy from "@middy/core"
 import inputOutputLogger from "@middy/input-output-logger"
 import {MiddyErrorHandler} from "@PrescriptionStatusUpdate_common/middyErrorHandler"
@@ -12,13 +14,16 @@ const errorResponseBody = {
 }
 
 const middyErrorHandler = new MiddyErrorHandler(errorResponseBody)
+const client = new DynamoDBClient()
+const docClient = DynamoDBDocumentClient.from(client)
 
-const lambdaHandler = async (event) => {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const lambdaHandler = async (event: any) => {
   const sourceTableArn = event.detail.sourceResourceArn
   const restoredTableArn = event.detail.createdResourceArn
   logger.debug("Use the following arn for verification", {sourceTableArn, restoredTableArn})
   const backup = new Backup()
-  const result = await compareTables(sourceTableArn, restoredTableArn, logger)
+  const result = await compareTables(sourceTableArn, restoredTableArn, docClient, logger)
   try {
     if(result) {
       logger.info("Compare tables successful")
