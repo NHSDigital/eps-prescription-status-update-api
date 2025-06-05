@@ -33,6 +33,10 @@
       "path": "../packages/nhsNotifyLambda"
     },
     {
+      "name": "packages/nhsNotifyUpdateCallback",
+      "path": "../packages/nhsNotifyUpdateCallback"
+    },
+    {
       "name": "packages/capabilityStatement",
       "path": "../packages/capabilityStatement"
     },
@@ -101,6 +105,7 @@
       "mermade",
       "milliliter",
       "mkhl",
+      "nhsapp",
       "nHSCHI",
       "NHSD",
       "nhsdlogin",

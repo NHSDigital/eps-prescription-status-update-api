@@ -25,11 +25,15 @@ Parameters:
     Type: String
     Default: none
 
-  # PrescriptionNotificationStatesTableName:
-  #   Type: String
-  #   Default: none
+  PrescriptionNotificationStatesTableName:
+    Type: String
+    Default: none
 
   NHSNotifyPrescriptionsSQSQueueUrl:
+    Type: String
+    Default: none
+
+  SQSSaltSecret:
     Type: String
     Default: none
 
@@ -76,17 +80,6 @@ Conditions:
     - !Ref EnableBackup
 
 Resources:
-  SQSSaltSecret:
-    Type: AWS::SecretsManager::Secret
-    Properties:
-      Name: !Sub ${StackName}-SqsSalt
-      Description: Auto-generated salt for SQS_SALT
-      GenerateSecretString:
-        SecretStringTemplate: "{}"
-        GenerateStringKey: salt
-        PasswordLength: 32
-        ExcludePunctuation: true
-
   UpdatePrescriptionStatus:
     Type: AWS::Serverless::Function
     Properties:
@@ -400,7 +393,7 @@ Resources:
         Variables:
           LOG_LEVEL: !Ref LogLevel
           NHS_NOTIFY_PRESCRIPTIONS_SQS_QUEUE_URL: !Ref NHSNotifyPrescriptionsSQSQueueUrl
-          # TABLE_NAME: !Ref PrescriptionNotificationStatesTableName
+          TABLE_NAME: !Ref PrescriptionNotificationStatesTableName
       Events:
         ScheduleEvent:
           Type: ScheduleV2
@@ -443,9 +436,58 @@ Resources:
           - - Fn::ImportValue: !Sub ${StackName}-WriteNHSNotifyPrescriptionsSQSQueuePolicyArn
             - Fn::ImportValue: !Sub ${StackName}-ReadNHSNotifyPrescriptionsSQSQueuePolicyArn
             - Fn::ImportValue: !Sub ${StackName}-UseNotificationSQSQueueKMSKeyPolicyArn
-            # - Fn::ImportValue: !Sub ${StackName}:tables:${PrescriptionNotificationStatesTableName}:TableReadPolicyArn
-            # - Fn::ImportValue: !Sub ${StackName}:tables:${PrescriptionNotificationStatesTableName}:TableWritePolicyArn
-            # - Fn::ImportValue: !Sub ${StackName}:tables:UsePrescriptionNotificationStatesKMSKeyPolicyArn
+            - Fn::ImportValue: !Sub ${StackName}:tables:${PrescriptionNotificationStatesTableName}:TableReadPolicyArn
+            - Fn::ImportValue: !Sub ${StackName}:tables:${PrescriptionNotificationStatesTableName}:TableWritePolicyArn
+            - Fn::ImportValue: !Sub ${StackName}:tables:UsePrescriptionNotificationStatesKMSKeyPolicyArn
+
+  NHSNotifyUpdateCallback:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub ${StackName}-NHSNotifyUpdateCallback
+      CodeUri: ../../packages/
+      Handler: lambdaHandler.handler
+      Role: !GetAtt NHSNotifyUpdateCallbackResources.Outputs.LambdaRoleArn
+      Environment:
+        Variables:
+          LOG_LEVEL: !Ref LogLevel
+          TABLE_NAME: !Ref PrescriptionNotificationStatesTableName
+          APP_NAME_SECRET: secrets-PSU-Notify-Application-Name
+          API_KEY_SECRET:  secrets-PSU-Notify-API-Key
+    Metadata:
+      BuildMethod: esbuild
+      guard:
+        SuppressedRules:
+          - LAMBDA_DLQ_CHECK
+          - LAMBDA_INSIDE_VPC
+          - LAMBDA_CONCURRENCY_CHECK
+      BuildProperties:
+        Minify: true
+        Target: es2020
+        Sourcemap: true
+        tsconfig: nhsNotifyUpdateCallback/tsconfig.json
+        packages: bundle
+        EntryPoints:
+          - nhsNotifyUpdateCallback/src/lambdaHandler.ts
+
+  NHSNotifyUpdateCallbackResources:
+    Type: AWS::Serverless::Application
+    Properties:
+      Location: lambda_resources.yaml
+      Parameters:
+        StackName: !Ref StackName
+        LambdaName: !Sub ${StackName}-NHSNotifyUpdateCallback
+        LambdaArn: !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:${StackName}-NHSNotifyUpdateCallback
+        IncludeAdditionalPolicies: true
+        AdditionalPolicies: !Join
+          - ","
+          - - Fn::ImportValue: !Sub ${StackName}:tables:${PrescriptionNotificationStatesTableName}:TableReadPolicyArn
+            - Fn::ImportValue: !Sub ${StackName}:tables:${PrescriptionNotificationStatesTableName}:TableWritePolicyArn
+            - Fn::ImportValue: !Sub ${StackName}:tables:UsePrescriptionNotificationStatesKMSKeyPolicyArn
+        LogRetentionInDays: !Ref LogRetentionInDays
+        CloudWatchKMSKeyId: !ImportValue account-resources:CloudwatchLogsKmsKeyArn
+        EnableSplunk: !Ref EnableSplunk
+        SplunkSubscriptionFilterRole: !ImportValue lambda-resources:SplunkSubscriptionFilterRole
+        SplunkDeliveryStreamArn: !ImportValue lambda-resources:SplunkDeliveryStream
 
   PsuRestoreValidationPolicy:
     Condition: EnableBackupCondition
@@ -616,3 +658,11 @@ Outputs:
   NotifyProcessorFunctionArn:
     Description: The function ARN of the NHS Notify lambda
     Value: !GetAtt NotifyProcessor.Arn
+
+  NHSNotifyUpdateCallbackFunctionName:
+    Description: The function name of the NHSNotifyUpdateCallback lambda
+    Value: !Ref NHSNotifyUpdateCallback
+
+  NHSNotifyUpdateCallbackFunctionArn:
+    Description: The function ARN of the NHSNotifyUpdateCallback lambda
+    Value: !GetAtt NHSNotifyUpdateCallback.Arn

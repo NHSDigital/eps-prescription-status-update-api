@@ -12,3 +12,11 @@ export interface PSUDataItem {
   ApplicationName: string
   ExpiryTime: number
 }
+
+export interface NotifyDataItem {
+  PatientNHSNumber: string
+  PharmacyODSCode: string
+  RequestID: string
+  TaskID: string
+  Status: string
+}

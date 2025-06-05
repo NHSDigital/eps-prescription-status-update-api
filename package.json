@@ -24,6 +24,7 @@
     "packages/checkPrescriptionStatusUpdates",
     "packages/nhsNotifyLambda",
     "packages/psuRestoreValidationLambda",
+    "packages/nhsNotifyUpdateCallback",
     "packages/common/testing",
     "packages/common/middyErrorHandler",
     "packages/common/commonTypes"
