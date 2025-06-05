@@ -16,8 +16,8 @@ const mockLogger: Partial<Logger> = {
 
 const SOURCE_ITEM = {
   LastModified: {S: "2024-08-19T16:11:13Z"},
-  PrescriptionID: "dummy_prescription",
-  TaskID: "dummy_task"
+  PrescriptionID: {S: "dummy_prescription"},
+  TaskID: {S: "dummy_task"}
 }
 
 const {compareTables} = await import("../src/compareTable")

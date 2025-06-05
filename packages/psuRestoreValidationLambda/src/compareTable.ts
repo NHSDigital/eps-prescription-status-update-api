@@ -1,14 +1,12 @@
 
 import {Logger} from "@aws-lambda-powertools/logger"
+import {DescribeTableCommand, DescribeTableInput, DynamoDBClient} from "@aws-sdk/client-dynamodb"
 import {
-  DynamoDBClient,
-  DescribeTableCommand,
-  DescribeTableInput,
   ScanCommand,
   ScanCommandInput,
   QueryCommandInput,
   QueryCommand
-} from "@aws-sdk/client-dynamodb"
+} from "@aws-sdk/lib-dynamodb"
 import assert from "assert"
 
 export const compareTables = async(
@@ -49,8 +47,8 @@ export const compareTables = async(
         logger.info("scanned item is too new", {sourceTableItem})
         continue
       }
-      const prescriptionID = sourceTableItem.PrescriptionID
-      const taskId =sourceTableItem.TaskID
+      const prescriptionID = String(sourceTableItem.PrescriptionID)
+      const taskId = String(sourceTableItem.TaskID)
       const restoredTableQueryItem: QueryCommandInput = {
         TableName: restoredTableArn,
         KeyConditionExpression: "PrescriptionID = :inputPrescriptionID  AND TaskID = :inputTaskID",
