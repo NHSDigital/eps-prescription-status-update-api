@@ -472,7 +472,7 @@ Resources:
         Enabled: true
       Tags:
         - Key: "NHSE-Enable-Backup"
-          Value: "True"
+          Value: "False"
 
   PrescriptionNotificationStatesResources:
     Type: AWS::Serverless::Application
