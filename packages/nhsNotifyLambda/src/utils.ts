@@ -22,16 +22,6 @@ const TTL_DELTA = 60 * 60 * 24 * 14 // Keep records for 2 weeks
 const NOTIFY_REQUEST_MAX_ITEMS = 45000
 const NOTIFY_REQUEST_MAX_BYTES = 5 * 1024 * 1024 // 5 MB
 
-// Fetch secrets and parameters
-if (
-  !process.env.NOTIFY_API_BASE_URL_PARAM
-  || !process.env.API_KEY_SECRET
-) {
-  throw new Error("Environment configuration error")
-}
-const NOTIFY_API_BASE_URL = await getParameter(process.env.NOTIFY_API_BASE_URL_PARAM)
-const API_KEY = await getSecret(process.env.API_KEY_SECRET)
-
 // these are only ever changed by a deployment
 const dynamoTable = process.env.TABLE_NAME
 const sqsUrl = process.env.NHS_NOTIFY_PRESCRIPTIONS_SQS_QUEUE_URL
@@ -366,6 +356,16 @@ export async function makeBatchNotifyRequest(
   routingPlanId: string,
   data: Array<NotifyDataItemMessage>
 ): Promise<Array<NotifyDataItemMessage>> {
+  // Fetch secrets and parameters
+  if (
+    !process.env.NOTIFY_API_BASE_URL_PARAM
+  || !process.env.API_KEY_SECRET
+  ) {
+    throw new Error("Environment configuration error")
+  }
+  const NOTIFY_API_BASE_URL = await getParameter(process.env.NOTIFY_API_BASE_URL_PARAM)
+  const API_KEY = await getSecret(process.env.API_KEY_SECRET)
+
   if (!NOTIFY_API_BASE_URL) throw new Error("NOTIFY_API_BASE_URL is not defined in the environment variables!")
   if (!API_KEY) throw new Error("API_KEY is not defined in the environment variables!")
 
