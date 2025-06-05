@@ -1,3 +1,4 @@
+import {EventBridgeEvent} from "aws-lambda"
 import {Backup} from "@aws-sdk/client-backup"
 import {Logger} from "@aws-lambda-powertools/logger"
 import {injectLambdaContext} from "@aws-lambda-powertools/logger/middleware"
@@ -7,6 +8,7 @@ import middy from "@middy/core"
 import inputOutputLogger from "@middy/input-output-logger"
 import {MiddyErrorHandler} from "@PrescriptionStatusUpdate_common/middyErrorHandler"
 import {compareTables} from "./compareTable"
+import {backupEventCompletedDetail} from "./types"
 
 const logger = new Logger({serviceName: "psuRestoreValidationLambda"})
 const errorResponseBody = {
@@ -17,8 +19,7 @@ const middyErrorHandler = new MiddyErrorHandler(errorResponseBody)
 const client = new DynamoDBClient()
 const docClient = DynamoDBDocumentClient.from(client)
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const lambdaHandler = async (event: any) => {
+const lambdaHandler = async (event: EventBridgeEvent<"Restore Job State Change", backupEventCompletedDetail>) => {
   const sourceTableArn = event.detail.sourceResourceArn
   const restoredTableArn = event.detail.createdResourceArn
   logger.debug("Use the following arn for verification", {sourceTableArn, restoredTableArn})
