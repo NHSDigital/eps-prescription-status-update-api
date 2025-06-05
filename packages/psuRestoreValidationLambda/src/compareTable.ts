@@ -20,7 +20,7 @@ export const compareTables = async(
   const sourceTableDescribe: DescribeTableInput = {
     TableName: sourceTableArn
   }
-  const createdTableDescribe: DescribeTableInput = {
+  const restoredTableDescribe: DescribeTableInput = {
     TableName: restoredTableArn
   }
   const sourceTableScan: ScanCommandInput = {
@@ -30,24 +30,26 @@ export const compareTables = async(
   let success = true
   try {
     const sourceTableResult = await client.send(new DescribeTableCommand(sourceTableDescribe))
-    const createdTableResult = await client.send(new DescribeTableCommand(createdTableDescribe))
+    const restoredTableResult = await client.send(new DescribeTableCommand(restoredTableDescribe))
     logger.info("Source table info", {sourceTableResult})
-    logger.info("Created table info", {createdTableResult})
+    logger.info("Restored table info", {restoredTableResult})
     const sourceTableItems = await client.send(new ScanCommand(sourceTableScan))
     if (sourceTableItems === undefined) {
+      logger.error("sourceTableItems is undefined", {sourceTableScan})
       throw new Error("Can not get results from scan")
     }
     if (sourceTableItems.Items === undefined) {
+      logger.error("sourceTableItems.Items is undefined", {sourceTableScan, sourceTableItems})
       throw new Error("Can not get results from scan")
     }
     for (const sourceTableItem of sourceTableItems.Items) {
       const lastModified = new Date(sourceTableItem.LastModified.S as string)
       const yesterday = new Date(new Date().setDate(new Date().getDate()-1))
       if (lastModified > yesterday) {
-        logger.info("scanned item is too new", sourceTableItem)
+        logger.info("scanned item is too new", {sourceTableItem})
         continue
       }
-      const prescriptionID =sourceTableItem.PrescriptionID
+      const prescriptionID = sourceTableItem.PrescriptionID
       const taskId =sourceTableItem.TaskID
       const restoredTableQueryItem: QueryCommandInput = {
         TableName: restoredTableArn,
@@ -59,13 +61,17 @@ export const compareTables = async(
       }
       const createdTableItem = await client.send(new QueryCommand(restoredTableQueryItem))
       if (createdTableItem === undefined) {
+        logger.error("createdTableItem is undefined", {queryParams: {prescriptionID, taskId}, restoredTableQueryItem})
         throw new Error("Can not get results from query")
       }
       if (createdTableItem.Items === undefined) {
+        logger.error("createdTableItem.Items is undefined",
+          {queryParams: {prescriptionID, taskId}, restoredTableQueryItem})
         throw new Error("Can not get results from query")
       }
       if (createdTableItem.Items.length !== 1) {
-        throw new Error("row count on restored table is not 1")
+        logger.error("Restored table count is not 1", {queryParams: {prescriptionID, taskId}, restoredTableQueryItem})
+        throw new Error("Row count on restored table query is not 1")
       }
       assert.deepStrictEqual(createdTableItem.Items[0], sourceTableItem)
     }
