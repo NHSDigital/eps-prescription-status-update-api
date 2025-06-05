@@ -80,6 +80,7 @@ Resources:
         - !Join
           - ","
           - - !Ref LambdaManagedPolicy
+            - !GetAtt SSMGetParameterPolicy.Arn
             - !ImportValue lambda-resources:LambdaInsightsLogGroupPolicy
             - !ImportValue account-resources:CloudwatchEncryptionKMSPolicyArn
             - !ImportValue account-resources:LambdaDecryptSecretsKMSPolicy
@@ -124,6 +125,19 @@ Resources:
       LogGroupName: !Ref LambdaLogGroup
       FilterPattern: ""
       DestinationArn: !Ref SplunkDeliveryStreamArn
+
+  SSMGetParameterPolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      Description: "Allows reading SSM parameters"
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Action:
+              - ssm:GetParameter
+            Resource:
+              - "*"
 
 Outputs:
   LambdaRoleArn:

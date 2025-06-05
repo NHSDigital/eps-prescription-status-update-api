@@ -363,6 +363,10 @@ export async function makeBatchNotifyRequest(
   ) {
     throw new Error("Environment configuration error")
   }
+
+  logger.info("Getting parameters with these names",
+    {NotifyApiBaseUrl: process.env.NOTIFY_API_BASE_URL, NotifyApiKey: process.env.API_KEY}
+  )
   const NOTIFY_API_BASE_URL = await getParameter(process.env.NOTIFY_API_BASE_URL_PARAM)
   const API_KEY = await getSecret(process.env.API_KEY_SECRET)
 
