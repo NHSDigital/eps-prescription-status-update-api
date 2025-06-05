@@ -67,10 +67,9 @@ Resources:
       Type: String
       Value: !If
         - IsProd
-        - > # Prod routing plan ID
-          changeme
-        - > # Non-prod routing plan ID (sandbox)
-          b838b13c-f98c-4def-93f0-515d4e4f4ee1
+        - changeme
+        # Non-prod value (sandbox)
+        - b838b13c-f98c-4def-93f0-515d4e4f4ee1
 
   NotifyAPIBaseURLParameter:
     Type: AWS::SSM::Parameter
@@ -80,10 +79,9 @@ Resources:
       Type: String
       Value: !If
         - IsProd
-        - > # Prod API URL
-          https://api.service.nhs.uk/comms
-        - > # Non-prod API URL (sandbox) (INT environment: https://int.api.service.nhs.uk/comms)
-          https://sandbox.api.service.nhs.uk/comms
+        - https://api.service.nhs.uk/comms
+        # Non-prod API URL (sandbox) (INT environment: https://int.api.service.nhs.uk/comms)
+        - https://sandbox.api.service.nhs.uk/comms
 
 Outputs:
   EnabledSiteODSCodesParameterName:
