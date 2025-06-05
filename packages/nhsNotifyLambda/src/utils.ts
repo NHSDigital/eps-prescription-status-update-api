@@ -13,7 +13,7 @@ import {getSecret} from "@aws-lambda-powertools/parameters/secrets"
 import {NotifyDataItem} from "@PrescriptionStatusUpdate_common/commonTypes"
 
 import {v4} from "uuid"
-import {CreateMessageBatchResponse} from "./types"
+import {CreateMessageBatchRequest, CreateMessageBatchResponse, MessageBatchItem} from "./types"
 
 // Dynamo TTL for entries
 const TTL_DELTA = 60 * 60 * 24 * 14 // Keep records for 2 weeks
@@ -172,7 +172,9 @@ export async function drainQueue(
     }
   }
 
-  logger.info(`In sum, retrieved ${allMessages.length} messages from SQS`)
+  logger.info(`In sum, retrieved ${allMessages.length} messages from SQS`,
+    {MessageDeduplicationIds: allMessages.map(el => el.Attributes?.MessageDeduplicationId)}
+  )
 
   return {messages: allMessages, isEmpty}
 }
@@ -346,6 +348,7 @@ function estimateSize(obj: unknown) {
 
 /**
  * Returns the original data, updated with the status returned by NHS notify.
+ * Does not return data for messages that failed to send.
  *
  * @param logger AWS logging object
  * @param routingPlanId The Notify routing plan ID with which to process the data
@@ -383,16 +386,23 @@ export async function makeBatchNotifyRequest(
   const messageBatchReference = v4()
 
   // Map the NotifyDataItems into the structure needed for notify
-  const messages = data.map(item => ({
+  const messages: Array<MessageBatchItem> = data.flatMap(item => {
+    // Ignore messages with missing deduplication IDs (the field is possibly undefined)
+    if (!item.Attributes?.MessageDeduplicationId) {
+      logger.error("NOT SENDING NOTIFY REQUEST FOR A MESSAGE; missing deduplication ID", {item})
+      return []
+    }
     // The message reference has to be unique for all messages in the batch.
     // The dedupe ID should work here.
-    messageReference: item.Attributes?.MessageDeduplicationId,
-    recipient: {nhsNumber: item.PSUDataItem.PatientNHSNumber},
-    originator: {odsCode: item.PSUDataItem.PharmacyODSCode},
-    personalisation: {}
-  }))
+    return [{
+      messageReference: item.Attributes?.MessageDeduplicationId,
+      recipient: {nhsNumber: item.PSUDataItem.PatientNHSNumber},
+      originator: {odsCode: item.PSUDataItem.PharmacyODSCode},
+      personalisation: {}
+    }]
+  })
 
-  const body = {
+  const body: CreateMessageBatchRequest = {
     data: {
       type: "MessageBatch" as const,
       attributes: {
@@ -402,6 +412,9 @@ export async function makeBatchNotifyRequest(
       }
     }
   }
+
+  // TODO: Remove this
+  logger.info("Making")
 
   // Recursive split if too large
   if (data.length >= NOTIFY_REQUEST_MAX_ITEMS || estimateSize(body) > NOTIFY_REQUEST_MAX_BYTES) {
@@ -470,6 +483,7 @@ export async function makeBatchNotifyRequest(
       logger.error("Notify batch request failed", {
         status: resp.status,
         statusText: resp.statusText,
+        responseBody: resp.body,
         messageBatchReference,
         messageReferences: messages.map(e => e.messageReference),
         success: "Requested Failed"
