@@ -27,6 +27,9 @@ Parameters:
     Type: Number
     Default: 600
 
+  EnableBackup:
+    Type: String
+
 Conditions:
   EnableDynamoDBAutoScalingCondition: !Equals
     - true
@@ -202,7 +205,7 @@ Resources:
         - Key: "EPS-Tablename"
           Value: "PrescriptionStatusUpdates"
         - Key: "NHSE-Enable-Backup"
-          Value: "True"
+          Value: !Ref EnableBackup
 
   PrescriptionStatusUpdatesResources:
     Type: AWS::Serverless::Application

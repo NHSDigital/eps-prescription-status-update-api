@@ -70,6 +70,9 @@ on:
       STATE_MACHINE_LOG_LEVEL:
         required: true
         type: string
+      ENABLE_BACKUP:
+        required: true
+        type: string
     secrets:
       CLOUD_FORMATION_DEPLOY_ROLE:
         required: true
@@ -154,6 +157,7 @@ jobs:
           DEPLOY_CHECK_PRESCRIPTION_STATUS_UPDATE: ${{ inputs.DEPLOY_CHECK_PRESCRIPTION_STATUS_UPDATE }}
           ENABLE_ALERTS: ${{ inputs.ENABLE_ALERTS }}
           STATE_MACHINE_LOG_LEVEL: ${{ inputs.STATE_MACHINE_LOG_LEVEL }}
+          ENABLE_BACKUP: ${{ inputs.ENABLE_BACKUP }}
         run: ./release_code.sh
 
       - name: get mtls secrets

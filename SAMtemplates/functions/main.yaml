@@ -63,10 +63,17 @@ Parameters:
   Environment:
     Type: String
 
+  EnableBackup:
+    Type: String
+
 Conditions:
   ShouldDeployCheckPrescriptionStatusUpdate: !Equals
     - true
     - !Ref DeployCheckPrescriptionStatusUpdate
+
+  EnableBackupCondition: !Equals
+    - True
+    - !Ref EnableBackup
 
 Resources:
   SQSSaltSecret:
@@ -441,6 +448,7 @@ Resources:
             # - Fn::ImportValue: !Sub ${StackName}:tables:UsePrescriptionNotificationStatesKMSKeyPolicyArn
 
   PsuRestoreValidationPolicy:
+    Condition: EnableBackupCondition
     Type: AWS::IAM::ManagedPolicy
     Properties:
       ManagedPolicyName: !Sub ${StackName}-PsuRestoreValidationPolicy
@@ -462,6 +470,7 @@ Resources:
             Resource: !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/awsbackup-restore-test-*
 
   PsuRestoreValidation:
+    Condition: EnableBackupCondition
     Type: AWS::Serverless::Function
     Properties:
       FunctionName: !Sub ${StackName}-PsuRestoreValidation
@@ -488,6 +497,7 @@ Resources:
           - psuRestoreValidationLambda/src/handler.ts
 
   PsuRestoreValidationResources:
+    Condition: EnableBackupCondition
     Type: AWS::Serverless::Application
     Properties:
       Location: lambda_resources.yaml
@@ -508,6 +518,7 @@ Resources:
             - Fn::ImportValue: !Sub ${StackName}:tables:UsePrescriptionStatusUpdatesKMSKeyPolicyArn
 
   PsuRestoreValidationLambdaInvokePermission:
+    Condition: EnableBackupCondition
     DependsOn:
       - PsuBackupRestoreJobStateChangeRule
       - PsuRestoreValidation
@@ -520,6 +531,7 @@ Resources:
 
   # EventBridge Rule for Backup Restore Job State Change
   PsuBackupRestoreJobStateChangeRule:
+    Condition: EnableBackupCondition
     Type: "AWS::Events::Rule"
     Properties:
       EventPattern:

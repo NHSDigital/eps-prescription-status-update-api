@@ -78,8 +78,8 @@ Parameters:
     Type: String
     Default: true
     AllowedValues:
-      - true
-      - false
+      - True
+      - False
 
   DynamoDBUtilizationPercentageThreshold:
     Type: Number
@@ -88,6 +88,13 @@ Parameters:
 
   StateMachineLogLevel:
     Type: String
+
+  EnableBackup:
+    Type: String
+    Default: false
+    AllowedValues:
+      - true
+      - false
 
 Resources:
   Parameters:
@@ -105,6 +112,7 @@ Resources:
       Parameters:
         StackName: !Ref AWS::StackName
         EnableDynamoDBAutoScaling: !Ref EnableDynamoDBAutoScaling
+        EnableBackup: !Ref EnableBackup
 
   Messaging:
     Type: AWS::Serverless::Application
@@ -154,6 +162,7 @@ Resources:
         CommitId: !Ref CommitId
         DeployCheckPrescriptionStatusUpdate: !Ref DeployCheckPrescriptionStatusUpdate
         Environment: !Ref Environment
+        EnableBackup: !Ref EnableBackup
 
   StateMachines:
     Type: AWS::Serverless::Application
