@@ -6,6 +6,8 @@ import middy from "@middy/core"
 import inputOutputLogger from "@middy/input-output-logger"
 import errorHandler from "@nhs/fhir-middy-error-handler"
 
+import {getParameter} from "@aws-lambda-powertools/parameters/ssm"
+
 import {
   addPrescriptionMessagesToNotificationStateStore,
   checkCooldownForUpdate,
@@ -17,8 +19,6 @@ import {
 
 const logger = new Logger({serviceName: "nhsNotify"})
 
-const NHS_NOTIFY_ROUTING_ID = process.env.NHS_NOTIFY_ROUTING_ID
-
 /**
  * Handler for the scheduled trigger.
  *
@@ -26,6 +26,11 @@ const NHS_NOTIFY_ROUTING_ID = process.env.NHS_NOTIFY_ROUTING_ID
  */
 export const lambdaHandler = async (event: EventBridgeEvent<string, string>): Promise<void> => {
   // EventBridge jsonifies the details so the second type of the event is a string. That's unused here, though
+
+  // Get the routing plan ID from the parameter storage
+  if (!process.env.NHS_NOTIFY_ROUTING_ID_PARAM) throw new Error("Environment not configured")
+  const NHS_NOTIFY_ROUTING_ID = await getParameter(process.env.NHS_NOTIFY_ROUTING_ID_PARAM)
+  if (!NHS_NOTIFY_ROUTING_ID) throw new Error("No Routing Plan ID found")
 
   logger.info("NHS Notify lambda triggered by scheduler", {event})
 
@@ -80,6 +85,7 @@ export const lambdaHandler = async (event: EventBridgeEvent<string, string>): Pr
     // Make the request. If it's successful, add the relevant messages to the list of processed messages.
     const processed: Array<NotifyDataItemMessage> = []
     if (!NHS_NOTIFY_ROUTING_ID) throw new Error("NHS_NOTIFY_ROUTING_ID environment variable not set.")
+    logger.info("Using this Routing Plan ID for all messages.", {RoutingPlanId: NHS_NOTIFY_ROUTING_ID})
     try {
       const results = await makeBatchNotifyRequest(
         logger, NHS_NOTIFY_ROUTING_ID, toProcess

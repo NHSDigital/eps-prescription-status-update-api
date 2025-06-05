@@ -8,6 +8,15 @@ import {
 
 import {constructPSUDataItem, constructPSUDataItemMessage} from "./testHelpers"
 
+const mockGetParameter = jest.fn().mockImplementation(() => "parameter_value")
+jest.unstable_mockModule(
+  "@aws-lambda-powertools/parameters/ssm",
+  async () => ({
+    __esModule: true,
+    getParameter: mockGetParameter
+  })
+)
+
 const mockAddPrescriptionMessagesToNotificationStateStore = jest.fn()
 const mockRemoveSQSMessages = jest.fn()
 const mockDrainQueue = jest.fn()
@@ -54,6 +63,11 @@ describe("Unit test for NHS Notify lambda handler", () => {
 
     jest.clearAllMocks()
     jest.restoreAllMocks()
+  })
+
+  it("When the getParameter call fails, the handler throws an error", async () => {
+    mockGetParameter.mockImplementationOnce(() => Promise.resolve(undefined))
+    await expect(lambdaHandler(mockEventBridgeEvent)).rejects.toThrow("No Routing Plan ID found")
   })
 
   it("When drainQueue throws an error, the handler throws an error", async () => {
@@ -172,6 +186,7 @@ describe("Unit test for NHS Notify lambda handler", () => {
     await expect(lambdaHandler(mockEventBridgeEvent)).resolves.not.toThrow()
 
     expect(mockError).not.toHaveBeenCalled()
+    expect(mockGetParameter).toHaveBeenCalledWith(process.env.NHS_NOTIFY_ROUTING_ID_PARAM)
   })
 
   it("Filters out messages inside cooldown", async () => {

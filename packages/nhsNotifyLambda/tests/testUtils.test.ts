@@ -10,6 +10,30 @@ import {constructMessage, constructPSUDataItemMessage, mockSQSClient} from "./te
 
 const {mockSend: sqsMockSend} = mockSQSClient()
 
+const TEST_URL = "https://example.com"
+const mockGetParameter = jest.fn().mockImplementation((name) => {
+  if (name === "NOTIFY_API_BASE_URL_PARAM") {
+    return TEST_URL
+  }
+  return "parameter_value"
+})
+jest.unstable_mockModule(
+  "@aws-lambda-powertools/parameters/ssm",
+  async () => ({
+    __esModule: true,
+    getParameter: mockGetParameter
+  })
+)
+
+const mockGetSecret = jest.fn().mockImplementation(() => "secret_value")
+jest.unstable_mockModule(
+  "@aws-lambda-powertools/parameters/secrets",
+  async () => ({
+    __esModule: true,
+    getSecret: mockGetSecret
+  })
+)
+
 const {
   addPrescriptionMessagesToNotificationStateStore,
   removeSQSMessages: clearCompletedSQSMessages,
@@ -474,7 +498,7 @@ describe("NHS notify lambda helper functions", () => {
       ]
 
       // nock the POST
-      nock(process.env.NOTIFY_API_BASE_URL!)
+      nock(TEST_URL)
         .post("/v1/message-batches")
         .reply(201, {
           data: {attributes: {messages: returnedMessages}}
@@ -513,7 +537,7 @@ describe("NHS notify lambda helper functions", () => {
         })
       ]
 
-      nock(process.env.NOTIFY_API_BASE_URL!)
+      nock(TEST_URL)
         .post("/v1/message-batches")
         .reply(500, "Internal Server Error")
 
@@ -562,7 +586,7 @@ describe("NHS notify lambda helper functions", () => {
       ]
 
       // Simulate network failure
-      nock(process.env.NOTIFY_API_BASE_URL!)
+      nock(TEST_URL)
         .post("/v1/message-batches")
         .replyWithError(new Error("Network failure"))
 
@@ -605,7 +629,7 @@ describe("NHS notify lambda helper functions", () => {
       )
 
       // every sub-batch returns an empty messages array
-      nock(process.env.NOTIFY_API_BASE_URL!)
+      nock(TEST_URL)
         .post("/v1/message-batches")
         .times(2)
         .reply(201, {
@@ -656,7 +680,7 @@ describe("NHS notify lambda helper functions", () => {
     //   ]
 
     //   // First reply 429 with header
-    //   nock(process.env.NOTIFY_API_BASE_URL!)
+    //   nock(TEST_URL)
     //     .post("/v1/message-batches")
     //     .reply(429, "", {"Retry-After": "2"})
     //     // Then the successful one

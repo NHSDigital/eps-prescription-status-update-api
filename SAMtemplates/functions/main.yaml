@@ -46,6 +46,12 @@ Parameters:
   BlockedSiteODSCodesParam:
     Type: AWS::SSM::Parameter::Value<String>
 
+  NotifyRoutingPlanIDParam:
+    Type: AWS::SSM::Parameter::Value<String>
+
+  NotifyAPIBaseURLParam:
+    Type: AWS::SSM::Parameter::Value<String>
+
   LogLevel:
     Type: String
 
@@ -84,7 +90,9 @@ Resources:
         Variables:
           TABLE_NAME: !Ref PrescriptionStatusUpdatesTableName
           NHS_NOTIFY_PRESCRIPTIONS_SQS_QUEUE_URL: !Ref NHSNotifyPrescriptionsSQSQueueUrl
+          # TODO: The salt should be fetched at runtime
           SQS_SALT: !Sub "{{resolve:secretsmanager:${SQSSaltSecret}:SecretString:salt}}"
+          # TODO: These should be fetched at runtime
           ENABLED_SITE_ODS_CODES: !Ref EnabledSiteODSCodesParam
           ENABLED_SYSTEMS: !Ref EnabledSystemsParam
           BLOCKED_SITE_ODS_CODES: !Ref BlockedSiteODSCodesParam
@@ -387,9 +395,9 @@ Resources:
           LOG_LEVEL: !Ref LogLevel
           NHS_NOTIFY_PRESCRIPTIONS_SQS_QUEUE_URL: !Ref NHSNotifyPrescriptionsSQSQueueUrl
           TABLE_NAME: !Ref PrescriptionNotificationStatesTableName
-          NHS_NOTIFY_ROUTING_ID: "b838b13c-f98c-4def-93f0-515d4e4f4ee1"
-          NOTIFY_API_BASE_URL: "https://sandbox.api.service.nhs.uk/comms"
           API_KEY_SECRET:  secrets-PSU-Notify-API-Key
+          NHS_NOTIFY_ROUTING_ID_PARAM: !Ref NotifyRoutingPlanIDParam
+          NOTIFY_API_BASE_URL_PARAM: !Ref NotifyAPIBaseURLParam
       Events:
         ScheduleEvent:
           Type: ScheduleV2

@@ -7,17 +7,32 @@ import {
 } from "@aws-sdk/client-sqs"
 import {DynamoDBClient} from "@aws-sdk/client-dynamodb"
 import {DynamoDBDocumentClient, GetCommand, PutCommand} from "@aws-sdk/lib-dynamodb"
+import {getParameter} from "@aws-lambda-powertools/parameters/ssm"
+import {getSecret} from "@aws-lambda-powertools/parameters/secrets"
 
 import {NotifyDataItem} from "@PrescriptionStatusUpdate_common/commonTypes"
 
 import {v4} from "uuid"
 import {CreateMessageBatchResponse} from "./types"
 
-const NOTIFY_API_BASE_URL = process.env.NOTIFY_API_BASE_URL
-const API_KEY = process.env.API_KEY
-
+// Dynamo TTL for entries
 const TTL_DELTA = 60 * 60 * 24 * 14 // Keep records for 2 weeks
 
+// For making the notify requests
+const NOTIFY_REQUEST_MAX_ITEMS = 45000
+const NOTIFY_REQUEST_MAX_BYTES = 5 * 1024 * 1024 // 5 MB
+
+// Fetch secrets and parameters
+if (
+  !process.env.NOTIFY_API_BASE_URL_PARAM
+  || !process.env.API_KEY_SECRET
+) {
+  throw new Error("Environment configuration error")
+}
+const NOTIFY_API_BASE_URL = await getParameter(process.env.NOTIFY_API_BASE_URL_PARAM)
+const API_KEY = await getSecret(process.env.API_KEY_SECRET)
+
+// these are only ever changed by a deployment
 const dynamoTable = process.env.TABLE_NAME
 const sqsUrl = process.env.NHS_NOTIFY_PRESCRIPTIONS_SQS_QUEUE_URL
 
@@ -335,12 +350,9 @@ export async function checkCooldownForUpdate(
   }
 }
 
-const estimateSize = (obj: unknown) => {
+function estimateSize(obj: unknown) {
   return Buffer.byteLength(JSON.stringify(obj), "utf8")
 }
-
-const MAX_ITEMS = 45000
-const MAX_BYTES = 5 * 1024 * 1024 // 5 MB
 
 /**
  * Returns the original data, updated with the status returned by NHS notify.
@@ -360,6 +372,8 @@ export async function makeBatchNotifyRequest(
   if (data.length === 0) {
     return []
   }
+
+  logger.info("Fetched parameter values:", {NotifyUrl: NOTIFY_API_BASE_URL, ApiKey: API_KEY})
 
   // Shared between all messages in this batch
   const messageBatchReference = v4()
@@ -386,7 +400,7 @@ export async function makeBatchNotifyRequest(
   }
 
   // Recursive split if too large
-  if (data.length >= MAX_ITEMS || estimateSize(body) > MAX_BYTES) {
+  if (data.length >= NOTIFY_REQUEST_MAX_ITEMS || estimateSize(body) > NOTIFY_REQUEST_MAX_BYTES) {
     logger.info("Received a large payload - splitting in half and trying again",
       {messageCount: data.length, estimatedSize: estimateSize(body)}
     )
