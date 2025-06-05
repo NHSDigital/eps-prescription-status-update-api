@@ -29,8 +29,8 @@ export const compareTables = async(
   try {
     const sourceTableResult = await client.send(new DescribeTableCommand(sourceTableDescribe))
     const restoredTableResult = await client.send(new DescribeTableCommand(restoredTableDescribe))
-    logger.info("Source table info", {sourceTableResult})
-    logger.info("Restored table info", {restoredTableResult})
+    logger.info("Source table describe table result", {sourceTableResult})
+    logger.info("Restored table describe table result", {restoredTableResult})
     const sourceTableItems = await client.send(new ScanCommand(sourceTableScan))
     if (sourceTableItems === undefined) {
       logger.error("sourceTableItems is undefined", {sourceTableScan})
@@ -49,7 +49,8 @@ export const compareTables = async(
       }
       const prescriptionID = String(sourceTableItem.PrescriptionID)
       const taskId = String(sourceTableItem.TaskID)
-      const restoredTableQueryItem: QueryCommandInput = {
+      logger.debug("Querying restored table", {queryParameters: {prescriptionID, taskId}})
+      const restoredTableQuery: QueryCommandInput = {
         TableName: restoredTableArn,
         KeyConditionExpression: "PrescriptionID = :inputPrescriptionID  AND TaskID = :inputTaskID",
         ExpressionAttributeValues: {
@@ -57,21 +58,24 @@ export const compareTables = async(
           ":inputTaskID": taskId
         }
       }
-      const createdTableItem = await client.send(new QueryCommand(restoredTableQueryItem))
-      if (createdTableItem === undefined) {
-        logger.error("createdTableItem is undefined", {queryParams: {prescriptionID, taskId}, restoredTableQueryItem})
+      const restoredTableItemResult = await client.send(new QueryCommand(restoredTableQuery))
+      if (restoredTableItemResult === undefined) {
+        logger.error("restoredTableItem is undefined", {queryParameters: {prescriptionID, taskId}, restoredTableQuery})
         throw new Error("Can not get results from query")
       }
-      if (createdTableItem.Items === undefined) {
+      if (restoredTableItemResult.Items === undefined) {
         logger.error("createdTableItem.Items is undefined",
-          {queryParams: {prescriptionID, taskId}, restoredTableQueryItem})
+          {queryParameters: {prescriptionID, taskId}, restoredTableQuery, restoredTableItemResult})
         throw new Error("Can not get results from query")
       }
-      if (createdTableItem.Items.length !== 1) {
-        logger.error("Restored table count is not 1", {queryParams: {prescriptionID, taskId}, restoredTableQueryItem})
+      if (restoredTableItemResult.Items.length !== 1) {
+        logger.error("Restored table count is not 1",
+          {queryParameters: {prescriptionID, taskId}, restoredTableQuery, restoredTableItemResult})
         throw new Error("Row count on restored table query is not 1")
       }
-      assert.deepStrictEqual(createdTableItem.Items[0], sourceTableItem)
+      const restoredTableItem = restoredTableItemResult.Items[0]
+      logger.debug("Comparing these two items", {compare: {restoredTableItem, sourceTableItem}})
+      assert.deepStrictEqual(restoredTableItem, sourceTableItem)
     }
   } catch(err) {
     logger.error("Error during validation", {error: err})

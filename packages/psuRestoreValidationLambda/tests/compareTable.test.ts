@@ -54,7 +54,7 @@ describe("Compare table function", () => {
   it("returns failure when there is a difference", async () => {
     const modifiedItem = {
       ...SOURCE_ITEM,
-      PrescriptionID: "not_a_dummy_prescription"
+      PrescriptionID: {S: "different_dummy_prescription"}
     }
     setupMockResponses([SOURCE_ITEM], [modifiedItem])
     const result = await compareTables("table1", "table2", mockDocumentClient, mockLogger as Logger)

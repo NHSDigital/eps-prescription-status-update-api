@@ -22,7 +22,7 @@ const docClient = DynamoDBDocumentClient.from(client)
 const lambdaHandler = async (event: EventBridgeEvent<"Restore Job State Change", backupEventCompletedDetail>) => {
   const sourceTableArn = event.detail.sourceResourceArn
   const restoredTableArn = event.detail.createdResourceArn
-  logger.debug("Use the following arn for verification", {sourceTableArn, restoredTableArn})
+  logger.debug("Verifying data in the tables", {tableArns: {sourceTableArn, restoredTableArn}})
   const backup = new Backup()
   const result = await compareTables(sourceTableArn, restoredTableArn, docClient, logger)
   try {
@@ -33,7 +33,7 @@ const lambdaHandler = async (event: EventBridgeEvent<"Restore Job State Change",
         ValidationStatus: "SUCCESSFUL",
         ValidationStatusMessage: "Resource validation succeeded"
       })
-      logger.info("PutRestoreValidationResult: ", {response})
+      logger.info("PutRestoreValidationResult", {response})
     } else {
       logger.info("Compare tables failed")
       const response = await backup.putRestoreValidationResult({
@@ -41,11 +41,11 @@ const lambdaHandler = async (event: EventBridgeEvent<"Restore Job State Change",
         ValidationStatus: "FAILED",
         ValidationStatusMessage: "Resource validation succeeded"
       })
-      logger.info("PutRestoreValidationResult: ", {response})
+      logger.info("PutRestoreValidationResult", {response})
 
     }
   } catch (error) {
-    logger.error("Error putting restore validation result: ", {error})
+    logger.error("Error putting restore validation result", {error})
     throw error
   }
 
