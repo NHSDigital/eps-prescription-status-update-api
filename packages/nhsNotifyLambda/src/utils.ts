@@ -413,9 +413,6 @@ export async function makeBatchNotifyRequest(
     }
   }
 
-  // TODO: Remove this
-  logger.info("Making a Notification request with this body", {body})
-
   // Recursive split if too large
   if (data.length >= NOTIFY_REQUEST_MAX_ITEMS || estimateSize(body) > NOTIFY_REQUEST_MAX_BYTES) {
     logger.info("Received a large payload - splitting in half and trying again",
@@ -437,6 +434,8 @@ export async function makeBatchNotifyRequest(
   const url = `${NOTIFY_API_BASE_URL}/v1/message-batches`
 
   try {
+    // TODO: Remove this
+    logger.info("Making a Notification request with this body", {body, url, API_KEY})
     const resp = await fetch(url, {
       method: "POST",
       headers: {
