@@ -414,7 +414,7 @@ export async function makeBatchNotifyRequest(
   }
 
   // TODO: Remove this
-  logger.info("Making")
+  logger.info("Making a Notification request with this body", {body})
 
   // Recursive split if too large
   if (data.length >= NOTIFY_REQUEST_MAX_ITEMS || estimateSize(body) > NOTIFY_REQUEST_MAX_BYTES) {
