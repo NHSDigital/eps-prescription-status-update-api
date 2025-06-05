@@ -47,10 +47,10 @@ Parameters:
     Type: AWS::SSM::Parameter::Value<String>
 
   NotifyRoutingPlanIDParam:
-    Type: AWS::SSM::Parameter::Value<String>
+    Type: AWS::SSM::Parameter::Name<String>
 
   NotifyAPIBaseURLParam:
-    Type: AWS::SSM::Parameter::Value<String>
+    Type: AWS::SSM::Parameter::Name<String>
 
   LogLevel:
     Type: String
