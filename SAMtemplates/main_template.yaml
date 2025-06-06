@@ -89,14 +89,21 @@ Parameters:
   StateMachineLogLevel:
     Type: String
 
+  EnableBackup:
+    Type: String
+    Default: false
+    AllowedValues:
+      - True
+      - False
+
 Resources:
-  Secrets: 
+  Secrets:
     Type: AWS::Serverless::Application
     Properties:
       Location: secrets/main.yaml
       Parameters:
         StackName: !Ref AWS::StackName
-  
+
   Parameters:
     Type: AWS::Serverless::Application
     Properties:
@@ -112,6 +119,7 @@ Resources:
       Parameters:
         StackName: !Ref AWS::StackName
         EnableDynamoDBAutoScaling: !Ref EnableDynamoDBAutoScaling
+        EnableBackup: !Ref EnableBackup
 
   Messaging:
     Type: AWS::Serverless::Application
@@ -164,6 +172,7 @@ Resources:
         CommitId: !Ref CommitId
         DeployCheckPrescriptionStatusUpdate: !Ref DeployCheckPrescriptionStatusUpdate
         Environment: !Ref Environment
+        EnableBackup: !Ref EnableBackup
 
   StateMachines:
     Type: AWS::Serverless::Application
