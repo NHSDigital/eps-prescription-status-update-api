@@ -157,6 +157,8 @@ Resources:
         EnabledSiteODSCodesParam: !GetAtt Parameters.Outputs.EnabledSiteODSCodesParameterName
         EnabledSystemsParam: !GetAtt Parameters.Outputs.EnabledSystemsParameterName
         BlockedSiteODSCodesParam: !GetAtt Parameters.Outputs.BlockedSiteODSCodesParameterName
+        NotifyRoutingPlanIDParam: !GetAtt Parameters.Outputs.NotifyRoutingPlanIDParameterName
+        NotifyAPIBaseURLParam: !GetAtt Parameters.Outputs.NotifyAPIBaseURLParameterName
         LogLevel: !Ref LogLevel
         LogRetentionInDays: !Ref LogRetentionInDays
         EnableSplunk: !Ref EnableSplunk

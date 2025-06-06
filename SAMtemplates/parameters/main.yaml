@@ -59,6 +59,30 @@ Resources:
         - > # Non-prod
           B3J1Z
 
+  NotifyRoutingPlanIDParameter:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub ${StackName}-PSUNotifyRoutingPlanID
+      Description: "Notify Routing Plan ID"
+      Type: String
+      Value: !If
+        - IsProd
+        - changeme
+        # Non-prod value (sandbox)
+        - b838b13c-f98c-4def-93f0-515d4e4f4ee1
+
+  NotifyAPIBaseURLParameter:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub ${StackName}-PSUNotifyApiBaseUrl
+      Description: "Notify API Base URL"
+      Type: String
+      Value: !If
+        - IsProd
+        - https://api.service.nhs.uk/comms
+        # Non-prod API URL (sandbox) (INT environment: https://int.api.service.nhs.uk/comms)
+        - https://sandbox.api.service.nhs.uk/comms
+
 Outputs:
   EnabledSiteODSCodesParameterName:
     Description: "Name of the SSM parameter holding enabled site ODS codes"
@@ -77,3 +101,15 @@ Outputs:
     Value: !Ref BlockedSiteODSCodesParameter
     Export:
       Name: !Sub ${StackName}-PSUNotifyBlockedSiteODSCodesParam
+
+  NotifyRoutingPlanIDParameterName:
+    Description: "Name of the SSM parameter holding the Notify Routing Plan ID"
+    Value: !Ref NotifyRoutingPlanIDParameter
+    Export:
+      Name: !Sub ${StackName}-PSUNotifyRoutingPlanIDParam
+
+  NotifyAPIBaseURLParameterName:
+    Description: "Name of the SSM parameter holding the Notify API Base URL"
+    Value: !Ref NotifyAPIBaseURLParameter
+    Export:
+      Name: !Sub ${StackName}-PSUNotifyApiBaseUrlParam
