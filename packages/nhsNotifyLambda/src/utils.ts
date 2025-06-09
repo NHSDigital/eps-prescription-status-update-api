@@ -360,27 +360,28 @@ export async function makeBatchNotifyRequest(
   data: Array<NotifyDataItemMessage>
 ): Promise<Array<NotifyDataItemMessage>> {
   // Fetch secrets and parameters
-  if (
-    !process.env.NOTIFY_API_BASE_URL_PARAM
-  || !process.env.API_KEY_SECRET
-  ) {
+  if (!process.env.NOTIFY_API_BASE_URL_PARAM || !process.env.API_KEY_SECRET) {
     throw new Error("Environment configuration error")
   }
 
   logger.info("Getting parameters with these names",
     {NotifyApiBaseUrl: process.env.NOTIFY_API_BASE_URL, NotifyApiKey: process.env.API_KEY}
   )
-  const NOTIFY_API_BASE_URL = await getParameter(process.env.NOTIFY_API_BASE_URL_PARAM)
-  const API_KEY = await getSecret(process.env.API_KEY_SECRET)
+  const notifyApiBaseUrlRaw = await getParameter(process.env.NOTIFY_API_BASE_URL_PARAM)
+  const apiKeyRaw = await getSecret(process.env.API_KEY_SECRET)
 
-  if (!NOTIFY_API_BASE_URL) throw new Error("NOTIFY_API_BASE_URL is not defined in the environment variables!")
-  if (!API_KEY) throw new Error("API_KEY is not defined in the environment variables!")
+  if (!notifyApiBaseUrlRaw) throw new Error("NOTIFY_API_BASE_URL is not defined in the environment variables!")
+  if (!apiKeyRaw) throw new Error("API_KEY is not defined in the environment variables!")
 
+  const BASE_URL = notifyApiBaseUrlRaw.trim()
+  const API_KEY = apiKeyRaw.toString().trim()
+
+  // Early break for empty data
   if (data.length === 0) {
     return []
   }
 
-  logger.info("Fetched parameter values:", {NotifyUrl: NOTIFY_API_BASE_URL, ApiKey: API_KEY})
+  logger.info("Fetched parameter values:", {NotifyUrl: BASE_URL, ApiKey: API_KEY})
 
   // Shared between all messages in this batch
   const messageBatchReference = v4()
@@ -431,7 +432,7 @@ export async function makeBatchNotifyRequest(
 
   logger.info("Making a request for notifications to NHS notify", {count: data.length, routingPlanId})
 
-  const url = `${NOTIFY_API_BASE_URL}/v1/message-batches`
+  const url = `${BASE_URL}/v1/message-batches`
 
   try {
     // TODO: Remove this
