@@ -38,13 +38,13 @@ Parameters:
     Default: none
 
   EnabledSiteODSCodesParam:
-    Type: AWS::SSM::Parameter::Value<String>
+    Type: AWS::SSM::Parameter::Name<String>
 
   EnabledSystemsParam:
-    Type: AWS::SSM::Parameter::Value<String>
+    Type: AWS::SSM::Parameter::Name<String>
 
   BlockedSiteODSCodesParam:
-    Type: AWS::SSM::Parameter::Value<String>
+    Type: AWS::SSM::Parameter::Name<String>
 
   NotifyRoutingPlanIDParam:
     Type: AWS::SSM::Parameter::Name<String>
@@ -93,9 +93,9 @@ Resources:
           # TODO: The salt should be fetched at runtime
           SQS_SALT: !Sub "{{resolve:secretsmanager:${SQSSaltSecret}:SecretString:salt}}"
           # TODO: These should be fetched at runtime
-          ENABLED_SITE_ODS_CODES: !Ref EnabledSiteODSCodesParam
-          ENABLED_SYSTEMS: !Ref EnabledSystemsParam
-          BLOCKED_SITE_ODS_CODES: !Ref BlockedSiteODSCodesParam
+          ENABLED_SITE_ODS_CODES_PARAM: !Ref EnabledSiteODSCodesParam
+          ENABLED_SYSTEMS_PARAM: !Ref EnabledSystemsParam
+          BLOCKED_SITE_ODS_CODES_PARAM: !Ref BlockedSiteODSCodesParam
           LOG_LEVEL: !Ref LogLevel
           ENVIRONMENT: !Ref Environment
           TEST_PRESCRIPTIONS_1: "None"

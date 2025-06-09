@@ -66,12 +66,10 @@ export async function pushPrescriptionToNotificationSQS(
   }
 
   // Only allow through sites and systems that are allowedSitesAndSystems
-  const allowedSitesAndSystemsData = checkSiteOrSystemIsNotifyEnabled(data)
+  const allowedSitesAndSystemsData = await checkSiteOrSystemIsNotifyEnabled(data)
   logger.info(
     "Filtered out sites and suppliers that are not enabled, or are explicitly disabled",
-    {
-      numItemsAllowed: allowedSitesAndSystemsData.length
-    }
+    {numItemsAllowed: allowedSitesAndSystemsData.length}
   )
 
   // SQS batch calls are limited to 10 messages per request, so chunk the data
