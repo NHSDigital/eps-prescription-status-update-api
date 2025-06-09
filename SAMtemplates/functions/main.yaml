@@ -89,7 +89,6 @@ Resources:
         Variables:
           TABLE_NAME: !Ref PrescriptionStatusUpdatesTableName
           NHS_NOTIFY_PRESCRIPTIONS_SQS_QUEUE_URL: !Ref NHSNotifyPrescriptionsSQSQueueUrl
-          # TODO: The salt should be fetched at runtime
           SQS_SALT: !Red SQSSaltSecret
           ENABLED_SITE_ODS_CODES_PARAM: !Ref EnabledSiteODSCodesParam
           ENABLED_SYSTEMS_PARAM: !Ref EnabledSystemsParam
