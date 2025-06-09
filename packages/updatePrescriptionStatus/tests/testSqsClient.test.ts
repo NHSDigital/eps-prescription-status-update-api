@@ -198,7 +198,79 @@ describe("Unit tests for pushPrescriptionToNotificationSQS", () => {
       )
   })
 })
+describe("Unit tests for getSaltValue", () => {
+  let getSaltValue: (logger: Logger) => Promise<string>
+  let logger: Logger
+  let errorSpy: SpiedFunction<(input: LogItemMessage, ...extraInput: LogItemExtraInput) => void>
+  let warnSpy: SpiedFunction<(input: LogItemMessage, ...extraInput: LogItemExtraInput) => void>
+  const fallbackSalt = "DEV SALT"
 
+  beforeEach(async () => {
+    jest.resetModules()
+    jest.clearAllMocks()
+    process.env = {...ORIGINAL_ENV}
+
+    logger = new Logger({serviceName: "test-service"})
+    errorSpy = jest.spyOn(logger, "error")
+    warnSpy = jest.spyOn(logger, "warn")
+
+    // re-import the function after resetModules so mocks are applied
+    ;({getSaltValue} = await import("../src/utils/sqsClient"))
+  })
+
+  it("returns the fallback salt when SQS_SALT is not configured", async () => {
+    delete process.env.SQS_SALT
+
+    const salt = await getSaltValue(logger)
+    expect(salt).toBe(fallbackSalt)
+    expect(warnSpy).toHaveBeenCalledWith(
+      "Using the fallback salt value - please update the environment variable `SQS_SALT` to a random value."
+    )
+  })
+
+  it("returns the secret salt when secret has a valid salt field", async () => {
+    process.env.SQS_SALT = "someSecret"
+    mockGetSecret.mockImplementationOnce(async () => ({salt: "real-salt"}))
+
+    const salt = await getSaltValue(logger)
+    expect(salt).toBe("real-salt")
+    expect(warnSpy).not.toHaveBeenCalled()
+  })
+
+  it("falls back and logs an error when secret is missing the salt field", async () => {
+    process.env.SQS_SALT = "someSecret"
+    const badValue = {notSalt: "value"}
+    mockGetSecret.mockImplementationOnce(async () => badValue)
+
+    const salt = await getSaltValue(logger)
+    expect(salt).toBe(fallbackSalt)
+    expect(errorSpy).toHaveBeenCalledWith(
+      "Secret did not contain a valid salt field, falling back to DEV SALT",
+      {secretValue: badValue}
+    )
+    expect(warnSpy).toHaveBeenCalledWith(
+      "Using the fallback salt value - please update the environment variable `SQS_SALT` to a random value."
+    )
+  })
+
+  it("falls back and logs an error when getSecret throws", async () => {
+    process.env.SQS_SALT = "someSecret"
+    const testErr = new Error("failure")
+    mockGetSecret.mockImplementationOnce(async () => {
+      throw testErr
+    })
+
+    const salt = await getSaltValue(logger)
+    expect(salt).toBe(fallbackSalt)
+    expect(errorSpy).toHaveBeenCalledWith(
+      "Failed to fetch SQS_SALT from Secrets Manager, using DEV SALT",
+      {error: testErr}
+    )
+    expect(warnSpy).toHaveBeenCalledWith(
+      "Using the fallback salt value - please update the environment variable `SQS_SALT` to a random value."
+    )
+  })
+})
 describe("Unit tests for checkSiteOrSystemIsNotifyEnabled", () => {
   it("includes an item with an enabled ODS code", async () => {
     const item = createMockDataItem({
@@ -249,4 +321,5 @@ describe("Unit tests for checkSiteOrSystemIsNotifyEnabled", () => {
     const result = await checkSiteOrSystemIsNotifyEnabled([item])
     expect(result).toEqual([])
   })
+
 })

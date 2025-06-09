@@ -49,7 +49,7 @@ export function saltedHash(
 /**
  * Gets the salt value from the secrets manager
  */
-async function getSaltValue(logger: Logger): Promise<string> {
+export async function getSaltValue(logger: Logger): Promise<string> {
   let sqsSalt: string
 
   if (!process.env.SQS_SALT) {
