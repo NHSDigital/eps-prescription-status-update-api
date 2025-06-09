@@ -447,8 +447,6 @@ export async function makeBatchNotifyRequest(
   const url = `${BASE_URL}/v1/message-batches`
 
   try {
-    // TODO: Remove this
-    logger.info("Making a Notification request with this body", {body, url, API_KEY})
     const resp = await fetch(url, {
       method: "POST",
       headers: {
@@ -473,7 +471,7 @@ export async function makeBatchNotifyRequest(
       // Map each input item to a NotifyDataItemMessage, marking success and attaching the notify ID
       return data.map(item => {
         const match = returnedMessages.find(
-          m => m.messageReference === item.Attributes?.MessageDeduplicationId
+          m => m.messageReference === item.messageReference
         )
 
         // SUCCESS
