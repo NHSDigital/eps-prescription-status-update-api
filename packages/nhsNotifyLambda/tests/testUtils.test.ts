@@ -492,7 +492,7 @@ describe("NHS notify lambda helper functions", () => {
       ]
       const returnedMessages = [
         {
-          messageReference: data[0].Attributes?.MessageDeduplicationId,
+          messageReference: data[0].messageReference,
           id: "msg-id-1"
         }
       ]
