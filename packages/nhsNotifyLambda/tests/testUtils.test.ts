@@ -512,15 +512,19 @@ describe("NHS notify lambda helper functions", () => {
 
       // Should return one success and one failure
       expect(result).toHaveLength(2)
-      expect(result[0]).toEqual({
+      expect(result[0]).toMatchObject({
         PSUDataItem: data[0].PSUDataItem,
         success: true,
-        notifyMessageId: "msg-id-1"
+        notifyMessageId: "msg-id-1",
+        messageBatchReference: expect.any(String),
+        messageReference: expect.any(String)
       })
-      expect(result[1]).toEqual({
+      expect(result[1]).toMatchObject({
         PSUDataItem: data[1].PSUDataItem,
         success: false,
-        notifyMessageId: undefined
+        notifyMessageId: undefined,
+        messageBatchReference: expect.any(String),
+        messageReference: expect.any(String)
       })
     })
 
@@ -547,11 +551,13 @@ describe("NHS notify lambda helper functions", () => {
         data
       )
 
-      expect(result).toEqual([
+      expect(result).toMatchObject([
         {
           PSUDataItem: data[0].PSUDataItem,
           success: false,
-          notifyMessageId: undefined
+          notifyMessageId: undefined,
+          messageBatchReference: expect.any(String),
+          messageReference: expect.any(String)
         }
       ])
       expect(errorSpy).toHaveBeenCalledWith(

@@ -36,6 +36,9 @@ export function constructPSUDataItemMessage(overrides: Partial<NotifyDataItemMes
   return {
     ...constructMessage(),
     PSUDataItem: constructPSUDataItem(),
+    messageBatchReference: v4(),
+    messageReference: v4(),
+    notifyMessageId: v4(),
     ...overrides
   }
 }

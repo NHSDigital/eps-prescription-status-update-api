@@ -28,8 +28,15 @@ const sqsUrl = process.env.NHS_NOTIFY_PRESCRIPTIONS_SQS_QUEUE_URL
 
 // AWS clients
 const sqs = new SQSClient({region: process.env.AWS_REGION})
+
+const marshallOptions = {
+  // remove undefined when pushing to dynamo - references will be undefined when notify request fails
+  removeUndefinedValues: true,
+  // remove empty strings as well
+  convertEmptyValues: true
+}
 const dynamo = new DynamoDBClient({region: process.env.AWS_REGION})
-const docClient = DynamoDBDocumentClient.from(dynamo)
+const docClient = DynamoDBDocumentClient.from(dynamo, {marshallOptions})
 
 /**
  * Returns the original array, chunked in batches of up to <size>
@@ -236,12 +243,12 @@ export interface LastNotificationStateType {
   NHSNumber: string
   ODSCode: string
   RequestId: string // x-request-id header
-  SQSMessageID: string // The SQS message ID
-  LastNotifiedPrescriptionStatus: string
+  SQSMessageID?: string // The SQS message ID
   DeliveryStatus: string
-  NotifyMessageBatchReference: string // The references we generated for the message
-  NotifyMessageReference: string // As above
-  NotifyMessageID: string // The UUID we got back from Notify for the submitted message
+  NotifyMessageID?: string // The UUID we got back from Notify for the submitted message
+  NotifyMessageReference: string // The references we generated for the message
+  NotifyMessageBatchReference?: string // As above
+  LastNotifiedPrescriptionStatus: string
   LastNotificationRequestTimestamp: string // ISO-8601 string
   ExpiryTime: number // DynamoDB expiration time (UNIX timestamp)
 }
@@ -263,12 +270,12 @@ export async function addPrescriptionMessagesToNotificationStateStore(
       NHSNumber: data.PSUDataItem.PatientNHSNumber,
       ODSCode: data.PSUDataItem.PharmacyODSCode,
       RequestId: data.PSUDataItem.RequestID,
-      SQSMessageID: data.MessageId ?? "no SQS message ID",
+      SQSMessageID: data.MessageId,
       LastNotifiedPrescriptionStatus: data.PSUDataItem.Status,
       DeliveryStatus: data.success ? "requested" : "notify request failed",
-      NotifyMessageID: data.notifyMessageId ?? "",
+      NotifyMessageID: data.notifyMessageId, // This is a GSI, but leaving it blank is fine
       NotifyMessageReference: data.messageReference,
-      NotifyMessageBatchReference: data.messageBatchReference ?? "", // Will be empty when request fails
+      NotifyMessageBatchReference: data.messageBatchReference, // Will be undefined when request fails
       LastNotificationRequestTimestamp: new Date().toISOString(),
       ExpiryTime: (Math.floor(+new Date() / 1000) + TTL_DELTA)
     }
