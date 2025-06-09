@@ -51,6 +51,10 @@ function chunkArray<T>(arr: Array<T>, size: number): Array<Array<T>> {
 export interface NotifyDataItemMessage extends Message {
   PSUDataItem: NotifyDataItem
   success?: boolean
+  messageBatchReference?: string,
+  // message reference is our internal UUID for the message
+  messageReference: string
+  // And notify send back one for their internal system.
   notifyMessageId?: string
 }
 
@@ -126,7 +130,9 @@ export async function drainQueue(
         return [
           {
             ...m,
-            PSUDataItem: parsedBody
+            PSUDataItem: parsedBody,
+            messageBatchReference: undefined, // Only populated when notify request is made
+            messageReference: v4()
           }
         ]
       } catch (error) {
@@ -233,6 +239,8 @@ export interface LastNotificationStateType {
   SQSMessageID: string // The SQS message ID
   LastNotifiedPrescriptionStatus: string
   DeliveryStatus: string
+  NotifyMessageBatchReference: string // The references we generated for the message
+  NotifyMessageReference: string // As above
   NotifyMessageID: string // The UUID we got back from Notify for the submitted message
   LastNotificationRequestTimestamp: string // ISO-8601 string
   ExpiryTime: number // DynamoDB expiration time (UNIX timestamp)
@@ -259,6 +267,8 @@ export async function addPrescriptionMessagesToNotificationStateStore(
       LastNotifiedPrescriptionStatus: data.PSUDataItem.Status,
       DeliveryStatus: data.success ? "requested" : "notify request failed",
       NotifyMessageID: data.notifyMessageId ?? "",
+      NotifyMessageReference: data.messageReference,
+      NotifyMessageBatchReference: data.messageBatchReference ?? "", // Will be empty when request fails
       LastNotificationRequestTimestamp: new Date().toISOString(),
       ExpiryTime: (Math.floor(+new Date() / 1000) + TTL_DELTA)
     }
@@ -364,15 +374,13 @@ export async function makeBatchNotifyRequest(
     throw new Error("Environment configuration error")
   }
 
-  logger.info("Getting parameters with these names",
-    {NotifyApiBaseUrl: process.env.NOTIFY_API_BASE_URL, NotifyApiKey: process.env.API_KEY}
-  )
   const notifyApiBaseUrlRaw = await getParameter(process.env.NOTIFY_API_BASE_URL_PARAM)
   const apiKeyRaw = await getSecret(process.env.API_KEY_SECRET)
 
   if (!notifyApiBaseUrlRaw) throw new Error("NOTIFY_API_BASE_URL is not defined in the environment variables!")
   if (!apiKeyRaw) throw new Error("API_KEY is not defined in the environment variables!")
 
+  // Just to be safe, trim any whitespace. Also, secrets may be bytes, so make sure it's a string
   const BASE_URL = notifyApiBaseUrlRaw.trim()
   const API_KEY = apiKeyRaw.toString().trim()
 
@@ -380,8 +388,6 @@ export async function makeBatchNotifyRequest(
   if (data.length === 0) {
     return []
   }
-
-  logger.info("Fetched parameter values:", {NotifyUrl: BASE_URL, ApiKey: API_KEY})
 
   // Shared between all messages in this batch
   const messageBatchReference = v4()
@@ -393,10 +399,9 @@ export async function makeBatchNotifyRequest(
       logger.error("NOT SENDING NOTIFY REQUEST FOR A MESSAGE; missing deduplication ID", {item})
       return []
     }
-    // The message reference has to be unique for all messages in the batch.
-    // The dedupe ID should work here.
+
     return [{
-      messageReference: item.Attributes?.MessageDeduplicationId,
+      messageReference: item.messageReference,
       recipient: {nhsNumber: item.PSUDataItem.PatientNHSNumber},
       originator: {odsCode: item.PSUDataItem.PharmacyODSCode},
       personalisation: {}
@@ -440,8 +445,9 @@ export async function makeBatchNotifyRequest(
     const resp = await fetch(url, {
       method: "POST",
       headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${API_KEY}`
+        "Accept": "*/*",
+        "Content-Type": "application/vnd.api+json",
+        "Authorization": `Bearer ${API_KEY}`
       },
       body: JSON.stringify(body)
     })
@@ -463,9 +469,12 @@ export async function makeBatchNotifyRequest(
           m => m.messageReference === item.Attributes?.MessageDeduplicationId
         )
 
+        // SUCCESS
         return {
           PSUDataItem: item.PSUDataItem,
           success: !!match,
+          messageBatchReference: item.messageBatchReference,
+          messageReference: item.messageReference,
           notifyMessageId: match?.id
         }
       })
@@ -496,6 +505,8 @@ export async function makeBatchNotifyRequest(
     return data.map(item => ({
       PSUDataItem: item.PSUDataItem,
       success: false,
+      messageBatchReference: item.messageBatchReference,
+      messageReference: item.messageReference,
       notifyMessageId: undefined
     }))
   }
