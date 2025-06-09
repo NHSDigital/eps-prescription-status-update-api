@@ -34,8 +34,7 @@ Parameters:
     Default: none
 
   SQSSaltSecret:
-    Type: String
-    Default: none
+    Type: AWS::SecretsManager::Secret::Name<String>
 
   EnabledSiteODSCodesParam:
     Type: AWS::SSM::Parameter::Name<String>
@@ -91,7 +90,7 @@ Resources:
           TABLE_NAME: !Ref PrescriptionStatusUpdatesTableName
           NHS_NOTIFY_PRESCRIPTIONS_SQS_QUEUE_URL: !Ref NHSNotifyPrescriptionsSQSQueueUrl
           # TODO: The salt should be fetched at runtime
-          SQS_SALT: !Sub "{{resolve:secretsmanager:${SQSSaltSecret}:SecretString:salt}}"
+          SQS_SALT: !Red SQSSaltSecret
           ENABLED_SITE_ODS_CODES_PARAM: !Ref EnabledSiteODSCodesParam
           ENABLED_SYSTEMS_PARAM: !Ref EnabledSystemsParam
           BLOCKED_SITE_ODS_CODES_PARAM: !Ref BlockedSiteODSCodesParam

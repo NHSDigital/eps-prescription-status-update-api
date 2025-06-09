@@ -14,7 +14,9 @@ import {createMockDataItem, mockSQSClient} from "./utils/testUtils"
 
 const {mockSend} = mockSQSClient()
 
-const mockGetSecret = jest.fn().mockImplementation(async () => "salt")
+const mockGetSecret = jest.fn().mockImplementation(async () => {
+  return {"salt": "salt"}
+})
 jest.unstable_mockModule(
   "@aws-lambda-powertools/parameters/secrets",
   async () => ({

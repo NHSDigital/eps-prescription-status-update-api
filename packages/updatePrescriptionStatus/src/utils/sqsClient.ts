@@ -47,6 +47,50 @@ export function saltedHash(
 }
 
 /**
+ * Gets the salt value from the secrets manager
+ */
+async function getSaltValue(logger: Logger): Promise<string> {
+  let sqsSalt: string
+
+  if (!process.env.SQS_SALT) {
+    // No secret name configured at all, so fall back
+    sqsSalt = fallbackSalt
+  } else {
+    try {
+      // grab the secret, expecting JSON like { "salt": "string" }
+      const secretJson = await getSecret(process.env.SQS_SALT, {transform: "json"})
+
+      // must be a non‐null object with a string .salt
+      if (
+        typeof secretJson === "object" &&
+        secretJson !== null &&
+        "salt" in secretJson &&
+        typeof secretJson.salt === "string"
+      ) {
+        // OK
+        sqsSalt = secretJson.salt
+      } else {
+        logger.error("Secret did not contain a valid salt field, falling back to DEV SALT", {
+          secretValue: secretJson
+        })
+        sqsSalt = fallbackSalt
+      }
+    } catch (error) {
+      logger.error("Failed to fetch SQS_SALT from Secrets Manager, using DEV SALT", {error})
+      sqsSalt = fallbackSalt
+    }
+  }
+
+  if (sqsSalt === fallbackSalt) {
+    logger.warn(
+      "Using the fallback salt value - please update the environment variable `SQS_SALT` to a random value."
+    )
+  }
+
+  return sqsSalt
+}
+
+/**
  * Pushes an array of PSUDataItem to the notifications SQS queue
  * Uses SendMessageBatch to send up to 10 at a time
  *
@@ -82,14 +126,7 @@ export async function pushPrescriptionToNotificationSQS(
     "ready to collect - partial"
   ]
 
-  let sqsSalt: string
-  if (!process.env.SQS_SALT) sqsSalt = fallbackSalt
-  else sqsSalt = await getSecret(process.env.SQS_SALT) ?? fallbackSalt
-
-  if (sqsSalt === fallbackSalt) {
-    logger.warn("Using the fallback salt value - please update the environment variable `SQS_SALT` to a random value.")
-  }
-
+  const sqsSalt = await getSaltValue(logger)
   for (const batch of batches) {
     const entries = batch
       .filter((item) => updateStatuses.includes(item.Status.toLowerCase()))
