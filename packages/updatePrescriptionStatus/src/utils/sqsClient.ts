@@ -1,5 +1,6 @@
 import {Logger} from "@aws-lambda-powertools/logger"
 import {SQSClient, SendMessageBatchCommand} from "@aws-sdk/client-sqs"
+import {getSecret} from "@aws-lambda-powertools/parameters/secrets"
 
 import {createHmac} from "crypto"
 
@@ -9,7 +10,6 @@ import {checkSiteOrSystemIsNotifyEnabled} from "../validation/notificationSiteAn
 
 const sqsUrl: string | undefined = process.env.NHS_NOTIFY_PRESCRIPTIONS_SQS_QUEUE_URL
 const fallbackSalt = "DEV SALT"
-const sqsSalt: string = process.env.SQS_SALT ?? fallbackSalt
 
 // The AWS_REGION is always defined in lambda environments
 const sqs = new SQSClient({region: process.env.AWS_REGION})
@@ -36,10 +36,11 @@ function chunkArray<T>(arr: Array<T>, size: number): Array<Array<T>> {
  * @param hashFunction - Which hash function to use. HMAC compatible. Defaults to SHA-256
  * @returns - A hex encoded string of the hash
  */
-export function saltedHash(logger: Logger, input: string, hashFunction: string = "sha256"): string {
-  if (sqsSalt === fallbackSalt) {
-    logger.warn("Using the fallback salt value - please update the environment variable `SQS_SALT` to a random value.")
-  }
+export function saltedHash(
+  input: string,
+  sqsSalt: string,
+  hashFunction: string = "sha256"
+): string {
   return createHmac(hashFunction, sqsSalt)
     .update(input, "utf8")
     .digest("hex")
@@ -81,6 +82,14 @@ export async function pushPrescriptionToNotificationSQS(
     "ready to collect - partial"
   ]
 
+  let sqsSalt: string
+  if (!process.env.SQS_SALT) sqsSalt = fallbackSalt
+  else sqsSalt = await getSecret(process.env.SQS_SALT) ?? fallbackSalt
+
+  if (sqsSalt === fallbackSalt) {
+    logger.warn("Using the fallback salt value - please update the environment variable `SQS_SALT` to a random value.")
+  }
+
   for (const batch of batches) {
     const entries = batch
       .filter((item) => updateStatuses.includes(item.Status.toLowerCase()))
@@ -91,7 +100,7 @@ export async function pushPrescriptionToNotificationSQS(
         MessageBody: JSON.stringify(item as NotifyDataItem),
         // FIFO
         // We dedupe on both nhs number and ods code
-        MessageDeduplicationId: saltedHash(logger, `${item.PatientNHSNumber}:${item.PharmacyODSCode}`),
+        MessageDeduplicationId: saltedHash(`${item.PatientNHSNumber}:${item.PharmacyODSCode}`, sqsSalt),
         MessageGroupId: requestId,
         MessageAttributes: {
           RequestId: {

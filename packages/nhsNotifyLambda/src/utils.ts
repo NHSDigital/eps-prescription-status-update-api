@@ -487,9 +487,9 @@ export async function makeBatchNotifyRequest(
     } else if (resp.status === 425 || resp.status === 429) {
       const retryAfter = parseInt(resp.headers.get("Retry-After") ?? "30") * 1000
       logger.warn("Received rate limit; retrying after delay", {retryAfter})
-      // When recursion is confirmed to be working, I'll uncomment this chunk. But not until I've checked it works!
-      // await new Promise(resolve => setTimeout(resolve, retryAfter))
-      // logger.info("Delay done, retrying now", {retryAfter})
+      //TODO: My unit tests for this crash, and I don't know why. Fix that! In theory this works though.
+      await new Promise(resolve => setTimeout(resolve, retryAfter))
+      logger.info("Delay done, retrying now", {retryAfter})
       const newRequest = await makeBatchNotifyRequest(logger, routingPlanId, data)
       return newRequest
 

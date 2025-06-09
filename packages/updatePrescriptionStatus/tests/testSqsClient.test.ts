@@ -14,6 +14,15 @@ import {createMockDataItem, mockSQSClient} from "./utils/testUtils"
 
 const {mockSend} = mockSQSClient()
 
+const mockGetSecret = jest.fn().mockImplementation(async () => "salt")
+jest.unstable_mockModule(
+  "@aws-lambda-powertools/parameters/secrets",
+  async () => ({
+    __esModule: true,
+    getSecret: mockGetSecret
+  })
+)
+
 const mockGetParameter = jest.fn().mockImplementation((name) => {
   if (!name) throw new Error("No parameter requested")
   else if (name === "ENABLED_SITE_ODS_CODES_PARAM") {
@@ -127,7 +136,7 @@ describe("Unit tests for pushPrescriptionToNotificationSQS", () => {
       // FIFO params
       expect(entry.MessageGroupId).toBe("req-789")
       expect(entry.MessageDeduplicationId).toBe(
-        saltedHash(logger, `${original.PatientNHSNumber}:${original.PharmacyODSCode}`)
+        saltedHash(`${original.PatientNHSNumber}:${original.PharmacyODSCode}`, "salt")
       )
     })
 
@@ -175,13 +184,14 @@ describe("Unit tests for pushPrescriptionToNotificationSQS", () => {
   })
 
   it("Uses the fallback salt value but logs a warning about it", async () => {
-    process.env.SQS_SALT = undefined
-    const {saltedHash: tempFunc} = await import("../src/utils/sqsClient")
+    mockGetSecret.mockImplementationOnce(async () => {
+      return "DEV SALT"
+    })
 
-    tempFunc(logger, "foobar")
+    await pushPrescriptionToNotificationSQS("req-123", [], logger)
 
     expect(warnSpy)
-      .toHaveBeenLastCalledWith(
+      .toHaveBeenCalledWith(
         "Using the fallback salt value - please update the environment variable `SQS_SALT` to a random value."
       )
   })
