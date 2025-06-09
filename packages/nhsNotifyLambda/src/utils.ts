@@ -478,7 +478,7 @@ export async function makeBatchNotifyRequest(
         return {
           PSUDataItem: item.PSUDataItem,
           success: !!match,
-          messageBatchReference: item.messageBatchReference,
+          messageBatchReference: messageBatchReference,
           messageReference: item.messageReference,
           notifyMessageId: match?.id
         }

@@ -92,7 +92,6 @@ Resources:
           NHS_NOTIFY_PRESCRIPTIONS_SQS_QUEUE_URL: !Ref NHSNotifyPrescriptionsSQSQueueUrl
           # TODO: The salt should be fetched at runtime
           SQS_SALT: !Sub "{{resolve:secretsmanager:${SQSSaltSecret}:SecretString:salt}}"
-          # TODO: These should be fetched at runtime
           ENABLED_SITE_ODS_CODES_PARAM: !Ref EnabledSiteODSCodesParam
           ENABLED_SYSTEMS_PARAM: !Ref EnabledSystemsParam
           BLOCKED_SITE_ODS_CODES_PARAM: !Ref BlockedSiteODSCodesParam
