@@ -89,7 +89,7 @@ Resources:
         Variables:
           TABLE_NAME: !Ref PrescriptionStatusUpdatesTableName
           NHS_NOTIFY_PRESCRIPTIONS_SQS_QUEUE_URL: !Ref NHSNotifyPrescriptionsSQSQueueUrl
-          SQS_SALT: !Red SQSSaltSecret
+          SQS_SALT: !Ref SQSSaltSecret
           ENABLED_SITE_ODS_CODES_PARAM: !Ref EnabledSiteODSCodesParam
           ENABLED_SYSTEMS_PARAM: !Ref EnabledSystemsParam
           BLOCKED_SITE_ODS_CODES_PARAM: !Ref BlockedSiteODSCodesParam
