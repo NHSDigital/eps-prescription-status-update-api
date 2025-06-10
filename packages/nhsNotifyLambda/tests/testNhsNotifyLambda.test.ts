@@ -263,8 +263,9 @@ describe("Unit test for NHS Notify lambda handler", () => {
 
     mockRemoveSQSMessages.mockImplementation(() => Promise.resolve())
     mockAddPrescriptionMessagesToNotificationStateStore.mockImplementation(() => Promise.resolve())
+    mockMakeBatchNotifyRequest.mockImplementation(() => Promise.resolve([])) // This function never returns undefined
 
-    await expect(lambdaHandler(mockEventBridgeEvent)).resolves.not.toThrow()
+    await lambdaHandler(mockEventBridgeEvent)
 
     expect(mockAddPrescriptionMessagesToNotificationStateStore).not.toHaveBeenCalled()
     expect(mockRemoveSQSMessages).toHaveBeenCalledWith(

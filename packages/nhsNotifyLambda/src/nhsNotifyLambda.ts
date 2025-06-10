@@ -20,101 +20,100 @@ import {
 const logger = new Logger({serviceName: "nhsNotify"})
 
 /**
- * Handler for the scheduled trigger.
- *
- * @param event - The CloudWatch EventBridge scheduled event payload.
+ * Process a single batch of SQS messages: filter, notify, persist, and clean up.
  */
-export const lambdaHandler = async (event: EventBridgeEvent<string, string>): Promise<void> => {
-  // EventBridge jsonifies the details so the second type of the event is a string. That's unused here, though
+async function processBatch(
+  messages: Array<NotifyDataItemMessage>,
+  routingId: string
+): Promise<void> {
+  if (messages.length === 0) {
+    console.log("No messages to process")
+    logger.info("No messages to process")
+    return
+  }
 
-  // Get the routing plan ID from the parameter storage
-  if (!process.env.NHS_NOTIFY_ROUTING_ID_PARAM) throw new Error("Environment not configured")
-  const NHS_NOTIFY_ROUTING_ID = await getParameter(process.env.NHS_NOTIFY_ROUTING_ID_PARAM)
-  if (!NHS_NOTIFY_ROUTING_ID) throw new Error("No Routing Plan ID found")
+  // Filter by cooldown
+  const checks = await Promise.all(
+    messages.map(async (msg) => ({
+      msg,
+      allowed: await checkCooldownForUpdate(logger, msg.PSUDataItem)
+    }))
+  )
+  const toProcess = checks.filter(c => c.allowed).map(c => c.msg)
+  const suppressed = checks.filter(c => !c.allowed).map(c => c.msg)
+
+  logSuppression(suppressed.length, messages.length)
+  if (suppressed.length) {
+    await removeSQSMessages(logger, suppressed)
+  }
+
+  // Send notifications
+  let processed: Array<NotifyDataItemMessage> = []
+  try {
+    processed = await makeBatchNotifyRequest(logger, routingId, toProcess)
+  } catch (err) {
+    logger.error("Notification request failed, will retry", {error: err, toProcess})
+  }
+
+  if (processed.length) {
+    await addPrescriptionMessagesToNotificationStateStore(logger, processed)
+    await removeSQSMessages(logger, processed)
+  }
+}
+
+/**
+ * Log suppression details (sonar complained of high code complexity)
+ */
+function logSuppression(suppressedCount: number, total: number): void {
+  if (suppressedCount === total) {
+    logger.info("All messages suppressed by cooldown; nothing to notify", {
+      suppressedCount,
+      totalFetched: total
+    })
+  } else if (suppressedCount > 0) {
+    logger.info(`Suppressed ${suppressedCount} messages due to cooldown`, {
+      suppressedCount,
+      totalFetched: total
+    })
+  }
+}
+
+/**
+ * Drain the queue until empty, processing each batch.
+ */
+async function drainAndProcess(routingId: string): Promise<void> {
+  let empty = false
+  while (!empty) {
+    const {messages, isEmpty} = await drainQueue(logger, 100)
+    empty = isEmpty
+    console.log(messages)
+    await processBatch(messages, routingId)
+  }
+}
+
+/**
+ * Handler for the scheduled EventBridge trigger.
+ */
+export const lambdaHandler = async (
+  event: EventBridgeEvent<string, string>
+): Promise<void> => {
+  if (!process.env.NHS_NOTIFY_ROUTING_ID_PARAM) {
+    throw new Error("Environment not configured")
+  }
+  const routingId = await getParameter(process.env.NHS_NOTIFY_ROUTING_ID_PARAM)
+  if (!routingId) {
+    throw new Error("No Routing Plan ID found")
+  }
 
   logger.info("NHS Notify lambda triggered by scheduler", {event})
+  logger.info("Routing Plan ID:", {routingId})
 
-  let queueDrained = false
-
-  // keep pulling until drainQueue tells us the queue is effectively empty
-  while (!queueDrained) {
-    const {messages, isEmpty} = await drainQueue(logger, 100)
-    queueDrained = isEmpty
-
-    if (messages.length === 0) {
-      logger.info("No messages to process")
-      return
-    }
-
-    // Filter messages by checkCooldownForUpdate. This is done in two stages so we can check in parallel
-    const eligibility = await Promise.all(
-      messages.map(async (m) => ({
-        message: m,
-        allowed: await checkCooldownForUpdate(logger, m.PSUDataItem)
-      }))
-    )
-    const toProcess = eligibility
-      .filter((e) => e.allowed)
-      .map((e) => e.message)
-    const suppressed = eligibility
-      .filter((e) => !e.allowed)
-      .map((e) => e.message)
-
-    // Log the results of checking the cooldown
-    const suppressedCount = suppressed.length
-    if (toProcess.length === 0) {
-      logger.info("All messages suppressed by cooldown; nothing to notify",
-        {
-          suppressedCount,
-          totalFetched: messages.length
-        })
-    } else if (suppressedCount > 0) {
-      logger.info(`Suppressed ${suppressedCount} messages due to cooldown`,
-        {
-          suppressedCount,
-          totalFetched: messages.length
-        }
-      )
-    }
-
-    if (suppressed.length) {
-      // Consider suppressed messages to have been processed and delete them from SQS
-      await removeSQSMessages(logger, suppressed)
-    }
-
-    // Make the request. If it's successful, add the relevant messages to the list of processed messages.
-    const processed: Array<NotifyDataItemMessage> = []
-    if (!NHS_NOTIFY_ROUTING_ID) throw new Error("NHS_NOTIFY_ROUTING_ID environment variable not set.")
-    logger.info("Using this Routing Plan ID for all messages.", {RoutingPlanId: NHS_NOTIFY_ROUTING_ID})
-    try {
-      const results = await makeBatchNotifyRequest(
-        logger, NHS_NOTIFY_ROUTING_ID, toProcess
-      )
-      processed.push(...results)
-    } catch (error) {
-      logger.error("Failed to make notification requests for these these messages. Will retry",
-        {error, failedMessages: toProcess}
-      )
-    }
-
-    if (processed.length) {
-      // Processed messages are pushed to the database
-      await addPrescriptionMessagesToNotificationStateStore(logger, processed)
-
-      // By waiting until a message is successfully processed before deleting it from SQS,
-      // failed messages will eventually be retried by subsequent notify consumers.
-      await removeSQSMessages(logger, processed)
-    }
-  }
+  await drainAndProcess(routingId)
 }
 
 export const handler = middy(lambdaHandler)
   .use(injectLambdaContext(logger, {clearState: true}))
   .use(
-    inputOutputLogger({
-      logger: (request) => {
-        logger.info(request)
-      }
-    })
+    inputOutputLogger({logger: (req) => logger.info(req)})
   )
-  .use(errorHandler({logger: logger}))
+  .use(errorHandler({logger}))

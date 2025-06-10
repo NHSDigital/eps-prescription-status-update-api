@@ -12,8 +12,11 @@ import {getSecret} from "@aws-lambda-powertools/parameters/secrets"
 
 import {NotifyDataItem} from "@PrescriptionStatusUpdate_common/commonTypes"
 
-import {v4} from "uuid"
 import {CreateMessageBatchRequest, CreateMessageBatchResponse, MessageBatchItem} from "./types"
+
+import {v4} from "uuid"
+import axios from "axios"
+import axiosRetry from "axios-retry"
 
 // Dynamo TTL for entries
 const TTL_DELTA = 60 * 60 * 24 * 14 // Keep records for 2 weeks
@@ -444,29 +447,37 @@ export async function makeBatchNotifyRequest(
 
   logger.info("Making a request for notifications to NHS notify", {count: data.length, routingPlanId})
 
-  const url = `${BASE_URL}/v1/message-batches`
+  // Create an axios instance configured for Notify
+  const axiosInstance = axios.create({
+    baseURL: BASE_URL,
+    headers: {
+      Accept: "*/*",
+      "Content-Type": "application/vnd.api+json",
+      Authorization: `Bearer ${API_KEY}`
+    }
+  })
+
+  // Retry configuration for rate limiting
+  const onAxiosRetry = (retryCount: number, error: unknown) => {
+    logger.warn(`Call to notify failed - retrying. Retry count ${retryCount}`, {error})
+  }
+
+  // Axios-retry respects the `Retry-After` header
+  axiosRetry(axiosInstance, {
+    retries: 5,
+    onRetry: onAxiosRetry
+  })
 
   try {
-    const resp = await fetch(url, {
-      method: "POST",
-      headers: {
-        "Accept": "*/*",
-        "Content-Type": "application/vnd.api+json",
-        "Authorization": `Bearer ${API_KEY}`
-      },
-      body: JSON.stringify(body)
-    })
+    const resp = await axiosInstance.post<CreateMessageBatchResponse>("/v1/message-batches", body)
 
-    if (resp.ok) {
-      const respBody = (await resp.json()) as CreateMessageBatchResponse
-      const returnedMessages = respBody.data.attributes.messages
-      logger.info("Requested notifications OK!",
-        {
-          messageBatchReference,
-          messageReferences: messages.map(e => e.messageReference),
-          success: "Requested Success"
-        }
-      )
+    if (resp.status === 201) {
+      const returnedMessages = resp.data.data.attributes.messages
+      logger.info("Requested notifications OK!", {
+        messageBatchReference,
+        messageReferences: messages.map(e => e.messageReference),
+        success: "Requested Success"
+      })
 
       // Map each input item to a NotifyDataItemMessage, marking success and attaching the notify ID
       return data.map(item => {
@@ -476,42 +487,30 @@ export async function makeBatchNotifyRequest(
 
         // SUCCESS
         return {
-          PSUDataItem: item.PSUDataItem,
+          ...item,
+          messageBatchReference,
           success: !!match,
-          messageBatchReference: messageBatchReference,
-          messageReference: item.messageReference,
           notifyMessageId: match?.id
         }
       })
-
-    } else if (resp.status === 425 || resp.status === 429) {
-      const retryAfter = parseInt(resp.headers.get("Retry-After") ?? "30") * 1000
-      logger.warn("Received rate limit; retrying after delay", {retryAfter})
-
-      await new Promise(resolve => setTimeout(resolve, retryAfter))
-      logger.info("Delay done, retrying now", {retryAfter})
-      const newRequest = await makeBatchNotifyRequest(logger, routingPlanId, data)
-      return newRequest
 
     } else {
       logger.error("Notify batch request failed", {
         status: resp.status,
         statusText: resp.statusText,
-        responseBody: resp.body,
         messageBatchReference,
         messageReferences: messages.map(e => e.messageReference),
         success: "Requested Failed"
       })
       throw new Error("Notify batch request failed")
     }
-  } catch (err) {
-    logger.error("Error sending notify batch", {error: err})
 
+  } catch (error) {
+    logger.error("Notify batch request failed", {error})
     return data.map(item => ({
-      PSUDataItem: item.PSUDataItem,
+      ...item,
       success: false,
-      messageBatchReference: item.messageBatchReference,
-      messageReference: item.messageReference,
+      messageBatchReference,
       notifyMessageId: undefined
     }))
   }
