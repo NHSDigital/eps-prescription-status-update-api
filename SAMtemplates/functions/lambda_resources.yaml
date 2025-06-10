@@ -91,17 +91,6 @@ Resources:
                 - ","
                 - !Ref AdditionalPolicies
               - !Ref AWS::NoValue
-      Policies:
-        - PolicyName: ReadSQSSaltSecret
-          PolicyDocument:
-            Version: "2012-10-17"
-            Statement:
-              - Effect: Allow
-                Action:
-                  - secretsmanager:GetSecretValue
-                  - secretsmanager:DescribeSecret
-                Resource:
-                  Fn::ImportValue: !Sub "${StackName}-SQSSaltSecret"
 
   LambdaManagedPolicy:
     Type: AWS::IAM::ManagedPolicy
