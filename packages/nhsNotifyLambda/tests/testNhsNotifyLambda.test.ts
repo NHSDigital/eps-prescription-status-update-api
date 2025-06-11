@@ -8,10 +8,20 @@ import {
 
 import {constructPSUDataItem, constructPSUDataItemMessage} from "./testHelpers"
 
+const mockGetParameter = jest.fn().mockImplementation(() => "parameter_value")
+jest.unstable_mockModule(
+  "@aws-lambda-powertools/parameters/ssm",
+  async () => ({
+    __esModule: true,
+    getParameter: mockGetParameter
+  })
+)
+
 const mockAddPrescriptionMessagesToNotificationStateStore = jest.fn()
-const mockClearCompletedSQSMessages = jest.fn()
+const mockRemoveSQSMessages = jest.fn()
 const mockDrainQueue = jest.fn()
 const mockCheckCooldownForUpdate = jest.fn()
+const mockMakeBatchNotifyRequest = jest.fn()
 
 jest.unstable_mockModule(
   "../src/utils",
@@ -19,8 +29,9 @@ jest.unstable_mockModule(
     __esModule: true,
     drainQueue: mockDrainQueue,
     addPrescriptionMessagesToNotificationStateStore: mockAddPrescriptionMessagesToNotificationStateStore,
-    clearCompletedSQSMessages: mockClearCompletedSQSMessages,
-    checkCooldownForUpdate: mockCheckCooldownForUpdate
+    removeSQSMessages: mockRemoveSQSMessages,
+    checkCooldownForUpdate: mockCheckCooldownForUpdate,
+    makeBatchNotifyRequest: mockMakeBatchNotifyRequest
   })
 )
 
@@ -54,13 +65,18 @@ describe("Unit test for NHS Notify lambda handler", () => {
     jest.restoreAllMocks()
   })
 
+  it("When the getParameter call fails, the handler throws an error", async () => {
+    mockGetParameter.mockImplementationOnce(() => Promise.resolve(undefined))
+    await expect(lambdaHandler(mockEventBridgeEvent)).rejects.toThrow("No Routing Plan ID found")
+  })
+
   it("When drainQueue throws an error, the handler throws an error", async () => {
     mockDrainQueue.mockImplementation(() => Promise.reject(new Error("Failed")))
     await expect(lambdaHandler(mockEventBridgeEvent)).rejects.toThrow("Failed")
   })
 
   it("When drainQueue returns no messages, the request succeeds", async () => {
-    mockDrainQueue.mockImplementation(() => Promise.resolve([]))
+    mockDrainQueue.mockImplementation(() => Promise.resolve({messages: [], isEmpty: true}))
     await expect(lambdaHandler(mockEventBridgeEvent)).resolves.not.toThrow()
 
     expect(mockCheckCooldownForUpdate).not.toHaveBeenCalled()
@@ -72,30 +88,28 @@ describe("Unit test for NHS Notify lambda handler", () => {
     const item2 = constructPSUDataItem({TaskID: "t2", RequestID: "r2"})
     const msg1 = constructPSUDataItemMessage({PSUDataItem: item1})
     const msg2 = constructPSUDataItemMessage({PSUDataItem: item2})
+
     // drainQueue returns two messages
-    mockDrainQueue.mockImplementationOnce(() => Promise.resolve([msg1, msg2]))
+    mockDrainQueue.mockImplementationOnce(() => Promise.resolve({messages: [msg1, msg2], isEmpty: true}))
     // deletion succeeds
-    mockClearCompletedSQSMessages.mockImplementationOnce(() => Promise.resolve(undefined))
+    mockRemoveSQSMessages.mockImplementation(() => Promise.resolve())
     // Checking cooldown
     mockCheckCooldownForUpdate.mockImplementation(() => Promise.resolve(true))
+    // Notify request succeeds
+    mockMakeBatchNotifyRequest.mockImplementationOnce(() => Promise.resolve(
+      [
+        {...msg1, success: true, notifyMessageId: "message1"},
+        {...msg2, success: true, notifyMessageId: "message2"}
+      ]
+    ))
 
     await expect(lambdaHandler(mockEventBridgeEvent)).resolves.not.toThrow()
 
     expect(mockCheckCooldownForUpdate).toHaveBeenCalledTimes(2)
+    expect(mockMakeBatchNotifyRequest).toHaveBeenCalledTimes(1)
 
-    // ensure we logged the fetched notifications
-    expect(mockInfo).toHaveBeenCalledWith(
-      "Fetched prescription notification messages",
-      {
-        count: 2,
-        toNotify: [
-          {RequestID: "r1", TaskId: "t1", Message: "Notification Required"},
-          {RequestID: "r2", TaskId: "t2", Message: "Notification Required"}
-        ]
-      }
-    )
-    // ensure clearCompletedSQSMessages was called with the original messages array
-    expect(mockClearCompletedSQSMessages).toHaveBeenCalledWith(
+    // ensure removeSQSMessages was called with the original messages array
+    expect(mockRemoveSQSMessages).toHaveBeenCalledWith(
       expect.any(Object), // the logger instance
       [
         expect.objectContaining({
@@ -112,36 +126,42 @@ describe("Unit test for NHS Notify lambda handler", () => {
     )
   })
 
-  it("Throws and logs if clearCompletedSQSMessages fails", async () => {
+  it("Throws and logs if removeSQSMessages fails", async () => {
     const item = constructPSUDataItem({TaskID: "tx", RequestID: "rx"})
     const msg = constructPSUDataItemMessage({PSUDataItem: item})
-    mockDrainQueue.mockImplementationOnce(() => Promise.resolve([msg]))
+    mockDrainQueue.mockImplementationOnce(() => Promise.resolve({messages: [msg], isEmpty: true}))
     mockCheckCooldownForUpdate.mockImplementation(() => Promise.resolve(true))
 
+    // Notify request succeeds
+    mockMakeBatchNotifyRequest.mockImplementationOnce(() => Promise.resolve(
+      [
+        {...msg, success: true, notifyMessageId: "message"}
+      ]
+    ))
+
     const deletionError = new Error("Delete failed")
-    mockClearCompletedSQSMessages.mockImplementationOnce(() => Promise.reject(deletionError))
+    mockRemoveSQSMessages.mockImplementationOnce(() => Promise.reject(deletionError))
 
     await expect(lambdaHandler(mockEventBridgeEvent)).rejects.toThrow("Delete failed")
-
-    expect(mockError).toHaveBeenCalledWith(
-      "Error while deleting successfully processed messages from SQS",
-      {error: deletionError}
-    )
   })
 
   it("Throws and logs if addPrescriptionMessagesToNotificationStateStore fails", async () => {
-    mockDrainQueue.mockImplementationOnce(() => Promise.resolve([constructPSUDataItemMessage()]))
+    const msg = constructPSUDataItemMessage()
+    mockDrainQueue.mockImplementationOnce(
+      () => Promise.resolve({messages: [msg], isEmpty: true})
+    )
     mockCheckCooldownForUpdate.mockImplementation(() => Promise.resolve(true))
     const thrownError = new Error("Failed")
     mockAddPrescriptionMessagesToNotificationStateStore.mockImplementationOnce(
       () => Promise.reject(thrownError)
     )
 
+    // Notify request succeeds
+    mockMakeBatchNotifyRequest.mockImplementationOnce(() => Promise.resolve(
+      [{...msg, success: true, notifyMessageId: "message"}]
+    ))
+
     await expect(lambdaHandler(mockEventBridgeEvent)).rejects.toThrow("Failed")
-    expect(mockError).toHaveBeenCalledWith(
-      "Error while pushing data to the PSU notification state data store",
-      {err: thrownError}
-    )
   })
 
   it("When drainQueue returns only valid messages, all are processed", async () => {
@@ -151,27 +171,22 @@ describe("Unit test for NHS Notify lambda handler", () => {
       RequestID: "req-1"
     })
     const message = constructPSUDataItemMessage({PSUDataItem: validItem})
-    mockDrainQueue.mockImplementation(() =>
-      Promise.resolve([message])
+    mockDrainQueue.mockImplementation(
+      () => Promise.resolve({messages: [message], isEmpty: true})
     )
     mockCheckCooldownForUpdate.mockImplementation(() => Promise.resolve(true))
+
+    // Notify request succeeds
+    mockMakeBatchNotifyRequest.mockImplementationOnce(() => Promise.resolve(
+      [
+        {...message, success: true, notifyMessageId: "message"}
+      ]
+    ))
 
     await expect(lambdaHandler(mockEventBridgeEvent)).resolves.not.toThrow()
 
     expect(mockError).not.toHaveBeenCalled()
-    expect(mockInfo).toHaveBeenCalledWith(
-      "Fetched prescription notification messages",
-      {
-        count: 1,
-        toNotify: [
-          {
-            RequestID: "req-1",
-            TaskId: "task-1",
-            Message: "Notification Required"
-          }
-        ]
-      }
-    )
+    expect(mockGetParameter).toHaveBeenCalledWith(process.env.NHS_NOTIFY_ROUTING_ID_PARAM)
   })
 
   it("Filters out messages inside cooldown", async () => {
@@ -180,7 +195,9 @@ describe("Unit test for NHS Notify lambda handler", () => {
     const msgFresh = constructPSUDataItemMessage({PSUDataItem: fresh})
     const msgStale = constructPSUDataItemMessage({PSUDataItem: stale})
 
-    mockDrainQueue.mockImplementation(() => Promise.resolve([msgFresh, msgStale]))
+    mockDrainQueue.mockImplementation(
+      () => Promise.resolve({messages: [msgFresh, msgStale], isEmpty: true})
+    )
 
     // returns true if the request ID is "fresh"
     mockCheckCooldownForUpdate.mockImplementation((logger, update) => {
@@ -188,7 +205,14 @@ describe("Unit test for NHS Notify lambda handler", () => {
       return Promise.resolve(u.RequestID === "fresh")
     })
 
-    mockClearCompletedSQSMessages.mockImplementation(() => Promise.resolve())
+    // Notify request succeeds
+    mockMakeBatchNotifyRequest.mockImplementationOnce(() => Promise.resolve(
+      [
+        {...msgFresh, success: true, notifyMessageId: "message"}
+      ]
+    ))
+
+    mockRemoveSQSMessages.mockImplementation(() => Promise.resolve())
     mockAddPrescriptionMessagesToNotificationStateStore.mockImplementation(() => Promise.resolve())
 
     await expect(lambdaHandler(mockEventBridgeEvent)).resolves.not.toThrow()
@@ -205,7 +229,7 @@ describe("Unit test for NHS Notify lambda handler", () => {
         ]
       )
 
-    expect(mockClearCompletedSQSMessages)
+    expect(mockRemoveSQSMessages)
       .toHaveBeenCalledWith(expect.any(Object),
         [
           expect.objectContaining({
@@ -227,7 +251,9 @@ describe("Unit test for NHS Notify lambda handler", () => {
     const stale = constructPSUDataItem({RequestID: "stale", TaskID: "t1"})
     const msgStale = constructPSUDataItemMessage({PSUDataItem: stale})
 
-    mockDrainQueue.mockImplementation(() => Promise.resolve([msgStale]))
+    mockDrainQueue.mockImplementation(
+      () => Promise.resolve({messages: [msgStale], isEmpty: true})
+    )
 
     // returns true if the request ID is "fresh"
     mockCheckCooldownForUpdate.mockImplementation((logger, update) => {
@@ -235,13 +261,17 @@ describe("Unit test for NHS Notify lambda handler", () => {
       return Promise.resolve(u.RequestID === "fresh")
     })
 
-    mockClearCompletedSQSMessages.mockImplementation(() => Promise.resolve())
+    mockRemoveSQSMessages.mockImplementation(() => Promise.resolve())
     mockAddPrescriptionMessagesToNotificationStateStore.mockImplementation(() => Promise.resolve())
+    mockMakeBatchNotifyRequest.mockImplementation(() => Promise.resolve([])) // This function never returns undefined
 
-    await expect(lambdaHandler(mockEventBridgeEvent)).resolves.not.toThrow()
+    await lambdaHandler(mockEventBridgeEvent)
 
     expect(mockAddPrescriptionMessagesToNotificationStateStore).not.toHaveBeenCalled()
-    expect(mockClearCompletedSQSMessages).not.toHaveBeenCalled()
+    expect(mockRemoveSQSMessages).toHaveBeenCalledWith(
+      expect.any(Object),
+      [expect.objectContaining(msgStale)]
+    )
 
     // and log that everything was suppressed
     expect(mockInfo)

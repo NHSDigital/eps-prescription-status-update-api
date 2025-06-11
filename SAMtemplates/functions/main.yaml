@@ -34,17 +34,22 @@ Parameters:
     Default: none
 
   SQSSaltSecret:
-    Type: String
-    Default: none
+    Type: AWS::SecretsManager::Secret::Name<String>
 
   EnabledSiteODSCodesParam:
-    Type: AWS::SSM::Parameter::Value<String>
+    Type: AWS::SSM::Parameter::Name<String>
 
   EnabledSystemsParam:
-    Type: AWS::SSM::Parameter::Value<String>
+    Type: AWS::SSM::Parameter::Name<String>
 
   BlockedSiteODSCodesParam:
-    Type: AWS::SSM::Parameter::Value<String>
+    Type: AWS::SSM::Parameter::Name<String>
+
+  NotifyRoutingPlanIDParam:
+    Type: AWS::SSM::Parameter::Name<String>
+
+  NotifyAPIBaseURLParam:
+    Type: AWS::SSM::Parameter::Name<String>
 
   LogLevel:
     Type: String
@@ -84,10 +89,10 @@ Resources:
         Variables:
           TABLE_NAME: !Ref PrescriptionStatusUpdatesTableName
           NHS_NOTIFY_PRESCRIPTIONS_SQS_QUEUE_URL: !Ref NHSNotifyPrescriptionsSQSQueueUrl
-          SQS_SALT: !Sub "{{resolve:secretsmanager:${SQSSaltSecret}:SecretString:salt}}"
-          ENABLED_SITE_ODS_CODES: !Ref EnabledSiteODSCodesParam
-          ENABLED_SYSTEMS: !Ref EnabledSystemsParam
-          BLOCKED_SITE_ODS_CODES: !Ref BlockedSiteODSCodesParam
+          SQS_SALT: !Ref SQSSaltSecret
+          ENABLED_SITE_ODS_CODES_PARAM: !Ref EnabledSiteODSCodesParam
+          ENABLED_SYSTEMS_PARAM: !Ref EnabledSystemsParam
+          BLOCKED_SITE_ODS_CODES_PARAM: !Ref BlockedSiteODSCodesParam
           LOG_LEVEL: !Ref LogLevel
           ENVIRONMENT: !Ref Environment
           TEST_PRESCRIPTIONS_1: "None"
@@ -124,6 +129,7 @@ Resources:
             - Fn::ImportValue: !Sub ${StackName}:tables:UsePrescriptionStatusUpdatesKMSKeyPolicyArn
             - Fn::ImportValue: !Sub ${StackName}-UseNotificationSQSQueueKMSKeyPolicyArn
             - Fn::ImportValue: !Sub ${StackName}-WriteNHSNotifyPrescriptionsSQSQueuePolicyArn
+            - Fn::ImportValue: !Sub ${StackName}-GetSQSSaltSecretPolicy
         LogRetentionInDays: !Ref LogRetentionInDays
         CloudWatchKMSKeyId: !ImportValue account-resources:CloudwatchLogsKmsKeyArn
         EnableSplunk: !Ref EnableSplunk
@@ -387,6 +393,9 @@ Resources:
           LOG_LEVEL: !Ref LogLevel
           NHS_NOTIFY_PRESCRIPTIONS_SQS_QUEUE_URL: !Ref NHSNotifyPrescriptionsSQSQueueUrl
           TABLE_NAME: !Ref PrescriptionNotificationStatesTableName
+          API_KEY_SECRET:  secrets-PSU-Notify-API-Key
+          NHS_NOTIFY_ROUTING_ID_PARAM: !Ref NotifyRoutingPlanIDParam
+          NOTIFY_API_BASE_URL_PARAM: !Ref NotifyAPIBaseURLParam
       Events:
         ScheduleEvent:
           Type: ScheduleV2

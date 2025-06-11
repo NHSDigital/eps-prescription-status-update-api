@@ -1,5 +1,6 @@
 import {Logger} from "@aws-lambda-powertools/logger"
 import {SQSClient, SendMessageBatchCommand} from "@aws-sdk/client-sqs"
+import {getSecret} from "@aws-lambda-powertools/parameters/secrets"
 
 import {createHmac} from "crypto"
 
@@ -9,7 +10,6 @@ import {checkSiteOrSystemIsNotifyEnabled} from "../validation/notificationSiteAn
 
 const sqsUrl: string | undefined = process.env.NHS_NOTIFY_PRESCRIPTIONS_SQS_QUEUE_URL
 const fallbackSalt = "DEV SALT"
-const sqsSalt: string = process.env.SQS_SALT ?? fallbackSalt
 
 // The AWS_REGION is always defined in lambda environments
 const sqs = new SQSClient({region: process.env.AWS_REGION})
@@ -36,13 +36,58 @@ function chunkArray<T>(arr: Array<T>, size: number): Array<Array<T>> {
  * @param hashFunction - Which hash function to use. HMAC compatible. Defaults to SHA-256
  * @returns - A hex encoded string of the hash
  */
-export function saltedHash(logger: Logger, input: string, hashFunction: string = "sha256"): string {
-  if (sqsSalt === fallbackSalt) {
-    logger.warn("Using the fallback salt value - please update the environment variable `SQS_SALT` to a random value.")
-  }
+export function saltedHash(
+  input: string,
+  sqsSalt: string,
+  hashFunction: string = "sha256"
+): string {
   return createHmac(hashFunction, sqsSalt)
     .update(input, "utf8")
     .digest("hex")
+}
+
+/**
+ * Gets the salt value from the secrets manager
+ */
+export async function getSaltValue(logger: Logger): Promise<string> {
+  let sqsSalt: string
+
+  if (!process.env.SQS_SALT) {
+    // No secret name configured at all, so fall back
+    sqsSalt = fallbackSalt
+  } else {
+    try {
+      // grab the secret, expecting JSON like { "salt": "string" }
+      const secretJson = await getSecret(process.env.SQS_SALT, {transform: "json"})
+
+      // must be a non‐null object with a string .salt
+      if (
+        typeof secretJson === "object" &&
+        secretJson !== null &&
+        "salt" in secretJson &&
+        typeof secretJson.salt === "string"
+      ) {
+        // OK
+        sqsSalt = secretJson.salt
+      } else {
+        logger.error("Secret did not contain a valid salt field, falling back to DEV SALT", {
+          secretValue: secretJson
+        })
+        sqsSalt = fallbackSalt
+      }
+    } catch (error) {
+      logger.error("Failed to fetch SQS_SALT from Secrets Manager, using DEV SALT", {error})
+      sqsSalt = fallbackSalt
+    }
+  }
+
+  if (sqsSalt === fallbackSalt) {
+    logger.warn(
+      "Using the fallback salt value - please update the environment variable `SQS_SALT` to a random value."
+    )
+  }
+
+  return sqsSalt
 }
 
 /**
@@ -66,12 +111,10 @@ export async function pushPrescriptionToNotificationSQS(
   }
 
   // Only allow through sites and systems that are allowedSitesAndSystems
-  const allowedSitesAndSystemsData = checkSiteOrSystemIsNotifyEnabled(data)
+  const allowedSitesAndSystemsData = await checkSiteOrSystemIsNotifyEnabled(data)
   logger.info(
     "Filtered out sites and suppliers that are not enabled, or are explicitly disabled",
-    {
-      numItemsAllowed: allowedSitesAndSystemsData.length
-    }
+    {numItemsAllowed: allowedSitesAndSystemsData.length}
   )
 
   // SQS batch calls are limited to 10 messages per request, so chunk the data
@@ -83,6 +126,7 @@ export async function pushPrescriptionToNotificationSQS(
     "ready to collect - partial"
   ]
 
+  const sqsSalt = await getSaltValue(logger)
   for (const batch of batches) {
     const entries = batch
       .filter((item) => updateStatuses.includes(item.Status.toLowerCase()))
@@ -93,7 +137,7 @@ export async function pushPrescriptionToNotificationSQS(
         MessageBody: JSON.stringify(item as NotifyDataItem),
         // FIFO
         // We dedupe on both nhs number and ods code
-        MessageDeduplicationId: saltedHash(logger, `${item.PatientNHSNumber}:${item.PharmacyODSCode}`),
+        MessageDeduplicationId: saltedHash(`${item.PatientNHSNumber}:${item.PharmacyODSCode}`, sqsSalt),
         MessageGroupId: requestId,
         MessageAttributes: {
           RequestId: {
