@@ -3,7 +3,8 @@ import {
   SQSClient,
   ReceiveMessageCommand,
   DeleteMessageBatchCommand,
-  Message
+  Message,
+  GetQueueAttributesCommand
 } from "@aws-sdk/client-sqs"
 import {DynamoDBClient} from "@aws-sdk/client-dynamodb"
 import {DynamoDBDocumentClient, GetCommand, PutCommand} from "@aws-sdk/lib-dynamodb"
@@ -56,6 +57,46 @@ function chunkArray<T>(arr: Array<T>, size: number): Array<Array<T>> {
   return chunks
 }
 
+export async function reportQueueStatus(logger: Logger): Promise<void> {
+  if (!sqsUrl) {
+    logger.error("Notifications SQS URL not configured")
+    throw new Error("NHS_NOTIFY_PRESCRIPTIONS_SQS_QUEUE_URL not set")
+  }
+
+  const attrsCmd = new GetQueueAttributesCommand({
+    QueueUrl: sqsUrl,
+    AttributeNames: [
+      "ApproximateNumberOfMessages",
+      "ApproximateNumberOfMessagesNotVisible",
+      "ApproximateNumberOfMessagesDelayed"
+    ]
+  })
+  const {Attributes} = await sqs.send(attrsCmd)
+
+  // Fall back to a negative value so missing data can be identified
+  const ApproximateNumberOfMessages = parseInt(Attributes?.ApproximateNumberOfMessages ?? "-1")
+  const ApproximateNumberOfMessagesNotVisible = parseInt(Attributes?.ApproximateNumberOfMessagesNotVisible ?? "-1")
+  const ApproximateNumberOfMessagesDelayed = parseInt(Attributes?.ApproximateNumberOfMessagesDelayed ?? "-1")
+
+  logger.info(
+    "Current queue attributes (if a value failed to fetch, it will be reported as -1):",
+    {
+      ApproximateNumberOfMessages,
+      ApproximateNumberOfMessagesNotVisible,
+      ApproximateNumberOfMessagesDelayed
+    }
+  )
+
+  logger.info(
+    "Current queue attributes:",
+    {
+      ApproximateNumberOfMessages,
+      ApproximateNumberOfMessagesNotVisible,
+      ApproximateNumberOfMessagesDelayed
+    }
+  )
+}
+
 // This is an extension of the SQS message interface, which explicitly parses the PSUDataItem
 // and helps track the nhs notify results
 export interface NotifyDataItemMessage extends Message {
@@ -76,11 +117,12 @@ export interface NotifyDataItemMessage extends Message {
  *  - messages the array of parsed NotifyDataItemMessage
  *  - isEmpty: true if the last receive returned fewer than 5 messages (or none),
  *             indicating the queue is effectively drained.
- */
+*/
 export async function drainQueue(
   logger: Logger,
   maxTotal = 100
 ): Promise<{ messages: Array<NotifyDataItemMessage>; isEmpty: boolean }> {
+  // TODO: This could be refactored, to guess the number of requests to drain the queue and make them in parallel.
   if (!sqsUrl) {
     logger.error("Notifications SQS URL not configured")
     throw new Error("NHS_NOTIFY_PRESCRIPTIONS_SQS_QUEUE_URL not set")
