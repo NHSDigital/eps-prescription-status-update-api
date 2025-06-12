@@ -477,9 +477,8 @@ export async function makeBatchNotifyRequest(
     logger.info("Not doing real Notify requests. Simply waiting for some time and returning success on all messages")
     await new Promise(f => setTimeout(f, DUMMY_NOTIFY_DELAY_MS))
 
-    // Map each input item to a NotifyDataItemMessage, marking success and attaching the notify ID
+    // Map each input item to a "successful" NotifyDataItemMessage
     return data.map(item => {
-      // SUCCESS
       return {
         ...item,
         messageBatchReference,
