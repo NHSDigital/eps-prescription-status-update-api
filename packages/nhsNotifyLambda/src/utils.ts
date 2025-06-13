@@ -86,15 +86,6 @@ export async function reportQueueStatus(logger: Logger): Promise<void> {
       ApproximateNumberOfMessagesDelayed
     }
   )
-
-  logger.info(
-    "Current queue attributes:",
-    {
-      ApproximateNumberOfMessages,
-      ApproximateNumberOfMessagesNotVisible,
-      ApproximateNumberOfMessagesDelayed
-    }
-  )
 }
 
 // This is an extension of the SQS message interface, which explicitly parses the PSUDataItem
