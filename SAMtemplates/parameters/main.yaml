@@ -83,6 +83,22 @@ Resources:
         # Non-prod API URL (sandbox) (INT environment: https://int.api.service.nhs.uk/comms)
         - https://sandbox.api.service.nhs.uk/comms
 
+  EnableNotificationExternalLink:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub ${StackName}-EnableNotificationExternalLink
+      Description: "Toggle on or off if we make real requests to the NHS notify service"
+      Type: String
+      Value: "false"
+      
+  EnableNotificationsInternal:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub ${StackName}-EnableNotificationsInternal
+      Description: "Toggle the notifications integration entirely"
+      Type: String
+      Value: "true"
+
 Outputs:
   EnabledSiteODSCodesParameterName:
     Description: "Name of the SSM parameter holding enabled site ODS codes"
@@ -113,3 +129,15 @@ Outputs:
     Value: !Ref NotifyAPIBaseURLParameter
     Export:
       Name: !Sub ${StackName}-PSUNotifyApiBaseUrlParam
+
+  EnableNotificationExternalLinkName:
+    Description: "Name of the SSM parameter holding the Notify API Base URL"
+    Value: !Ref EnableNotificationExternalLink
+    Export:
+      Name: !Sub ${StackName}-EnableNotificationExternalLinkName
+
+  EnableNotificationsInternalName:
+    Description: "Name of the SSM parameter holding the Notify API Base URL"
+    Value: !Ref EnableNotificationsInternal
+    Export:
+      Name: !Sub ${StackName}-EnableNotificationsInternalName

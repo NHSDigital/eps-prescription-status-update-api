@@ -3,6 +3,7 @@ import {APIGatewayProxyEvent, APIGatewayProxyResult} from "aws-lambda"
 import {Logger} from "@aws-lambda-powertools/logger"
 import {injectLambdaContext} from "@aws-lambda-powertools/logger/middleware"
 import {TransactionCanceledException} from "@aws-sdk/client-dynamodb"
+import {getParameter} from "@aws-lambda-powertools/parameters/ssm"
 
 import middy from "@middy/core"
 import inputOutputLogger from "@middy/input-output-logger"
@@ -43,6 +44,8 @@ export const TEST_PRESCRIPTIONS_1 = (process.env.TEST_PRESCRIPTIONS_1 ?? "")
   .split(",").map(item => item.trim()) || []
 export const TEST_PRESCRIPTIONS_2 = (process.env.TEST_PRESCRIPTIONS_2 ?? "")
   .split(",").map(item => item.trim()) || []
+
+const ENABLE_NOTIFICATIONS_PARAM = process.env.ENABLE_NOTIFICATIONS_PARAM
 
 const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
   logger.appendKeys({
@@ -152,12 +155,26 @@ const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPro
 
   // This prescription was handled successfully,
   // so add a message to the notifications SQS
+  let enableNotifications: boolean = false
   try {
-    const requestId = event.headers["x-request-id"] ?? "x-request-id-not-found"
-    await pushPrescriptionToNotificationSQS(requestId, dataItems, logger)
-  } catch (err) {
-    logger.error("Failed to push prescriptions to the notifications SQS", {err})
-    // DO NOT throw an error here, since we want to still return the update!
+    if (ENABLE_NOTIFICATIONS_PARAM) enableNotifications = await getParameter(ENABLE_NOTIFICATIONS_PARAM) === "true"
+  } catch {
+    logger.error("Failed to fetch ENABLE_NOTIFICATIONS_PARAM. Defaulting to false.", {ENABLE_NOTIFICATIONS_PARAM})
+  }
+
+  if (enableNotifications) {
+    try {
+      const requestId = event.headers["x-request-id"] ?? "x-request-id-not-found"
+      await pushPrescriptionToNotificationSQS(requestId, dataItems, logger)
+    } catch (err) {
+      logger.error("Failed to push prescriptions to the notifications SQS", {err})
+      // DO NOT throw an error here, since we want to still return the update!
+    }
+  } else {
+    logger.info(
+      "enableNotifications is not true, skipping the notification request.",
+      {enableNotifications}
+    )
   }
 
   return response(201, responseEntries)
