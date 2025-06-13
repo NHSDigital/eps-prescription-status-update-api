@@ -19,6 +19,7 @@ jest.unstable_mockModule(
 
 const mockAddPrescriptionMessagesToNotificationStateStore = jest.fn()
 const mockRemoveSQSMessages = jest.fn()
+const mockReportQueueStatus = jest.fn()
 const mockDrainQueue = jest.fn()
 const mockCheckCooldownForUpdate = jest.fn()
 const mockMakeBatchNotifyRequest = jest.fn()
@@ -27,6 +28,7 @@ jest.unstable_mockModule(
   "../src/utils",
   async () => ({
     __esModule: true,
+    reportQueueStatus: mockReportQueueStatus,
     drainQueue: mockDrainQueue,
     addPrescriptionMessagesToNotificationStateStore: mockAddPrescriptionMessagesToNotificationStateStore,
     removeSQSMessages: mockRemoveSQSMessages,

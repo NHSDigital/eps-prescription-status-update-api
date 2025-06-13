@@ -12,6 +12,7 @@ import {
   addPrescriptionMessagesToNotificationStateStore,
   checkCooldownForUpdate,
   removeSQSMessages,
+  reportQueueStatus,
   drainQueue,
   makeBatchNotifyRequest,
   NotifyDataItemMessage
@@ -108,6 +109,7 @@ export const lambdaHandler = async (
   logger.info("NHS Notify lambda triggered by scheduler", {event})
   logger.info("Routing Plan ID:", {routingId})
 
+  await reportQueueStatus(logger)
   await drainAndProcess(routingId)
 }
 
