@@ -113,7 +113,6 @@ export async function drainQueue(
   logger: Logger,
   maxTotal = 100
 ): Promise<{ messages: Array<NotifyDataItemMessage>; isEmpty: boolean }> {
-  // TODO: This could be refactored, to guess the number of requests to drain the queue and make them in parallel.
   if (!sqsUrl) {
     logger.error("Notifications SQS URL not configured")
     throw new Error("NHS_NOTIFY_PRESCRIPTIONS_SQS_QUEUE_URL not set")
