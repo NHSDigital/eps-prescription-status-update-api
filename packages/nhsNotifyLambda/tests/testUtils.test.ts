@@ -742,7 +742,7 @@ describe("NHS notify lambda helper functions", () => {
       await reportQueueStatus(logger)
 
       expect(infoSpy).toHaveBeenCalledWith(
-        "Current queue attributes:",
+        "Current queue attributes (if a value failed to fetch, it will be reported as -1):",
         {
           ApproximateNumberOfMessages: 7,
           ApproximateNumberOfMessagesNotVisible: 4,
