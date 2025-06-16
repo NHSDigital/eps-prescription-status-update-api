@@ -40,7 +40,7 @@ const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPro
     return response(400, {message: "Request body failed to parse"})
   }
 
-  payload.data.map(m => {
+  payload.data.forEach(m => {
     logger.info(
       "Message state updated",
       {
