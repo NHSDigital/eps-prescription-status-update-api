@@ -4,7 +4,7 @@ import nock from "nock"
 
 import {Logger} from "@aws-lambda-powertools/logger"
 import {DynamoDBDocumentClient, GetCommand, PutCommand} from "@aws-sdk/lib-dynamodb"
-import {DeleteMessageBatchCommand, Message} from "@aws-sdk/client-sqs"
+import {GetQueueAttributesCommand, DeleteMessageBatchCommand, Message} from "@aws-sdk/client-sqs"
 
 import {constructMessage, constructPSUDataItemMessage, mockSQSClient} from "./testHelpers"
 
@@ -36,8 +36,9 @@ jest.unstable_mockModule(
 
 const {
   addPrescriptionMessagesToNotificationStateStore,
-  removeSQSMessages: clearCompletedSQSMessages,
+  removeSQSMessages,
   checkCooldownForUpdate,
+  reportQueueStatus,
   drainQueue,
   makeBatchNotifyRequest
 } = await import("../src/utils")
@@ -155,7 +156,7 @@ describe("NHS notify lambda helper functions", () => {
     })
   })
 
-  describe("clearCompletedSQSMessages", () => {
+  describe("removeSQSMessages", () => {
     let logger: Logger
     let errorSpy: SpiedFunction<(msg: string, ...meta: Array<unknown>) => void>
     let infoSpy: SpiedFunction<(msg: string, ...meta: Array<unknown>) => void>
@@ -179,7 +180,7 @@ describe("NHS notify lambda helper functions", () => {
       // successful delete (no .Failed)
       sqsMockSend.mockImplementationOnce(() => Promise.resolve({}))
 
-      await expect(clearCompletedSQSMessages(logger, messages))
+      await expect(removeSQSMessages(logger, messages))
         .resolves
         .toBeUndefined()
 
@@ -205,7 +206,7 @@ describe("NHS notify lambda helper functions", () => {
       // succeed both batches
       sqsMockSend.mockImplementation(() => Promise.resolve({}))
 
-      await clearCompletedSQSMessages(logger, messages)
+      await removeSQSMessages(logger, messages)
       expect(sqsMockSend).toHaveBeenCalledTimes(2)
 
       // first batch of 10
@@ -234,7 +235,7 @@ describe("NHS notify lambda helper functions", () => {
       // partial failure
       sqsMockSend.mockImplementationOnce(() => Promise.resolve({Failed: failedEntries}))
 
-      await clearCompletedSQSMessages(logger, messages)
+      await removeSQSMessages(logger, messages)
 
       expect(errorSpy).toHaveBeenCalledWith(
         "Some messages failed to delete in this batch",
@@ -756,4 +757,63 @@ describe("NHS notify lambda helper functions", () => {
       })
     })
   })
+
+  describe("reportQueueStatus", () => {
+    let logger: Logger
+    let infoSpy: SpiedFunction<(msg: string, ...meta: Array<unknown>) => void>
+    let errorSpy: SpiedFunction<(msg: string, ...meta: Array<unknown>) => void>
+
+    beforeEach(() => {
+      jest.resetModules()
+      jest.clearAllMocks()
+
+      process.env = {...ORIGINAL_ENV}
+      logger = new Logger({serviceName: "test-service"})
+      infoSpy = jest.spyOn(logger, "info")
+      errorSpy = jest.spyOn(logger, "error")
+    })
+
+    it("logs current queue attributes when SQS returns attributes", async () => {
+      const attrs = {
+        ApproximateNumberOfMessages: "7",
+        ApproximateNumberOfMessagesNotVisible: "4",
+        ApproximateNumberOfMessagesDelayed: "1"
+      }
+
+      sqsMockSend.mockImplementationOnce((cmd) => {
+        expect(cmd).toBeInstanceOf(GetQueueAttributesCommand)
+        expect((cmd as GetQueueAttributesCommand).input).toEqual({
+          QueueUrl: process.env.NHS_NOTIFY_PRESCRIPTIONS_SQS_QUEUE_URL,
+          AttributeNames: [
+            "ApproximateNumberOfMessages",
+            "ApproximateNumberOfMessagesNotVisible",
+            "ApproximateNumberOfMessagesDelayed"
+          ]
+        })
+        return Promise.resolve({Attributes: attrs})
+      })
+
+      await reportQueueStatus(logger)
+
+      expect(infoSpy).toHaveBeenCalledWith(
+        "Current queue attributes (if a value failed to fetch, it will be reported as -1):",
+        {
+          ApproximateNumberOfMessages: 7,
+          ApproximateNumberOfMessagesNotVisible: 4,
+          ApproximateNumberOfMessagesDelayed: 1
+        }
+      )
+    })
+
+    it("throws if the SQS URL is not configured", async () => {
+      delete process.env.NHS_NOTIFY_PRESCRIPTIONS_SQS_QUEUE_URL
+      const {reportQueueStatus: rqs} = await import("../src/utils")
+
+      await expect(rqs(logger)).rejects.toThrow(
+        "NHS_NOTIFY_PRESCRIPTIONS_SQS_QUEUE_URL not set"
+      )
+      expect(errorSpy).toHaveBeenCalledWith("Notifications SQS URL not configured")
+    })
+  })
+
 })
