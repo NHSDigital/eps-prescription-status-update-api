@@ -25,10 +25,12 @@ const TTL_DELTA = 60 * 60 * 24 * 14 // Keep records for 2 weeks
 // For making the notify requests
 const NOTIFY_REQUEST_MAX_ITEMS = 45000
 const NOTIFY_REQUEST_MAX_BYTES = 5 * 1024 * 1024 // 5 MB
+const DUMMY_NOTIFY_DELAY_MS = 150
 
 // these are only ever changed by a deployment
 const dynamoTable = process.env.TABLE_NAME
 const sqsUrl = process.env.NHS_NOTIFY_PRESCRIPTIONS_SQS_QUEUE_URL
+const MAKE_REAL_NOTIFY_REQUESTS_PARAM = process.env.MAKE_REAL_NOTIFY_REQUESTS_PARAM
 
 // AWS clients
 const sqs = new SQSClient({region: process.env.AWS_REGION})
@@ -499,6 +501,24 @@ export async function makeBatchNotifyRequest(
     retries: 5,
     onRetry: onAxiosRetry
   })
+
+  let doRealRequest: boolean = false
+  if (MAKE_REAL_NOTIFY_REQUESTS_PARAM) doRealRequest = await getParameter(MAKE_REAL_NOTIFY_REQUESTS_PARAM) === "true"
+
+  if (!doRealRequest) {
+    logger.info("Not doing real Notify requests. Simply waiting for some time and returning success on all messages")
+    await new Promise(f => setTimeout(f, DUMMY_NOTIFY_DELAY_MS))
+
+    // Map each input item to a "successful" NotifyDataItemMessage
+    return data.map(item => {
+      return {
+        ...item,
+        messageBatchReference,
+        success: true,
+        notifyMessageId: v4() // Create a dummy UUID
+      }
+    })
+  }
 
   try {
     const resp = await axiosInstance.post<CreateMessageBatchResponse>("/v1/message-batches", body)

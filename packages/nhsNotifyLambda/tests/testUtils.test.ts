@@ -15,7 +15,7 @@ const mockGetParameter = jest.fn().mockImplementation((name) => {
   if (name === "NOTIFY_API_BASE_URL_PARAM") {
     return TEST_URL
   }
-  return "parameter_value"
+  return name
 })
 jest.unstable_mockModule(
   "@aws-lambda-powertools/parameters/ssm",
@@ -701,6 +701,60 @@ describe("NHS notify lambda helper functions", () => {
       jest.useRealTimers()
 
       expect(result).toHaveLength(2)
+    })
+
+    it("uses a dummy call when the MAKE_REAL_NOTIFY_REQUESTS_PARAM is false", async () => {
+      process.env.MAKE_REAL_NOTIFY_REQUESTS_PARAM = "false"
+      const {makeBatchNotifyRequest: fn} = await import("../src/utils")
+
+      const data = [
+        constructPSUDataItemMessage({
+          PSUDataItem: {
+            RequestID: "r1",
+            PatientNHSNumber: "n1",
+            PharmacyODSCode: "o1",
+            TaskID: "t1",
+            Status: "s1"
+          }
+        }),
+        constructPSUDataItemMessage({
+          PSUDataItem: {
+            RequestID: "r2",
+            PatientNHSNumber: "n2",
+            PharmacyODSCode: "o2",
+            TaskID: "t2",
+            Status: "s2"
+          }
+        })
+      ]
+
+      // nock the POST to fail, so if nock is called the test will fail
+      nock(TEST_URL)
+        .post("/v1/message-batches")
+        .reply(500)
+
+      const result = await fn(
+        logger,
+        "plan-123",
+        data
+      )
+
+      // Should return all successes
+      expect(result).toHaveLength(2)
+      expect(result[0]).toMatchObject({
+        PSUDataItem: data[0].PSUDataItem,
+        success: true,
+        notifyMessageId: expect.any(String), // it will be assigned a dummy ID
+        messageBatchReference: expect.any(String),
+        messageReference: expect.any(String)
+      })
+      expect(result[1]).toMatchObject({
+        PSUDataItem: data[1].PSUDataItem,
+        success: true,
+        notifyMessageId: expect.any(String),
+        messageBatchReference: expect.any(String),
+        messageReference: expect.any(String)
+      })
     })
   })
 
