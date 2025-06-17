@@ -17,7 +17,6 @@ import {
   generateExpectedItems,
   generateMockEvent,
   mockDynamoDBClient,
-  mockSQSClient,
   TASK_VALUES
 } from "./utils/testUtils"
 
@@ -38,7 +37,21 @@ import {
 import {QueryCommand, TransactionCanceledException, TransactWriteItemsCommand} from "@aws-sdk/client-dynamodb"
 
 const {mockSend: dynamoDBMockSend} = mockDynamoDBClient()
-const {mockSend: sqsMockSend} = mockSQSClient()
+
+const mockPushPrescriptionToNotificationSQS = jest.fn().mockImplementation(async () => Promise.resolve())
+jest.unstable_mockModule("../src/utils/sqsClient", async () => ({
+  __esModule: true,
+  pushPrescriptionToNotificationSQS: mockPushPrescriptionToNotificationSQS
+}))
+
+export const mockGetParameter = jest.fn(async () => Promise.resolve("false"))
+jest.unstable_mockModule(
+  "@aws-lambda-powertools/parameters/ssm",
+  async () => ({
+    __esModule: true,
+    getParameter: mockGetParameter
+  })
+)
 
 const {handler, logger} = await import("../src/updatePrescriptionStatus")
 
@@ -416,7 +429,8 @@ describe("Integration tests for updatePrescriptionStatus handler", () => {
   })
 
   it("when the notification SQS push fails, the response still succeeds", async () => {
-    sqsMockSend.mockImplementation(
+    mockGetParameter.mockImplementation(async () => Promise.resolve("true"))
+    mockPushPrescriptionToNotificationSQS.mockImplementation(
       async () => {
         throw new Error("Test error")
       }
@@ -425,13 +439,12 @@ describe("Integration tests for updatePrescriptionStatus handler", () => {
     const event: APIGatewayProxyEvent = generateMockEvent(requestDispatched)
     const response: APIGatewayProxyResult = await handler(event, {})
     expect(response.statusCode).toBe(201)
+    expect(mockPushPrescriptionToNotificationSQS).toHaveBeenCalled()
   })
 
-  it("when SQS environment variables are not set, the response still succeeds", async () => {
-    process.env.NHS_NOTIFY_PRESCRIPTIONS_SQS_QUEUE_URL = undefined
-    process.env.AWS_REGION = undefined
-
-    sqsMockSend.mockImplementation(
+  it("when SQS push throws an error, the response still succeeds", async () => {
+    mockGetParameter.mockImplementation(async () => Promise.resolve("true"))
+    mockPushPrescriptionToNotificationSQS.mockImplementation(
       async () => {
         throw new Error("Test error")
       }
@@ -440,5 +453,33 @@ describe("Integration tests for updatePrescriptionStatus handler", () => {
     const event: APIGatewayProxyEvent = generateMockEvent(requestDispatched)
     const response: APIGatewayProxyResult = await handler(event, {})
     expect(response.statusCode).toBe(201)
+    expect(mockPushPrescriptionToNotificationSQS).toHaveBeenCalled()
+  })
+
+  it("When the get parameter call throws an error, the request succeeds and the sqs queue is untouched", async () => {
+    mockGetParameter.mockImplementation(async () => Promise.reject(new Error("Failed")))
+
+    const rejected_event: APIGatewayProxyEvent = generateMockEvent(requestDispatched)
+    const rejected_response: APIGatewayProxyResult = await handler(rejected_event, {})
+    expect(rejected_response.statusCode).toBe(201)
+    expect(mockPushPrescriptionToNotificationSQS).not.toHaveBeenCalled()
+  })
+
+  it("When the enable notifications parameter is false, the push to SQS is skipped", async () => {
+    mockGetParameter.mockImplementation(async () => Promise.resolve("false"))
+
+    const bypass_event: APIGatewayProxyEvent = generateMockEvent(requestDispatched)
+    const bypass_response: APIGatewayProxyResult = await handler(bypass_event, {})
+    expect(bypass_response.statusCode).toBe(201)
+    expect(mockPushPrescriptionToNotificationSQS).not.toHaveBeenCalled()
+  })
+
+  it("When the enable notifications parameter is true, the push to SQS is done", async () => {
+    mockGetParameter.mockImplementation(async () => Promise.resolve("true"))
+
+    const successful_event: APIGatewayProxyEvent = generateMockEvent(requestDispatched)
+    const successful_response: APIGatewayProxyResult = await handler(successful_event, {})
+    expect(successful_response.statusCode).toBe(201)
+    expect(mockPushPrescriptionToNotificationSQS).toHaveBeenCalled()
   })
 })
