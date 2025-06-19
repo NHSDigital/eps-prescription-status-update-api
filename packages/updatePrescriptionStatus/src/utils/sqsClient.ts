@@ -204,6 +204,9 @@ export async function removeSqsMessages(
   logger: Logger,
   receiptHandles: Array<string>
 ): Promise<void> {
+  // If there is no data, just noop
+  if (receiptHandles.length === 0) return
+
   logger.info("Removing SQS messages from the queue", {receiptHandles})
 
   if (!sqsUrl) {
