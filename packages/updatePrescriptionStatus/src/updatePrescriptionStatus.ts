@@ -17,7 +17,7 @@ import {PSUDataItem} from "@PrescriptionStatusUpdate_common/commonTypes"
 import {transactionBundle, validateEntry} from "./validation/content"
 import {getPreviousItem, persistDataItems} from "./utils/databaseClient"
 import {jobWithTimeout, hasTimedOut} from "./utils/timeoutUtils"
-import {pushPrescriptionToNotificationSQS} from "./utils/sqsClient"
+import {pushPrescriptionToNotificationSQS, removeSqsMessages} from "./utils/sqsClient"
 import {
   accepted,
   badRequest,
@@ -115,6 +115,30 @@ const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPro
 
   await logTransitions(dataItems)
 
+  // This prescription update is valid and all seems alright, so request for a notification
+  let enableNotifications: boolean = false
+  try {
+    if (ENABLE_NOTIFICATIONS_PARAM) enableNotifications = await getParameter(ENABLE_NOTIFICATIONS_PARAM) === "true"
+  } catch {
+    logger.error("Failed to fetch ENABLE_NOTIFICATIONS_PARAM. Defaulting to false.", {ENABLE_NOTIFICATIONS_PARAM})
+  }
+
+  let created_messageIds: Array<string> = []
+  if (enableNotifications) {
+    try {
+      const requestId = event.headers["x-request-id"] ?? "x-request-id-not-found"
+      created_messageIds = await pushPrescriptionToNotificationSQS(requestId, dataItems, logger)
+    } catch (err) {
+      logger.error("Failed to push prescriptions to the notifications SQS", {err})
+      return response(500, responseEntries)
+    }
+  } else {
+    logger.info(
+      "enableNotifications is not true, skipping the notification request.",
+      {enableNotifications}
+    )
+  }
+
   try {
     const persistSuccess = persistDataItems(dataItems, logger)
     const persistResponse = await jobWithTimeout(LAMBDA_TIMEOUT_MS, persistSuccess)
@@ -122,11 +146,13 @@ const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPro
     if (hasTimedOut(persistResponse)) {
       responseEntries = [timeoutResponse()]
       logger.info("DynamoDB operation timed out.")
+      await removeSqsMessages(logger, created_messageIds)
       return response(504, responseEntries)
     }
 
     if (!persistResponse) {
       responseEntries = [serverError()]
+      await removeSqsMessages(logger, created_messageIds)
       return response(500, responseEntries)
     }
 
@@ -142,6 +168,7 @@ const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPro
       }
 
       handleTransactionCancelledException(e, responseEntries)
+      await removeSqsMessages(logger, created_messageIds)
       return response(409, responseEntries)
     }
   }
@@ -150,31 +177,8 @@ const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPro
   if (testPrescriptionForcedError) {
     logger.info("Forcing error for INT test prescription")
     responseEntries = [serverError()]
+    await removeSqsMessages(logger, created_messageIds)
     return response(500, responseEntries)
-  }
-
-  // This prescription was handled successfully,
-  // so add a message to the notifications SQS
-  let enableNotifications: boolean = false
-  try {
-    if (ENABLE_NOTIFICATIONS_PARAM) enableNotifications = await getParameter(ENABLE_NOTIFICATIONS_PARAM) === "true"
-  } catch {
-    logger.error("Failed to fetch ENABLE_NOTIFICATIONS_PARAM. Defaulting to false.", {ENABLE_NOTIFICATIONS_PARAM})
-  }
-
-  if (enableNotifications) {
-    try {
-      const requestId = event.headers["x-request-id"] ?? "x-request-id-not-found"
-      await pushPrescriptionToNotificationSQS(requestId, dataItems, logger)
-    } catch (err) {
-      logger.error("Failed to push prescriptions to the notifications SQS", {err})
-      // DO NOT throw an error here, since we want to still return the update!
-    }
-  } else {
-    logger.info(
-      "enableNotifications is not true, skipping the notification request.",
-      {enableNotifications}
-    )
   }
 
   return response(201, responseEntries)
