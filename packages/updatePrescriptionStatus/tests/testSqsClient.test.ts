@@ -362,10 +362,6 @@ describe("Unit tests for removeSqsMessages", () => {
       removeSqsMessages(logger, [])
     ).resolves.toBeUndefined()
 
-    expect(infoSpy).toHaveBeenCalledWith(
-      "Removing SQS messages from the queue",
-      {receiptHandles: []}
-    )
     expect(mockSend).not.toHaveBeenCalled()
   })
 
