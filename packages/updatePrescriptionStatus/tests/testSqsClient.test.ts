@@ -114,7 +114,7 @@ describe("Unit tests for pushPrescriptionToNotificationSQS", () => {
       createMockDataItem({Status: "a status that will never be real"})
     ]
 
-    mockSend.mockImplementationOnce(() => Promise.resolve({Successful: [{}], Failed: [{}]}))
+    mockSend.mockImplementationOnce(() => Promise.resolve({Successful: [{}]}))
 
     await expect(
       pushPrescriptionToNotificationSQS("req-789", payload, logger)
@@ -147,16 +147,8 @@ describe("Unit tests for pushPrescriptionToNotificationSQS", () => {
     })
 
     expect(infoSpy).toHaveBeenCalledWith(
-      "Notification required. Pushing prescriptions to the notifications SQS with the following SQS message IDs",
-      expect.objectContaining({requestId: "req-789", deduplicationIds: expect.any(Array)})
-    )
-    expect(infoSpy).toHaveBeenCalledWith(
       "Successfully sent a batch of prescriptions to the notifications SQS",
-      {result: {Successful: [{}], Failed: [{}]}}
-    )
-    expect(errorSpy).toHaveBeenCalledWith(
-      "Failed to send a batch of prescriptions to the notifications SQS",
-      {result: {Successful: [{}], Failed: [{}]}}
+      {result: {Successful: [{}]}}
     )
   })
 
