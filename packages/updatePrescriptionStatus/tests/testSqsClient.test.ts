@@ -8,7 +8,7 @@ import {SpiedFunction} from "jest-mock"
 
 import {Logger} from "@aws-lambda-powertools/logger"
 import {LogItemMessage, LogItemExtraInput} from "@aws-lambda-powertools/logger/lib/cjs/types/Logger"
-import {SendMessageBatchCommand} from "@aws-sdk/client-sqs"
+import {SendMessageBatchCommand, DeleteMessageBatchCommand} from "@aws-sdk/client-sqs"
 
 import {createMockDataItem, mockSQSClient} from "./utils/testUtils"
 
@@ -44,7 +44,11 @@ jest.unstable_mockModule(
   })
 )
 
-const {pushPrescriptionToNotificationSQS, saltedHash} = await import("../src/utils/sqsClient")
+const {
+  pushPrescriptionToNotificationSQS,
+  removeSqsMessages,
+  saltedHash
+} = await import("../src/utils/sqsClient")
 const {checkSiteOrSystemIsNotifyEnabled} = await import("../src/validation/notificationSiteAndSystemFilters")
 
 const ORIGINAL_ENV = {...process.env}
@@ -93,7 +97,7 @@ describe("Unit tests for pushPrescriptionToNotificationSQS", () => {
 
     await expect(
       pushPrescriptionToNotificationSQS("req-456", data, logger)
-    ).resolves.toBeUndefined()
+    ).resolves.toEqual([])
 
     // It logs the initial push attempt, but never actually sends
     expect(infoSpy).toHaveBeenCalledWith(
@@ -110,11 +114,11 @@ describe("Unit tests for pushPrescriptionToNotificationSQS", () => {
       createMockDataItem({Status: "a status that will never be real"})
     ]
 
-    mockSend.mockImplementationOnce(() => Promise.resolve({Successful: [{}], Failed: [{}]}))
+    mockSend.mockImplementationOnce(() => Promise.resolve({Successful: [{}]}))
 
     await expect(
       pushPrescriptionToNotificationSQS("req-789", payload, logger)
-    ).resolves.toBeUndefined()
+    ).resolves.toEqual([])
 
     // Should have attempted exactly one SendMessageBatch call
     expect(mockSend).toHaveBeenCalledTimes(1)
@@ -143,16 +147,8 @@ describe("Unit tests for pushPrescriptionToNotificationSQS", () => {
     })
 
     expect(infoSpy).toHaveBeenCalledWith(
-      "Notification required. Pushing prescriptions to the notifications SQS with the following SQS message IDs",
-      expect.objectContaining({requestId: "req-789", deduplicationIds: expect.any(Array)})
-    )
-    expect(infoSpy).toHaveBeenCalledWith(
       "Successfully sent a batch of prescriptions to the notifications SQS",
-      {result: {Successful: [{}], Failed: [{}]}}
-    )
-    expect(errorSpy).toHaveBeenCalledWith(
-      "Failed to send a batch of prescriptions to the notifications SQS",
-      {result: {Successful: [{}], Failed: [{}]}}
+      {result: {Successful: [{}]}}
     )
   })
 
@@ -322,4 +318,77 @@ describe("Unit tests for checkSiteOrSystemIsNotifyEnabled", () => {
     expect(result).toEqual([])
   })
 
+})
+
+describe("Unit tests for removeSqsMessages", () => {
+  let logger: Logger
+  let infoSpy: SpiedFunction<(input: LogItemMessage, ...extraInput: LogItemExtraInput) => void>
+  let errorSpy: SpiedFunction<(input: LogItemMessage, ...extraInput: LogItemExtraInput) => void>
+
+  beforeEach(async () => {
+    jest.resetModules()
+    jest.clearAllMocks()
+    process.env = {...ORIGINAL_ENV}
+    process.env.NHS_NOTIFY_PRESCRIPTIONS_SQS_QUEUE_URL = "https://queue.url"
+
+    logger = new Logger({serviceName: "test-service"})
+    infoSpy = jest.spyOn(logger, "info")
+    errorSpy = jest.spyOn(logger, "error")
+  })
+
+  it("throws if the SQS URL is not configured", async () => {
+    delete process.env.NHS_NOTIFY_PRESCRIPTIONS_SQS_QUEUE_URL
+    const {removeSqsMessages: tempFunc} = await import("../src/utils/sqsClient")
+    await expect(
+      tempFunc(logger, ["rh1"])
+    ).rejects.toThrow("Notifications SQS URL not configured")
+
+    expect(errorSpy).toHaveBeenCalledWith(
+      "Notifications SQS URL not found in environment variables"
+    )
+    expect(mockSend).not.toHaveBeenCalled()
+  })
+
+  it("does nothing when there are no receipt handles", async () => {
+    await expect(
+      removeSqsMessages(logger, [])
+    ).resolves.toBeUndefined()
+
+    expect(mockSend).not.toHaveBeenCalled()
+  })
+
+  it("deletes messages in batches of 10 and logs successes and failures", async () => {
+    const handles = Array.from({length: 12}, (_, i) => `rh${i}`)
+    const firstResult = {
+      Successful: Array.from({length: 10}, (_, i) => ({Id: i.toString()})),
+      Failed: Array.from({length: 2}, (_, i) => ({Id: (10 + i).toString(), SenderFault: false}))
+    }
+    mockSend
+      .mockImplementationOnce(() => Promise.resolve(firstResult))
+      .mockImplementationOnce(() => Promise.resolve({Successful: [], Failed: []}))
+
+    await removeSqsMessages(logger, handles)
+
+    expect(mockSend).toHaveBeenCalledTimes(2)
+
+    const firstCall = mockSend.mock.calls[0][0]
+    expect(firstCall).toBeInstanceOf(DeleteMessageBatchCommand)
+    if (firstCall instanceof DeleteMessageBatchCommand) {
+      expect(firstCall.input.Entries).toHaveLength(10)
+      expect(infoSpy).toHaveBeenCalledWith(
+        "Successfully removed messages from the SQS queue",
+        {successfulIds: expect.arrayContaining(firstResult.Successful.map(r => r.Id))}
+      )
+      expect(errorSpy).toHaveBeenCalledWith(
+        "Failed to remove some messages from the SQS queue",
+        {failures: firstResult.Failed}
+      )
+    }
+
+    const secondCall = mockSend.mock.calls[1][0]
+    expect(secondCall).toBeInstanceOf(DeleteMessageBatchCommand)
+    if (secondCall instanceof DeleteMessageBatchCommand) {
+      expect(secondCall.input.Entries).toHaveLength(2)
+    }
+  })
 })
