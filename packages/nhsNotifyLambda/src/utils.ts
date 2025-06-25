@@ -357,14 +357,19 @@ export async function checkCooldownForUpdate(
       TableName: dynamoTable,
       Key: {
         NHSNumber: update.PatientNHSNumber,
-        ODSCode: update.PharmacyODSCode
+        ODSCode: update.PharmacyODSCode,
+        requestID: update.RequestID
       }
     })
     const {Item} = await docClient.send(getCmd)
 
     // If no previous record, we're okay to send a notification
     if (!Item?.LastNotificationRequestTimestamp) {
-      logger.info("No previous notification state found. Notification allowed.")
+      logger.debug("No previous notification state found. Notification allowed.", {
+        NHSNumber: update.PatientNHSNumber,
+        ODSCode: update.PharmacyODSCode,
+        requestID: update.RequestID
+      })
       return true
     }
 
@@ -374,19 +379,21 @@ export async function checkCooldownForUpdate(
     const secondsSince = Math.floor((nowTs - lastTs) / 1000)
 
     if (secondsSince > cooldownPeriod) {
-      logger.info("Cooldown period has passed. Notification allowed.", {
+      logger.debug("Cooldown period has passed. Notification allowed.", {
         NHSNumber: update.PatientNHSNumber,
         ODSCode: update.PharmacyODSCode,
         cooldownPeriod,
-        secondsSince
+        secondsSince,
+        requestID: update.RequestID
       })
       return true
     } else {
-      logger.info("Within cooldown period. Notification suppressed.", {
+      logger.debug("Within cooldown period. Notification suppressed.", {
         NHSNumber: update.PatientNHSNumber,
         ODSCode: update.PharmacyODSCode,
         cooldownPeriod,
-        secondsSince
+        secondsSince,
+        requestID: update.RequestID
       })
       return false
     }
