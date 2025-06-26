@@ -112,7 +112,7 @@ export async function reportQueueStatus(logger: Logger): Promise<void> {
 // and helps track the nhs notify results
 export interface NotifyDataItemMessage extends Message {
   PSUDataItem: NotifyDataItem
-  success?: boolean
+  deliveryStatus?: string
   messageBatchReference?: string,
   // message reference is our internal UUID for the message
   messageReference: string
@@ -327,7 +327,7 @@ export async function addPrescriptionMessagesToNotificationStateStore(
       RequestId: data.PSUDataItem.RequestID,
       SQSMessageID: data.MessageId,
       LastNotifiedPrescriptionStatus: data.PSUDataItem.Status,
-      DeliveryStatus: data.success ? "requested" : "notify request failed",
+      DeliveryStatus: data.deliveryStatus ?? "unknown", // Fall back to unknown if not set
       NotifyMessageID: data.notifyMessageId, // This is a GSI, but leaving it blank is fine
       NotifyMessageReference: data.messageReference,
       NotifyMessageBatchReference: data.messageBatchReference, // Will be undefined when request fails
@@ -496,6 +496,21 @@ export async function makeBatchNotifyRequest(
     return [...res1, ...res2]
   }
 
+  if (!makeRealNotifyRequests) {
+    logger.info("Not doing real Notify requests. Simply waiting for some time and returning success on all messages")
+    await new Promise(f => setTimeout(f, DUMMY_NOTIFY_DELAY_MS))
+
+    // Map each input item to a "successful" NotifyDataItemMessage
+    return data.map(item => {
+      return {
+        ...item,
+        messageBatchReference,
+        deliveryStatus: "silent running",
+        notifyMessageId: v4() // Create a dummy UUID
+      }
+    })
+  }
+
   logger.info("Making a request for notifications to NHS notify", {count: data.length, routingPlanId})
 
   // Create an axios instance configured for Notify
@@ -519,21 +534,6 @@ export async function makeBatchNotifyRequest(
     onRetry: onAxiosRetry
   })
 
-  if (!makeRealNotifyRequests) {
-    logger.info("Not doing real Notify requests. Simply waiting for some time and returning success on all messages")
-    await new Promise(f => setTimeout(f, DUMMY_NOTIFY_DELAY_MS))
-
-    // Map each input item to a "successful" NotifyDataItemMessage
-    return data.map(item => {
-      return {
-        ...item,
-        messageBatchReference,
-        success: true,
-        notifyMessageId: v4() // Create a dummy UUID
-      }
-    })
-  }
-
   try {
     const resp = await axiosInstance.post<CreateMessageBatchResponse>("/v1/message-batches", body)
 
@@ -542,7 +542,7 @@ export async function makeBatchNotifyRequest(
       logger.info("Requested notifications OK!", {
         messageBatchReference,
         messageReferences: messages.map(e => e.messageReference),
-        success: "Requested Success"
+        deliveryStatus: "requested"
       })
 
       // Map each input item to a NotifyDataItemMessage, marking success and attaching the notify ID
@@ -555,7 +555,7 @@ export async function makeBatchNotifyRequest(
         return {
           ...item,
           messageBatchReference,
-          success: !!match,
+          deliveryStatus: match ? "requested" : "notify request failed",
           notifyMessageId: match?.id
         }
       })
@@ -566,7 +566,7 @@ export async function makeBatchNotifyRequest(
         statusText: resp.statusText,
         messageBatchReference,
         messageReferences: messages.map(e => e.messageReference),
-        success: "Requested Failed"
+        deliveryStatus: "notify request failed"
       })
       throw new Error("Notify batch request failed")
     }
@@ -575,7 +575,7 @@ export async function makeBatchNotifyRequest(
     logger.error("Notify batch request failed", {error})
     return data.map(item => ({
       ...item,
-      success: false,
+      deliveryStatus: "notify request failed",
       messageBatchReference,
       notifyMessageId: undefined
     }))

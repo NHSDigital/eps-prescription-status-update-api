@@ -518,14 +518,14 @@ describe("NHS notify lambda helper functions", () => {
       expect(result).toHaveLength(2)
       expect(result[0]).toMatchObject({
         PSUDataItem: data[0].PSUDataItem,
-        success: true,
+        deliveryStatus: "requested",
         notifyMessageId: "msg-id-1",
         messageBatchReference: expect.any(String),
         messageReference: expect.any(String)
       })
       expect(result[1]).toMatchObject({
         PSUDataItem: data[1].PSUDataItem,
-        success: false,
+        deliveryStatus: "notify request failed",
         notifyMessageId: undefined,
         messageBatchReference: expect.any(String),
         messageReference: expect.any(String)
@@ -558,7 +558,7 @@ describe("NHS notify lambda helper functions", () => {
       expect(result).toMatchObject([
         {
           PSUDataItem: data[0].PSUDataItem,
-          success: false,
+          deliveryStatus: "notify request failed",
           notifyMessageId: undefined,
           messageBatchReference: expect.any(String),
           messageReference: expect.any(String)
@@ -606,7 +606,10 @@ describe("NHS notify lambda helper functions", () => {
       expect(result).toHaveLength(2)
       result.forEach((r) =>
         expect(r).toEqual(
-          expect.objectContaining({success: false, notifyMessageId: undefined})
+          expect.objectContaining({
+            deliveryStatus: "notify request failed",
+            notifyMessageId: undefined
+          })
         )
       )
       expect(errorSpy).toHaveBeenCalledWith(
@@ -751,14 +754,14 @@ describe("NHS notify lambda helper functions", () => {
       expect(result).toHaveLength(2)
       expect(result[0]).toMatchObject({
         PSUDataItem: data[0].PSUDataItem,
-        success: true,
+        deliveryStatus: "silent running",
         notifyMessageId: expect.any(String), // it will be assigned a dummy ID
         messageBatchReference: expect.any(String),
         messageReference: expect.any(String)
       })
       expect(result[1]).toMatchObject({
         PSUDataItem: data[1].PSUDataItem,
-        success: true,
+        deliveryStatus: "silent running",
         notifyMessageId: expect.any(String),
         messageBatchReference: expect.any(String),
         messageReference: expect.any(String)
