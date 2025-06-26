@@ -11,17 +11,20 @@ import {constructMessage, constructPSUDataItemMessage, mockSQSClient} from "./te
 const {mockSend: sqsMockSend} = mockSQSClient()
 
 const TEST_URL = "https://example.com"
-const mockGetParameter = jest.fn().mockImplementation((name) => {
-  if (name === "NOTIFY_API_BASE_URL_PARAM") {
-    return TEST_URL
+const mockGetParametersByName = jest.fn(async () => Promise.resolve(
+  {
+    [process.env.NOTIFY_API_BASE_URL_PARAM!]: TEST_URL,
+    [process.env.MAKE_REAL_NOTIFY_REQUESTS_PARAM!]: "true"
   }
-  return name
-})
+))
+
 jest.unstable_mockModule(
   "@aws-lambda-powertools/parameters/ssm",
   async () => ({
     __esModule: true,
-    getParameter: mockGetParameter
+    SSMProvider: jest.fn().mockImplementation(() => ({
+      getParametersByName: mockGetParametersByName
+    }))
   })
 )
 
@@ -704,7 +707,12 @@ describe("NHS notify lambda helper functions", () => {
     })
 
     it("uses a dummy call when the MAKE_REAL_NOTIFY_REQUESTS_PARAM is false", async () => {
-      process.env.MAKE_REAL_NOTIFY_REQUESTS_PARAM = "false"
+      mockGetParametersByName.mockImplementation(async () => Promise.resolve(
+        {
+          [process.env.NOTIFY_API_BASE_URL_PARAM!]: TEST_URL,
+          [process.env.MAKE_REAL_NOTIFY_REQUESTS_PARAM!]: "false"
+        }
+      ))
       const {makeBatchNotifyRequest: fn} = await import("../src/utils")
 
       const data = [

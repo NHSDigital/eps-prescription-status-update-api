@@ -8,7 +8,7 @@ import {
 } from "@aws-sdk/client-sqs"
 import {DynamoDBClient} from "@aws-sdk/client-dynamodb"
 import {DynamoDBDocumentClient, GetCommand, PutCommand} from "@aws-sdk/lib-dynamodb"
-import {getParameter} from "@aws-lambda-powertools/parameters/ssm"
+import {SSMProvider} from "@aws-lambda-powertools/parameters/ssm"
 import {getSecret} from "@aws-lambda-powertools/parameters/secrets"
 
 import {NotifyDataItem} from "@PrescriptionStatusUpdate_common/commonTypes"
@@ -30,7 +30,6 @@ const DUMMY_NOTIFY_DELAY_MS = 150
 // these are only ever changed by a deployment
 const dynamoTable = process.env.TABLE_NAME
 const sqsUrl = process.env.NHS_NOTIFY_PRESCRIPTIONS_SQS_QUEUE_URL
-const MAKE_REAL_NOTIFY_REQUESTS_PARAM = process.env.MAKE_REAL_NOTIFY_REQUESTS_PARAM
 
 // AWS clients
 const sqs = new SQSClient({region: process.env.AWS_REGION})
@@ -43,6 +42,25 @@ const marshallOptions = {
 }
 const dynamo = new DynamoDBClient({region: process.env.AWS_REGION})
 const docClient = DynamoDBDocumentClient.from(dynamo, {marshallOptions})
+
+const ssm = new SSMProvider()
+const paramNames = {
+  [process.env.MAKE_REAL_NOTIFY_REQUESTS_PARAM!]: {maxAge: 60},
+  [process.env.NOTIFY_API_BASE_URL_PARAM!]: {maxAge: 60}
+}
+const configPromise = ssm.getParametersByName(paramNames)
+
+async function loadConfig(): Promise<{
+  makeRealNotifyRequests: boolean,
+  notifyApiBaseUrlRaw: string
+}> {
+  const all = await configPromise
+
+  return {
+    makeRealNotifyRequests: all[process.env.MAKE_REAL_NOTIFY_REQUESTS_PARAM!] === "true",
+    notifyApiBaseUrlRaw: all[process.env.NOTIFY_API_BASE_URL_PARAM!] as string
+  }
+}
 
 /**
  * Returns the original array, chunked in batches of up to <size>
@@ -413,12 +431,11 @@ export async function makeBatchNotifyRequest(
   routingPlanId: string,
   data: Array<NotifyDataItemMessage>
 ): Promise<Array<NotifyDataItemMessage>> {
-  // Fetch secrets and parameters
-  if (!process.env.NOTIFY_API_BASE_URL_PARAM || !process.env.API_KEY_SECRET) {
+  if (!process.env.API_KEY_SECRET) {
     throw new Error("Environment configuration error")
   }
 
-  const notifyApiBaseUrlRaw = await getParameter(process.env.NOTIFY_API_BASE_URL_PARAM)
+  const {makeRealNotifyRequests, notifyApiBaseUrlRaw} = await loadConfig()
   const apiKeyRaw = await getSecret(process.env.API_KEY_SECRET)
 
   if (!notifyApiBaseUrlRaw) throw new Error("NOTIFY_API_BASE_URL is not defined in the environment variables!")
@@ -502,10 +519,7 @@ export async function makeBatchNotifyRequest(
     onRetry: onAxiosRetry
   })
 
-  let doRealRequest: boolean = false
-  if (MAKE_REAL_NOTIFY_REQUESTS_PARAM) doRealRequest = await getParameter(MAKE_REAL_NOTIFY_REQUESTS_PARAM) === "true"
-
-  if (!doRealRequest) {
+  if (!makeRealNotifyRequests) {
     logger.info("Not doing real Notify requests. Simply waiting for some time and returning success on all messages")
     await new Promise(f => setTimeout(f, DUMMY_NOTIFY_DELAY_MS))
 
