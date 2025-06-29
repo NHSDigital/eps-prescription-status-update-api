@@ -176,7 +176,7 @@ export async function pushPrescriptionToNotificationSQS(
         Entries: batch
       })
       const result = await sqs.send(command)
-      if (result.Successful && result.Successful.length) {
+      if (result.Successful?.length) {
         logger.info("Successfully sent a batch of prescriptions to the notifications SQS", {result})
 
         // For each successful message, get its message ID. I don't think there will ever be undefined
@@ -184,7 +184,7 @@ export async function pushPrescriptionToNotificationSQS(
         out.push(...result.Successful.map(e => e.MessageId).filter(msg_id => msg_id !== undefined))
       }
       // Some may succeed, and some may fail. So check for both
-      if (result.Failed && result.Failed.length) {
+      if (result.Failed?.length) {
         throw new Error("Failed to send a batch of prescriptions to the notifications SQS")
       }
     } catch (error) {

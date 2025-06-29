@@ -25,22 +25,22 @@ jest.unstable_mockModule(
   })
 )
 
-const mockGetParameter = jest.fn().mockImplementation((name) => {
-  if (!name) throw new Error("No parameter requested")
-  else if (name === "ENABLED_SITE_ODS_CODES_PARAM") {
-    return "FA565"
-  } else if (name === "ENABLED_SYSTEMS_PARAM") {
-    return "Internal Test System,Apotec Ltd - Apotec CRM - Production,CrxPatientApp,nhsPrescriptionApp,Titan PSU Prod"
-  } else if (name === "BLOCKED_SITE_ODS_CODES_PARAM") {
-    return "B3J1Z"
+export const mockGetParametersByName = jest.fn(async () => {
+  // eslint-disable-next-line max-len
+  let enabledString: string = "Internal Test System,Apotec Ltd - Apotec CRM - Production,CrxPatientApp,nhsPrescriptionApp,Titan PSU Prod"
+  return {
+    [process.env.ENABLED_SITE_ODS_CODES_PARAM!]: "FA565",
+    [process.env.ENABLED_SYSTEMS_PARAM!]: enabledString,
+    [process.env.BLOCKED_SITE_ODS_CODES_PARAM!]: "B3J1Z"
   }
-  return "parameter_value"
 })
 jest.unstable_mockModule(
   "@aws-lambda-powertools/parameters/ssm",
   async () => ({
     __esModule: true,
-    getParameter: mockGetParameter
+    SSMProvider: jest.fn().mockImplementation(() => ({
+      getParametersByName: mockGetParametersByName
+    }))
   })
 )
 

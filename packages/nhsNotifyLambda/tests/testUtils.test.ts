@@ -11,17 +11,20 @@ import {constructMessage, constructPSUDataItemMessage, mockSQSClient} from "./te
 const {mockSend: sqsMockSend} = mockSQSClient()
 
 const TEST_URL = "https://example.com"
-const mockGetParameter = jest.fn().mockImplementation((name) => {
-  if (name === "NOTIFY_API_BASE_URL_PARAM") {
-    return TEST_URL
+const mockGetParametersByName = jest.fn(async () => Promise.resolve(
+  {
+    [process.env.NOTIFY_API_BASE_URL_PARAM!]: TEST_URL,
+    [process.env.MAKE_REAL_NOTIFY_REQUESTS_PARAM!]: "true"
   }
-  return name
-})
+))
+
 jest.unstable_mockModule(
   "@aws-lambda-powertools/parameters/ssm",
   async () => ({
     __esModule: true,
-    getParameter: mockGetParameter
+    SSMProvider: jest.fn().mockImplementation(() => ({
+      getParametersByName: mockGetParametersByName
+    }))
   })
 )
 
@@ -515,14 +518,14 @@ describe("NHS notify lambda helper functions", () => {
       expect(result).toHaveLength(2)
       expect(result[0]).toMatchObject({
         PSUDataItem: data[0].PSUDataItem,
-        success: true,
+        deliveryStatus: "requested",
         notifyMessageId: "msg-id-1",
         messageBatchReference: expect.any(String),
         messageReference: expect.any(String)
       })
       expect(result[1]).toMatchObject({
         PSUDataItem: data[1].PSUDataItem,
-        success: false,
+        deliveryStatus: "notify request failed",
         notifyMessageId: undefined,
         messageBatchReference: expect.any(String),
         messageReference: expect.any(String)
@@ -555,7 +558,7 @@ describe("NHS notify lambda helper functions", () => {
       expect(result).toMatchObject([
         {
           PSUDataItem: data[0].PSUDataItem,
-          success: false,
+          deliveryStatus: "notify request failed",
           notifyMessageId: undefined,
           messageBatchReference: expect.any(String),
           messageReference: expect.any(String)
@@ -603,7 +606,10 @@ describe("NHS notify lambda helper functions", () => {
       expect(result).toHaveLength(2)
       result.forEach((r) =>
         expect(r).toEqual(
-          expect.objectContaining({success: false, notifyMessageId: undefined})
+          expect.objectContaining({
+            deliveryStatus: "notify request failed",
+            notifyMessageId: undefined
+          })
         )
       )
       expect(errorSpy).toHaveBeenCalledWith(
@@ -704,7 +710,12 @@ describe("NHS notify lambda helper functions", () => {
     })
 
     it("uses a dummy call when the MAKE_REAL_NOTIFY_REQUESTS_PARAM is false", async () => {
-      process.env.MAKE_REAL_NOTIFY_REQUESTS_PARAM = "false"
+      mockGetParametersByName.mockImplementation(async () => Promise.resolve(
+        {
+          [process.env.NOTIFY_API_BASE_URL_PARAM!]: TEST_URL,
+          [process.env.MAKE_REAL_NOTIFY_REQUESTS_PARAM!]: "false"
+        }
+      ))
       const {makeBatchNotifyRequest: fn} = await import("../src/utils")
 
       const data = [
@@ -743,14 +754,14 @@ describe("NHS notify lambda helper functions", () => {
       expect(result).toHaveLength(2)
       expect(result[0]).toMatchObject({
         PSUDataItem: data[0].PSUDataItem,
-        success: true,
+        deliveryStatus: "silent running",
         notifyMessageId: expect.any(String), // it will be assigned a dummy ID
         messageBatchReference: expect.any(String),
         messageReference: expect.any(String)
       })
       expect(result[1]).toMatchObject({
         PSUDataItem: data[1].PSUDataItem,
-        success: true,
+        deliveryStatus: "silent running",
         notifyMessageId: expect.any(String),
         messageBatchReference: expect.any(String),
         messageReference: expect.any(String)
