@@ -28,7 +28,6 @@ async function processBatch(
   routingId: string
 ): Promise<void> {
   if (messages.length === 0) {
-    console.log("No messages to process")
     logger.info("No messages to process")
     return
   }
@@ -57,8 +56,10 @@ async function processBatch(
   }
 
   if (processed.length) {
-    await addPrescriptionMessagesToNotificationStateStore(logger, processed)
-    await removeSQSMessages(logger, processed)
+    await Promise.all([
+      addPrescriptionMessagesToNotificationStateStore(logger, processed),
+      removeSQSMessages(logger, processed)
+    ])
   }
 }
 
@@ -87,7 +88,6 @@ async function drainAndProcess(routingId: string): Promise<void> {
   while (!empty) {
     const {messages, isEmpty} = await drainQueue(logger, 100)
     empty = isEmpty
-    console.log(messages)
     await processBatch(messages, routingId)
   }
 }
@@ -106,9 +106,9 @@ export const lambdaHandler = async (
     throw new Error("No Routing Plan ID found")
   }
 
-  logger.info("NHS Notify lambda triggered by scheduler", {event})
-  logger.info("Routing Plan ID:", {routingId})
+  logger.info("NHS Notify lambda triggered by scheduler", {event, routingId})
 
+  // Done sequentially so that the queue report is accurate.
   await reportQueueStatus(logger)
   await drainAndProcess(routingId)
 }
