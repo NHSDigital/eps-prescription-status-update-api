@@ -392,6 +392,7 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       FunctionName: !Sub ${StackName}-NotifyProcessor
+      Timeout: 600
       CodeUri: ../../packages/
       Handler: nhsNotifyLambda.handler
       Role: !GetAtt NotifyProcessorResources.Outputs.LambdaRoleArn
