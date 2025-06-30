@@ -57,8 +57,11 @@ async function loadConfig(logger: Logger): Promise<{
   const all = await configPromise
 
   // make sure that the MAKE_REAL_NOTIFY_REQUESTS_PARAM parameter value is a string, and lowercase
-  const realNotifyParam = (all[process.env.MAKE_REAL_NOTIFY_REQUESTS_PARAM!] as string).toString().toLowerCase()
-  logger.info("Loaded configuration parameters", {all})
+  const realNotifyParam = (all[process.env.MAKE_REAL_NOTIFY_REQUESTS_PARAM!] as string)
+    .toString()
+    .toLowerCase()
+    .trim()
+  logger.info("Loaded configuration parameters", {all, realNotifyParam})
 
   return {
     makeRealNotifyRequests: realNotifyParam === "true",
