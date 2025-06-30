@@ -50,14 +50,18 @@ const paramNames = {
 }
 const configPromise = ssm.getParametersByName(paramNames)
 
-async function loadConfig(): Promise<{
+async function loadConfig(logger: Logger): Promise<{
   makeRealNotifyRequests: boolean,
   notifyApiBaseUrlRaw: string
 }> {
   const all = await configPromise
 
+  // make sure that the MAKE_REAL_NOTIFY_REQUESTS_PARAM parameter value is a string, and lowercase
+  const realNotifyParam = (all[process.env.MAKE_REAL_NOTIFY_REQUESTS_PARAM!] as string).toString().toLowerCase()
+  logger.info("Loaded configuration parameters", {all})
+
   return {
-    makeRealNotifyRequests: all[process.env.MAKE_REAL_NOTIFY_REQUESTS_PARAM!] === "true",
+    makeRealNotifyRequests: realNotifyParam === "true",
     notifyApiBaseUrlRaw: all[process.env.NOTIFY_API_BASE_URL_PARAM!] as string
   }
 }
@@ -435,7 +439,7 @@ export async function makeBatchNotifyRequest(
     throw new Error("Environment configuration error")
   }
 
-  const {makeRealNotifyRequests, notifyApiBaseUrlRaw} = await loadConfig()
+  const {makeRealNotifyRequests, notifyApiBaseUrlRaw} = await loadConfig(logger)
   const apiKeyRaw = await getSecret(process.env.API_KEY_SECRET)
 
   if (!notifyApiBaseUrlRaw) throw new Error("NOTIFY_API_BASE_URL is not defined in the environment variables!")
