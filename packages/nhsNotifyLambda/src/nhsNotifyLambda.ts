@@ -20,6 +20,8 @@ import {
 
 const logger = new Logger({serviceName: "nhsNotify"})
 
+const MAX_QUEUE_RUNTIME = 14*60*1000 // 14 minutes, to avoid Lambda timeout issues (timeout is 15 minutes)
+
 /**
  * Process a single batch of SQS messages: filter, notify, persist, and clean up.
  */
@@ -28,7 +30,6 @@ async function processBatch(
   routingId: string
 ): Promise<void> {
   if (messages.length === 0) {
-    console.log("No messages to process")
     logger.info("No messages to process")
     return
   }
@@ -80,14 +81,22 @@ function logSuppression(suppressedCount: number, total: number): void {
 }
 
 /**
- * Drain the queue until empty, processing each batch.
+ * Drain the queue until empty or the MAX_QUEUE_RUNTIME has passed, processing each batch.
  */
 async function drainAndProcess(routingId: string): Promise<void> {
+  const start = Date.now()
   let empty = false
   while (!empty) {
+    if (Date.now() - start >= MAX_QUEUE_RUNTIME) {
+      logger.warn("drainAndProcess timed out; exiting before queue is empty",
+        {maxRuntimeMilliseconds: MAX_QUEUE_RUNTIME}
+      )
+      break
+    }
+
     const {messages, isEmpty} = await drainQueue(logger, 100)
     empty = isEmpty
-    console.log(messages)
+
     await processBatch(messages, routingId)
   }
 }
