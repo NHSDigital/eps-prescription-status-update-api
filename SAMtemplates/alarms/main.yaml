@@ -18,6 +18,9 @@ Parameters:
 
   ConvertRequestToFhirFormatFunctionName:
     Type: String
+
+  NotifyProcessorFunctionName:
+    Type: String
     
   EnableAlerts:
     Type: String
@@ -314,8 +317,7 @@ Resources:
     Type: AWS::Logs::MetricFilter
     Properties:
       FilterName: NotifyProcessorTimeouts
-      # match the Lambda runtime timeout message
-      FilterPattern: "drainAndProcess timed out; exiting before queue is empty"
+      FilterPattern: !Sub '{ ($.level = "INFO") && ($.function_name = "${NotifyProcessorFunctionName}") && ($.message = %drainAndProcess timed out; exiting before queue is empty%) }'
       LogGroupName:
         Fn::ImportValue: !Sub ${StackName}:functions:${NotifyProcessorFunctionName}:LambdaLogGroupName
       MetricTransformations:
@@ -323,6 +325,9 @@ Resources:
           MetricName: TimeoutCount
           MetricValue: 1
           Unit: Count
+          Dimensions:
+            - Key: FunctionName
+              Value: $.function_name
 
   NotifyProcessorTimeoutsAlarm:
     Type: AWS::CloudWatch::Alarm
@@ -331,7 +336,7 @@ Resources:
       AlarmName: !Sub ${StackName}_NotifyProcessor_Timeouts
       Namespace: LambdaLogFilterMetrics
       MetricName: TimeoutCount
-      Period: 60                # seconds
+      Period: 60 # seconds
       EvaluationPeriods: 1
       Statistic: Sum
       ComparisonOperator: GreaterThanOrEqualToThreshold
