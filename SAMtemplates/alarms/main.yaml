@@ -309,3 +309,38 @@ Resources:
         - !ImportValue lambda-resources:SlackAlertsSnsTopicArn
       OKActions:
         - !ImportValue lambda-resources:SlackAlertsSnsTopicArn
+
+  NotifyProcessorTimeoutsMetricFilter:
+    Type: AWS::Logs::MetricFilter
+    Properties:
+      FilterName: NotifyProcessorTimeouts
+      # match the Lambda runtime timeout message
+      FilterPattern: "drainAndProcess timed out; exiting before queue is empty"
+      LogGroupName:
+        Fn::ImportValue: !Sub ${StackName}:functions:${NotifyProcessorFunctionName}:LambdaLogGroupName
+      MetricTransformations:
+        - MetricNamespace: LambdaLogFilterMetrics
+          MetricName: TimeoutCount
+          MetricValue: 1
+          Unit: Count
+
+  NotifyProcessorTimeoutsAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmDescription: Count of NotifyProcessor invocations that timed out
+      AlarmName: !Sub ${StackName}_NotifyProcessor_Timeouts
+      Namespace: LambdaLogFilterMetrics
+      MetricName: TimeoutCount
+      Period: 60                # seconds
+      EvaluationPeriods: 1
+      Statistic: Sum
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      Threshold: 1
+      TreatMissingData: notBreaching
+      ActionsEnabled: !Ref EnableAlerts
+      AlarmActions:
+        - !ImportValue lambda-resources:SlackAlertsSnsTopicArn
+      InsufficientDataActions:
+        - !ImportValue lambda-resources:SlackAlertsSnsTopicArn
+      OKActions:
+        - !ImportValue lambda-resources:SlackAlertsSnsTopicArn
