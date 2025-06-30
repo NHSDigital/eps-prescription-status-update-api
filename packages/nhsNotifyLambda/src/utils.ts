@@ -45,8 +45,8 @@ const docClient = DynamoDBDocumentClient.from(dynamo, {marshallOptions})
 
 const ssm = new SSMProvider()
 const paramNames = {
-  [process.env.MAKE_REAL_NOTIFY_REQUESTS_PARAM!]: {maxAge: 60},
-  [process.env.NOTIFY_API_BASE_URL_PARAM!]: {maxAge: 60}
+  [process.env.MAKE_REAL_NOTIFY_REQUESTS_PARAM!]: {maxAge: 5},
+  [process.env.NOTIFY_API_BASE_URL_PARAM!]: {maxAge: 5}
 }
 const configPromise = ssm.getParametersByName(paramNames)
 

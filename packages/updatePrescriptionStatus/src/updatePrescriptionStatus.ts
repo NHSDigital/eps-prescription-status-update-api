@@ -50,7 +50,7 @@ export const TEST_PRESCRIPTIONS_2 = (process.env.TEST_PRESCRIPTIONS_2 ?? "")
 // (it was failing load tests using getParameter directly)
 const ssm = new SSMProvider()
 const paramNames = {
-  [process.env.ENABLE_NOTIFICATIONS_PARAM!]: {maxAge: 60}
+  [process.env.ENABLE_NOTIFICATIONS_PARAM!]: {maxAge: 5}
 }
 const configPromise = ssm.getParametersByName(paramNames)
 

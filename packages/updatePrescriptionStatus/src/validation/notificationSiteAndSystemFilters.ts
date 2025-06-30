@@ -3,9 +3,9 @@ import {SSMProvider} from "@aws-lambda-powertools/parameters/ssm"
 
 const ssm = new SSMProvider()
 const paramNames = {
-  [process.env.ENABLED_SITE_ODS_CODES_PARAM!]: {maxAge: 60},
-  [process.env.ENABLED_SYSTEMS_PARAM!]: {maxAge: 60},
-  [process.env.BLOCKED_SITE_ODS_CODES_PARAM!]: {maxAge: 60}
+  [process.env.ENABLED_SITE_ODS_CODES_PARAM!]: {maxAge: 5},
+  [process.env.ENABLED_SYSTEMS_PARAM!]: {maxAge: 5},
+  [process.env.BLOCKED_SITE_ODS_CODES_PARAM!]: {maxAge: 5}
 }
 const configPromise = ssm.getParametersByName(paramNames)
 
