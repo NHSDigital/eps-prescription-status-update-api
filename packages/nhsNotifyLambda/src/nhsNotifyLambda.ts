@@ -88,7 +88,9 @@ async function drainAndProcess(routingId: string): Promise<void> {
   let empty = false
   while (!empty) {
     if (Date.now() - start >= MAX_QUEUE_RUNTIME) {
-      logger.warn("drainAndProcess timed out after 9 minutes; exiting before queue is empty")
+      logger.warn("drainAndProcess timed out; exiting before queue is empty",
+        {maxRuntimeMilliseconds: MAX_QUEUE_RUNTIME}
+      )
       break
     }
 
