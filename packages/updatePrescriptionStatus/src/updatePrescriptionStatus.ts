@@ -52,9 +52,9 @@ const ssm = new SSMProvider()
 const paramNames = {
   [process.env.ENABLE_NOTIFICATIONS_PARAM!]: {maxAge: 5}
 }
-const configPromise = ssm.getParametersByName(paramNames)
 
 async function loadConfig() {
+  const configPromise = ssm.getParametersByName(paramNames)
   const all = await configPromise
   console.log(all)
   return {
