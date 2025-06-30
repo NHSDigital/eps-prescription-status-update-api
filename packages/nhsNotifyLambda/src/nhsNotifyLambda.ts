@@ -20,7 +20,7 @@ import {
 
 const logger = new Logger({serviceName: "nhsNotify"})
 
-const MAX_QUEUE_RUNTIME = 9*60*1000 // 9 minutes, to avoid Lambda timeout issues (timeout is 10 minutes)
+const MAX_QUEUE_RUNTIME = 14*60*1000 // 14 minutes, to avoid Lambda timeout issues (timeout is 15 minutes)
 
 /**
  * Process a single batch of SQS messages: filter, notify, persist, and clean up.
