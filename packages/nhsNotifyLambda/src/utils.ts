@@ -44,15 +44,15 @@ const dynamo = new DynamoDBClient({region: process.env.AWS_REGION})
 const docClient = DynamoDBDocumentClient.from(dynamo, {marshallOptions})
 
 const ssm = new SSMProvider()
-const paramNames = {
-  [process.env.MAKE_REAL_NOTIFY_REQUESTS_PARAM!]: {maxAge: 5},
-  [process.env.NOTIFY_API_BASE_URL_PARAM!]: {maxAge: 5}
-}
 
 async function loadConfig(logger: Logger): Promise<{
   makeRealNotifyRequests: boolean,
   notifyApiBaseUrlRaw: string
 }> {
+  const paramNames = {
+    [process.env.MAKE_REAL_NOTIFY_REQUESTS_PARAM!]: {maxAge: 5},
+    [process.env.NOTIFY_API_BASE_URL_PARAM!]: {maxAge: 5}
+  }
   const configPromise = ssm.getParametersByName(paramNames)
   const all = await configPromise
 
