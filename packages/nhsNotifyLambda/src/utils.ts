@@ -53,8 +53,7 @@ async function loadConfig(logger: Logger): Promise<{
     [process.env.MAKE_REAL_NOTIFY_REQUESTS_PARAM!]: {maxAge: 5},
     [process.env.NOTIFY_API_BASE_URL_PARAM!]: {maxAge: 5}
   }
-  const configPromise = ssm.getParametersByName(paramNames)
-  const all = await configPromise
+  const all = await ssm.getParametersByName(paramNames)
 
   // make sure that the MAKE_REAL_NOTIFY_REQUESTS_PARAM parameter value is a string, and lowercase
   const realNotifyParam = (all[process.env.MAKE_REAL_NOTIFY_REQUESTS_PARAM!] as string)

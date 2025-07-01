@@ -54,8 +54,7 @@ async function loadConfig() {
   const paramNames = {
     [process.env.ENABLE_NOTIFICATIONS_PARAM!]: {maxAge: 5}
   }
-  const configPromise = ssm.getParametersByName(paramNames)
-  const all = await configPromise
+  const all = await ssm.getParametersByName(paramNames)
 
   return {
     enableNotifications: all[process.env.ENABLE_NOTIFICATIONS_PARAM!] === "true"

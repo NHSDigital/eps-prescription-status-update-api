@@ -22,8 +22,7 @@ async function loadConfig(): Promise<{
     [process.env.ENABLED_SYSTEMS_PARAM!]: {maxAge: 5},
     [process.env.BLOCKED_SITE_ODS_CODES_PARAM!]: {maxAge: 5}
   }
-  const configPromise = ssm.getParametersByName(paramNames)
-  const all = await configPromise
+  const all = await ssm.getParametersByName(paramNames)
 
   const enabledSiteODSCodes = str2set(all[process.env.ENABLED_SITE_ODS_CODES_PARAM!] as string)
   const enabledSystems = str2set(all[process.env.ENABLED_SYSTEMS_PARAM!] as string)
