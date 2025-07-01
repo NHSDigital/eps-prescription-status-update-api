@@ -56,8 +56,13 @@ async function loadConfig() {
   }
   const all = await ssm.getParametersByName(paramNames)
 
+  const enableNotificationsValue = (all[process.env.ENABLE_NOTIFICATIONS_PARAM!] as string)
+    .toString()
+    .trim()
+    .toLowerCase()
+
   return {
-    enableNotifications: all[process.env.ENABLE_NOTIFICATIONS_PARAM!] === "true"
+    enableNotifications: enableNotificationsValue === "true"
   }
 }
 

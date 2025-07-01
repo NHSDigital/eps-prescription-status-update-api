@@ -45,7 +45,7 @@ const docClient = DynamoDBDocumentClient.from(dynamo, {marshallOptions})
 
 const ssm = new SSMProvider()
 
-async function loadConfig(logger: Logger): Promise<{
+async function loadConfig(): Promise<{
   makeRealNotifyRequests: boolean,
   notifyApiBaseUrlRaw: string
 }> {
@@ -60,7 +60,6 @@ async function loadConfig(logger: Logger): Promise<{
     .toString()
     .toLowerCase()
     .trim()
-  logger.info("Loaded configuration parameters", {all, realNotifyParam})
 
   return {
     makeRealNotifyRequests: realNotifyParam === "true",
@@ -441,7 +440,7 @@ export async function makeBatchNotifyRequest(
     throw new Error("Environment configuration error")
   }
 
-  const {makeRealNotifyRequests, notifyApiBaseUrlRaw} = await loadConfig(logger)
+  const {makeRealNotifyRequests, notifyApiBaseUrlRaw} = await loadConfig()
   const apiKeyRaw = await getSecret(process.env.API_KEY_SECRET)
 
   if (!notifyApiBaseUrlRaw) throw new Error("NOTIFY_API_BASE_URL is not defined in the environment variables!")
