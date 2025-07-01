@@ -16,6 +16,19 @@ import {
 import responseSingleItem from "../../specification/examples/response-single-item.json"
 import {GetItemCommand, TransactionCanceledException, TransactWriteItemsCommand} from "@aws-sdk/client-dynamodb"
 
+export const mockGetParametersByName = jest.fn(async () => {
+  return {}
+})
+jest.unstable_mockModule(
+  "@aws-lambda-powertools/parameters/ssm",
+  async () => ({
+    __esModule: true,
+    SSMProvider: jest.fn().mockImplementation(() => ({
+      getParametersByName: mockGetParametersByName
+    }))
+  })
+)
+
 const {mockSend} = mockDynamoDBClient()
 process.env.ENVIRONMENT = "int"
 /*

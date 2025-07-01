@@ -8,7 +8,7 @@ import {
 } from "@aws-sdk/client-sqs"
 import {DynamoDBClient} from "@aws-sdk/client-dynamodb"
 import {DynamoDBDocumentClient, GetCommand, PutCommand} from "@aws-sdk/lib-dynamodb"
-import {getParameter} from "@aws-lambda-powertools/parameters/ssm"
+import {SSMProvider} from "@aws-lambda-powertools/parameters/ssm"
 import {getSecret} from "@aws-lambda-powertools/parameters/secrets"
 
 import {NotifyDataItem} from "@PrescriptionStatusUpdate_common/commonTypes"
@@ -30,7 +30,6 @@ const DUMMY_NOTIFY_DELAY_MS = 150
 // these are only ever changed by a deployment
 const dynamoTable = process.env.TABLE_NAME
 const sqsUrl = process.env.NHS_NOTIFY_PRESCRIPTIONS_SQS_QUEUE_URL
-const MAKE_REAL_NOTIFY_REQUESTS_PARAM = process.env.MAKE_REAL_NOTIFY_REQUESTS_PARAM
 
 // AWS clients
 const sqs = new SQSClient({region: process.env.AWS_REGION})
@@ -43,6 +42,30 @@ const marshallOptions = {
 }
 const dynamo = new DynamoDBClient({region: process.env.AWS_REGION})
 const docClient = DynamoDBDocumentClient.from(dynamo, {marshallOptions})
+
+const ssm = new SSMProvider()
+
+async function loadConfig(): Promise<{
+  makeRealNotifyRequests: boolean,
+  notifyApiBaseUrlRaw: string
+}> {
+  const paramNames = {
+    [process.env.MAKE_REAL_NOTIFY_REQUESTS_PARAM!]: {maxAge: 5},
+    [process.env.NOTIFY_API_BASE_URL_PARAM!]: {maxAge: 5}
+  }
+  const all = await ssm.getParametersByName(paramNames)
+
+  // make sure that the MAKE_REAL_NOTIFY_REQUESTS_PARAM parameter value is a string, and lowercase
+  const realNotifyParam = (all[process.env.MAKE_REAL_NOTIFY_REQUESTS_PARAM!] as string)
+    .toString()
+    .toLowerCase()
+    .trim()
+
+  return {
+    makeRealNotifyRequests: realNotifyParam === "true",
+    notifyApiBaseUrlRaw: all[process.env.NOTIFY_API_BASE_URL_PARAM!] as string
+  }
+}
 
 /**
  * Returns the original array, chunked in batches of up to <size>
@@ -94,7 +117,7 @@ export async function reportQueueStatus(logger: Logger): Promise<void> {
 // and helps track the nhs notify results
 export interface NotifyDataItemMessage extends Message {
   PSUDataItem: NotifyDataItem
-  success?: boolean
+  deliveryStatus?: string
   messageBatchReference?: string,
   // message reference is our internal UUID for the message
   messageReference: string
@@ -309,7 +332,7 @@ export async function addPrescriptionMessagesToNotificationStateStore(
       RequestId: data.PSUDataItem.RequestID,
       SQSMessageID: data.MessageId,
       LastNotifiedPrescriptionStatus: data.PSUDataItem.Status,
-      DeliveryStatus: data.success ? "requested" : "notify request failed",
+      DeliveryStatus: data.deliveryStatus ?? "unknown", // Fall back to unknown if not set
       NotifyMessageID: data.notifyMessageId, // This is a GSI, but leaving it blank is fine
       NotifyMessageReference: data.messageReference,
       NotifyMessageBatchReference: data.messageBatchReference, // Will be undefined when request fails
@@ -420,12 +443,11 @@ export async function makeBatchNotifyRequest(
   routingPlanId: string,
   data: Array<NotifyDataItemMessage>
 ): Promise<Array<NotifyDataItemMessage>> {
-  // Fetch secrets and parameters
-  if (!process.env.NOTIFY_API_BASE_URL_PARAM || !process.env.API_KEY_SECRET) {
+  if (!process.env.API_KEY_SECRET) {
     throw new Error("Environment configuration error")
   }
 
-  const notifyApiBaseUrlRaw = await getParameter(process.env.NOTIFY_API_BASE_URL_PARAM)
+  const {makeRealNotifyRequests, notifyApiBaseUrlRaw} = await loadConfig()
   const apiKeyRaw = await getSecret(process.env.API_KEY_SECRET)
 
   if (!notifyApiBaseUrlRaw) throw new Error("NOTIFY_API_BASE_URL is not defined in the environment variables!")
@@ -486,6 +508,21 @@ export async function makeBatchNotifyRequest(
     return [...res1, ...res2]
   }
 
+  if (!makeRealNotifyRequests) {
+    logger.info("Not doing real Notify requests. Simply waiting for some time and returning success on all messages")
+    await new Promise(f => setTimeout(f, DUMMY_NOTIFY_DELAY_MS))
+
+    // Map each input item to a "successful" NotifyDataItemMessage
+    return data.map(item => {
+      return {
+        ...item,
+        messageBatchReference,
+        deliveryStatus: "silent running",
+        notifyMessageId: v4() // Create a dummy UUID
+      }
+    })
+  }
+
   logger.info("Making a request for notifications to NHS notify", {count: data.length, routingPlanId})
 
   // Create an axios instance configured for Notify
@@ -509,24 +546,6 @@ export async function makeBatchNotifyRequest(
     onRetry: onAxiosRetry
   })
 
-  let doRealRequest: boolean = false
-  if (MAKE_REAL_NOTIFY_REQUESTS_PARAM) doRealRequest = await getParameter(MAKE_REAL_NOTIFY_REQUESTS_PARAM) === "true"
-
-  if (!doRealRequest) {
-    logger.info("Not doing real Notify requests. Simply waiting for some time and returning success on all messages")
-    await new Promise(f => setTimeout(f, DUMMY_NOTIFY_DELAY_MS))
-
-    // Map each input item to a "successful" NotifyDataItemMessage
-    return data.map(item => {
-      return {
-        ...item,
-        messageBatchReference,
-        success: true,
-        notifyMessageId: v4() // Create a dummy UUID
-      }
-    })
-  }
-
   try {
     const resp = await axiosInstance.post<CreateMessageBatchResponse>("/v1/message-batches", body)
 
@@ -535,7 +554,7 @@ export async function makeBatchNotifyRequest(
       logger.info("Requested notifications OK!", {
         messageBatchReference,
         messageReferences: messages.map(e => e.messageReference),
-        success: "Requested Success"
+        deliveryStatus: "requested"
       })
 
       // Map each input item to a NotifyDataItemMessage, marking success and attaching the notify ID
@@ -548,7 +567,7 @@ export async function makeBatchNotifyRequest(
         return {
           ...item,
           messageBatchReference,
-          success: !!match,
+          deliveryStatus: match ? "requested" : "notify request failed",
           notifyMessageId: match?.id
         }
       })
@@ -559,7 +578,7 @@ export async function makeBatchNotifyRequest(
         statusText: resp.statusText,
         messageBatchReference,
         messageReferences: messages.map(e => e.messageReference),
-        success: "Requested Failed"
+        deliveryStatus: "notify request failed"
       })
       throw new Error("Notify batch request failed")
     }
@@ -568,7 +587,7 @@ export async function makeBatchNotifyRequest(
     logger.error("Notify batch request failed", {error})
     return data.map(item => ({
       ...item,
-      success: false,
+      deliveryStatus: "notify request failed",
       messageBatchReference,
       notifyMessageId: undefined
     }))

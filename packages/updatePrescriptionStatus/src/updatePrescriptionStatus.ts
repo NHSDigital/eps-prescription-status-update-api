@@ -3,7 +3,7 @@ import {APIGatewayProxyEvent, APIGatewayProxyResult} from "aws-lambda"
 import {Logger} from "@aws-lambda-powertools/logger"
 import {injectLambdaContext} from "@aws-lambda-powertools/logger/middleware"
 import {TransactionCanceledException} from "@aws-sdk/client-dynamodb"
-import {getParameter} from "@aws-lambda-powertools/parameters/ssm"
+import {SSMProvider} from "@aws-lambda-powertools/parameters/ssm"
 
 import middy from "@middy/core"
 import inputOutputLogger from "@middy/input-output-logger"
@@ -45,7 +45,26 @@ export const TEST_PRESCRIPTIONS_1 = (process.env.TEST_PRESCRIPTIONS_1 ?? "")
 export const TEST_PRESCRIPTIONS_2 = (process.env.TEST_PRESCRIPTIONS_2 ?? "")
   .split(",").map(item => item.trim()) || []
 
-const ENABLE_NOTIFICATIONS_PARAM = process.env.ENABLE_NOTIFICATIONS_PARAM
+// Fetching the parameters from SSM using a dedicated provider, so that the values can be cached
+// and reused across invocations, reducing the number of calls to SSM.
+// (it was failing load tests using getParameter directly)
+const ssm = new SSMProvider()
+
+async function loadConfig() {
+  const paramNames = {
+    [process.env.ENABLE_NOTIFICATIONS_PARAM!]: {maxAge: 5}
+  }
+  const all = await ssm.getParametersByName(paramNames)
+
+  const enableNotificationsValue = (all[process.env.ENABLE_NOTIFICATIONS_PARAM!] as string)
+    .toString()
+    .trim()
+    .toLowerCase()
+
+  return {
+    enableNotifications: enableNotificationsValue === "true"
+  }
+}
 
 const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
   logger.appendKeys({
@@ -115,16 +134,17 @@ const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPro
 
   await logTransitions(dataItems)
 
-  // This prescription update is valid and all seems alright, so request for a notification
-  let enableNotifications: boolean = false
+  // Await the parameter promise before we continue
+  let enableNotificationsFlag = false
   try {
-    if (ENABLE_NOTIFICATIONS_PARAM) enableNotifications = await getParameter(ENABLE_NOTIFICATIONS_PARAM) === "true"
-  } catch {
-    logger.error("Failed to fetch ENABLE_NOTIFICATIONS_PARAM. Defaulting to false.", {ENABLE_NOTIFICATIONS_PARAM})
+    const {enableNotifications} = await loadConfig()
+    enableNotificationsFlag = enableNotifications
+  } catch (err) {
+    logger.error("Failed to load parameters from SSM", {err})
   }
 
   let created_messageIds: Array<string> = []
-  if (enableNotifications) {
+  if (enableNotificationsFlag) {
     try {
       const requestId = event.headers["x-request-id"] ?? "x-request-id-not-found"
       created_messageIds = await pushPrescriptionToNotificationSQS(requestId, dataItems, logger)
@@ -135,7 +155,7 @@ const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPro
   } else {
     logger.info(
       "enableNotifications is not true, skipping the notification request.",
-      {enableNotifications}
+      {enableNotificationsFlag}
     )
   }
 
