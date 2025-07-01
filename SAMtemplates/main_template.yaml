@@ -193,5 +193,6 @@ Resources:
         UpdatePrescriptionStatusFunctionName: !GetAtt Functions.Outputs.UpdatePrescriptionStatusFunctionName
         PrescriptionStatusUpdatesTableName: !GetAtt Tables.Outputs.PrescriptionStatusUpdatesTableName
         ConvertRequestToFhirFormatFunctionName: !GetAtt Functions.Outputs.ConvertRequestToFhirFormatFunctionName
+        NotifyProcessorFunctionName: !GetAtt Functions.Outputs.NotifyProcessorFunctionName
         DynamoDBUtilizationPercentageThreshold: !Ref DynamoDBUtilizationPercentageThreshold
         EnableAlerts: !Ref EnableAlerts

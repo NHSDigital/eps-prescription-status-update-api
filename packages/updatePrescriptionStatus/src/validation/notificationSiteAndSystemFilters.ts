@@ -2,12 +2,6 @@ import {PSUDataItem} from "@PrescriptionStatusUpdate_common/commonTypes"
 import {SSMProvider} from "@aws-lambda-powertools/parameters/ssm"
 
 const ssm = new SSMProvider()
-const paramNames = {
-  [process.env.ENABLED_SITE_ODS_CODES_PARAM!]: {maxAge: 60},
-  [process.env.ENABLED_SYSTEMS_PARAM!]: {maxAge: 60},
-  [process.env.BLOCKED_SITE_ODS_CODES_PARAM!]: {maxAge: 60}
-}
-const configPromise = ssm.getParametersByName(paramNames)
 
 function str2set(value: string | undefined): Set<string> {
   const raw = value ?? ""
@@ -23,7 +17,12 @@ async function loadConfig(): Promise<{
   enabledSystems: Set<string>,
   blockedSiteODSCodes: Set<string>
 }> {
-  const all = await configPromise
+  const paramNames = {
+    [process.env.ENABLED_SITE_ODS_CODES_PARAM!]: {maxAge: 5},
+    [process.env.ENABLED_SYSTEMS_PARAM!]: {maxAge: 5},
+    [process.env.BLOCKED_SITE_ODS_CODES_PARAM!]: {maxAge: 5}
+  }
+  const all = await ssm.getParametersByName(paramNames)
 
   const enabledSiteODSCodes = str2set(all[process.env.ENABLED_SITE_ODS_CODES_PARAM!] as string)
   const enabledSystems = str2set(all[process.env.ENABLED_SYSTEMS_PARAM!] as string)

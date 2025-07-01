@@ -49,16 +49,20 @@ export const TEST_PRESCRIPTIONS_2 = (process.env.TEST_PRESCRIPTIONS_2 ?? "")
 // and reused across invocations, reducing the number of calls to SSM.
 // (it was failing load tests using getParameter directly)
 const ssm = new SSMProvider()
-const paramNames = {
-  [process.env.ENABLE_NOTIFICATIONS_PARAM!]: {maxAge: 60}
-}
-const configPromise = ssm.getParametersByName(paramNames)
 
 async function loadConfig() {
-  const all = await configPromise
-  console.log(all)
+  const paramNames = {
+    [process.env.ENABLE_NOTIFICATIONS_PARAM!]: {maxAge: 5}
+  }
+  const all = await ssm.getParametersByName(paramNames)
+
+  const enableNotificationsValue = (all[process.env.ENABLE_NOTIFICATIONS_PARAM!] as string)
+    .toString()
+    .trim()
+    .toLowerCase()
+
   return {
-    enableNotifications: all[process.env.ENABLE_NOTIFICATIONS_PARAM!] === "true"
+    enableNotifications: enableNotificationsValue === "true"
   }
 }
 
@@ -80,8 +84,6 @@ const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPro
   logger.appendKeys({
     "x-request-id": xRequestID
   })
-
-  const paramPromise = loadConfig()
 
   const requestBody = event.body
   const requestBundle = castEventBody(requestBody, responseEntries)
@@ -135,7 +137,7 @@ const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPro
   // Await the parameter promise before we continue
   let enableNotificationsFlag = false
   try {
-    const {enableNotifications} = await paramPromise
+    const {enableNotifications} = await loadConfig()
     enableNotificationsFlag = enableNotifications
   } catch (err) {
     logger.error("Failed to load parameters from SSM", {err})

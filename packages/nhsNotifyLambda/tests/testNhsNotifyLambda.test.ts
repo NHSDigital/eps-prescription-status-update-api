@@ -39,13 +39,15 @@ jest.unstable_mockModule(
 
 const mockInfo = jest.fn()
 const mockError = jest.fn()
+const mockWarn = jest.fn()
 jest.unstable_mockModule(
   "@aws-lambda-powertools/logger",
   async () => ({
     __esModule: true,
     Logger: jest.fn().mockImplementation(() => ({
       info: mockInfo,
-      error: mockError
+      error: mockError,
+      warn: mockWarn
     }))
   })
 )
@@ -281,5 +283,36 @@ describe("Unit test for NHS Notify lambda handler", () => {
         "All messages suppressed by cooldown; nothing to notify",
         {suppressedCount: 1, totalFetched: 1}
       )
+  })
+
+  it("Stops draining after 14 minutes", async () => {
+    const msg = constructPSUDataItemMessage()
+
+    // call returns a non‐empty batch so the loop should continue
+    mockDrainQueue.mockImplementation(() =>
+      Promise.resolve({messages: [msg], isEmpty: false})
+    )
+
+    const nowSpy = jest.spyOn(Date, "now")
+      .mockImplementationOnce(() => 0) // start time
+      .mockImplementationOnce(() => (14 * 60 * 1000) + 1)
+
+    // Happy‐path for everything else
+    mockCheckCooldownForUpdate.mockReturnValueOnce(Promise.resolve(true))
+    mockMakeBatchNotifyRequest.mockReturnValueOnce(Promise.resolve([
+      {...msg, success: true, notifyMessageId: "m1"}
+    ]))
+    mockAddPrescriptionMessagesToNotificationStateStore.mockReturnValueOnce(() => Promise.resolve())
+    mockRemoveSQSMessages.mockReturnValueOnce(() => Promise.resolve())
+
+    await expect(lambdaHandler(mockEventBridgeEvent)).resolves.not.toThrow()
+
+    // Calls a warning
+    expect(mockWarn).toHaveBeenCalledTimes(1)
+
+    // Since the timer advances before the promise resolves, this never gets called
+    expect(mockDrainQueue).toHaveBeenCalledTimes(0)
+
+    nowSpy.mockRestore()
   })
 })
