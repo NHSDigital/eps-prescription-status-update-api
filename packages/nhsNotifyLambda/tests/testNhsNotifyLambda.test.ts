@@ -25,28 +25,14 @@ const mockCheckCooldownForUpdate = jest.fn()
 const mockMakeBatchNotifyRequest = jest.fn()
 
 jest.unstable_mockModule(
-  "../src/dynamo",
+  "../src/utils",
   async () => ({
     __esModule: true,
     checkCooldownForUpdate: mockCheckCooldownForUpdate,
-    addPrescriptionMessagesToNotificationStateStore: mockAddPrescriptionMessagesToNotificationStateStore
-  })
-)
-
-jest.unstable_mockModule(
-  "../src/sqs",
-  async () => ({
-    __esModule: true,
+    addPrescriptionMessagesToNotificationStateStore: mockAddPrescriptionMessagesToNotificationStateStore,
     reportQueueStatus: mockReportQueueStatus,
     drainQueue: mockDrainQueue,
-    removeSQSMessages: mockRemoveSQSMessages
-  })
-)
-
-jest.unstable_mockModule(
-  "../src/notify",
-  async () => ({
-    __esModule: true,
+    removeSQSMessages: mockRemoveSQSMessages,
     makeBatchNotifyRequest: mockMakeBatchNotifyRequest
   })
 )
