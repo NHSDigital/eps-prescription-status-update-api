@@ -1,3 +1,32 @@
+import {Message} from "@aws-sdk/client-sqs"
+import {NotifyDataItem} from "@PrescriptionStatusUpdate_common/commonTypes"
+
+// This is an extension of the SQS message interface, which explicitly parses the PSUDataItem
+// and helps track the nhs notify results
+export interface NotifyDataItemMessage extends Message {
+  PSUDataItem: NotifyDataItem
+  deliveryStatus?: string
+  messageBatchReference?: string,
+  // message reference is our internal UUID for the message
+  messageReference: string
+  // And notify send back one for their internal system.
+  notifyMessageId?: string
+}
+
+export interface LastNotificationStateType {
+  NHSNumber: string
+  ODSCode: string
+  RequestId: string // x-request-id header
+  SQSMessageID?: string // The SQS message ID
+  DeliveryStatus: string
+  NotifyMessageID?: string // The UUID we got back from Notify for the submitted message
+  NotifyMessageReference: string // The references we generated for the message
+  NotifyMessageBatchReference?: string // As above
+  LastNotifiedPrescriptionStatus: string
+  LastNotificationRequestTimestamp: string // ISO-8601 string
+  ExpiryTime: number // DynamoDB expiration time (UNIX timestamp)
+}
+
 /**
  * NHS NOTIFY REQUEST SCHEMA
  */
