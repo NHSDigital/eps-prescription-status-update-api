@@ -37,9 +37,14 @@ jest.unstable_mockModule(
   })
 )
 
-const {checkCooldownForUpdate, addPrescriptionMessagesToNotificationStateStore} = await import("../src/utils")
-const {removeSQSMessages, drainQueue, reportQueueStatus} = await import("../src/utils")
-const {makeBatchNotifyRequest} = await import("../src/utils")
+const {
+  addPrescriptionMessagesToNotificationStateStore,
+  removeSQSMessages,
+  checkCooldownForUpdate,
+  reportQueueStatus,
+  drainQueue,
+  makeBatchNotifyRequest
+} = await import("../src/utils")
 
 const ORIGINAL_ENV = {...process.env}
 
