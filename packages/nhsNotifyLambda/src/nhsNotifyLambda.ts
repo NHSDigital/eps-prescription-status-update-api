@@ -9,13 +9,13 @@ import errorHandler from "@nhs/fhir-middy-error-handler"
 import {getParameter} from "@aws-lambda-powertools/parameters/ssm"
 
 import {
-  NotifyDataItemMessage,
-  checkCooldownForUpdate,
   addPrescriptionMessagesToNotificationStateStore,
+  checkCooldownForUpdate,
   removeSQSMessages,
-  drainQueue,
   reportQueueStatus,
-  makeBatchNotifyRequest
+  drainQueue,
+  makeBatchNotifyRequest,
+  NotifyDataItemMessage
 } from "./utils"
 
 const logger = new Logger({serviceName: "nhsNotify"})
