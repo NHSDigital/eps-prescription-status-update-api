@@ -28,11 +28,11 @@ jest.unstable_mockModule(
   "../src/utils",
   async () => ({
     __esModule: true,
-    checkCooldownForUpdate: mockCheckCooldownForUpdate,
-    addPrescriptionMessagesToNotificationStateStore: mockAddPrescriptionMessagesToNotificationStateStore,
     reportQueueStatus: mockReportQueueStatus,
     drainQueue: mockDrainQueue,
+    addPrescriptionMessagesToNotificationStateStore: mockAddPrescriptionMessagesToNotificationStateStore,
     removeSQSMessages: mockRemoveSQSMessages,
+    checkCooldownForUpdate: mockCheckCooldownForUpdate,
     makeBatchNotifyRequest: mockMakeBatchNotifyRequest
   })
 )
