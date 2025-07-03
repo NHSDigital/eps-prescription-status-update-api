@@ -107,7 +107,7 @@ describe("Unit test persistDataItems", () => {
 
     const result = await persistDataItems(dataItems, logger)
     expect(result).toBe(true)
-    expect(loggerSpy).not.toBeCalled()
+    expect(loggerSpy).not.toHaveBeenCalled()
   })
 
   it("call dynamo update twice when there is a large batch", async () => {
@@ -130,8 +130,8 @@ describe("Unit test persistDataItems", () => {
 
     const result = await persistDataItems(dataItems, logger)
     expect(result).toBe(true)
-    expect(loggerSpy).not.toBeCalled()
-    expect(mockSend).toBeCalledTimes(2)
+    expect(loggerSpy).not.toHaveBeenCalled()
+    expect(mockSend).toHaveBeenCalledTimes(2)
   })
 
   it("returns false when there is a general error", async () => {
@@ -171,6 +171,6 @@ describe("Unit test persistDataItems", () => {
 
     const result = await persistDataItems(dataItems, logger)
     expect(result).toBe(false)
-    expect(loggerSpy).toBeCalled()
+    expect(loggerSpy).toHaveBeenCalled()
   })
 })
