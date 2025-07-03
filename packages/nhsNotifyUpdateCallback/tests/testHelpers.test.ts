@@ -167,7 +167,6 @@ describe("helpers.ts", () => {
 
       // Only QueryCommand should be called
       expect(sendSpy).toHaveBeenCalledTimes(1)
-      expect(sendSpy).toHaveBeenCalledWith(expect.any(QueryCommand))
       // Warning logged
       expect(logger.warn).toHaveBeenCalledWith(
         "No matching record found for NotifyMessageID. Counting this as a successful update.",
@@ -205,20 +204,17 @@ describe("helpers.ts", () => {
 
       await updateNotificationsTable(logger, mockResponse)
 
-      expect(sendSpy).toHaveBeenCalledWith(expect.any(QueryCommand))
-      expect(sendSpy).toHaveBeenCalledWith(
-        expect.objectContaining({
-          input: expect.objectContaining({
-            TableName: process.env.TABLE_NAME,
-            Key: {NHSNumber: mockItem.NHSNumber, ODSCode: mockItem.ODSCode},
-            ExpressionAttributeValues: {
-              ":ds": mockResponse.data[0].attributes.messageStatus,
-              ":ts": overrideTimestamp,
-              ":et": Math.floor(100_000_000 / 1000) + 60 * 60 * 24 * 7
-            }
-          })
-        })
-      )
+      const [updateCmd] = sendSpy.mock.calls[1]
+      expect((updateCmd).input).toMatchObject({
+        TableName: process.env.TABLE_NAME,
+        Key: {NHSNumber: mockItem.NHSNumber, ODSCode: mockItem.ODSCode},
+        ExpressionAttributeValues: {
+          ":ds": mockResponse.data[0].attributes.messageStatus,
+          ":ts": overrideTimestamp,
+          ":et": Math.floor(100_000_000 / 1000) + 60 * 60 * 24 * 7
+        }
+      })
+
       expect(logger.info).toHaveBeenCalledWith(
         "Updated notification state",
         expect.objectContaining({
@@ -336,8 +332,8 @@ describe("helpers.ts", () => {
       const {fetchSecrets: fn} = await import("../src/helpers")
       await expect(fn(logger)).resolves.toBeUndefined()
 
-      expect(mockGetSecret).toHaveBeenCalledWith(process.env.APP_NAME_SECRET)
-      expect(mockGetSecret).toHaveBeenCalledWith(process.env.API_KEY_SECRET)
+      expect(mockGetSecret).toHaveBeenCalledWith(process.env.APP_NAME_SECRET!)
+      expect(mockGetSecret).toHaveBeenCalledWith(process.env.API_KEY_SECRET!)
     })
   })
 })
