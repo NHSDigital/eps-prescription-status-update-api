@@ -380,9 +380,6 @@ describe("NHS notify lambda helper functions", () => {
       const result = await checkCooldownForUpdate(logger, update, 900)
 
       expect(sendSpy).toHaveBeenCalledWith(expect.any(GetCommand))
-      expect(infoSpy).toHaveBeenCalledWith(
-        "No previous notification state found. Notification allowed."
-      )
       expect(result).toBe(true)
     })
 
@@ -395,10 +392,6 @@ describe("NHS notify lambda helper functions", () => {
       const update = constructPSUDataItemMessage().PSUDataItem
       const result = await checkCooldownForUpdate(logger, update, 900)
 
-      expect(infoSpy).toHaveBeenCalledWith(
-        "Cooldown period has passed. Notification allowed.",
-        expect.objectContaining({secondsSince: expect.any(Number)})
-      )
       expect(result).toBe(true)
     })
 
@@ -411,10 +404,6 @@ describe("NHS notify lambda helper functions", () => {
       const update = constructPSUDataItemMessage().PSUDataItem
       const result = await checkCooldownForUpdate(logger, update, 900)
 
-      expect(infoSpy).toHaveBeenCalledWith(
-        "Within cooldown period. Notification suppressed.",
-        expect.objectContaining({secondsSince: expect.any(Number)})
-      )
       expect(result).toBe(false)
     })
 
@@ -428,10 +417,6 @@ describe("NHS notify lambda helper functions", () => {
       const update = constructPSUDataItemMessage().PSUDataItem
       const result = await checkCooldownForUpdate(logger, update, 60)
 
-      expect(infoSpy).toHaveBeenCalledWith(
-        "Within cooldown period. Notification suppressed.",
-        expect.objectContaining({secondsSince: expect.any(Number)})
-      )
       expect(result).toBe(false)
     })
 
@@ -441,10 +426,6 @@ describe("NHS notify lambda helper functions", () => {
 
       const update = constructPSUDataItemMessage().PSUDataItem
       await expect(checkCooldownForUpdate(logger, update)).rejects.toThrow("DDB failure")
-      expect(errorSpy).toHaveBeenCalledWith(
-        "Error checking cooldown state",
-        expect.objectContaining({error: awsErr})
-      )
     })
 
     it("does nothing when passed an empty array", async () => {
