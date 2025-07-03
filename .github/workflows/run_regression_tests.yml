@@ -71,4 +71,4 @@ jobs:
         run: |
           poetry install
           echo Running regression tests in the "$TARGET_ENVIRONMENT" environment
-          poetry run python run_regression_tests.py --env="$TARGET_ENVIRONMENT" --pr_label="$VERSION_NUMBER" --token=${{ steps.generate-token.outputs.token }}
+          poetry run python -u run_regression_tests.py --env="$TARGET_ENVIRONMENT" --pr_label="$VERSION_NUMBER" --token=${{ steps.generate-token.outputs.token }}
