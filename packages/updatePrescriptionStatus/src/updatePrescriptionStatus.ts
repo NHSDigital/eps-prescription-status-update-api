@@ -165,7 +165,7 @@ const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPro
 
     if (hasTimedOut(persistResponse)) {
       responseEntries = [timeoutResponse()]
-      logger.info("DynamoDB operation timed out.")
+      logger.error("DynamoDB operation timed out.")
       // It's okay to just call the function here, since if the enableNotifications
       //  boolean is False, this function does nothing
       await removeSqsMessages(logger, created_messageIds)
