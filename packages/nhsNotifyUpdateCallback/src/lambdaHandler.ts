@@ -35,11 +35,22 @@ const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPro
   let payload: MessageStatusResponse
   try {
     payload = JSON.parse(event.body)
-    logger.info("Payload parsed", {payload})
   } catch (error) {
     logger.error("Failed to parse payload", {error, payload: event.body})
     return response(400, {message: "Request body failed to parse"})
   }
+
+  payload.data.forEach(m => {
+    logger.info(
+      "Message state updated",
+      {
+        messageStatus: m.attributes.messageStatus,
+        messageReference: m.attributes.messageReference,
+        messageId: m.attributes.messageId,
+        receivedTimestamp: m.attributes.timestamp
+      }
+    )
+  })
 
   try {
     await updateNotificationsTable(logger, payload)

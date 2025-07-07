@@ -80,6 +80,7 @@ Resources:
         - !Join
           - ","
           - - !Ref LambdaManagedPolicy
+            - !Ref SSMGetParameterPolicy
             - !ImportValue lambda-resources:LambdaInsightsLogGroupPolicy
             - !ImportValue account-resources:CloudwatchEncryptionKMSPolicyArn
             - !ImportValue account-resources:LambdaDecryptSecretsKMSPolicy
@@ -104,6 +105,20 @@ Resources:
             Resource:
               - !GetAtt LambdaLogGroup.Arn
               - !Sub ${LambdaLogGroup.Arn}:log-stream:*
+
+  SSMGetParameterPolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      Description: "Allows reading SSM parameters"
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action:
+              - ssm:GetParameter
+              - ssm:GetParameters
+            Resource:
+              - "*"
 
   LambdaLogGroup:
     Type: AWS::Logs::LogGroup

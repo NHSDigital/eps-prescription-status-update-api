@@ -3,6 +3,7 @@ import {APIGatewayProxyEvent, APIGatewayProxyResult} from "aws-lambda"
 import {Logger} from "@aws-lambda-powertools/logger"
 import {injectLambdaContext} from "@aws-lambda-powertools/logger/middleware"
 import {TransactionCanceledException} from "@aws-sdk/client-dynamodb"
+import {SSMProvider} from "@aws-lambda-powertools/parameters/ssm"
 
 import middy from "@middy/core"
 import inputOutputLogger from "@middy/input-output-logger"
@@ -16,7 +17,7 @@ import {PSUDataItem} from "@PrescriptionStatusUpdate_common/commonTypes"
 import {transactionBundle, validateEntry} from "./validation/content"
 import {getPreviousItem, persistDataItems} from "./utils/databaseClient"
 import {jobWithTimeout, hasTimedOut} from "./utils/timeoutUtils"
-import {pushPrescriptionToNotificationSQS} from "./utils/sqsClient"
+import {pushPrescriptionToNotificationSQS, removeSqsMessages} from "./utils/sqsClient"
 import {
   accepted,
   badRequest,
@@ -43,6 +44,27 @@ export const TEST_PRESCRIPTIONS_1 = (process.env.TEST_PRESCRIPTIONS_1 ?? "")
   .split(",").map(item => item.trim()) || []
 export const TEST_PRESCRIPTIONS_2 = (process.env.TEST_PRESCRIPTIONS_2 ?? "")
   .split(",").map(item => item.trim()) || []
+
+// Fetching the parameters from SSM using a dedicated provider, so that the values can be cached
+// and reused across invocations, reducing the number of calls to SSM.
+// (it was failing load tests using getParameter directly)
+const ssm = new SSMProvider()
+
+async function loadConfig() {
+  const paramNames = {
+    [process.env.ENABLE_NOTIFICATIONS_PARAM!]: {maxAge: 5}
+  }
+  const all = await ssm.getParametersByName(paramNames)
+
+  const enableNotificationsValue = (all[process.env.ENABLE_NOTIFICATIONS_PARAM!] as string)
+    .toString()
+    .trim()
+    .toLowerCase()
+
+  return {
+    enableNotifications: enableNotificationsValue === "true"
+  }
+}
 
 const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
   logger.appendKeys({
@@ -112,18 +134,47 @@ const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPro
 
   await logTransitions(dataItems)
 
+  // Await the parameter promise before we continue
+  let enableNotificationsFlag = false
+  try {
+    const {enableNotifications} = await loadConfig()
+    enableNotificationsFlag = enableNotifications
+  } catch (err) {
+    logger.error("Failed to load parameters from SSM", {err})
+  }
+
+  let created_messageIds: Array<string> = []
+  if (enableNotificationsFlag) {
+    try {
+      const requestId = event.headers["x-request-id"] ?? "x-request-id-not-found"
+      created_messageIds = await pushPrescriptionToNotificationSQS(requestId, dataItems, logger)
+    } catch (err) {
+      logger.error("Failed to push prescriptions to the notifications SQS", {err})
+      return response(500, responseEntries)
+    }
+  } else {
+    logger.info(
+      "enableNotifications is not true, skipping the notification request.",
+      {enableNotificationsFlag}
+    )
+  }
+
   try {
     const persistSuccess = persistDataItems(dataItems, logger)
     const persistResponse = await jobWithTimeout(LAMBDA_TIMEOUT_MS, persistSuccess)
 
     if (hasTimedOut(persistResponse)) {
       responseEntries = [timeoutResponse()]
-      logger.info("DynamoDB operation timed out.")
+      logger.error("DynamoDB operation timed out.")
+      // It's okay to just call the function here, since if the enableNotifications
+      //  boolean is False, this function does nothing
+      await removeSqsMessages(logger, created_messageIds)
       return response(504, responseEntries)
     }
 
     if (!persistResponse) {
       responseEntries = [serverError()]
+      await removeSqsMessages(logger, created_messageIds)
       return response(500, responseEntries)
     }
 
@@ -139,6 +190,7 @@ const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPro
       }
 
       handleTransactionCancelledException(e, responseEntries)
+      await removeSqsMessages(logger, created_messageIds)
       return response(409, responseEntries)
     }
   }
@@ -147,17 +199,8 @@ const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPro
   if (testPrescriptionForcedError) {
     logger.info("Forcing error for INT test prescription")
     responseEntries = [serverError()]
+    await removeSqsMessages(logger, created_messageIds)
     return response(500, responseEntries)
-  }
-
-  // This prescription was handled successfully,
-  // so add a message to the notifications SQS
-  try {
-    const requestId = event.headers["x-request-id"] ?? "x-request-id-not-found"
-    await pushPrescriptionToNotificationSQS(requestId, dataItems, logger)
-  } catch (err) {
-    logger.error("Failed to push prescriptions to the notifications SQS", {err})
-    // DO NOT throw an error here, since we want to still return the update!
   }
 
   return response(201, responseEntries)

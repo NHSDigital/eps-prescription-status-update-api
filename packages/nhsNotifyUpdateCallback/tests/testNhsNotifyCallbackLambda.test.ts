@@ -90,7 +90,19 @@ describe("NHS Notify update callback lambda handler", () => {
   })
 
   it("returns 500 if updateNotificationsTable throws", async () => {
-    const payload = {status: "foo"}
+    const payload = {
+      status: "foo",
+      data: [
+        {
+          attributes: {
+            messageStatus: "messageStatus",
+            messageReference: "messageReference",
+            messageId: "messageId",
+            timestamp: "timestamp"
+          }
+        }
+      ]
+    }
     const event = generateMockEvent(payload)
     event.headers["x-request-id"] = "abc"
     mockCheckSignature.mockImplementation(() => undefined)
@@ -110,7 +122,19 @@ describe("NHS Notify update callback lambda handler", () => {
   })
 
   it("returns 202 and 'OK' when everything succeeds", async () => {
-    const payload = {status: "ok"}
+    const payload = {
+      status: "ok",
+      data: [
+        {
+          attributes: {
+            messageStatus: "messageStatus",
+            messageReference: "messageReference",
+            messageId: "messageId",
+            timestamp: "timestamp"
+          }
+        }
+      ]
+    }
     const event = generateMockEvent(payload)
     event.headers["x-request-id"] = "abc"
     mockCheckSignature.mockImplementation(() => undefined)

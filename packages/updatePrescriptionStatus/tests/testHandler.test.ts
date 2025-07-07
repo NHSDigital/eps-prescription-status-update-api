@@ -17,7 +17,6 @@ import {
   generateExpectedItems,
   generateMockEvent,
   mockDynamoDBClient,
-  mockSQSClient,
   TASK_VALUES
 } from "./utils/testUtils"
 
@@ -38,7 +37,28 @@ import {
 import {QueryCommand, TransactionCanceledException, TransactWriteItemsCommand} from "@aws-sdk/client-dynamodb"
 
 const {mockSend: dynamoDBMockSend} = mockDynamoDBClient()
-const {mockSend: sqsMockSend} = mockSQSClient()
+
+const mockPushPrescriptionToNotificationSQS = jest.fn().mockImplementation(async () => Promise.resolve())
+const mockRemoveSqsMessages = jest.fn().mockImplementation(async () => Promise.resolve())
+jest.unstable_mockModule("../src/utils/sqsClient", async () => ({
+  __esModule: true,
+  pushPrescriptionToNotificationSQS: mockPushPrescriptionToNotificationSQS,
+  removeSqsMessages: mockRemoveSqsMessages
+}))
+
+const mockGetParametersByName = jest.fn(async () => Promise.resolve(
+  {[process.env.ENABLE_NOTIFICATIONS_PARAM!]: "false"}
+))
+
+jest.unstable_mockModule(
+  "@aws-lambda-powertools/parameters/ssm",
+  async () => ({
+    __esModule: true,
+    SSMProvider: jest.fn().mockImplementation(() => ({
+      getParametersByName: mockGetParametersByName
+    }))
+  })
+)
 
 const {handler, logger} = await import("../src/updatePrescriptionStatus")
 
@@ -225,6 +245,8 @@ describe("Integration tests for updatePrescriptionStatus handler", () => {
     const response = await eventHandler
     expect(response.statusCode).toBe(504)
     expect(JSON.parse(response.body)).toEqual(bundleWrap([timeoutResponse()]))
+    expect(mockRemoveSqsMessages).toHaveBeenCalledTimes(1)
+    expect(mockRemoveSqsMessages).toHaveBeenCalledWith(logger, [])
   })
 
   it("when multiple tasks have missing fields, expect 400 status code and messages indicating missing fields", async () => {
@@ -324,6 +346,8 @@ describe("Integration tests for updatePrescriptionStatus handler", () => {
       "Request contains a task id and prescription id identical to a record already in the data store."
     )
     expect(responseBody.entry[1].response.status).not.toEqual("200 OK")
+    expect(mockRemoveSqsMessages).toHaveBeenCalledTimes(1)
+    expect(mockRemoveSqsMessages).toHaveBeenCalledWith(logger, [])
   })
 
   it("when duplicates are introduced without any other entry, expect only 409 status with a message", async () => {
@@ -362,6 +386,8 @@ describe("Integration tests for updatePrescriptionStatus handler", () => {
       "Request contains a task id and prescription id identical to a record already in the data store."
     )
     expect(responseBody.entry[0].response.status).not.toEqual("200 OK")
+    expect(mockRemoveSqsMessages).toHaveBeenCalledTimes(1)
+    expect(mockRemoveSqsMessages).toHaveBeenCalledWith(logger, [])
   })
 
   function itemQueryResult(taskID: string, status: string, businessStatus: string, lastModified: string) {
@@ -416,29 +442,78 @@ describe("Integration tests for updatePrescriptionStatus handler", () => {
   })
 
   it("when the notification SQS push fails, the response still succeeds", async () => {
-    sqsMockSend.mockImplementation(
+    mockGetParametersByName.mockImplementation(async () => {
+      return {
+        [process.env.ENABLE_NOTIFICATIONS_PARAM!]: "true"
+      }
+    })
+    mockPushPrescriptionToNotificationSQS.mockImplementation(
       async () => {
         throw new Error("Test error")
       }
     )
+    const {handler: tmpfn} = await import("../src/updatePrescriptionStatus")
 
     const event: APIGatewayProxyEvent = generateMockEvent(requestDispatched)
-    const response: APIGatewayProxyResult = await handler(event, {})
-    expect(response.statusCode).toBe(201)
+    const response: APIGatewayProxyResult = await tmpfn(event, {})
+    expect(response.statusCode).toBe(500)
+    expect(mockPushPrescriptionToNotificationSQS).toHaveBeenCalled()
   })
 
-  it("when SQS environment variables are not set, the response still succeeds", async () => {
-    process.env.NHS_NOTIFY_PRESCRIPTIONS_SQS_QUEUE_URL = undefined
-    process.env.AWS_REGION = undefined
-
-    sqsMockSend.mockImplementation(
+  it("when SQS push throws an error, the response still succeeds", async () => {
+    mockGetParametersByName.mockImplementation(async () => {
+      return {
+        [process.env.ENABLE_NOTIFICATIONS_PARAM!]: "true"
+      }
+    })
+    mockPushPrescriptionToNotificationSQS.mockImplementation(
       async () => {
         throw new Error("Test error")
       }
     )
+    const {handler: tmpfn} = await import("../src/updatePrescriptionStatus")
 
     const event: APIGatewayProxyEvent = generateMockEvent(requestDispatched)
-    const response: APIGatewayProxyResult = await handler(event, {})
-    expect(response.statusCode).toBe(201)
+    const response: APIGatewayProxyResult = await tmpfn(event, {})
+    expect(response.statusCode).toBe(500)
+    expect(mockPushPrescriptionToNotificationSQS).toHaveBeenCalled()
+  })
+
+  it("When the get parameter call throws an error, the request succeeds and the sqs queue is untouched", async () => {
+    mockGetParametersByName.mockImplementation(async () => Promise.reject(new Error("Failed")))
+    const {handler: tmpfn} = await import("../src/updatePrescriptionStatus")
+
+    const rejected_event: APIGatewayProxyEvent = generateMockEvent(requestDispatched)
+    const rejected_response: APIGatewayProxyResult = await tmpfn(rejected_event, {})
+    expect(rejected_response.statusCode).toBe(201)
+    expect(mockPushPrescriptionToNotificationSQS).not.toHaveBeenCalled()
+  })
+
+  it("When the enable notifications parameter is false, the push to SQS is skipped", async () => {
+    mockGetParametersByName.mockImplementation(async () => {
+      return {
+        [process.env.ENABLE_NOTIFICATIONS_PARAM!]: "false"
+      }
+    })
+    const {handler: tmpfn} = await import("../src/updatePrescriptionStatus")
+
+    const bypass_event: APIGatewayProxyEvent = generateMockEvent(requestDispatched)
+    const bypass_response: APIGatewayProxyResult = await tmpfn(bypass_event, {})
+    expect(bypass_response.statusCode).toBe(201)
+    expect(mockPushPrescriptionToNotificationSQS).not.toHaveBeenCalled()
+  })
+
+  it("When the enable notifications parameter is true, the push to SQS is done", async () => {
+    mockGetParametersByName.mockImplementation(async () => {
+      return {
+        [process.env.ENABLE_NOTIFICATIONS_PARAM!]: "true"
+      }
+    })
+    const {handler: tmpfn} = await import("../src/updatePrescriptionStatus")
+
+    const successful_event: APIGatewayProxyEvent = generateMockEvent(requestDispatched)
+    const successful_response: APIGatewayProxyResult = await tmpfn(successful_event, {})
+    expect(successful_response.statusCode).toBe(201)
+    expect(mockPushPrescriptionToNotificationSQS).toHaveBeenCalled()
   })
 })

@@ -6,114 +6,127 @@ import middy from "@middy/core"
 import inputOutputLogger from "@middy/input-output-logger"
 import errorHandler from "@nhs/fhir-middy-error-handler"
 
-import {v4} from "uuid"
+import {getParameter} from "@aws-lambda-powertools/parameters/ssm"
 
 import {
   addPrescriptionMessagesToNotificationStateStore,
   checkCooldownForUpdate,
-  clearCompletedSQSMessages,
+  removeSQSMessages,
+  reportQueueStatus,
   drainQueue,
+  makeBatchNotifyRequest,
   NotifyDataItemMessage
 } from "./utils"
 
 const logger = new Logger({serviceName: "nhsNotify"})
 
+const MAX_QUEUE_RUNTIME = 14*60*1000 // 14 minutes, to avoid Lambda timeout issues (timeout is 15 minutes)
+
 /**
- * Handler for the scheduled trigger.
- *
- * @param event - The CloudWatch EventBridge scheduled event payload.
+ * Process a single batch of SQS messages: filter, notify, persist, and clean up.
  */
-export const lambdaHandler = async (event: EventBridgeEvent<string, string>): Promise<void> => {
-  // EventBridge jsonifies the details so the second type of the event is a string. That's unused here, though
+async function processBatch(
+  messages: Array<NotifyDataItemMessage>,
+  routingId: string
+): Promise<void> {
+  if (messages.length === 0) {
+    logger.info("No messages to process")
+    return
+  }
 
-  logger.info("NHS Notify lambda triggered by scheduler", {event})
+  // Filter by cooldown
+  const checks = await Promise.all(
+    messages.map(async (msg) => ({
+      msg,
+      allowed: await checkCooldownForUpdate(logger, msg.PSUDataItem)
+    }))
+  )
+  const toProcess = checks.filter(c => c.allowed).map(c => c.msg)
+  const suppressed = checks.filter(c => !c.allowed).map(c => c.msg)
 
-  let messages: Array<NotifyDataItemMessage>
-  let processed: Array<NotifyDataItemMessage>
+  logSuppression(suppressed.length, messages.length)
+  if (suppressed.length) {
+    await removeSQSMessages(logger, suppressed)
+  }
+
+  // Send notifications
+  let processed: Array<NotifyDataItemMessage> = []
   try {
-    messages = await drainQueue(logger, 100)
+    processed = await makeBatchNotifyRequest(logger, routingId, toProcess)
+  } catch (err) {
+    logger.error("Notification request failed, will retry", {error: err, toProcess})
+  }
 
-    if (messages.length === 0) {
-      logger.info("No messages to process")
-      return
-    }
+  if (processed.length) {
+    await Promise.all([
+      addPrescriptionMessagesToNotificationStateStore(logger, processed),
+      removeSQSMessages(logger, processed)
+    ])
+  }
+}
 
-    // Filter messages by checkCooldownForUpdate. This is done in two stages so we can check in parallel
-    const eligibility = await Promise.all(
-      messages.map(async (m) => ({
-        message: m,
-        allowed: await checkCooldownForUpdate(logger, m.PSUDataItem)
-      }))
-    )
-    const toProcess = eligibility
-      .filter((e) => e.allowed)
-      .map((e) => e.message)
-
-    // Log the results of checking the cooldown
-    const suppressedCount = messages.length - toProcess.length
-    if (toProcess.length === 0) {
-      logger.info("All messages suppressed by cooldown; nothing to notify",
-        {
-          suppressedCount,
-          totalFetched: messages.length
-        })
-      return
-    } else if (suppressedCount > 0) {
-      logger.info(`Suppressed ${suppressedCount} messages due to cooldown`,
-        {
-          suppressedCount,
-          totalFetched: messages.length
-        }
-      )
-    }
-
-    // Just for diagnostics for now
-    const toNotify = toProcess
-      .map((m) => ({
-        RequestID: m.PSUDataItem.RequestID,
-        TaskId: m.PSUDataItem.TaskID,
-        Message: "Notification Required"
-      }))
-    logger.info("Fetched prescription notification messages", {count: toNotify.length, toNotify})
-
-    // TODO: Notifications request will be done here.
-    processed = toProcess.map((el) => {
-      return {
-        ...el,
-        success: true,
-        notifyMessageId: v4()
-      }
+/**
+ * Log suppression details (sonar complained of high code complexity)
+ */
+function logSuppression(suppressedCount: number, total: number): void {
+  if (suppressedCount === total) {
+    logger.info("All messages suppressed by cooldown; nothing to notify", {
+      suppressedCount,
+      totalFetched: total
     })
+  } else if (suppressedCount > 0) {
+    logger.info(`Suppressed ${suppressedCount} messages due to cooldown`, {
+      suppressedCount,
+      totalFetched: total
+    })
+  }
+}
 
-  } catch (err) {
-    logger.error("Error while draining SQS queue", {error: err})
-    throw err
+/**
+ * Drain the queue until empty or the MAX_QUEUE_RUNTIME has passed, processing each batch.
+ */
+async function drainAndProcess(routingId: string): Promise<void> {
+  const start = Date.now()
+  let empty = false
+  while (!empty) {
+    if (Date.now() - start >= MAX_QUEUE_RUNTIME) {
+      logger.warn("drainAndProcess timed out; exiting before queue is empty",
+        {maxRuntimeMilliseconds: MAX_QUEUE_RUNTIME}
+      )
+      break
+    }
+
+    const {messages, isEmpty} = await drainQueue(logger, 100)
+    empty = isEmpty
+
+    await processBatch(messages, routingId)
+  }
+}
+
+/**
+ * Handler for the scheduled EventBridge trigger.
+ */
+export const lambdaHandler = async (
+  event: EventBridgeEvent<string, string>
+): Promise<void> => {
+  if (!process.env.NHS_NOTIFY_ROUTING_ID_PARAM) {
+    throw new Error("Environment not configured")
+  }
+  const routingId = await getParameter(process.env.NHS_NOTIFY_ROUTING_ID_PARAM)
+  if (!routingId) {
+    throw new Error("No Routing Plan ID found")
   }
 
-  try {
-    await addPrescriptionMessagesToNotificationStateStore(logger, processed)
-  } catch (err) {
-    logger.error("Error while pushing data to the PSU notification state data store", {err})
-    throw err
-  }
+  logger.info("NHS Notify lambda triggered by scheduler", {event, routingId})
 
-  // By waiting until a message is successfully processed before deleting it from SQS,
-  // failed messages will eventually be retried by subsequent notify consumers.
-  try {
-    await clearCompletedSQSMessages(logger, processed)
-  } catch (err) {
-    logger.error("Error while deleting successfully processed messages from SQS", {error: err})
-    throw err
-  }
+  // Done sequentially so that the queue report is accurate.
+  await reportQueueStatus(logger)
+  await drainAndProcess(routingId)
 }
 
 export const handler = middy(lambdaHandler)
   .use(injectLambdaContext(logger, {clearState: true}))
   .use(
-    inputOutputLogger({
-      logger: (request) => {
-        logger.info(request)
-      }
-    })
+    inputOutputLogger({logger: (req) => logger.info(req)})
   )
-  .use(errorHandler({logger: logger}))
+  .use(errorHandler({logger}))

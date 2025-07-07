@@ -1,5 +1,6 @@
 import {Logger} from "@aws-lambda-powertools/logger"
-import {SQSClient, SendMessageBatchCommand} from "@aws-sdk/client-sqs"
+import {DeleteMessageBatchCommand, SQSClient, SendMessageBatchCommand} from "@aws-sdk/client-sqs"
+import {getSecret} from "@aws-lambda-powertools/parameters/secrets"
 
 import {createHmac} from "crypto"
 
@@ -9,7 +10,6 @@ import {checkSiteOrSystemIsNotifyEnabled} from "../validation/notificationSiteAn
 
 const sqsUrl: string | undefined = process.env.NHS_NOTIFY_PRESCRIPTIONS_SQS_QUEUE_URL
 const fallbackSalt = "DEV SALT"
-const sqsSalt: string = process.env.SQS_SALT ?? fallbackSalt
 
 // The AWS_REGION is always defined in lambda environments
 const sqs = new SQSClient({region: process.env.AWS_REGION})
@@ -36,13 +36,58 @@ function chunkArray<T>(arr: Array<T>, size: number): Array<Array<T>> {
  * @param hashFunction - Which hash function to use. HMAC compatible. Defaults to SHA-256
  * @returns - A hex encoded string of the hash
  */
-export function saltedHash(logger: Logger, input: string, hashFunction: string = "sha256"): string {
-  if (sqsSalt === fallbackSalt) {
-    logger.warn("Using the fallback salt value - please update the environment variable `SQS_SALT` to a random value.")
-  }
+export function saltedHash(
+  input: string,
+  sqsSalt: string,
+  hashFunction: string = "sha256"
+): string {
   return createHmac(hashFunction, sqsSalt)
     .update(input, "utf8")
     .digest("hex")
+}
+
+/**
+ * Gets the salt value from the secrets manager
+ */
+export async function getSaltValue(logger: Logger): Promise<string> {
+  let sqsSalt: string
+
+  if (!process.env.SQS_SALT) {
+    // No secret name configured at all, so fall back
+    sqsSalt = fallbackSalt
+  } else {
+    try {
+      // grab the secret, expecting JSON like { "salt": "string" }
+      const secretJson = await getSecret(process.env.SQS_SALT, {transform: "json"})
+
+      // must be a non‐null object with a string .salt
+      if (
+        typeof secretJson === "object" &&
+        secretJson !== null &&
+        "salt" in secretJson &&
+        typeof secretJson.salt === "string"
+      ) {
+        // OK
+        sqsSalt = secretJson.salt
+      } else {
+        logger.error("Secret did not contain a valid salt field, falling back to DEV SALT", {
+          secretValue: secretJson
+        })
+        sqsSalt = fallbackSalt
+      }
+    } catch (error) {
+      logger.error("Failed to fetch SQS_SALT from Secrets Manager, using DEV SALT", {error})
+      sqsSalt = fallbackSalt
+    }
+  }
+
+  if (sqsSalt === fallbackSalt) {
+    logger.warn(
+      "Using the fallback salt value - please update the environment variable `SQS_SALT` to a random value."
+    )
+  }
+
+  return sqsSalt
 }
 
 /**
@@ -52,12 +97,14 @@ export function saltedHash(logger: Logger, input: string, hashFunction: string =
  * @param requestId - The x-request-id header from the incoming event
  * @param data - Array of PSUDataItem to send to SQS
  * @param logger - Logger instance
+ *
+ * @returns An array of the created MessageIds
  */
 export async function pushPrescriptionToNotificationSQS(
   requestId: string,
   data: Array<PSUDataItem>,
   logger: Logger
-) {
+): Promise<Array<string>> {
   logger.info("Checking if any items require notifications", {numItemsToBeChecked: data.length, sqsUrl})
 
   if (!sqsUrl) {
@@ -66,80 +113,139 @@ export async function pushPrescriptionToNotificationSQS(
   }
 
   // Only allow through sites and systems that are allowedSitesAndSystems
-  const allowedSitesAndSystemsData = checkSiteOrSystemIsNotifyEnabled(data)
+  const allowedSitesAndSystemsData = await checkSiteOrSystemIsNotifyEnabled(data)
   logger.info(
     "Filtered out sites and suppliers that are not enabled, or are explicitly disabled",
-    {
-      numItemsAllowed: allowedSitesAndSystemsData.length
-    }
+    {numItemsAllowed: allowedSitesAndSystemsData.length}
   )
-
-  // SQS batch calls are limited to 10 messages per request, so chunk the data
-  const batches = chunkArray(allowedSitesAndSystemsData, 10)
 
   // Only these statuses will be pushed to the SQS
   const updateStatuses: Array<string> = [
     "ready to collect",
     "ready to collect - partial"
   ]
+  // Salt for the deduplication hash
+  const sqsSalt = await getSaltValue(logger)
+
+  // Extract the required SQS payload data out of the filtered data
+  // We could do a round of deduplications here, but benefits would be minimal and AWS SQS will do it for us anyway.
+  const allEntries = allowedSitesAndSystemsData
+    .filter((item) => updateStatuses.includes(item.Status.toLowerCase()))
+    // Build SQS batch entries with FIFO parameters
+    .map((item, idx) => ({
+      Id: idx.toString(),
+      // Only post the required information to SQS
+      MessageBody: JSON.stringify(item as NotifyDataItem),
+      // FIFO
+      // We dedupe on both nhs number and ods code
+      MessageDeduplicationId: saltedHash(`${item.PatientNHSNumber}:${item.PharmacyODSCode}`, sqsSalt),
+      MessageGroupId: requestId,
+      MessageAttributes: {
+        RequestId: {
+          DataType: "String",
+          StringValue: requestId
+        }
+      }
+    }))
+
+  if (!allEntries.length) {
+    // Carry on if we have no updates to make.
+    logger.info("No entries to post to the notifications SQS")
+    return []
+  }
+
+  // SQS batch calls are limited to 10 messages per request, so chunk the data
+  const batches = chunkArray(allEntries, 10)
+
+  // Used for the return value
+  let out: Array<string> = []
 
   for (const batch of batches) {
-    const entries = batch
-      .filter((item) => updateStatuses.includes(item.Status.toLowerCase()))
-      // Build SQS batch entries with FIFO parameters
-      .map((item, idx) => ({
-        Id: idx.toString(),
-        // Only post the required information to SQS
-        MessageBody: JSON.stringify(item as NotifyDataItem),
-        // FIFO
-        // We dedupe on both nhs number and ods code
-        MessageDeduplicationId: saltedHash(logger, `${item.PatientNHSNumber}:${item.PharmacyODSCode}`),
-        MessageGroupId: requestId,
-        MessageAttributes: {
-          RequestId: {
-            DataType: "String",
-            StringValue: requestId
-          }
-        }
-      }))
-    // We could do a round of deduplications here, but benefits would be minimal and AWS SQS will do it for us anyway.
-
-    logger.info(
-      "For this batch, this is the results of filtering out unwanted statuses and parsing to SQS message entries",
-      {
-        batchLength: batch.length,
-        entriesLength: entries.length,
-        entriesStatuses: batch.map((el) => el.Status)
-      }
-    )
-
-    if (!entries.length) {
-      // Carry on if we have no updates to make.
-      logger.info("No entries to post to the notifications SQS")
-      continue
-    }
-
-    logger.info(
-      "Notification required. Pushing prescriptions to the notifications SQS with the following SQS message IDs",
-      {deduplicationIds: entries.map(e => e.MessageDeduplicationId), requestId}
-    )
-
     try {
+      logger.info(
+        "Pushing a batch of notification requests to SQS",
+        {
+          batchLength: batch.length,
+          deduplicationIds: batch.map(e => e.MessageDeduplicationId),
+          requestId
+        }
+      )
+
       const command = new SendMessageBatchCommand({
         QueueUrl: sqsUrl,
-        Entries: entries
+        Entries: batch
       })
       const result = await sqs.send(command)
-      if (result.Successful) {
+      if (result.Successful?.length) {
         logger.info("Successfully sent a batch of prescriptions to the notifications SQS", {result})
+
+        // For each successful message, get its message ID. I don't think there will ever be undefined
+        // actually in here, but the typing suggests that there could be so filter those out
+        out.push(...result.Successful.map(e => e.MessageId).filter(msg_id => msg_id !== undefined))
       }
       // Some may succeed, and some may fail. So check for both
-      if (result.Failed) {
-        logger.error("Failed to send a batch of prescriptions to the notifications SQS", {result})
+      if (result.Failed?.length) {
+        throw new Error("Failed to send a batch of prescriptions to the notifications SQS")
       }
     } catch (error) {
       logger.error("Failed to send a batch of prescriptions to the notifications SQS", {error})
+      await removeSqsMessages(logger, out)
       throw error
     }
+  }
+
+  return out
+}
+
+export async function removeSqsMessages(
+  logger: Logger,
+  receiptHandles: Array<string>
+): Promise<void> {
+  if (!sqsUrl) {
+    logger.error("Notifications SQS URL not found in environment variables")
+    throw new Error("Notifications SQS URL not configured")
+  }
+
+  try {
+    // If there is no data, just noop
+    if (receiptHandles.length === 0) return
+
+    logger.info("Removing SQS messages from the queue", {receiptHandles})
+
+    // batch at most 10 deletes per request
+    const batches = chunkArray(receiptHandles, 10)
+
+    for (const batch of batches) {
+      const entries = batch.map((handle, idx) => ({
+        Id: idx.toString(),
+        ReceiptHandle: handle
+      }))
+
+      try {
+        const command = new DeleteMessageBatchCommand({
+          QueueUrl: sqsUrl,
+          Entries: entries
+        })
+        const result = await sqs.send(command)
+
+        if (result.Successful && result.Successful.length > 0) {
+          logger.info("Successfully removed messages from the SQS queue", {
+            successfulIds: result.Successful.map((r) => r.Id)
+          })
+        }
+
+        if (result.Failed && result.Failed.length > 0) {
+          logger.error("Failed to remove some messages from the SQS queue", {
+            failures: result.Failed
+          })
+        }
+      } catch (error) {
+        logger.error("Error while removing messages from the SQS queue", {error})
+      }
+    }
+
+  } catch (error) {
+    // If we encounter an error, log it but don't prevent the logic from proceeding
+    logger.error("Error in removeSqsMessages", {error})
   }
 }
