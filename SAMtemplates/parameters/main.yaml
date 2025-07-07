@@ -9,14 +9,14 @@ Parameters:
   Environment:
     Type: String
 
-  EnableNotificationsInternal:
+  EnableNotificationsInternalValue:
     Type: String
     Default: false
     AllowedValues:
       - true
       - false
 
-  EnableNotificationsExternal:
+  EnableNotificationsExternalValue:
     Type: String
     Default: false
     AllowedValues:
@@ -97,13 +97,13 @@ Resources:
         # Non-prod API URL (sandbox) (INT environment: https://int.api.service.nhs.uk/comms)
         - https://sandbox.api.service.nhs.uk/comms
 
-  EnableNotificationExternal:
+  EnableNotificationsExternal:
     Type: AWS::SSM::Parameter
     Properties:
-      Name: !Sub ${StackName}-EnableNotificationExternal
+      Name: !Sub ${StackName}-EnableNotificationsExternal
       Description: "Toggle on or off if we make real requests to the NHS notify service"
       Type: String
-      Value: !Ref EnableNotificationsExternal
+      Value: !Ref EnableNotificationsExternalValue
       
   EnableNotificationsInternal:
     Type: AWS::SSM::Parameter
@@ -111,7 +111,7 @@ Resources:
       Name: !Sub ${StackName}-EnableNotificationsInternal
       Description: "Toggle the notifications integration entirely"
       Type: String
-      Value: !Ref EnableNotificationsInternal
+      Value: !Ref EnableNotificationsInternalValue
 
 Outputs:
   EnabledSiteODSCodesParameterName:
@@ -144,11 +144,11 @@ Outputs:
     Export:
       Name: !Sub ${StackName}-PSUNotifyApiBaseUrlParam
 
-  EnableNotificationExternalName:
+  EnableNotificationsExternalName:
     Description: "Name of the SSM parameter holding the Notify API Base URL"
-    Value: !Ref EnableNotificationExternal
+    Value: !Ref EnableNotificationsExternal
     Export:
-      Name: !Sub ${StackName}-EnableNotificationExternalName
+      Name: !Sub ${StackName}-EnableNotificationsExternalName
 
   EnableNotificationsInternalName:
     Description: "Name of the SSM parameter holding the Notify API Base URL"

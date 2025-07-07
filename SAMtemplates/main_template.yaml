@@ -118,8 +118,8 @@ Resources:
       Parameters:
         StackName: !Ref AWS::StackName
         Environment: !Ref Environment
-        EnableNotificationsInternal: !Ref EnableNotificationsInternal
-        EnableNotificationsExternal: !Ref EnableNotificationsExternal
+        EnableNotificationsInternalValue: !Ref EnableNotificationsInternal
+        EnableNotificationsExternalValue: !Ref EnableNotificationsExternal
 
   Tables:
     Type: AWS::Serverless::Application
@@ -175,7 +175,7 @@ Resources:
         BlockedSiteODSCodesParam: !GetAtt Parameters.Outputs.BlockedSiteODSCodesParameterName
         NotifyRoutingPlanIDParam: !GetAtt Parameters.Outputs.NotifyRoutingPlanIDParameterName
         NotifyAPIBaseURLParam: !GetAtt Parameters.Outputs.NotifyAPIBaseURLParameterName
-        EnableNotificationExternalParam: !GetAtt Parameters.Outputs.EnableNotificationExternalName
+        EnableNotificationsExternalParam: !GetAtt Parameters.Outputs.EnableNotificationsExternalName
         EnableNotificationsInternalParam: !GetAtt Parameters.Outputs.EnableNotificationsInternalName
         LogLevel: !Ref LogLevel
         LogRetentionInDays: !Ref LogRetentionInDays
