@@ -66,18 +66,18 @@ describe("helpers.ts", () => {
 
   describe("checkSignature()", () => {
     let logger: Logger
-    let validHeaders: { "x-request-id": string; "x-api-key": string; "x-hmac-sha256-signature": string }
+    let validHeaders: { "x-request-id": string; "apiKey": string; "x-hmac-sha256-signature": string }
     beforeEach(() => {
       logger = new Logger({serviceName: "nhsNotifyUpdateCallback"})
       validHeaders = {
         "x-request-id": "requestid",
-        "x-api-key": "api-key",
+        "apiKey": "api-key", // TODO: Should be x-api-key
         "x-hmac-sha256-signature": "deadbeef"
       }
     })
 
     it("401 when missing signature header", async () => {
-      const ev = generateMockEvent("{}", {"x-api-key": "foobar", "x-request-id": "rid"})
+      const ev = generateMockEvent("{}", {"apiKey": "foobar", "x-request-id": "rid"}) // TODO: Should be x-api-key
       const resp = await checkSignature(logger, ev)
       expect(resp).toEqual({
         statusCode: 401,
@@ -91,7 +91,7 @@ describe("helpers.ts", () => {
 
       expect(resp).toEqual({
         statusCode: 401,
-        body: JSON.stringify({message: "No x-api-key header given"})
+        body: JSON.stringify({message: "No apiKey header given"})
       })
     })
 
