@@ -85,8 +85,7 @@ export async function checkCooldownForUpdate(
       TableName: dynamoTable,
       Key: {
         NHSNumber: update.PatientNHSNumber,
-        ODSCode: update.PharmacyODSCode,
-        requestID: update.RequestID
+        ODSCode: update.PharmacyODSCode
       }
     })
     const {Item} = await docClient.send(getCmd)
