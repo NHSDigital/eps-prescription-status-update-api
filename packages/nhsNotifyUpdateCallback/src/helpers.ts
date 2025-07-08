@@ -89,13 +89,6 @@ export async function checkSignature(logger: Logger, event: APIGatewayProxyEvent
     return response(401, {message: "No x-hmac-sha256-signature given"})
   }
 
-  // TODO: This should be x-api-key
-  const givenApiKey = event.headers["apikey"]
-  if (!givenApiKey) {
-    logger.error("No apiKey header given")
-    return response(401, {message: "No apikey header given"})
-  }
-
   // Compute the HMAC-SHA256 hash of the combination of the request body and the secret value
   const secretValue = `${APP_NAME}.${API_KEY}`
   const payload = event.body ?? ""
