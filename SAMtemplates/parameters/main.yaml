@@ -165,6 +165,6 @@ Outputs:
 
   GetNotificationsParameterPolicyArn:
     Description: Use kms key policy arn
-    Value: !GetAtt GetNotificationsParameterPolicy.PolicyArn
+    Value: !Ref GetNotificationsParameterPolicy
     Export:
-      Name: !Sub ${StackName}:tables:GetNotificationsParameterPolicyArn
+      Name: !Sub ${StackName}-GetNotificationsParameterPolicyArn
