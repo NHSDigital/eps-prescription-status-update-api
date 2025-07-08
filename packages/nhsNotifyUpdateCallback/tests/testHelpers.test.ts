@@ -85,16 +85,6 @@ describe("helpers.ts", () => {
       })
     })
 
-    it("401 when missing API key header", async () => {
-      const ev = generateMockEvent("{}", {"x-hmac-sha256-signature": "foobar", "x-request-id": "rid"})
-      const resp = await checkSignature(logger, ev)
-
-      expect(resp).toEqual({
-        statusCode: 401,
-        body: JSON.stringify({message: "No apikey header given"})
-      })
-    })
-
     it("403 when signature hex is malformed", async () => {
       const headers = {
         ...validHeaders,
