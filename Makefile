@@ -97,7 +97,9 @@ sam-deploy-package: guard-artifact_bucket guard-artifact_bucket_prefix guard-sta
 			  Environment=$$TARGET_ENVIRONMENT \
 			  DeployCheckPrescriptionStatusUpdate=$$DEPLOY_CHECK_PRESCRIPTION_STATUS_UPDATE \
 			  EnableAlerts=$$ENABLE_ALERTS \
-			  StateMachineLogLevel=$$STATE_MACHINE_LOG_LEVEL
+			  StateMachineLogLevel=$$STATE_MACHINE_LOG_LEVEL \
+			  EnableBackup=$$ENABLE_BACKUP
+
 
 compile-node:
 	npx tsc --build tsconfig.build.json
@@ -121,6 +123,7 @@ lint-node: compile-node
 	npm run lint --workspace packages/common/testing
 	npm run lint --workspace packages/common/middyErrorHandler
 	npm run lint --workspace packages/common/commonTypes
+	npm run lint --workspace packages/psuRestoreValidationLambda
 
 lint-specification: compile-specification
 	npm run lint --workspace packages/specification
@@ -150,6 +153,7 @@ test: compile
 	npm run test --workspace packages/nhsNotifyLambda
 	npm run test --workspace packages/nhsNotifyUpdateCallback
 	npm run test --workspace packages/common/middyErrorHandler
+	npm run test --workspace packages/psuRestoreValidationLambda
 
 clean:
 	rm -rf packages/updatePrescriptionStatus/coverage
