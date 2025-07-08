@@ -163,8 +163,8 @@ Outputs:
     Export:
       Name: !Sub ${StackName}-EnableNotificationsInternalName
 
-  GetNotificationsParameterPolicyArn:
-    Description: Use kms key policy arn
+  GetNotificationsParameterPolicy:
+    Description: Access to the parameters used by the notifications integration
     Value: !Ref GetNotificationsParameterPolicy
     Export:
-      Name: !Sub ${StackName}-GetNotificationsParameterPolicyArn
+      Name: !Sub ${StackName}-GetNotificationsParameterPolicy

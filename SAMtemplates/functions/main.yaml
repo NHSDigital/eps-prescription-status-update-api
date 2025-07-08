@@ -137,7 +137,7 @@ Resources:
             - Fn::ImportValue: !Sub ${StackName}-UseNotificationSQSQueueKMSKeyPolicyArn
             - Fn::ImportValue: !Sub ${StackName}-WriteNHSNotifyPrescriptionsSQSQueuePolicyArn
             - Fn::ImportValue: !Sub ${StackName}-GetSQSSaltSecretPolicy
-            - Fn::ImportValue: !Sub ${StackName}-GetNotificationsParameterPolicyArn
+            - Fn::ImportValue: !Sub ${StackName}-GetNotificationsParameterPolicy
         LogRetentionInDays: !Ref LogRetentionInDays
         CloudWatchKMSKeyId: !ImportValue account-resources:CloudwatchLogsKmsKeyArn
         EnableSplunk: !Ref EnableSplunk
@@ -451,7 +451,7 @@ Resources:
             - Fn::ImportValue: !Sub ${StackName}:tables:${PrescriptionNotificationStatesTableName}:TableReadPolicyArn
             - Fn::ImportValue: !Sub ${StackName}:tables:${PrescriptionNotificationStatesTableName}:TableWritePolicyArn
             - Fn::ImportValue: !Sub ${StackName}:tables:UsePrescriptionNotificationStatesKMSKeyPolicyArn
-            - Fn::ImportValue: !Sub ${StackName}-GetNotificationsParameterPolicyArn
+            - Fn::ImportValue: !Sub ${StackName}-GetNotificationsParameterPolicy
 
   NHSNotifyUpdateCallback:
     Type: AWS::Serverless::Function
