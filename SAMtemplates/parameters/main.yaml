@@ -111,13 +111,13 @@ Resources:
               - ssm:GetParameter
               - ssm:GetParameters
             Resource:
-              - !GetAtt EnabledSiteODSCodesParameter.Arn
-              - !GetAtt EnabledSystemsParameter.Arn
-              - !GetAtt BlockedSiteODSCodesParameter.Arn
-              - !GetAtt NotifyRoutingPlanIDParameter.Arn
-              - !GetAtt NotifyAPIBaseURLParameter.Arn
-              - !GetAtt EnableNotificationExternalLink.Arn
-              - !GetAtt EnableNotificationsInternal.Arn
+              - !Ref EnabledSiteODSCodesParameter
+              - !Ref EnabledSystemsParameter
+              - !Ref BlockedSiteODSCodesParameter
+              - !Ref NotifyRoutingPlanIDParameter
+              - !Ref NotifyAPIBaseURLParameter
+              - !Ref EnableNotificationExternalLink
+              - !Ref EnableNotificationsInternal
 
 
 Outputs:
