@@ -99,6 +99,27 @@ Resources:
       Type: String
       Value: "true"
 
+  GetNotificationsParameterPolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      Description: "Allows reading SSM parameters"
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action:
+              - ssm:GetParameter
+              - ssm:GetParameters
+            Resource:
+              - !GetAtt EnabledSiteODSCodesParameter.Arn
+              - !GetAtt EnabledSystemsParameter.Arn
+              - !GetAtt BlockedSiteODSCodesParameter.Arn
+              - !GetAtt NotifyRoutingPlanIDParameter.Arn
+              - !GetAtt NotifyAPIBaseURLParameter.Arn
+              - !GetAtt EnableNotificationExternalLink.Arn
+              - !GetAtt EnableNotificationsInternal.Arn
+
+
 Outputs:
   EnabledSiteODSCodesParameterName:
     Description: "Name of the SSM parameter holding enabled site ODS codes"
@@ -141,3 +162,9 @@ Outputs:
     Value: !Ref EnableNotificationsInternal
     Export:
       Name: !Sub ${StackName}-EnableNotificationsInternalName
+
+  GetNotificationsParameterPolicyArn:
+    Description: Use kms key policy arn
+    Value: !GetAtt GetNotificationsParameterPolicy.PolicyArn
+    Export:
+      Name: !Sub ${StackName}:tables:GetNotificationsParameterPolicyArn
