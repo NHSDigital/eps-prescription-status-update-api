@@ -111,13 +111,13 @@ Resources:
               - ssm:GetParameter
               - ssm:GetParameters
             Resource:
-              - !Ref EnabledSiteODSCodesParameter
-              - !Ref EnabledSystemsParameter
-              - !Ref BlockedSiteODSCodesParameter
-              - !Ref NotifyRoutingPlanIDParameter
-              - !Ref NotifyAPIBaseURLParameter
-              - !Ref EnableNotificationExternalLink
-              - !Ref EnableNotificationsInternal
+              - !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${StackName}-PSUNotifyEnabledSiteODSCodes
+              - !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${StackName}-PSUNotifyEnabledSystems
+              - !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${StackName}-PSUNotifyBlockedSiteODSCodes
+              - !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${StackName}-PSUNotifyRoutingPlanID
+              - !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${StackName}-PSUNotifyApiBaseUrl
+              - !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${StackName}-EnableNotificationExternalLink
+              - !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${StackName}-EnableNotificationsInternal
 
 
 Outputs:
