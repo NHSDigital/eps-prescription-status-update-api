@@ -80,7 +80,6 @@ Resources:
         - !Join
           - ","
           - - !Ref LambdaManagedPolicy
-            - !Ref SSMGetParameterPolicy
             - !ImportValue lambda-resources:LambdaInsightsLogGroupPolicy
             - !ImportValue account-resources:CloudwatchEncryptionKMSPolicyArn
             - !ImportValue account-resources:LambdaDecryptSecretsKMSPolicy
