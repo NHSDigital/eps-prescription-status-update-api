@@ -134,6 +134,27 @@ Resources:
               - !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${StackName}-EnableNotificationsInternal
 
 
+  GetNotificationsParameterPolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      Description: "Allows reading SSM parameters"
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action:
+              - ssm:GetParameter
+              - ssm:GetParameters
+            Resource:
+              - !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${StackName}-PSUNotifyEnabledSiteODSCodes
+              - !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${StackName}-PSUNotifyEnabledSystems
+              - !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${StackName}-PSUNotifyBlockedSiteODSCodes
+              - !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${StackName}-PSUNotifyRoutingPlanID
+              - !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${StackName}-PSUNotifyApiBaseUrl
+              - !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${StackName}-EnableNotificationExternalLink
+              - !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${StackName}-EnableNotificationsInternal
+
+
 Outputs:
   EnabledSiteODSCodesParameterName:
     Description: "Name of the SSM parameter holding enabled site ODS codes"
