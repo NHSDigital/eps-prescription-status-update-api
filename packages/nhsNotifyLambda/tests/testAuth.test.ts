@@ -33,7 +33,7 @@ beforeAll(async () => {
 })
 
 describe("tokenExchange", () => {
-  const host = "notify.example.com"
+  const host = "https://notify.example.com"
 
   let logger: Logger
   let errorSpy: SpiedFunction<(msg: string, ...meta: Array<unknown>) => void>
@@ -47,7 +47,7 @@ describe("tokenExchange", () => {
   })
 
   it("should successfully exchange secrets for a bearer token", async () => {
-    // Mock getSecret for API_KEY, PRIVATE_KEY, KID
+    // Mock getSecret for API_KEY, PRIVATE_KEY, KID (in that order)
     mockGetSecret
       .mockImplementationOnce(() => Promise.resolve("  myApiKey  "))
       .mockImplementationOnce(() => Promise.resolve("my\nPrivate\nKey"))
@@ -72,8 +72,8 @@ describe("tokenExchange", () => {
     // Mock uuid
     mockUuidv4.mockReturnValue("uuid-1234")
 
-    // Mock the HTTP call with nock
-    nock(`https://${host}`)
+    // Mock the HTTP call
+    nock(`${host}`)
       .post("/oauth2/token", (body) => {
       // if Nock gives a raw string:
         if (typeof body === "string") {
@@ -132,7 +132,7 @@ describe("tokenExchange", () => {
     }))
     mockUuidv4.mockReturnValue("uid")
 
-    nock(`https://${host}`)
+    nock(`${host}`)
       .post("/oauth2/token")
       .reply(500, {error: "oops"})
 
@@ -162,7 +162,7 @@ describe("tokenExchange", () => {
     }))
     mockUuidv4.mockReturnValue("uid")
 
-    nock(`https://${host}`)
+    nock(`${host}`)
       .post("/oauth2/token")
       .reply(200, {not_token: "nope"})
 
