@@ -1,5 +1,4 @@
 import {Logger} from "@aws-lambda-powertools/logger"
-import {getSecret} from "@aws-lambda-powertools/parameters/secrets"
 
 import axios from "axios"
 import axiosRetry from "axios-retry"
@@ -12,6 +11,7 @@ import {
   MessageBatchItem
 } from "./types"
 import {loadConfig} from "./ssm"
+import {tokenExchange} from "./auth"
 import {NOTIFY_REQUEST_MAX_BYTES, NOTIFY_REQUEST_MAX_ITEMS, DUMMY_NOTIFY_DELAY_MS} from "./constants"
 
 /**
@@ -51,14 +51,11 @@ export async function makeBatchNotifyRequest(
   }
 
   const {makeRealNotifyRequests, notifyApiBaseUrlRaw} = await loadConfig()
-  const apiKeyRaw = await getSecret(process.env.API_KEY_SECRET)
 
   if (!notifyApiBaseUrlRaw) throw new Error("NOTIFY_API_BASE_URL is not defined in the environment variables!")
-  if (!apiKeyRaw) throw new Error("API_KEY is not defined in the environment variables!")
 
   // Just to be safe, trim any whitespace. Also, secrets may be bytes, so make sure it's a string
   const BASE_URL = notifyApiBaseUrlRaw.trim()
-  const API_KEY = apiKeyRaw.toString().trim()
 
   // Early break for empty data
   if (data.length === 0) {
@@ -126,15 +123,18 @@ export async function makeBatchNotifyRequest(
     })
   }
 
+  // This is actually going to hit notify, so get the bearer token
+  const bearerToken = await tokenExchange(logger, BASE_URL)
+
   logger.info("Making a request for notifications to NHS notify", {count: data.length, routingPlanId})
 
   // Create an axios instance configured for Notify
   const axiosInstance = axios.create({
-    baseURL: BASE_URL,
+    baseURL: BASE_URL + "/comms/v1/message-batches",
     headers: {
       Accept: "*/*",
       "Content-Type": "application/vnd.api+json",
-      Authorization: `Bearer ${API_KEY}`
+      Authorization: `Bearer ${bearerToken}`
     }
   })
 
