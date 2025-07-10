@@ -130,7 +130,7 @@ export async function makeBatchNotifyRequest(
 
   // Create an axios instance configured for Notify
   const axiosInstance = axios.create({
-    baseURL: BASE_URL + "/comms/v1/message-batches",
+    baseURL: BASE_URL + "/comms",
     headers: {
       Accept: "*/*",
       "Content-Type": "application/vnd.api+json",
