@@ -130,7 +130,7 @@ Resources:
               - !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${StackName}-PSUNotifyBlockedSiteODSCodes
               - !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${StackName}-PSUNotifyRoutingPlanID
               - !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${StackName}-PSUNotifyApiBaseUrl
-              - !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${StackName}-EnableNotificationExternalLink
+              - !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${StackName}-EnableNotificationsExternal
               - !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${StackName}-EnableNotificationsInternal
 
 
