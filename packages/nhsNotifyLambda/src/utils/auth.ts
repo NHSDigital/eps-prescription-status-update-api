@@ -37,7 +37,7 @@ export async function tokenExchange(
     sub: API_KEY,
     iss: API_KEY,
     jti,
-    aud: `https://${host}/oauth2/token`
+    aud: `${host}/oauth2/token`
   })
     .setProtectedHeader({alg, kid: KID, typ: "JWT"})
     .setIssuedAt(now)
@@ -55,7 +55,7 @@ export async function tokenExchange(
   })
 
   const resp = await axios.post(
-    `https://${host}/oauth2/token`,
+    `${host}/oauth2/token`,
     params.toString(),
     {
       headers: {"Content-Type": "application/x-www-form-urlencoded"},
