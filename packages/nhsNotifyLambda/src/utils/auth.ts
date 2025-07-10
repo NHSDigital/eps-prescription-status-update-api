@@ -41,7 +41,7 @@ export async function tokenExchange(
   })
     .setProtectedHeader({alg, kid: KID, typ: "JWT"})
     .setIssuedAt(now)
-    .setExpirationTime(now + 60) // 1 minute (the token will be used immediately)
+    .setExpirationTime(now + 60) // 1 minute
     .sign(key)
 
   logger.info("Exchanging JWT for access token", {host, jti})
@@ -58,7 +58,8 @@ export async function tokenExchange(
     `https://${host}/oauth2/token`,
     params.toString(),
     {
-      headers: {"Content-Type": "application/x-www-form-urlencoded"}
+      headers: {"Content-Type": "application/x-www-form-urlencoded"},
+      validateStatus: () => true
     }
   )
 
