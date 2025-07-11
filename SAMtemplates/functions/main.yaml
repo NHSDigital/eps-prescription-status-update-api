@@ -403,6 +403,8 @@ Resources:
           NHS_NOTIFY_PRESCRIPTIONS_SQS_QUEUE_URL: !Ref NHSNotifyPrescriptionsSQSQueueUrl
           TABLE_NAME: !Ref PrescriptionNotificationStatesTableName
           API_KEY_SECRET:  secrets-PSU-Notify-API-Key
+          PRIVATE_KEY_SECRET: secrets-PSU-Notify-PrivateKey
+          KID_SECRET: secrets-PSU-Notify-Application-Name
           NHS_NOTIFY_ROUTING_ID_PARAM: !Ref NotifyRoutingPlanIDParam
           NOTIFY_API_BASE_URL_PARAM: !Ref NotifyAPIBaseURLParam
           MAKE_REAL_NOTIFY_REQUESTS_PARAM: !Ref EnableNotificationExternalLinkParam
