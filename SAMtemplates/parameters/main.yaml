@@ -9,6 +9,20 @@ Parameters:
   Environment:
     Type: String
 
+  EnableNotificationsInternalValue:
+    Type: String
+    Default: false
+    AllowedValues:
+      - true
+      - false
+
+  EnableNotificationsExternalValue:
+    Type: String
+    Default: false
+    AllowedValues:
+      - true
+      - false
+
 Conditions:
   IsProd: !Equals [ !Ref Environment, prod ]
 
@@ -83,13 +97,13 @@ Resources:
         # Non-prod API URL (sandbox) (INT environment: https://int.api.service.nhs.uk/comms)
         - https://sandbox.api.service.nhs.uk/comms
 
-  EnableNotificationExternalLink:
+  EnableNotificationsExternal:
     Type: AWS::SSM::Parameter
     Properties:
-      Name: !Sub ${StackName}-EnableNotificationExternalLink
+      Name: !Sub ${StackName}-EnableNotificationsExternal
       Description: "Toggle on or off if we make real requests to the NHS notify service"
       Type: String
-      Value: "false"
+      Value: !Ref EnableNotificationsExternalValue
       
   EnableNotificationsInternal:
     Type: AWS::SSM::Parameter
@@ -97,7 +111,7 @@ Resources:
       Name: !Sub ${StackName}-EnableNotificationsInternal
       Description: "Toggle the notifications integration entirely"
       Type: String
-      Value: "true"
+      Value: !Ref EnableNotificationsInternalValue
 
   GetNotificationsParameterPolicy:
     Type: AWS::IAM::ManagedPolicy
@@ -116,7 +130,7 @@ Resources:
               - !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${StackName}-PSUNotifyBlockedSiteODSCodes
               - !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${StackName}-PSUNotifyRoutingPlanID
               - !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${StackName}-PSUNotifyApiBaseUrl
-              - !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${StackName}-EnableNotificationExternalLink
+              - !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${StackName}-EnableNotificationsExternal
               - !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${StackName}-EnableNotificationsInternal
 
 
@@ -151,11 +165,11 @@ Outputs:
     Export:
       Name: !Sub ${StackName}-PSUNotifyApiBaseUrlParam
 
-  EnableNotificationExternalLinkName:
+  EnableNotificationsExternalName:
     Description: "Name of the SSM parameter holding the Notify API Base URL"
-    Value: !Ref EnableNotificationExternalLink
+    Value: !Ref EnableNotificationsExternal
     Export:
-      Name: !Sub ${StackName}-EnableNotificationExternalLinkName
+      Name: !Sub ${StackName}-EnableNotificationsExternalName
 
   EnableNotificationsInternalName:
     Description: "Name of the SSM parameter holding the Notify API Base URL"

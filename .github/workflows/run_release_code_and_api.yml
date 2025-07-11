@@ -70,6 +70,14 @@ on:
       STATE_MACHINE_LOG_LEVEL:
         required: true
         type: string
+      ENABLE_NOTIFICATIONS_INTERNAL:
+        required: false
+        type: boolean
+        default: false
+      ENABLE_NOTIFICATIONS_EXTERNAL:
+        required: false
+        type: boolean
+        default: false
     secrets:
       CLOUD_FORMATION_DEPLOY_ROLE:
         required: true
@@ -155,6 +163,8 @@ jobs:
           DEPLOY_CHECK_PRESCRIPTION_STATUS_UPDATE: ${{ inputs.DEPLOY_CHECK_PRESCRIPTION_STATUS_UPDATE }}
           ENABLE_ALERTS: ${{ inputs.ENABLE_ALERTS }}
           STATE_MACHINE_LOG_LEVEL: ${{ inputs.STATE_MACHINE_LOG_LEVEL }}
+          ENABLE_NOTIFICATIONS_INTERNAL: ${{ inputs.ENABLE_NOTIFICATIONS_INTERNAL }}
+          ENABLE_NOTIFICATIONS_EXTERNAL: ${{ inputs.ENABLE_NOTIFICATIONS_EXTERNAL }}
         run: ./release_code.sh
 
       - name: get mtls secrets

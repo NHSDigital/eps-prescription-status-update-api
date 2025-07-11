@@ -51,7 +51,7 @@ Parameters:
   NotifyAPIBaseURLParam:
     Type: AWS::SSM::Parameter::Name<String>
 
-  EnableNotificationExternalLinkParam:
+  EnableNotificationsExternalParam:
     Type: AWS::SSM::Parameter::Name<String>
 
   EnableNotificationsInternalParam:
@@ -407,7 +407,7 @@ Resources:
           KID_SECRET: secrets-PSU-Notify-Application-Name
           NHS_NOTIFY_ROUTING_ID_PARAM: !Ref NotifyRoutingPlanIDParam
           NOTIFY_API_BASE_URL_PARAM: !Ref NotifyAPIBaseURLParam
-          MAKE_REAL_NOTIFY_REQUESTS_PARAM: !Ref EnableNotificationExternalLinkParam
+          MAKE_REAL_NOTIFY_REQUESTS_PARAM: !Ref EnableNotificationsExternalParam
       Events:
         ScheduleEvent:
           Type: ScheduleV2
