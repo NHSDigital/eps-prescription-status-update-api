@@ -37,6 +37,15 @@ jest.unstable_mockModule(
   })
 )
 
+const mockTokenExchange = jest.fn().mockImplementation(() => Promise.resolve("bearer token"))
+jest.unstable_mockModule(
+  "../src/utils/auth",
+  async () => ({
+    __esModule: true,
+    tokenExchange: mockTokenExchange
+  })
+)
+
 const {
   addPrescriptionMessagesToNotificationStateStore,
   removeSQSMessages,
@@ -484,7 +493,7 @@ describe("NHS notify lambda helper functions", () => {
 
       // nock the POST
       nock(TEST_URL)
-        .post("/v1/message-batches")
+        .post("/comms/v1/message-batches")
         .reply(201, {
           data: {attributes: {messages: returnedMessages}}
         })
@@ -527,7 +536,7 @@ describe("NHS notify lambda helper functions", () => {
       ]
 
       nock(TEST_URL)
-        .post("/v1/message-batches")
+        .post("/comms/v1/message-batches")
         .reply(500, "Internal Server Error")
 
       const result = await makeBatchNotifyRequest(
@@ -575,7 +584,7 @@ describe("NHS notify lambda helper functions", () => {
 
       // Simulate network failure
       nock(TEST_URL)
-        .post("/v1/message-batches")
+        .post("/comms/v1/message-batches")
         .replyWithError(new Error("Network failure"))
 
       const result = await makeBatchNotifyRequest(
@@ -621,7 +630,7 @@ describe("NHS notify lambda helper functions", () => {
 
       // every sub-batch returns an empty messages array
       nock(TEST_URL)
-        .post("/v1/message-batches")
+        .post("/comms/v1/message-batches")
         .times(2)
         .reply(201, {
           data: {attributes: {messages: []}}
@@ -670,10 +679,10 @@ describe("NHS notify lambda helper functions", () => {
 
       // First reply 429 with header
       nock(TEST_URL)
-        .post("/v1/message-batches")
+        .post("/comms/v1/message-batches")
         .reply(429, "", {"Retry-After": "2"})
         // Then the successful one
-        .post("/v1/message-batches")
+        .post("/comms/v1/message-batches")
         .reply(201, {
           data: {attributes: {messages: returnedMessages}}
         })
@@ -722,7 +731,7 @@ describe("NHS notify lambda helper functions", () => {
 
       // nock the POST to fail, so if nock is called the test will fail
       nock(TEST_URL)
-        .post("/v1/message-batches")
+        .post("/comms/v1/message-batches")
         .reply(500)
 
       const result = await fn(
