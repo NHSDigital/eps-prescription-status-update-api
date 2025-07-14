@@ -97,7 +97,9 @@ sam-deploy-package: guard-artifact_bucket guard-artifact_bucket_prefix guard-sta
 			  Environment=$$TARGET_ENVIRONMENT \
 			  DeployCheckPrescriptionStatusUpdate=$$DEPLOY_CHECK_PRESCRIPTION_STATUS_UPDATE \
 			  EnableAlerts=$$ENABLE_ALERTS \
-			  StateMachineLogLevel=$$STATE_MACHINE_LOG_LEVEL
+			  StateMachineLogLevel=$$STATE_MACHINE_LOG_LEVEL \
+			  EnableNotificationsInternal=$$ENABLE_NOTIFICATIONS_INTERNAL \
+			  EnableNotificationsExternal=$$ENABLE_NOTIFICATIONS_EXTERNAL
 
 compile-node:
 	npx tsc --build tsconfig.build.json

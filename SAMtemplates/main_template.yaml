@@ -89,6 +89,20 @@ Parameters:
   StateMachineLogLevel:
     Type: String
 
+  EnableNotificationsInternal:
+    Type: String
+    Default: false
+    AllowedValues:
+      - true
+      - false
+  
+  EnableNotificationsExternal:
+    Type: String
+    Default: false
+    AllowedValues:
+      - true
+      - false
+
 Resources:
   Secrets: 
     Type: AWS::Serverless::Application
@@ -104,6 +118,8 @@ Resources:
       Parameters:
         StackName: !Ref AWS::StackName
         Environment: !Ref Environment
+        EnableNotificationsInternalValue: !Ref EnableNotificationsInternal
+        EnableNotificationsExternalValue: !Ref EnableNotificationsExternal
 
   Tables:
     Type: AWS::Serverless::Application
@@ -159,7 +175,7 @@ Resources:
         BlockedSiteODSCodesParam: !GetAtt Parameters.Outputs.BlockedSiteODSCodesParameterName
         NotifyRoutingPlanIDParam: !GetAtt Parameters.Outputs.NotifyRoutingPlanIDParameterName
         NotifyAPIBaseURLParam: !GetAtt Parameters.Outputs.NotifyAPIBaseURLParameterName
-        EnableNotificationExternalLinkParam: !GetAtt Parameters.Outputs.EnableNotificationExternalLinkName
+        EnableNotificationsExternalParam: !GetAtt Parameters.Outputs.EnableNotificationsExternalName
         EnableNotificationsInternalParam: !GetAtt Parameters.Outputs.EnableNotificationsInternalName
         LogLevel: !Ref LogLevel
         LogRetentionInDays: !Ref LogRetentionInDays

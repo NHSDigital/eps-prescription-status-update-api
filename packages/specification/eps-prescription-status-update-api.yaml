@@ -336,7 +336,7 @@ components:
   parameters:
     ApiKey:
       in: header
-      name: x-api-key
+      name: apikey # Should be x-api-key, but we must use apiKey to match APIM
       required: true
       description: |
         Contains the pre-agreed API key.
