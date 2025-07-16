@@ -152,8 +152,10 @@ export async function makeBatchNotifyRequest(
       const returnedMessages = resp.data.data.attributes.messages
       logger.info("Requested notifications OK!", {
         messageBatchReference,
-        messageReferences: messages.map(e => e.messageReference),
-        nhsNumbers: messages.map(e => e.recipient.nhsNumber),
+        messageReferences: messages.map(e => ({
+          nhsNumber: e.recipient.nhsNumber,
+          messageReference: e.messageReference
+        })),
         deliveryStatus: "requested"
       })
 
@@ -177,8 +179,10 @@ export async function makeBatchNotifyRequest(
         status: resp.status,
         statusText: resp.statusText,
         messageBatchReference,
-        messageReferences: messages.map(e => e.messageReference),
-        nhsNumbers: messages.map(e => e.recipient.nhsNumber),
+        messageReferences: messages.map(e => ({
+          nhsNumber: e.recipient.nhsNumber,
+          messageReference: e.messageReference
+        })),
         deliveryStatus: "notify request failed"
       })
       throw new Error("Notify batch request failed")
@@ -190,7 +194,10 @@ export async function makeBatchNotifyRequest(
       ...item,
       deliveryStatus: "notify request failed",
       messageBatchReference,
-      nhsNumbers: data.map(e => e.PSUDataItem.PatientNHSNumber),
+      messageReferences: messages.map(e => ({
+        nhsNumber: e.recipient.nhsNumber,
+        messageReference: undefined
+      })),
       notifyMessageId: undefined
     }))
   }
