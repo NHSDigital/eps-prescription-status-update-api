@@ -154,7 +154,8 @@ export async function makeBatchNotifyRequest(
         messageBatchReference,
         messageReferences: messages.map(e => ({
           nhsNumber: e.recipient.nhsNumber,
-          messageReference: e.messageReference
+          messageReference: e.messageReference,
+          psuRequestId: data.find((el) => el.messageReference === e.messageReference)?.PSUDataItem.RequestID
         })),
         deliveryStatus: "requested"
       })
@@ -181,7 +182,8 @@ export async function makeBatchNotifyRequest(
         messageBatchReference,
         messageReferences: messages.map(e => ({
           nhsNumber: e.recipient.nhsNumber,
-          messageReference: e.messageReference
+          messageReference: e.messageReference,
+          psuRequestId: data.find((el) => el.messageReference === e.messageReference)?.PSUDataItem.RequestID
         })),
         deliveryStatus: "notify request failed"
       })
@@ -196,7 +198,8 @@ export async function makeBatchNotifyRequest(
       messageBatchReference,
       messageReferences: messages.map(e => ({
         nhsNumber: e.recipient.nhsNumber,
-        messageReference: undefined
+        messageReference: undefined,
+        psuRequestId: data.find((el) => el.messageReference === e.messageReference)?.PSUDataItem.RequestID
       })),
       notifyMessageId: undefined
     }))
