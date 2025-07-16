@@ -46,10 +46,6 @@ export async function makeBatchNotifyRequest(
   routingPlanId: string,
   data: Array<NotifyDataItemMessage>
 ): Promise<Array<NotifyDataItemMessage>> {
-  if (!process.env.API_KEY_SECRET) {
-    throw new Error("Environment configuration error")
-  }
-
   const {makeRealNotifyRequests, notifyApiBaseUrlRaw} = await loadConfig()
 
   if (!notifyApiBaseUrlRaw) throw new Error("NOTIFY_API_BASE_URL is not defined in the environment variables!")
@@ -157,6 +153,7 @@ export async function makeBatchNotifyRequest(
       logger.info("Requested notifications OK!", {
         messageBatchReference,
         messageReferences: messages.map(e => e.messageReference),
+        nhsNumbers: messages.map(e => e.recipient.nhsNumber),
         deliveryStatus: "requested"
       })
 
@@ -181,6 +178,7 @@ export async function makeBatchNotifyRequest(
         statusText: resp.statusText,
         messageBatchReference,
         messageReferences: messages.map(e => e.messageReference),
+        nhsNumbers: messages.map(e => e.recipient.nhsNumber),
         deliveryStatus: "notify request failed"
       })
       throw new Error("Notify batch request failed")
@@ -192,6 +190,7 @@ export async function makeBatchNotifyRequest(
       ...item,
       deliveryStatus: "notify request failed",
       messageBatchReference,
+      nhsNumbers: data.map(e => e.PSUDataItem.PatientNHSNumber),
       notifyMessageId: undefined
     }))
   }
