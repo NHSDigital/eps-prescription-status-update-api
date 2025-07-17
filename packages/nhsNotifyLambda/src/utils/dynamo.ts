@@ -2,10 +2,10 @@ import {DynamoDBClient} from "@aws-sdk/client-dynamodb"
 import {DynamoDBDocumentClient, PutCommand, GetCommand} from "@aws-sdk/lib-dynamodb"
 import {Logger} from "@aws-lambda-powertools/logger"
 
-import {NotifyDataItem} from "@PrescriptionStatusUpdate_common/commonTypes"
+import {LastNotificationStateType, NotifyDataItem} from "@PrescriptionStatusUpdate_common/commonTypes"
 
 import {TTL_DELTA} from "./constants"
-import {LastNotificationStateType, NotifyDataItemMessage} from "./types"
+import {NotifyDataItemMessage} from "./types"
 
 const marshallOptions = {
   // remove undefined when pushing to dynamo - references will be undefined when notify request fails
