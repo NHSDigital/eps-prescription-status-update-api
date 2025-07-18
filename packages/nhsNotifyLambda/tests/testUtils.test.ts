@@ -3,7 +3,7 @@ import {SpiedFunction} from "jest-mock"
 import nock from "nock"
 
 import {Logger} from "@aws-lambda-powertools/logger"
-import {DynamoDBDocumentClient, GetCommand, PutCommand} from "@aws-sdk/lib-dynamodb"
+import {DynamoDBDocumentClient, PutCommand} from "@aws-sdk/lib-dynamodb"
 import {GetQueueAttributesCommand, DeleteMessageBatchCommand, Message} from "@aws-sdk/client-sqs"
 
 import {constructMessage, constructPSUDataItemMessage, mockSQSClient} from "./testHelpers"
@@ -388,7 +388,7 @@ describe("NHS notify lambda helper functions", () => {
       const update = constructPSUDataItemMessage().PSUDataItem
       const result = await checkCooldownForUpdate(logger, update, 900)
 
-      expect(sendSpy).toHaveBeenCalledWith(expect.any(GetCommand))
+      expect(sendSpy).toHaveBeenCalledTimes(1)
       expect(result).toBe(true)
     })
 
@@ -407,7 +407,7 @@ describe("NHS notify lambda helper functions", () => {
     it("returns false when last notification is within default cooldown", async () => {
       const recentTs = new Date(Date.now() - (1000 * 300)).toISOString() // 300s ago
       sendSpy.mockImplementationOnce(() =>
-        Promise.resolve({Item: {LastNotificationRequestTimestamp: recentTs}})
+        Promise.resolve({Items: [{LastNotificationRequestTimestamp: recentTs}]})
       )
 
       const update = constructPSUDataItemMessage().PSUDataItem
@@ -420,7 +420,7 @@ describe("NHS notify lambda helper functions", () => {
       // custom cooldown = 60 seconds, but timestamp is only 30s ago
       const recentTs = new Date(Date.now() - 30000).toISOString()
       sendSpy.mockImplementationOnce(() =>
-        Promise.resolve({Item: {LastNotificationRequestTimestamp: recentTs}})
+        Promise.resolve({Items: [{LastNotificationRequestTimestamp: recentTs}]})
       )
 
       const update = constructPSUDataItemMessage().PSUDataItem

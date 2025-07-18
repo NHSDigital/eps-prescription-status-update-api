@@ -169,7 +169,7 @@ export async function updateNotificationsTable(
     const updatePromises = items.map(async item => {
       const key = {
         NHSNumber: item.NHSNumber,
-        ODSCode: item.ODSCode
+        RequestId: item.RequestId
       }
       try {
         await docClient.send(new UpdateCommand({

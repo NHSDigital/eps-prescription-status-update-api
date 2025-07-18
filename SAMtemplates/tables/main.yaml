@@ -430,9 +430,26 @@ Resources:
           AttributeType: S
         - AttributeName: ODSCode
           AttributeType: S
-        - AttributeName: NotifyMessageID
+        - AttributeName: RequestID # this is the PSU request ID, and is used to identify a single notification's flow
           AttributeType: S
+        - AttributeName: NotifyMessageID # This is the ID returned by Notify for this notification request. Used for callback lookup
+          AttributeType: S
+
       GlobalSecondaryIndexes:
+        - IndexName: PatientPharmacyIndex
+          KeySchema:
+            - AttributeName: NHSNumber
+              KeyType: HASH
+            - AttributeName: ODSCode
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
+          ProvisionedThroughput: !If
+            - EnableDynamoDBAutoScalingCondition
+            - ReadCapacityUnits: 1
+              WriteCapacityUnits: !Ref MinWritePrescriptionNotificationStatesCapacity
+            - !Ref "AWS::NoValue"
+
         - IndexName: NotifyMessageIDIndex
           KeySchema:
             - AttributeName: NotifyMessageID
@@ -444,10 +461,11 @@ Resources:
             - ReadCapacityUnits: 1
               WriteCapacityUnits: !Ref MinWritePrescriptionNotificationStatesCapacity
             - !Ref "AWS::NoValue"
+
       KeySchema:
         - AttributeName: NHSNumber
           KeyType: HASH       # Partition key
-        - AttributeName: ODSCode
+        - AttributeName: RequestID
           KeyType: RANGE      # Sort key
       BillingMode: !If
         - EnableDynamoDBAutoScalingCondition
