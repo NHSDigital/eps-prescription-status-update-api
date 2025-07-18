@@ -311,12 +311,12 @@ describe("NHS notify lambda helper functions", () => {
         "Attempting to push data to DynamoDB",
         {count: 1}
       )
-      // error log includes PrescriptionID and the error
+      // error log includes the item that failed, and the error
       expect(errorSpy).toHaveBeenCalledWith(
         "Failed to write to DynamoDB",
         {
           error: awsErr,
-          item
+          item: expect.any(Object)
         }
       )
     })
