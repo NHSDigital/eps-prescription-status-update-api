@@ -315,7 +315,8 @@ describe("NHS notify lambda helper functions", () => {
       expect(errorSpy).toHaveBeenCalledWith(
         "Failed to write to DynamoDB",
         {
-          error: awsErr
+          error: awsErr,
+          item
         }
       )
     })

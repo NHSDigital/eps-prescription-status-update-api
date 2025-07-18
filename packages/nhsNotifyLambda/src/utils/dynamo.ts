@@ -53,7 +53,8 @@ export async function addPrescriptionMessagesToNotificationStateStore(
       logger.info("Upserted prescription")
     } catch (err) {
       logger.error("Failed to write to DynamoDB", {
-        error: err
+        error: err,
+        item
       })
       throw err
     }
