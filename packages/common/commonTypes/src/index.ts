@@ -20,3 +20,17 @@ export interface NotifyDataItem {
   TaskID: string
   Status: string
 }
+
+export interface LastNotificationStateType {
+  NHSNumber: string
+  ODSCode: string
+  RequestId: string // x-request-id header
+  SQSMessageID?: string // The SQS message ID
+  DeliveryStatus: string
+  NotifyMessageID?: string // The UUID we got back from Notify for the submitted message
+  NotifyMessageReference: string // The references we generated for the message
+  NotifyMessageBatchReference?: string // As above
+  LastNotifiedPrescriptionStatus: string
+  LastNotificationRequestTimestamp: string // ISO-8601 string
+  ExpiryTime: number // DynamoDB expiration time (UNIX timestamp)
+}

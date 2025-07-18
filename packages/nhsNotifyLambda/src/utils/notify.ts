@@ -46,10 +46,6 @@ export async function makeBatchNotifyRequest(
   routingPlanId: string,
   data: Array<NotifyDataItemMessage>
 ): Promise<Array<NotifyDataItemMessage>> {
-  if (!process.env.API_KEY_SECRET) {
-    throw new Error("Environment configuration error")
-  }
-
   const {makeRealNotifyRequests, notifyApiBaseUrlRaw} = await loadConfig()
 
   if (!notifyApiBaseUrlRaw) throw new Error("NOTIFY_API_BASE_URL is not defined in the environment variables!")
@@ -156,7 +152,11 @@ export async function makeBatchNotifyRequest(
       const returnedMessages = resp.data.data.attributes.messages
       logger.info("Requested notifications OK!", {
         messageBatchReference,
-        messageReferences: messages.map(e => e.messageReference),
+        messageReferences: messages.map(e => ({
+          nhsNumber: e.recipient.nhsNumber,
+          messageReference: e.messageReference,
+          psuRequestId: data.find((el) => el.messageReference === e.messageReference)?.PSUDataItem.RequestID
+        })),
         deliveryStatus: "requested"
       })
 
@@ -180,7 +180,11 @@ export async function makeBatchNotifyRequest(
         status: resp.status,
         statusText: resp.statusText,
         messageBatchReference,
-        messageReferences: messages.map(e => e.messageReference),
+        messageReferences: messages.map(e => ({
+          nhsNumber: e.recipient.nhsNumber,
+          messageReference: e.messageReference,
+          psuRequestId: data.find((el) => el.messageReference === e.messageReference)?.PSUDataItem.RequestID
+        })),
         deliveryStatus: "notify request failed"
       })
       throw new Error("Notify batch request failed")
@@ -192,6 +196,11 @@ export async function makeBatchNotifyRequest(
       ...item,
       deliveryStatus: "notify request failed",
       messageBatchReference,
+      messageReferences: messages.map(e => ({
+        nhsNumber: e.recipient.nhsNumber,
+        messageReference: undefined,
+        psuRequestId: data.find((el) => el.messageReference === e.messageReference)?.PSUDataItem.RequestID
+      })),
       notifyMessageId: undefined
     }))
   }

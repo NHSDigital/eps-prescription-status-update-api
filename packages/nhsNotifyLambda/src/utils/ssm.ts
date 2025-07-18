@@ -12,8 +12,8 @@ export async function loadConfig(): Promise<{
   notifyApiBaseUrlRaw: string
 }> {
   const paramNames = {
-    [process.env.MAKE_REAL_NOTIFY_REQUESTS_PARAM!]: {maxAge: 5},
-    [process.env.NOTIFY_API_BASE_URL_PARAM!]: {maxAge: 5}
+    [process.env.MAKE_REAL_NOTIFY_REQUESTS_PARAM!]: {maxAge: 1},
+    [process.env.NOTIFY_API_BASE_URL_PARAM!]: {maxAge: 1}
   }
   const all = await ssm.getParametersByName(paramNames)
 

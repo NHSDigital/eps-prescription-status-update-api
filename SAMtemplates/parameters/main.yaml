@@ -93,9 +93,9 @@ Resources:
       Type: String
       Value: !If
         - IsProd
-        - https://api.service.nhs.uk/comms
+        - https://api.service.nhs.uk
         # Non-prod API URL (sandbox) (INT environment: https://int.api.service.nhs.uk/comms)
-        - https://sandbox.api.service.nhs.uk/comms
+        - https://sandbox.api.service.nhs.uk
 
   EnableNotificationsExternal:
     Type: AWS::SSM::Parameter

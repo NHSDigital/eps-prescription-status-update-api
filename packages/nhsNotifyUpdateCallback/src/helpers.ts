@@ -7,6 +7,8 @@ import {getSecret} from "@aws-lambda-powertools/parameters/secrets"
 
 import {createHmac, timingSafeEqual} from "crypto"
 
+import {LastNotificationStateType} from "@PrescriptionStatusUpdate_common/commonTypes"
+
 import {MessageStatusResponse} from "./types"
 
 const APP_NAME_SECRET = process.env.APP_NAME_SECRET
@@ -144,7 +146,7 @@ export async function updateNotificationsTable(
       throw error
     }
 
-    const items = queryResult.Items ?? []
+    const items = queryResult.Items as Array<LastNotificationStateType> ?? []
     if (items.length === 0) {
       logger.warn("No matching record found for NotifyMessageID. Counting this as a successful update.", {messageId})
       return
@@ -167,7 +169,7 @@ export async function updateNotificationsTable(
     const updatePromises = items.map(async item => {
       const key = {
         NHSNumber: item.NHSNumber,
-        ODSCode: item.ODSCode
+        RequestId: item.RequestId
       }
       try {
         await docClient.send(new UpdateCommand({
@@ -188,6 +190,8 @@ export async function updateNotificationsTable(
           "Updated notification state",
           {
             NotifyMessageID: item.NotifyMessageID,
+            nhsNumber: item.NHSNumber,
+            psuRequestId: item.RequestId,
             newStatus: messageStatus,
             newTimestamp: timestamp,
             newExpiryTime: newExpiry
@@ -198,6 +202,8 @@ export async function updateNotificationsTable(
           "Failed to update notification state",
           {
             NotifyMessageID: item.NotifyMessageID,
+            nhsNumber: item.NHSNumber,
+            psuRequestId: item.RequestId,
             error: err
           }
         )
