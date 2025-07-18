@@ -430,7 +430,7 @@ Resources:
           AttributeType: S
         - AttributeName: ODSCode
           AttributeType: S
-        - AttributeName: RequestID # this is the PSU request ID, and is used to identify a single notification's flow
+        - AttributeName: RequestId # this is the PSU request ID, and is used to identify a single notification's flow
           AttributeType: S
         - AttributeName: NotifyMessageID # This is the ID returned by Notify for this notification request. Used for callback lookup
           AttributeType: S
@@ -465,7 +465,7 @@ Resources:
       KeySchema:
         - AttributeName: NHSNumber
           KeyType: HASH       # Partition key
-        - AttributeName: RequestID
+        - AttributeName: RequestId
           KeyType: RANGE      # Sort key
       BillingMode: !If
         - EnableDynamoDBAutoScalingCondition
