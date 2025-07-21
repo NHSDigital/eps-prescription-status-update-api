@@ -29,7 +29,7 @@ Parameters:
 
 Conditions:
   EnableDynamoDBAutoScalingCondition: !Equals
-    - true
+    - "true"
     - !Ref EnableDynamoDBAutoScaling
 
 Resources:
@@ -466,6 +466,68 @@ Resources:
         AttributeName: ExpiryTime
         Enabled: true
 
+  PrescriptionNotificationStatesResources:
+    Type: AWS::Serverless::Application
+    Properties:
+      Location: dynamodb_resources.yaml
+      Parameters:
+        StackName: !Ref StackName
+        TableName: !Ref PrescriptionNotificationStatesTable
+        TableArn: !GetAtt PrescriptionNotificationStatesTable.Arn
+
+  # Auto scaling for the table
+  PrescriptionNotificationStatesTableWriteScalingTarget:
+    Type: AWS::ApplicationAutoScaling::ScalableTarget
+    DependsOn: PrescriptionNotificationStatesTable
+    Condition: EnableDynamoDBAutoScalingCondition
+    Properties:
+      MinCapacity: !Ref MinWritePrescriptionNotificationStatesCapacity
+      MaxCapacity: !Ref MaxWritePrescriptionNotificationStatesCapacity
+      ResourceId: !Sub table/${PrescriptionNotificationStatesTable}
+      RoleARN: !GetAtt DynamoDbScalingRole.Arn
+      ScalableDimension: "dynamodb:table:WriteCapacityUnits"
+      ServiceNamespace: dynamodb
+
+  PrescriptionNotificationStatesTableWriteScalingPolicy:
+    Type: AWS::ApplicationAutoScaling::ScalingPolicy
+    Condition: EnableDynamoDBAutoScalingCondition
+    Properties:
+      PolicyName: PrescriptionNotificationStatesTableWriteScalingPolicy
+      PolicyType: TargetTrackingScaling
+      ScalingTargetId: !Ref PrescriptionNotificationStatesTableWriteScalingTarget
+      TargetTrackingScalingPolicyConfiguration:
+        TargetValue: 50
+        ScaleInCooldown: 600
+        ScaleOutCooldown: 0
+        PredefinedMetricSpecification:
+          PredefinedMetricType: DynamoDBWriteCapacityUtilization
+
+  PrescriptionNotificationStatesTableReadScalingTarget:
+    Type: AWS::ApplicationAutoScaling::ScalableTarget
+    DependsOn: PrescriptionNotificationStatesTable
+    Condition: EnableDynamoDBAutoScalingCondition
+    Properties:
+      MinCapacity: 1
+      MaxCapacity: 100
+      ResourceId: !Sub table/${PrescriptionNotificationStatesTable}
+      RoleARN: !GetAtt DynamoDbScalingRole.Arn
+      ScalableDimension: "dynamodb:table:ReadCapacityUnits"
+      ServiceNamespace: dynamodb
+
+  PrescriptionNotificationStatesTableReadScalingPolicy:
+    Type: AWS::ApplicationAutoScaling::ScalingPolicy
+    Condition: EnableDynamoDBAutoScalingCondition
+    Properties:
+      PolicyName: PrescriptionNotificationStatesTableReadScalingPolicy
+      PolicyType: TargetTrackingScaling
+      ScalingTargetId: !Ref PrescriptionNotificationStatesTableReadScalingTarget
+      TargetTrackingScalingPolicyConfiguration:
+        TargetValue: 70
+        ScaleInCooldown: 60
+        ScaleOutCooldown: 60
+        PredefinedMetricSpecification:
+          PredefinedMetricType: DynamoDBReadCapacityUtilization
+
   PrescriptionNotificationStatesTableV1:
     Type: AWS::DynamoDB::Table
     Properties:
@@ -531,35 +593,35 @@ Resources:
         AttributeName: ExpiryTime
         Enabled: true
 
-  PrescriptionNotificationStatesResources:
+  PrescriptionNotificationStatesV1Resources:
     Type: AWS::Serverless::Application
     Properties:
       Location: dynamodb_resources.yaml
       Parameters:
         StackName: !Ref StackName
-        TableName: !Ref PrescriptionNotificationStatesTable
-        TableArn: !GetAtt PrescriptionNotificationStatesTable.Arn
+        TableName: !Ref PrescriptionNotificationStatesTableV1
+        TableArn: !GetAtt PrescriptionNotificationStatesTableV1.Arn
 
   # Auto scaling for the table
-  PrescriptionNotificationStatesTableWriteScalingTarget:
+  PrescriptionNotificationStatesTableV1WriteScalingTarget:
     Type: AWS::ApplicationAutoScaling::ScalableTarget
-    DependsOn: PrescriptionNotificationStatesTable
+    DependsOn: PrescriptionNotificationStatesTableV1
     Condition: EnableDynamoDBAutoScalingCondition
     Properties:
       MinCapacity: !Ref MinWritePrescriptionNotificationStatesCapacity
       MaxCapacity: !Ref MaxWritePrescriptionNotificationStatesCapacity
-      ResourceId: !Sub table/${PrescriptionNotificationStatesTable}
+      ResourceId: !Sub table/${PrescriptionNotificationStatesTableV1}
       RoleARN: !GetAtt DynamoDbScalingRole.Arn
       ScalableDimension: "dynamodb:table:WriteCapacityUnits"
       ServiceNamespace: dynamodb
 
-  PrescriptionNotificationStatesTableWriteScalingPolicy:
+  PrescriptionNotificationStatesTableV1WriteScalingPolicy:
     Type: AWS::ApplicationAutoScaling::ScalingPolicy
     Condition: EnableDynamoDBAutoScalingCondition
     Properties:
-      PolicyName: PrescriptionNotificationStatesTableWriteScalingPolicy
+      PolicyName: PrescriptionNotificationStatesTableV1WriteScalingPolicy
       PolicyType: TargetTrackingScaling
-      ScalingTargetId: !Ref PrescriptionNotificationStatesTableWriteScalingTarget
+      ScalingTargetId: !Ref PrescriptionNotificationStatesTableV1WriteScalingTarget
       TargetTrackingScalingPolicyConfiguration:
         TargetValue: 50
         ScaleInCooldown: 600
@@ -567,25 +629,25 @@ Resources:
         PredefinedMetricSpecification:
           PredefinedMetricType: DynamoDBWriteCapacityUtilization
 
-  PrescriptionNotificationStatesTableReadScalingTarget:
+  PrescriptionNotificationStatesTableV1ReadScalingTarget:
     Type: AWS::ApplicationAutoScaling::ScalableTarget
-    DependsOn: PrescriptionNotificationStatesTable
+    DependsOn: PrescriptionNotificationStatesTableV1
     Condition: EnableDynamoDBAutoScalingCondition
     Properties:
       MinCapacity: 1
       MaxCapacity: 100
-      ResourceId: !Sub table/${PrescriptionNotificationStatesTable}
+      ResourceId: !Sub table/${PrescriptionNotificationStatesTableV1}
       RoleARN: !GetAtt DynamoDbScalingRole.Arn
       ScalableDimension: "dynamodb:table:ReadCapacityUnits"
       ServiceNamespace: dynamodb
 
-  PrescriptionNotificationStatesTableReadScalingPolicy:
+  PrescriptionNotificationStatesTableV1ReadScalingPolicy:
     Type: AWS::ApplicationAutoScaling::ScalingPolicy
     Condition: EnableDynamoDBAutoScalingCondition
     Properties:
-      PolicyName: PrescriptionNotificationStatesTableReadScalingPolicy
+      PolicyName: PrescriptionNotificationStatesTableV1ReadScalingPolicy
       PolicyType: TargetTrackingScaling
-      ScalingTargetId: !Ref PrescriptionNotificationStatesTableReadScalingTarget
+      ScalingTargetId: !Ref PrescriptionNotificationStatesTableV1ReadScalingTarget
       TargetTrackingScalingPolicyConfiguration:
         TargetValue: 70
         ScaleInCooldown: 60
@@ -614,7 +676,7 @@ Outputs:
 
   PrescriptionNotificationStatesTableArn:
     Description: PrescriptionNotificationStates table ARN
-    Value: !GetAtt PrescriptionNotificationStatesTable.Arn
+    Value: !GetAtt PrescriptionNotificationStatesTableV1.Arn
 
   UsePrescriptionNotificationStatesKMSKeyPolicyArn:
     Description: Use kms key policy arn
