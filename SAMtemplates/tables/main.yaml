@@ -470,7 +470,7 @@ Resources:
   PrescriptionNotificationStatesTableV1:
     Type: AWS::DynamoDB::Table
     Properties:
-      TableName: !Sub ${StackName}-PrescriptionNotificationStates
+      TableName: !Sub ${StackName}-PrescriptionNotificationStatesV1
       PointInTimeRecoverySpecification:
         PointInTimeRecoveryEnabled: true
       AttributeDefinitions:
