@@ -466,6 +466,72 @@ Resources:
         AttributeName: ExpiryTime
         Enabled: true
 
+
+  PrescriptionNotificationStatesTableV1:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub ${StackName}-PrescriptionNotificationStates
+      PointInTimeRecoverySpecification:
+        PointInTimeRecoveryEnabled: true
+      AttributeDefinitions:
+        - AttributeName: NHSNumber
+          AttributeType: S
+        - AttributeName: ODSCode
+          AttributeType: S
+        - AttributeName: RequestId # this is the PSU request ID, and is used to identify a single notification's flow
+          AttributeType: S
+        - AttributeName: NotifyMessageID # This is the ID returned by Notify for this notification request. Used for callback lookup
+          AttributeType: S
+
+      GlobalSecondaryIndexes:
+        - IndexName: PatientPharmacyIndex
+          KeySchema:
+            - AttributeName: NHSNumber
+              KeyType: HASH
+            - AttributeName: ODSCode
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
+          ProvisionedThroughput: !If
+            - EnableDynamoDBAutoScalingCondition
+            - ReadCapacityUnits: 1
+              WriteCapacityUnits: !Ref MinWritePrescriptionNotificationStatesCapacity
+            - !Ref "AWS::NoValue"
+
+        - IndexName: NotifyMessageIDIndex
+          KeySchema:
+            - AttributeName: NotifyMessageID
+              KeyType: HASH
+          Projection:
+            ProjectionType: ALL
+          ProvisionedThroughput: !If
+            - EnableDynamoDBAutoScalingCondition
+            - ReadCapacityUnits: 1
+              WriteCapacityUnits: !Ref MinWritePrescriptionNotificationStatesCapacity
+            - !Ref "AWS::NoValue"
+
+      KeySchema:
+        - AttributeName: NHSNumber
+          KeyType: HASH       # Partition key
+        - AttributeName: RequestId
+          KeyType: RANGE      # Sort key
+      BillingMode: !If
+        - EnableDynamoDBAutoScalingCondition
+        - PROVISIONED
+        - PAY_PER_REQUEST
+      ProvisionedThroughput: !If
+        - EnableDynamoDBAutoScalingCondition
+        - ReadCapacityUnits: 1
+          WriteCapacityUnits: !Ref MinWritePrescriptionNotificationStatesCapacity
+        - !Ref "AWS::NoValue"
+      SSESpecification:
+        KMSMasterKeyId: !Ref PrescriptionNotificationStatesKMSKey
+        SSEEnabled: true
+        SSEType: KMS
+      TimeToLiveSpecification:
+        AttributeName: ExpiryTime
+        Enabled: true
+
   PrescriptionNotificationStatesResources:
     Type: AWS::Serverless::Application
     Properties:
