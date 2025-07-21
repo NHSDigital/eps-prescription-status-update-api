@@ -177,7 +177,7 @@ describe("helpers.ts", () => {
       ])
       const mockItem = {
         NHSNumber: "NHS123",
-        ODSCode: "ODS1",
+        RequestId: "psu-request-id",
         NotifyMessageID: "msg-123"
       }
       // First call: QueryCommand
@@ -197,7 +197,7 @@ describe("helpers.ts", () => {
       const [updateCmd] = sendSpy.mock.calls[1]
       expect((updateCmd).input).toMatchObject({
         TableName: process.env.TABLE_NAME,
-        Key: {NHSNumber: mockItem.NHSNumber, ODSCode: mockItem.ODSCode},
+        Key: {NHSNumber: mockItem.NHSNumber, RequestId: mockItem.RequestId},
         ExpressionAttributeValues: {
           ":ds": mockResponse.data[0].attributes.messageStatus,
           ":ts": overrideTimestamp,
