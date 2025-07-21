@@ -24,7 +24,7 @@
     "axios": "^1.10.0",
     "axios-retry": "^4.5.0",
     "jose": "^6.0.12",
-    "nock": "^14.0.5"
+    "nock": "^14.0.6"
   },
   "devDependencies": {
     "@PrescriptionStatusUpdate_common/testing": "^1.0.0",
