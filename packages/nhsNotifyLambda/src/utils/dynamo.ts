@@ -1,11 +1,11 @@
-import {DynamoDBClient} from "@aws-sdk/client-dynamodb"
-import {DynamoDBDocumentClient, PutCommand, GetCommand} from "@aws-sdk/lib-dynamodb"
+import {DynamoDBClient, QueryCommand} from "@aws-sdk/client-dynamodb"
+import {DynamoDBDocumentClient, PutCommand} from "@aws-sdk/lib-dynamodb"
 import {Logger} from "@aws-lambda-powertools/logger"
 
-import {NotifyDataItem} from "@PrescriptionStatusUpdate_common/commonTypes"
+import {LastNotificationStateType, NotifyDataItem} from "@PrescriptionStatusUpdate_common/commonTypes"
 
 import {TTL_DELTA} from "./constants"
-import {LastNotificationStateType, NotifyDataItemMessage} from "./types"
+import {NotifyDataItemMessage} from "./types"
 
 const marshallOptions = {
   // remove undefined when pushing to dynamo - references will be undefined when notify request fails
@@ -53,7 +53,8 @@ export async function addPrescriptionMessagesToNotificationStateStore(
       logger.info("Upserted prescription")
     } catch (err) {
       logger.error("Failed to write to DynamoDB", {
-        error: err
+        error: err,
+        item
       })
       throw err
     }
@@ -73,7 +74,6 @@ export async function checkCooldownForUpdate(
   update: NotifyDataItem,
   cooldownPeriod: number = 900
 ): Promise<boolean> {
-
   if (!dynamoTable) {
     logger.error("DynamoDB table not configured")
     throw new Error("TABLE_NAME not set")
@@ -81,16 +81,27 @@ export async function checkCooldownForUpdate(
 
   try {
     // Retrieve the last notification state for this patient/pharmacy combo
-    const getCmd = new GetCommand({
+    const q = new QueryCommand({
       TableName: dynamoTable,
-      Key: {
-        NHSNumber: update.PatientNHSNumber,
-        ODSCode: update.PharmacyODSCode
-      }
+      IndexName: "PatientPharmacyIndex",
+      KeyConditionExpression: "NHSNumber = :n AND ODSCode = :o",
+      ExpressionAttributeValues: {
+        ":n": {S: update.PatientNHSNumber},
+        ":o": {S: update.PharmacyODSCode}
+      },
+      ScanIndexForward: false, // descending on the ODSCode key (i.e. newest RequestID)
+      Limit: 1
     })
-    const {Item} = await docClient.send(getCmd)
 
-    // If no previous record, we're okay to send a notification
+    let result
+    try {
+      result = await docClient.send(q)
+    } catch (err) {
+      logger.error("Error querying DynamoDB", {error: err})
+      throw err
+    }
+
+    const Item = result.Items?.[0]
     if (!Item?.LastNotificationRequestTimestamp) {
       logger.debug("No previous notification state found. Notification allowed.", {
         NHSNumber: update.PatientNHSNumber,
@@ -101,7 +112,7 @@ export async function checkCooldownForUpdate(
     }
 
     // Compute seconds since last notification
-    const lastTs = new Date(Item.LastNotificationRequestTimestamp).getTime()
+    const lastTs = new Date(Item.LastNotificationRequestTimestamp.S as string).getTime()
     const nowTs = Date.now()
     const secondsSince = Math.floor((nowTs - lastTs) / 1000)
 
