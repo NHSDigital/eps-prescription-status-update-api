@@ -108,12 +108,24 @@ export async function makeBatchNotifyRequest(
     logger.info("Not doing real Notify requests. Simply waiting for some time and returning success on all messages")
     await new Promise(f => setTimeout(f, DUMMY_NOTIFY_DELAY_MS))
 
+    const deliveryStatus = "silent running"
+
+    logger.info("Requested notifications OK!", {
+      messageBatchReference,
+      messageReferences: messages.map(e => ({
+        nhsNumber: e.recipient.nhsNumber,
+        messageReference: e.messageReference,
+        psuRequestId: data.find((el) => el.messageReference === e.messageReference)?.PSUDataItem.RequestID
+      })),
+      deliveryStatus
+    })
+
     // Map each input item to a "successful" NotifyDataItemMessage
     return data.map(item => {
       return {
         ...item,
         messageBatchReference,
-        deliveryStatus: "silent running",
+        deliveryStatus,
         notifyMessageId: v4() // Create a dummy UUID
       }
     })
