@@ -31,16 +31,16 @@
   "devDependencies": {
     "@semantic-release/changelog": "^6.0.3",
     "@semantic-release/release-notes-generator": "^14.0.3",
-    "@types/aws-lambda": "^8.10.150",
+    "@types/aws-lambda": "^8.10.152",
     "@types/jest": "^30.0.0",
-    "@types/node": "^24.0.14",
+    "@types/node": "^24.1.0",
     "@typescript-eslint/eslint-plugin": "^8.37.0",
     "@typescript-eslint/parser": "^8.34.1",
     "aws-lambda": "^1.0.7",
     "eslint": "^9.31.0",
-    "eslint-config-prettier": "^10.1.5",
+    "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-import-newlines": "^1.3.4",
-    "eslint-plugin-prettier": "^5.5.1",
+    "eslint-plugin-prettier": "^5.5.3",
     "jest": "^30.0.5",
     "jest-junit": "^16.0.0",
     "license-checker": "^25.0.1",
@@ -54,6 +54,6 @@
     "@PrescriptionStatusUpdate_common/middyErrorHandler": "^1.0.0",
     "@PrescriptionStatusUpdate_common/commonTypes": "^1.0.0",
     "conventional-changelog-eslint": "^6.0.0",
-    "esbuild": "^0.25.6"
+    "esbuild": "^0.25.8"
   }
 }
