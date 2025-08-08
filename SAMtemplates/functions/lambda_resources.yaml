@@ -125,6 +125,17 @@ Resources:
       FilterPattern: ""
       DestinationArn: !Ref SplunkDeliveryStreamArn
 
+  QueryLogGroupsPolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action:
+              - logs:DescribeLogGroups
+            Resource: !Sub arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/${StackName}-*
+
 Outputs:
   LambdaRoleArn:
     Description: LambdaRole ARN

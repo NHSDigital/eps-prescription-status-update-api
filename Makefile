@@ -56,7 +56,7 @@ sam-list-resources: guard-AWS_DEFAULT_PROFILE guard-stack_name
 sam-list-outputs: guard-AWS_DEFAULT_PROFILE guard-stack_name
 	sam list stack-outputs --stack-name $$stack_name
 
-sam-validate: 
+sam-validate:
 	sam validate --template-file SAMtemplates/main_template.yaml --region eu-west-2
 	sam validate --template-file SAMtemplates/apis/main.yaml --region eu-west-2
 	sam validate --template-file SAMtemplates/apis/api_resources.yaml --region eu-west-2
@@ -118,6 +118,7 @@ lint-node: compile-node
 	npm run lint --workspace packages/capabilityStatement
 	npm run lint --workspace packages/cpsuLambda
 	npm run lint --workspace packages/checkPrescriptionStatusUpdates
+	npm run lint --workspace packages/testReportLambda
 	npm run lint --workspace packages/nhsNotifyLambda
 	npm run lint --workspace packages/nhsNotifyUpdateCallback
 	npm run lint --workspace packages/common/testing
@@ -149,6 +150,7 @@ test: compile
 	npm run test --workspace packages/capabilityStatement
 	npm run test --workspace packages/cpsuLambda
 	npm run test --workspace packages/checkPrescriptionStatusUpdates
+	npm run test --workspace packages/testReportLambda
 	npm run test --workspace packages/nhsNotifyLambda
 	npm run test --workspace packages/nhsNotifyUpdateCallback
 	npm run test --workspace packages/common/middyErrorHandler
@@ -171,6 +173,7 @@ clean:
 	rm -rf packages/nhsNotifyUpdateCallback/coverage
 	rm -rf packages/nhsNotifyUpdateCallback/lib
 	rm -rf packages/checkPrescriptionStatusUpdates/lib
+	rm -rf packages/testReportLambda/lib
 	rm -rf packages/common/testing/lib
 	rm -rf packages/common/middyErrorHandler/lib
 	rm -rf packages/common/commonTypes/lib
