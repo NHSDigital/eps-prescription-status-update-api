@@ -71,6 +71,9 @@ Parameters:
   DeployCheckPrescriptionStatusUpdate:
     Type: String
 
+  DeployTestReportLambda:
+    Type: String
+
   Environment:
     Type: String
 
@@ -95,7 +98,7 @@ Parameters:
     AllowedValues:
       - true
       - false
-  
+
   EnableNotificationsExternal:
     Type: String
     Default: false
@@ -104,13 +107,13 @@ Parameters:
       - false
 
 Resources:
-  Secrets: 
+  Secrets:
     Type: AWS::Serverless::Application
     Properties:
       Location: secrets/main.yaml
       Parameters:
         StackName: !Ref AWS::StackName
-  
+
   Parameters:
     Type: AWS::Serverless::Application
     Properties:
@@ -156,9 +159,12 @@ Resources:
         CheckPrescriptionStatusUpdatesFunctionArn: !GetAtt Functions.Outputs.CheckPrescriptionStatusUpdatesFunctionArn
         NHSNotifyUpdateCallbackFunctionName: !GetAtt Functions.Outputs.NHSNotifyUpdateCallbackFunctionName
         NHSNotifyUpdateCallbackFunctionArn: !GetAtt Functions.Outputs.NHSNotifyUpdateCallbackFunctionArn
+        TestReportFunctionName: !GetAtt Functions.Outputs.TestReportFunctionName
+        TestReportFunctionArn: !GetAtt Functions.Outputs.TestReportFunctionArn
         LogRetentionInDays: !Ref LogRetentionInDays
         EnableSplunk: !Ref EnableSplunk
         DeployCheckPrescriptionStatusUpdate: !Ref DeployCheckPrescriptionStatusUpdate
+        DeployTestReportLambda: !Ref DeployTestReportLambda
 
   Functions:
     Type: AWS::Serverless::Application
@@ -183,6 +189,7 @@ Resources:
         VersionNumber: !Ref VersionNumber
         CommitId: !Ref CommitId
         DeployCheckPrescriptionStatusUpdate: !Ref DeployCheckPrescriptionStatusUpdate
+        DeployTestReportLambda: !Ref DeployTestReportLambda
         Environment: !Ref Environment
 
   StateMachines:

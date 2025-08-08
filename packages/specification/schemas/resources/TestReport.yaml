@@ -1,0 +1,8 @@
+type: object
+required: [items]
+description: |
+  A test report generated for a specific supplier using the Electronic Prescription Service test pack.
+properties:
+  message:
+    type: string
+    description: Status of the test report
