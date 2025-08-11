@@ -615,14 +615,14 @@ Outputs:
       - !GetAtt CheckPrescriptionStatusUpdates.Arn
       - ""
 
-  TestReportLambdaFunctionName:
+  TestReportFunctionName:
     Description: The function name of the TestReport lambda
     Value: !If
       - ShouldDeployTestReportLambda
       - !Ref TestReportLambda
       - ""
 
-  TestReportLambdaFunctionArn:
+  TestReportFunctionArn:
     Description: The function ARN of the TestReport lambda
     Value: !If
       - ShouldDeployTestReportLambda
