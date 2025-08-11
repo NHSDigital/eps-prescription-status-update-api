@@ -10,6 +10,7 @@ echo "Apigee environment: ${APIGEE_ENVIRONMENT}"
 echo "Proxygen private key name: ${PROXYGEN_PRIVATE_KEY_NAME}"
 echo "Proxygen KID: ${PROXYGEN_KID}"
 echo "Deploy Check Prescription Status Update: ${DEPLOY_CHECK_PRESCRIPTION_STATUS_UPDATE}"
+echo "Deploy Test Report Lambda: ${DEPLOY_TEST_REPORT_LAMBDA}"
 echo "Dry run: ${DRY_RUN}"
 
 
@@ -29,7 +30,7 @@ put_secret_lambda=lambda-resources-ProxygenPTLMTLSSecretPut
 instance_put_lambda=lambda-resources-ProxygenPTLInstancePut
 spec_publish_lambda=lambda-resources-ProxygenPTLSpecPublish
 
-if [[ "$APIGEE_ENVIRONMENT" =~ ^(int|sandbox|prod)$ ]]; then 
+if [[ "$APIGEE_ENVIRONMENT" =~ ^(int|sandbox|prod)$ ]]; then
     put_secret_lambda=lambda-resources-ProxygenProdMTLSSecretPut
     instance_put_lambda=lambda-resources-ProxygenProdInstancePut
     spec_publish_lambda=lambda-resources-ProxygenProdSpecPublish
@@ -70,7 +71,7 @@ if [[ "${is_pull_request}" == "true" ]]; then
     jq '."x-nhsd-apim".monitoring = false' "${SPEC_PATH}" > temp.json && mv temp.json "${SPEC_PATH}"
 fi
 
-# Find and replace the specification version number 
+# Find and replace the specification version number
 jq --arg version "${VERSION_NUMBER}" '.info.version = $version' "${SPEC_PATH}" > temp.json && mv temp.json "${SPEC_PATH}"
 
 # Find and replace the x-nhsd-apim.target.url value
@@ -103,6 +104,14 @@ if [[ "${DEPLOY_CHECK_PRESCRIPTION_STATUS_UPDATE}" == "false" ]]; then
     if [[ "${API_TYPE}" == "standard" ]]; then
         echo "Removing checkprescriptionstatusupdates endpoint"
         jq 'del(.paths."/checkprescriptionstatusupdates")' "$SPEC_PATH" > temp.json && mv temp.json "$SPEC_PATH"
+    fi
+fi
+
+# Remove test report lambda if its not needed
+if [[ "${DEPLOY_TEST_REPORT_LAMBDA}" == "false" ]]; then
+    if [[ "${API_TYPE}" == "standard" ]]; then
+        echo "Removing test report lambda endpoint"
+        jq 'del(.paths."/test-report")' "$SPEC_PATH" > temp.json && mv temp.json "$SPEC_PATH"
     fi
 fi
 

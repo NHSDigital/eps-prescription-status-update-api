@@ -34,6 +34,7 @@ sam-sync: guard-AWS_DEFAULT_PROFILE guard-stack_name compile
 		--parameter-overrides \
 			  EnableSplunk=false \
 			  DeployCheckPrescriptionStatusUpdate=true \
+			  DeployTestReportLambda=true \
 			  EnableAlerts=false
 
 sam-deploy: guard-AWS_DEFAULT_PROFILE guard-stack_name
@@ -42,6 +43,7 @@ sam-deploy: guard-AWS_DEFAULT_PROFILE guard-stack_name
 		--parameter-overrides \
 			  EnableSplunk=false \
 			  DeployCheckPrescriptionStatusUpdate=true \
+			  DeployTestReportLambda=true \
 			  EnableAlerts=false
 
 sam-delete: guard-AWS_DEFAULT_PROFILE guard-stack_name
@@ -96,6 +98,7 @@ sam-deploy-package: guard-artifact_bucket guard-artifact_bucket_prefix guard-sta
 			  LogRetentionInDays=$$LOG_RETENTION_DAYS \
 			  Environment=$$TARGET_ENVIRONMENT \
 			  DeployCheckPrescriptionStatusUpdate=$$DEPLOY_CHECK_PRESCRIPTION_STATUS_UPDATE \
+			  DeployTestReportLambda=$$DEPLOY_TEST_REPORT_LAMBDA \
 			  EnableAlerts=$$ENABLE_ALERTS \
 			  StateMachineLogLevel=$$STATE_MACHINE_LOG_LEVEL \
 			  EnableNotificationsInternal=$$ENABLE_NOTIFICATIONS_INTERNAL \
