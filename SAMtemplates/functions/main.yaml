@@ -426,10 +426,7 @@ Resources:
         EnableSplunk: !Ref EnableSplunk
         SplunkSubscriptionFilterRole: !ImportValue lambda-resources:SplunkSubscriptionFilterRole
         SplunkDeliveryStreamArn: !ImportValue lambda-resources:SplunkDeliveryStream
-        IncludeAdditionalPolicies: true
-        AdditionalPolicies: !Join
-          - ","
-          - - Fn::ImportValue: !Sub lambda-resources:QueryLogGroupsPolicy
+        IncludeQueryLogGroupsPolicy: true
 
 
   NotifyProcessorScheduleEventRolePolicy:

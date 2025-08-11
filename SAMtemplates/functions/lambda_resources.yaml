@@ -42,6 +42,10 @@ Parameters:
     Type: String
     Default: none
 
+  IncludeQueryLogGroupsPolicy:
+    Type: String
+    Default: false
+
 Conditions:
   ShouldUseSplunk: !Equals
     - true
@@ -50,6 +54,10 @@ Conditions:
   ShouldIncludeAdditionalPolicies: !Equals
     - true
     - !Ref IncludeAdditionalPolicies
+
+  ShouldIncludeQueryLogGroupsPolicy: !Equals
+    - true
+    - !Ref IncludeQueryLogGroupsPolicy
 
 Resources:
   ExecuteLambdaManagedPolicy:
@@ -84,6 +92,10 @@ Resources:
             - !ImportValue account-resources:CloudwatchEncryptionKMSPolicyArn
             - !ImportValue account-resources:LambdaDecryptSecretsKMSPolicy
             - !ImportValue secrets:GetNotifySecretsManagedPolicy
+            - !If
+              - ShouldIncludeQueryLogGroupsPolicy
+              - !Ref QueryLogGroupsPolicy
+              - !Ref AWS::NoValue
             - !If
               - ShouldIncludeAdditionalPolicies
               - !Join
@@ -131,10 +143,33 @@ Resources:
       PolicyDocument:
         Version: 2012-10-17
         Statement:
-          - Effect: Allow
+          - Sid: Describe
+            Effect: Allow
             Action:
               - logs:DescribeLogGroups
-            Resource: !Sub arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/${StackName}-*
+              - logs:DescribeLogStreams
+            Resource:
+              - !Sub arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/${StackName}-*
+              - !Sub arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/${StackName}-*:log-stream:*
+          - Sid: ReadEvents
+            Effect: Allow
+            Action:
+              - logs:GetLogEvents
+              - logs:FilterLogEvents
+            Resource:
+              - !Sub arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/${StackName}-*
+              - !Sub arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/${StackName}-*:log-stream:*
+          - Sid: InsightsQuery
+            Effect: Allow
+            Action:
+              - logs:StartQuery
+              - logs:GetQueryResults
+              - logs:StopQuery
+            Resource: "*"
+            Condition:
+              StringLike:
+                logs:LogGroupName:
+                  - !Sub "/aws/lambda/${StackName}-*"
 
 Outputs:
   LambdaRoleArn:
@@ -152,9 +187,3 @@ Outputs:
     Value: !Ref LambdaLogGroup
     Export:
       Name: !Sub ${StackName}:functions:${LambdaName}:LambdaLogGroupName
-
-  QueryLogGroupsPolicy:
-    Description: Allows a lambda to read log groups for this stack
-    Value: !GetAtt QueryLogGroupsPolicy
-    Export:
-      Name: !Sub ${StackName}:functions:${LambdaName}:QueryLogGroupsPolicy
