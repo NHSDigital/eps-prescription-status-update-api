@@ -89,7 +89,7 @@ Conditions:
   ShouldDeployCheckPrescriptionStatusUpdate: !Equals
     - true
     - !Ref DeployCheckPrescriptionStatusUpdate
-  ShouldDeployTestReportLambda: !Equals
+  ShouldDeployTestReport: !Equals
     - true
     - !Ref DeployTestReportLambda
 
@@ -475,16 +475,16 @@ Resources:
       ParentId: !GetAtt RestApiGateway.RootResourceId
       PathPart: notification-delivery-status-callback
 
-  TestReportLambdaResource:
-    Condition: ShouldDeployTestReportLambda
+  TestReportResource:
+    Condition: ShouldDeployTestReport
     Type: AWS::ApiGateway::Resource
     Properties:
       RestApiId: !Ref RestApiGateway
       ParentId: !GetAtt RestApiGateway.RootResourceId
       PathPart: test-report
 
-  TestReportLambdaMethod:
-    Condition: ShouldDeployTestReportLambda
+  TestReportMethod:
+    Condition: ShouldDeployTestReport
     Type: AWS::ApiGateway::Method
     Properties:
       RestApiId: !Ref RestApiGateway
@@ -582,22 +582,22 @@ Resources:
       Timeout: "1"
       Count: 0
 
-  TestReportLambdaHandle:
-    Condition: ShouldDeployTestReportLambda
-    DependsOn: TestReportLambdaMethod
+  TestReportHandle:
+    Condition: ShouldDeployTestReport
+    DependsOn: TestReportMethod
     Type: "AWS::CloudFormation::WaitConditionHandle"
 
-  TestReportLambdasWaitHandle:
+  TestReportWaitHandle:
     Type: "AWS::CloudFormation::WaitConditionHandle"
 
-  TestReportLambdasWaitCondition:
+  TestReportWaitCondition:
     Type: "AWS::CloudFormation::WaitCondition"
     Properties:
       Handle:
         !If [
-          ShouldDeployTestReportLambda,
-          !Ref TestReportLambdaHandle,
-          !Ref TestReportLambdasWaitHandle,
+          ShouldDeployTestReport,
+          !Ref TestReportHandle,
+          !Ref TestReportWaitHandle,
         ]
       Timeout: "1"
       Count: 0
