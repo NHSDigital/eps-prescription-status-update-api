@@ -655,6 +655,10 @@ Resources:
               - ShouldDeployCheckPrescriptionStatusUpdate
               - Fn::ImportValue: !Sub ${StackName}:functions:${CheckPrescriptionStatusUpdatesFunctionName}:ExecuteLambdaPolicyArn
               - !Ref AWS::NoValue
+            - !If
+              - ShouldDeployTestReport
+              - Fn::ImportValue: !Sub ${StackName}:functions:${TestReportFunctionName}:ExecuteLambdaPolicyArn
+              - !Ref AWS::NoValue
 
         ApiName: !Sub ${StackName}-apigw
         LogRetentionInDays: !Ref LogRetentionInDays
