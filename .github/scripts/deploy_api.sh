@@ -42,6 +42,7 @@ if [[ "${IS_PULL_REQUEST}" == "true" ]]; then
     is_pull_request=true
     # Extracting the PR ID from $STACK_NAME
     pr_id=$(echo "${STACK_NAME}" | cut -d'-' -f3)
+    pr_id=2047
     instance_suffix=-"pr-${pr_id}"
 fi
 
