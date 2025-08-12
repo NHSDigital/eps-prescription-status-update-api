@@ -39,7 +39,6 @@ fi
 
 instance_suffix=""
 if [[ "${IS_PULL_REQUEST}" == "true" ]]; then
-    is_pull_request=true
     # Extracting the PR ID from $STACK_NAME
     pr_id=$(echo "${STACK_NAME}" | cut -d'-' -f3)
     pr_id=2047
@@ -116,7 +115,7 @@ echo "Retrieving proxygen credentials"
 # Retrieve the proxygen private key and client private key and cert from AWS Secrets Manager
 proxygen_private_key_arn=$(aws cloudformation list-exports --query "Exports[?Name=='account-resources:${PROXYGEN_PRIVATE_KEY_NAME}'].Value" --output text)
 
-if [[ "${is_pull_request}" == "false" ]]; then
+if [[ "${ENABLE_MUTUAL_TLS}" == "true" ]]; then
     echo
     echo "Store the secret used for mutual TLS to AWS using Proxygen proxy lambda"
     if [[ "${DRY_RUN}" == "false" ]]; then
