@@ -207,6 +207,7 @@ jobs:
           DEPLOY_CHECK_PRESCRIPTION_STATUS_UPDATE: ${{ inputs.DEPLOY_CHECK_PRESCRIPTION_STATUS_UPDATE }}
           IS_PULL_REQUEST: ${{ inputs.IS_PULL_REQUEST }}
           MTLS_KEY: ${{ inputs.MTLS_KEY }}
+          ENABLE_MUTUAL_TLS: ${{ inputs.ENABLE_MUTUAL_TLS }}
         run: ./deploy_api.sh
 
       - name: Deploy CPSU API
@@ -227,6 +228,7 @@ jobs:
           DEPLOY_CHECK_PRESCRIPTION_STATUS_UPDATE: ${{ inputs.DEPLOY_CHECK_PRESCRIPTION_STATUS_UPDATE }}
           IS_PULL_REQUEST: ${{ inputs.IS_PULL_REQUEST }}
           MTLS_KEY: ${{ inputs.MTLS_KEY }}
+          ENABLE_MUTUAL_TLS: ${{ inputs.ENABLE_MUTUAL_TLS }}
         run: ./deploy_api.sh
 
       - name: create_int_release_notes
