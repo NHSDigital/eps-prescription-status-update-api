@@ -9,7 +9,12 @@ import httpHeaderNormalizer from "@middy/http-header-normalizer"
 
 import errorHandler from "@nhs/fhir-middy-error-handler"
 
+import {TestReportRequestBody, LogSearchOptions} from "./utils/types"
+import {searchLogGroupForStrings} from "./utils/logSearching"
+
 export const logger = new Logger({serviceName: "generateTestReport"})
+
+const PSU_LOG_GROUP_NAME = "/aws/lambda/psu-pr-2036-UpdatePrescriptionStatus"
 
 const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
   logger.appendKeys({
@@ -20,8 +25,34 @@ const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPro
     "x-request-id": event.headers["x-request-id"]
   })
 
-  const requestBody = event.body
+  if (!event.body) {
+    return response(400, {"message": "Missing request body."})
+  }
+
+  let requestBody: TestReportRequestBody
+  try {
+    requestBody = JSON.parse(event.body)
+  } catch (err) {
+    return response(400, {"message": "Badly formed request body", "error": err})
+  }
   logger.info("Received request body", {requestBody})
+
+  const searchOptions: LogSearchOptions = {}
+  const logEvents = await searchLogGroupForStrings(
+    PSU_LOG_GROUP_NAME,
+    requestBody.prescriptionIds,
+    logger,
+    searchOptions
+  )
+
+  logger.info(
+    "Found matching events",
+    {
+      "logEvents": logEvents.map(function (events, i) {
+        return [events, requestBody.prescriptionIds[i]]
+      })
+    }
+  )
 
   return response(200, {"message": "OK"})
 }
