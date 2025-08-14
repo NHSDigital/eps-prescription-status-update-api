@@ -45,16 +45,17 @@ const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPro
     searchOptions
   )
 
+  const foundMessages = logEvents.map(function (events, i) {
+    return [events, requestBody.prescriptionIds[i]]
+  })
   logger.info(
     "Found matching events",
     {
-      "logEvents": logEvents.map(function (events, i) {
-        return [events, requestBody.prescriptionIds[i]]
-      })
+      "logEvents": foundMessages
     }
   )
 
-  return response(200, {"message": "OK"})
+  return response(200, {"message": "OK", "searchResults": foundMessages})
 }
 
 function response(statusCode: number, body: any) {

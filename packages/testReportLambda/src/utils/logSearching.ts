@@ -73,10 +73,6 @@ export async function searchLogGroupForString(
     })
 
     const resp = await client.send(cmd)
-    logger.debug(
-      "Got a response from the log events query",
-      {resp}
-    )
 
     if (resp.events && resp.events.length > 0) {
       events = events.concat(resp.events)
@@ -88,8 +84,6 @@ export async function searchLogGroupForString(
     // If nextToken is not given, then we are on the last page.
     if (!nextToken) break
   }
-
-  logger.info("Returning events", {"events": `${events}`})
 
   return events
 }
