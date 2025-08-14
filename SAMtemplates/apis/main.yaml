@@ -489,12 +489,12 @@ Resources:
     Properties:
       RestApiId: !Ref RestApiGateway
       ResourceId: !Ref TestReportResource
-      HttpMethod: POST
+      HttpMethod: GET
       AuthorizationType: NONE
       Integration:
         Type: AWS_PROXY
         Credentials: !GetAtt RestApiGatewayResources.Outputs.ApiGwRoleArn
-        IntegrationHttpMethod: GET
+        IntegrationHttpMethod: POST
         Uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${TestReportFunctionArn}/invocations
 
   StatusLambdaMethodResource:
