@@ -489,7 +489,7 @@ Resources:
     Properties:
       RestApiId: !Ref RestApiGateway
       ResourceId: !Ref TestReportResource
-      HttpMethod: GET
+      HttpMethod: POST
       AuthorizationType: NONE
       Integration:
         Type: AWS_PROXY
