@@ -489,7 +489,7 @@ Resources:
     Properties:
       RestApiId: !Ref RestApiGateway
       ResourceId: !Ref TestReportResource
-      HttpMethod: GET
+      HttpMethod: POST
       AuthorizationType: NONE
       Integration:
         Type: AWS_PROXY
@@ -497,7 +497,10 @@ Resources:
         IntegrationHttpMethod: POST
         Uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${TestReportFunctionArn}/invocations
       MethodResponses:
-        - StatusCode: "200"
+        - StatusCode: "202"
+        - StatusCode: "401"
+        - StatusCode: "403"
+        - StatusCode: "429"
         - StatusCode: "500"
 
   StatusLambdaMethodResource:
