@@ -1,4 +1,9 @@
 // Enums
+export enum CallbackType {
+  message = "MessageStatus",
+  channel = "ChannelStatus"
+}
+
 export type MessageStatus =
   | "created"
   | "pending_enrichment"
@@ -20,7 +25,6 @@ export type ChannelStatus =
   | "failed"
   | "skipped";
 
-// Callback return schema
 export interface Channel {
   /** The communication type of this channel */
   type: ChannelType;
@@ -56,9 +60,9 @@ export interface MessageStatusAttributes {
   routingPlan: RoutingPlan;
 }
 
+// https://digital.nhs.uk/developer/api-catalogue/nhs-notify#post-/%3Cclient-provided-message-status-URI%3E
 export interface MessageStatusResource {
-  /** Always "MessageStatus" */
-  type: "MessageStatus";
+  type: CallbackType.message;
   attributes: MessageStatusAttributes;
   links: {
     /** URL to retrieve the overarching message status */
@@ -76,4 +80,74 @@ export interface MessageStatusResponse {
    * Must contain at least one element.
    */
   data: Array<MessageStatusResource>;
+}
+
+// --- ChannelStatus payload types ---
+
+export type CascadeType = "primary" | "secondary";
+
+export type SupplierStatus =
+  | "delivered"
+  | "read"
+  | "notification_attempted"
+  | "unnotified"
+  | "rejected"
+  | "notified"
+  | "received"
+  | "permanent_failure"
+  | "temporary_failure"
+  | "technical_failure"
+  | "accepted"
+  | "cancelled"
+  | "pending_virus_check"
+  | "validation_failed"
+  | "unknown";
+
+export interface ChannelStatusAttributes {
+  /** The unique identifier for the message (KSUID; 27-char alphanumeric) */
+  messageId: string;
+  /** Original reference supplied for the message (supplied by us) */
+  messageReference: string;
+  /** The cascade type of this message */
+  cascadeType?: CascadeType;
+  /** 1-based order of the message in the cascade */
+  cascadeOrder?: number;
+  channel: ChannelType;
+  /** Current status of this channel */
+  channelStatus: ChannelStatus;
+  /** Extra information associated with the status of this channel */
+  channelStatusDescription?: string;
+  /** Current status of this message within the channel/supplier */
+  supplierStatus?: SupplierStatus;
+  /** Date-time when the supplier status change was processed (ISO 8601) */
+  timestamp: string;
+  retryCount: number;
+}
+
+// https://digital.nhs.uk/developer/api-catalogue/nhs-notify#post-/%3Cclient-provided-channel-status-URI%3E
+export interface ChannelStatusResource {
+  type: CallbackType.channel;
+  attributes: ChannelStatusAttributes;
+  links: {
+    /** URL to retrieve overarching message status */
+    message: string;
+  };
+  meta: {
+    /** Key to deduplicate retried requests */
+    idempotencyKey: string;
+  };
+}
+
+export interface ChannelStatusResponse {
+  /**
+   * Array of ChannelStatus resources.
+   * Must contain at least one element.
+   */
+  data: Array<ChannelStatusResource>;
+}
+
+export type CallbackResource = MessageStatusResource | ChannelStatusResource;
+
+export interface CallbackResponse {
+  data: Array<CallbackResource>;
 }

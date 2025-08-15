@@ -2,11 +2,11 @@ import {
   jest,
   describe,
   it,
-  beforeAll,
-  afterEach
+  beforeAll
 } from "@jest/globals"
 
 import {generateMockEvent} from "./utilities"
+import {CallbackType, ChannelStatusResponse} from "../src/types"
 
 const mockCheckSignature = jest.fn()
 const mockResponse = jest.fn()
@@ -30,10 +30,20 @@ beforeAll(async () => {
 const ORIGINAL_ENV = {...process.env}
 
 describe("NHS Notify update callback lambda handler", () => {
-  afterEach(() => {
+  beforeEach(() => {
     process.env = {...ORIGINAL_ENV}
     jest.clearAllMocks()
     jest.restoreAllMocks()
+    jest.resetAllMocks()
+
+    // Copies the real implementation
+    mockResponse.mockImplementation((...args: Array<unknown>): {statusCode: number; body: string} => {
+      const [statusCode, body = {}] = args as [number, unknown]
+      return {
+        statusCode,
+        body: JSON.stringify(body)
+      }
+    })
   })
 
   it("returns 400 if no x-request-id header", async () => {
@@ -121,11 +131,17 @@ describe("NHS Notify update callback lambda handler", () => {
     expect(result).toBe(errResp)
   })
 
-  it("returns 202 and 'OK' when everything succeeds", async () => {
+  it("Returns 400 but still hits the database if CallbackType is not recognised", async () => {
     const payload = {
-      status: "ok",
       data: [
         {
+          type: "globglogabgalab",
+          links: {
+            message: "https://example.org"
+          },
+          meta: {
+            idempotencyKey: "deadbeef"
+          },
           attributes: {
             messageStatus: "messageStatus",
             messageReference: "messageReference",
@@ -145,6 +161,79 @@ describe("NHS Notify update callback lambda handler", () => {
 
     expect(mockCheckSignature).toHaveBeenCalledWith(expect.any(Object), event)
     expect(mockUpdateNotificationsTable).toHaveBeenCalledWith(expect.any(Object), payload)
-    expect(result).toEqual({statusCode: 202, body: "OK"})
+
+    expect(result.statusCode).toBe(400)
+
+    const body = typeof result.body === "string" ? JSON.parse(result.body) : result.body
+    expect(body).toEqual({message: expect.any(String)})
+  })
+
+  it("returns 202 and 'OK' when MessageStatus is valid and succeeds", async () => {
+    const payload = {
+      data: [
+        {
+          type: "MessageStatus",
+          links: {
+            message: "https://example.org"
+          },
+          meta: {
+            idempotencyKey: "deadbeef"
+          },
+          attributes: {
+            messageStatus: "messageStatus",
+            messageReference: "messageReference",
+            messageId: "messageId",
+            timestamp: "timestamp"
+          }
+        }
+      ]
+    }
+    const event = generateMockEvent(payload)
+    event.headers["x-request-id"] = "abc"
+    mockCheckSignature.mockImplementation(() => undefined)
+    event.body = JSON.stringify(payload)
+    mockUpdateNotificationsTable.mockImplementation(() => Promise.resolve())
+
+    const result = await handler(event, {})
+
+    expect(mockCheckSignature).toHaveBeenCalledWith(expect.any(Object), event)
+    expect(mockUpdateNotificationsTable).toHaveBeenCalledWith(expect.any(Object), payload)
+    expect(result).toEqual({statusCode: 202, body: "\"OK\""})
+  })
+
+  it("returns 202 and 'OK' when ChannelStatus is valid and succeeds", async () => {
+    const payload: ChannelStatusResponse = {
+      data: [
+        {
+          type: CallbackType.channel,
+          links: {
+            message: "https://example.org"
+          },
+          meta: {
+            idempotencyKey: "deadbeef"
+          },
+          attributes: {
+            channelStatus: "delivered",
+            channel: "nhsapp",
+            retryCount: 0,
+            supplierStatus: "read",
+            messageReference: "messageReference",
+            messageId: "messageId",
+            timestamp: "timestamp"
+          }
+        }
+      ]
+    }
+    const event = generateMockEvent(payload)
+    event.headers["x-request-id"] = "abc"
+    mockCheckSignature.mockImplementation(() => undefined)
+    event.body = JSON.stringify(payload)
+    mockUpdateNotificationsTable.mockImplementation(() => Promise.resolve())
+
+    const result = await handler(event, {})
+
+    expect(mockCheckSignature).toHaveBeenCalledWith(expect.any(Object), event)
+    expect(mockUpdateNotificationsTable).toHaveBeenCalledWith(expect.any(Object), payload)
+    expect(result).toEqual({statusCode: 202, body: "\"OK\""})
   })
 })
