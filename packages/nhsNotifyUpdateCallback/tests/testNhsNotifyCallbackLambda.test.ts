@@ -182,8 +182,8 @@ describe("NHS Notify update callback lambda handler", () => {
           attributes: {
             messageStatus: "messageStatus",
             messageReference: "messageReference",
-            messageId: "messageId",
-            timestamp: "timestamp"
+            messageId: "31JwuwbJOv68kgsHuxKeq4oqpDe",
+            timestamp: "2025-08-15T11:02:19+0000"
           }
         }
       ]
@@ -198,7 +198,7 @@ describe("NHS Notify update callback lambda handler", () => {
 
     expect(mockCheckSignature).toHaveBeenCalledWith(expect.any(Object), event)
     expect(mockUpdateNotificationsTable).toHaveBeenCalledWith(expect.any(Object), payload)
-    expect(result).toEqual({statusCode: 202, body: "\"OK\""})
+    expect(result.statusCode).toEqual(202)
   })
 
   it("returns 202 and 'OK' when ChannelStatus is valid and succeeds", async () => {
@@ -218,8 +218,8 @@ describe("NHS Notify update callback lambda handler", () => {
             retryCount: 0,
             supplierStatus: "read",
             messageReference: "messageReference",
-            messageId: "messageId",
-            timestamp: "timestamp"
+            messageId: "31Jwv2SS0Zq3vVDOrCtDHdxvJXW",
+            timestamp: "2025-08-15T11:02:19+0000"
           }
         }
       ]
@@ -234,6 +234,6 @@ describe("NHS Notify update callback lambda handler", () => {
 
     expect(mockCheckSignature).toHaveBeenCalledWith(expect.any(Object), event)
     expect(mockUpdateNotificationsTable).toHaveBeenCalledWith(expect.any(Object), payload)
-    expect(result).toEqual({statusCode: 202, body: "\"OK\""})
+    expect(result.statusCode).toEqual(202)
   })
 })

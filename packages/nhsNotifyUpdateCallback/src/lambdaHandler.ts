@@ -93,7 +93,7 @@ const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPro
   }
 
   // All's well that ends well
-  return response(202, "OK")
+  return response(202)
 }
 
 export const handler = middy(lambdaHandler)
