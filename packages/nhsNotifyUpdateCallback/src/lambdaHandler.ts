@@ -64,10 +64,9 @@ const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPro
       logger.warn("Unknown callback data structure.", {data: m})
       receivedUnknownCallbackType = true
     }
-    logger.info(
-      "Message state updated",
-      logPayload
-    )
+
+    // If we have populated the logPayload object, then log it.
+    if (Object.keys(logPayload).length > 0) logger.info("Message state updated", logPayload)
   })
 
   try {
