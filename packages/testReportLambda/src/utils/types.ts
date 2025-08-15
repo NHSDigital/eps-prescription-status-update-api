@@ -39,7 +39,6 @@ export interface StatusDataResponse {
 }
 
 /** LOG SEARCHING TYPES */
-import {FilteredLogEvent} from "@aws-sdk/client-cloudwatch-logs"
 
 export interface LogSearchOptions {
   /** UNIX epoch, milliseconds */
@@ -54,7 +53,9 @@ export interface LogSearchOptions {
   logStreamNames?: Array<string>
 }
 
-export interface TermSearchResult {
-  term: string
+import {FilteredLogEvent} from "@aws-sdk/client-cloudwatch-logs"
+
+export interface PrescriptionIdSearchResult {
+  prescriptionId: string
   matches: Array<FilteredLogEvent>
 }

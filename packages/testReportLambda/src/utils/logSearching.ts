@@ -1,7 +1,7 @@
 import {CloudWatchLogsClient, FilterLogEventsCommand, FilteredLogEvent} from "@aws-sdk/client-cloudwatch-logs"
 import type {Logger} from "@aws-lambda-powertools/logger"
 
-import {LogSearchOptions, TermSearchResult} from "./types"
+import {LogSearchOptions, PrescriptionIdSearchResult} from "./types"
 
 // https://docs.aws.amazon.com/AWSJavaScriptSDK/v3/latest/client/cloudwatch-logs/
 let _client: CloudWatchLogsClient | null = null
@@ -75,7 +75,10 @@ export async function searchLogGroupForString(
     const resp = await client.send(cmd)
 
     if (resp.events && resp.events.length > 0) {
-      events = events.concat(resp.events)
+      const parsedMessages = resp.events.map((e) => {
+        return (e.message === undefined) ? {} : JSON.parse(e.message)
+      })
+      events = events.concat(parsedMessages)
     }
 
     nextToken = resp.nextToken
@@ -94,20 +97,27 @@ export async function searchLogGroupForString(
  */
 export async function searchLogGroupForStrings(
   logGroupNameOrArn: string,
-  terms: Array<string>,
+  prescriptionIds: Array<string>,
   logger: Logger,
   opts: LogSearchOptions = {}
-): Promise<Array<TermSearchResult>> {
-  const results: Array<TermSearchResult> = []
+): Promise<Array<PrescriptionIdSearchResult>> {
+  const results: Array<PrescriptionIdSearchResult> = []
 
-  for (const term of terms) {
+  for (const prescriptionId of prescriptionIds) {
     // Skip empty strings to avoid a very broad query
-    if (!term || !term.trim()) {
-      results.push({term, matches: []})
+    if (!prescriptionId || !prescriptionId.trim()) {
+      results.push({prescriptionId: prescriptionId, matches: []})
       continue
     }
-    const matches = await searchLogGroupForString(logGroupNameOrArn, term, logger, opts)
-    results.push({term, matches})
+
+    const matches = await searchLogGroupForString(
+      logGroupNameOrArn,
+      prescriptionId,
+      logger,
+      opts
+    )
+
+    results.push({prescriptionId, matches})
   }
 
   return results
