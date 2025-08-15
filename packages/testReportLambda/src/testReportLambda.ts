@@ -10,7 +10,7 @@ import httpHeaderNormalizer from "@middy/http-header-normalizer"
 import errorHandler from "@nhs/fhir-middy-error-handler"
 
 import {TestReportRequestBody, LogSearchOptions} from "./utils/types"
-import {searchLogGroupForStrings} from "./utils/logSearching"
+import {searchLogGroupForPrescriptionIds} from "./utils/logSearching"
 
 export const logger = new Logger({serviceName: "generateTestReport"})
 
@@ -38,8 +38,9 @@ const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPro
   logger.info("Received request body", {requestBody})
 
   const searchOptions: LogSearchOptions = {}
-  const logEvents = await searchLogGroupForStrings(
+  const logEvents = await searchLogGroupForPrescriptionIds(
     PSU_LOG_GROUP_NAME,
+    requestBody.connectingSystemName,
     requestBody.prescriptionIds,
     logger,
     searchOptions

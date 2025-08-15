@@ -1,7 +1,12 @@
-import {CloudWatchLogsClient, FilterLogEventsCommand, FilteredLogEvent} from "@aws-sdk/client-cloudwatch-logs"
+import {CloudWatchLogsClient, FilterLogEventsCommand} from "@aws-sdk/client-cloudwatch-logs"
 import type {Logger} from "@aws-lambda-powertools/logger"
 
-import {LogSearchOptions, PrescriptionIdSearchResult} from "./types"
+import {
+  LogSearchOptions,
+  ParsedMessages,
+  PrescriptionIdSearchResult,
+  UpdatePrescriptionStatusLog
+} from "./types"
 
 // https://docs.aws.amazon.com/AWSJavaScriptSDK/v3/latest/client/cloudwatch-logs/
 let _client: CloudWatchLogsClient | null = null
@@ -15,25 +20,13 @@ function getClient() {
   return _client
 }
 
-/**
- * Builds a filter pattern that matches any log message containing the exact term.
- * Using quotes in CloudWatch Logs filter patterns matches the literal substring anywhere in the message.
- */
-export function buildExactSubstringFilter(term: string): string {
-  // Escape any embedded quotes in the term by backslash-escaping
-  const safe = term.replace(/"/g, '\\"')
-  return `"${safe}"`
-}
-
-/**
- * Search a single log group for messages containing a single term.
- */
-export async function searchLogGroupForString(
+export async function searchLogGroupForPrescriptionId(
   logGroupName: string,
-  term: string,
+  applicationName: string,
+  prescriptionId: string,
   logger: Logger,
   opts: LogSearchOptions = {}
-): Promise<Array<FilteredLogEvent>> {
+): Promise<ParsedMessages> {
   const client = getClient()
 
   // Defaults
@@ -42,17 +35,31 @@ export async function searchLogGroupForString(
   const limitPerTerm = Math.max(1, opts.limitPerTerm ?? 1000)
   const pageLimit = Math.max(1, opts.pageLimit ?? 50)
 
-  const filterPattern = buildExactSubstringFilter(term)
+  prescriptionId = prescriptionId.trim().toUpperCase()
 
-  let events: Array<FilteredLogEvent> = []
+  // Build a JSON filter pattern that matches:
+  // - message === "Transitioning item status."
+  // - applicationName === supplierSystemName
+  // - prescriptionID === term
+  //
+  // Use JSON.stringify to escape arbitrary values.
+  //
+  // We really don't want them to be able to search for any old whatever in here.
+  const filterPattern =
+    `{ $.message = "Transitioning item status." && ` +
+    `$.applicationName = ${JSON.stringify(applicationName)} && ` +
+    `$.prescriptionID = ${JSON.stringify(prescriptionId)} }`
+
+  let events: Array<UpdatePrescriptionStatusLog> = []
   let nextToken: string | undefined = undefined
   let pageCount = 0
 
-  logger.info?.(
-    `Searching log group for term`,
+  logger.info(
+    `Searching log group for prescriptionId`,
     {
       logGroupName,
-      term,
+      supplierSystemName: applicationName,
+      prescriptionId,
       startTime,
       endTime
     }
@@ -75,10 +82,11 @@ export async function searchLogGroupForString(
     const resp = await client.send(cmd)
 
     if (resp.events && resp.events.length > 0) {
-      const parsedMessages = resp.events.map((e) => {
-        return (e.message === undefined) ? {} : JSON.parse(e.message)
+      const parsed: Array<UpdatePrescriptionStatusLog> = resp.events.flatMap((e) => {
+        // Parses the message where it's found, skips if not.
+        return e.message ? [JSON.parse(e.message)] : []
       })
-      events = events.concat(parsedMessages)
+      events = events.concat(parsed)
     }
 
     nextToken = resp.nextToken
@@ -91,12 +99,9 @@ export async function searchLogGroupForString(
   return events
 }
 
-/**
- * Search a single log group for messages containing each of the given terms.
- * Returns a list of results keyed by the term.
- */
-export async function searchLogGroupForStrings(
-  logGroupNameOrArn: string,
+export async function searchLogGroupForPrescriptionIds(
+  logGroupName: string,
+  applicationName: string,
   prescriptionIds: Array<string>,
   logger: Logger,
   opts: LogSearchOptions = {}
@@ -110,8 +115,9 @@ export async function searchLogGroupForStrings(
       continue
     }
 
-    const matches = await searchLogGroupForString(
-      logGroupNameOrArn,
+    const matches = await searchLogGroupForPrescriptionId(
+      logGroupName,
+      applicationName,
       prescriptionId,
       logger,
       opts
