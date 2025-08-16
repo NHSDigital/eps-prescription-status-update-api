@@ -2,6 +2,7 @@
 
 import {APIGatewayProxyEvent} from "aws-lambda"
 import {
+  CallbackType,
   Channel,
   MessageStatusResource,
   MessageStatusResponse,
@@ -61,7 +62,7 @@ export function generateMockMessageStatusResponse(
   ]
 
   const defaultResource: MessageStatusResource = {
-    type: "MessageStatus",
+    type: CallbackType.message,
     attributes: {
       messageId: "msg-123",
       messageReference: "ref-123",

@@ -9,7 +9,7 @@ import {createHmac, timingSafeEqual} from "crypto"
 
 import {LastNotificationStateType} from "@PrescriptionStatusUpdate_common/commonTypes"
 
-import {MessageStatusResponse} from "./types"
+import {CallbackResponse, CallbackType} from "./types"
 
 const APP_NAME_SECRET = process.env.APP_NAME_SECRET
 const API_KEY_SECRET = process.env.API_KEY_SECRET
@@ -105,7 +105,7 @@ export async function checkSignature(logger: Logger, event: APIGatewayProxyEvent
 
   // Must be same length for timingSafeEqual
   if (givenSigBuf.length !== expectedSigBuf.length ||
-      !timingSafeEqual(expectedSigBuf, givenSigBuf)) {
+    !timingSafeEqual(expectedSigBuf, givenSigBuf)) {
     logger.error("Incorrect signature given", {
       expectedSignature: expectedSigBuf.toString("hex"),
       givenSignature: signature
@@ -113,6 +113,7 @@ export async function checkSignature(logger: Logger, event: APIGatewayProxyEvent
     return response(403, {message: "Incorrect signature"})
   }
 
+  logger.info("Signature OK!")
   return undefined
 }
 
@@ -124,11 +125,29 @@ export async function checkSignature(logger: Logger, event: APIGatewayProxyEvent
  */
 export async function updateNotificationsTable(
   logger: Logger,
-  bodyData: MessageStatusResponse
+  bodyData: CallbackResponse
 ): Promise<void> {
   // For each callback resource, return a promise
   const callbackPromises = bodyData.data.map(async (resource) => {
-    const {messageId, messageStatus, timestamp} = resource.attributes
+    let messageId: string
+    let messageStatus: string
+    let timestamp: string
+
+    if (resource.type === CallbackType.message) {
+      messageId = resource.attributes.messageId
+      messageStatus = resource.attributes.messageStatus
+      timestamp = resource.attributes.timestamp
+    } else if (resource.type === CallbackType.channel) {
+      messageId = resource.attributes.messageId
+      messageStatus = resource.attributes.channelStatus
+      timestamp = resource.attributes.timestamp
+    } else {
+      logger.error("Unknown data structure - cannot store to notifications table.", {resource})
+      // Set to junk data, so that when we try and update the table we will fail. This is fine, and handled later.
+      messageId = "unknown"
+      messageStatus = "unknown"
+      timestamp = "unknown"
+    }
 
     // Query matching records
     let queryResult
