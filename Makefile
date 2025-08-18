@@ -84,7 +84,7 @@ sam-deploy-package: guard-artifact_bucket guard-artifact_bucket_prefix guard-sta
 		--role-arn $$cloud_formation_execution_role \
 		--no-confirm-changeset \
 		--force-upload \
-		--tags "version=$$VERSION_NUMBER" \
+		--tags "version=$$VERSION_NUMBER cloudFormationStack=$$stack_name" \
 		--parameter-overrides \
 			  TruststoreVersion=$$LATEST_TRUSTSTORE_VERSION \
 			  EnableMutualTLS=$$enable_mutual_tls \
@@ -98,8 +98,9 @@ sam-deploy-package: guard-artifact_bucket guard-artifact_bucket_prefix guard-sta
 			  DeployCheckPrescriptionStatusUpdate=$$DEPLOY_CHECK_PRESCRIPTION_STATUS_UPDATE \
 			  EnableAlerts=$$ENABLE_ALERTS \
 			  StateMachineLogLevel=$$STATE_MACHINE_LOG_LEVEL \
+			  EnableNotificationsInternal=$$ENABLE_NOTIFICATIONS_INTERNAL \
+			  EnableNotificationsExternal=$$ENABLE_NOTIFICATIONS_EXTERNAL \
 			  EnableBackup=$$ENABLE_BACKUP
-
 
 compile-node:
 	npx tsc --build tsconfig.build.json

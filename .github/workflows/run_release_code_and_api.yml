@@ -73,6 +73,14 @@ on:
       ENABLE_BACKUP:
         required: true
         type: string
+      ENABLE_NOTIFICATIONS_INTERNAL:
+        required: false
+        type: boolean
+        default: false
+      ENABLE_NOTIFICATIONS_EXTERNAL:
+        required: false
+        type: boolean
+        default: false
     secrets:
       CLOUD_FORMATION_DEPLOY_ROLE:
         required: true
@@ -99,7 +107,7 @@ jobs:
 
     steps:
       - name: Checkout local github actions
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           ref: ${{ env.BRANCH_NAME }}
           fetch-depth: 0
@@ -126,7 +134,7 @@ jobs:
           role-session-name: psu-release-code
 
       - name: Download build artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v5
         with:
           name: ${{ inputs.BUILD_ARTIFACT }}
           path: .
@@ -144,14 +152,14 @@ jobs:
         shell: bash
         working-directory: .github/scripts
         env:
-          artifact_bucket_prefix: prescription_status_update/${{ inputs.ARTIFACT_BUCKET_PREFIX }}
+          ARTIFACT_BUCKET_PREFIX: prescription_status_update/${{ inputs.ARTIFACT_BUCKET_PREFIX }}
           COMMIT_ID: ${{ inputs.COMMIT_ID }}
-          enable_mutual_tls: ${{ inputs.ENABLE_MUTUAL_TLS }}
+          ENABLE_MUTUAL_TLS: ${{ inputs.ENABLE_MUTUAL_TLS }}
           LOG_LEVEL: ${{ inputs.LOG_LEVEL }}
           LOG_RETENTION_DAYS: ${{ inputs.LOG_RETENTION_DAYS }}
-          stack_name: ${{ inputs.STACK_NAME }}
+          STACK_NAME: ${{ inputs.STACK_NAME }}
           TARGET_ENVIRONMENT: ${{ inputs.AWS_ENVIRONMENT }}
-          template_file: template.yaml
+          TEMPLATE_FILE: template.yaml
           TRUSTSTORE_FILE: ${{ inputs.TRUSTSTORE_FILE }}
           VERSION_NUMBER: ${{ inputs.VERSION_NUMBER }}
           DYNAMODB_AUTOSCALE: ${{ inputs.DYNAMODB_AUTOSCALE }}
@@ -159,6 +167,8 @@ jobs:
           ENABLE_ALERTS: ${{ inputs.ENABLE_ALERTS }}
           STATE_MACHINE_LOG_LEVEL: ${{ inputs.STATE_MACHINE_LOG_LEVEL }}
           ENABLE_BACKUP: ${{ inputs.ENABLE_BACKUP }}
+          ENABLE_NOTIFICATIONS_INTERNAL: ${{ inputs.ENABLE_NOTIFICATIONS_INTERNAL }}
+          ENABLE_NOTIFICATIONS_EXTERNAL: ${{ inputs.ENABLE_NOTIFICATIONS_EXTERNAL }}
         run: ./release_code.sh
 
       - name: get mtls secrets
@@ -243,7 +253,7 @@ jobs:
           DEV_CLOUD_FORMATION_EXECUTE_LAMBDA_ROLE: ${{ secrets.DEV_CLOUD_FORMATION_EXECUTE_LAMBDA_ROLE }}
 
       - name: Checkout gh-pages
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           ref: gh-pages
           path: gh-pages

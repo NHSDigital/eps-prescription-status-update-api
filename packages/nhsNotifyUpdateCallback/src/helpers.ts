@@ -7,7 +7,9 @@ import {getSecret} from "@aws-lambda-powertools/parameters/secrets"
 
 import {createHmac, timingSafeEqual} from "crypto"
 
-import {MessageStatusResponse} from "./types"
+import {LastNotificationStateType} from "@PrescriptionStatusUpdate_common/commonTypes"
+
+import {CallbackResponse, CallbackType} from "./types"
 
 const APP_NAME_SECRET = process.env.APP_NAME_SECRET
 const API_KEY_SECRET = process.env.API_KEY_SECRET
@@ -89,12 +91,6 @@ export async function checkSignature(logger: Logger, event: APIGatewayProxyEvent
     return response(401, {message: "No x-hmac-sha256-signature given"})
   }
 
-  const givenApiKey = event.headers["x-api-key"]
-  if (!givenApiKey) {
-    logger.error("No x-api-key header given")
-    return response(401, {message: "No x-api-key header given"})
-  }
-
   // Compute the HMAC-SHA256 hash of the combination of the request body and the secret value
   const secretValue = `${APP_NAME}.${API_KEY}`
   const payload = event.body ?? ""
@@ -109,7 +105,7 @@ export async function checkSignature(logger: Logger, event: APIGatewayProxyEvent
 
   // Must be same length for timingSafeEqual
   if (givenSigBuf.length !== expectedSigBuf.length ||
-      !timingSafeEqual(expectedSigBuf, givenSigBuf)) {
+    !timingSafeEqual(expectedSigBuf, givenSigBuf)) {
     logger.error("Incorrect signature given", {
       expectedSignature: expectedSigBuf.toString("hex"),
       givenSignature: signature
@@ -117,6 +113,7 @@ export async function checkSignature(logger: Logger, event: APIGatewayProxyEvent
     return response(403, {message: "Incorrect signature"})
   }
 
+  logger.info("Signature OK!")
   return undefined
 }
 
@@ -128,11 +125,29 @@ export async function checkSignature(logger: Logger, event: APIGatewayProxyEvent
  */
 export async function updateNotificationsTable(
   logger: Logger,
-  bodyData: MessageStatusResponse
+  bodyData: CallbackResponse
 ): Promise<void> {
   // For each callback resource, return a promise
   const callbackPromises = bodyData.data.map(async (resource) => {
-    const {messageId, messageStatus, timestamp} = resource.attributes
+    let messageId: string
+    let messageStatus: string
+    let timestamp: string
+
+    if (resource.type === CallbackType.message) {
+      messageId = resource.attributes.messageId
+      messageStatus = resource.attributes.messageStatus
+      timestamp = resource.attributes.timestamp
+    } else if (resource.type === CallbackType.channel) {
+      messageId = resource.attributes.messageId
+      messageStatus = resource.attributes.channelStatus
+      timestamp = resource.attributes.timestamp
+    } else {
+      logger.error("Unknown data structure - cannot store to notifications table.", {resource})
+      // Set to junk data, so that when we try and update the table we will fail. This is fine, and handled later.
+      messageId = "unknown"
+      messageStatus = "unknown"
+      timestamp = "unknown"
+    }
 
     // Query matching records
     let queryResult
@@ -150,7 +165,7 @@ export async function updateNotificationsTable(
       throw error
     }
 
-    const items = queryResult.Items ?? []
+    const items = queryResult.Items as Array<LastNotificationStateType> ?? []
     if (items.length === 0) {
       logger.warn("No matching record found for NotifyMessageID. Counting this as a successful update.", {messageId})
       return
@@ -173,7 +188,7 @@ export async function updateNotificationsTable(
     const updatePromises = items.map(async item => {
       const key = {
         NHSNumber: item.NHSNumber,
-        ODSCode: item.ODSCode
+        RequestId: item.RequestId
       }
       try {
         await docClient.send(new UpdateCommand({
@@ -194,6 +209,8 @@ export async function updateNotificationsTable(
           "Updated notification state",
           {
             NotifyMessageID: item.NotifyMessageID,
+            nhsNumber: item.NHSNumber,
+            psuRequestId: item.RequestId,
             newStatus: messageStatus,
             newTimestamp: timestamp,
             newExpiryTime: newExpiry
@@ -204,6 +221,8 @@ export async function updateNotificationsTable(
           "Failed to update notification state",
           {
             NotifyMessageID: item.NotifyMessageID,
+            nhsNumber: item.NHSNumber,
+            psuRequestId: item.RequestId,
             error: err
           }
         )

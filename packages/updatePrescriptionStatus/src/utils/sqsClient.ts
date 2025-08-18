@@ -154,6 +154,11 @@ export async function pushPrescriptionToNotificationSQS(
     return []
   }
 
+  logger.info(
+    "The following patients will have prescription update app notifications requested",
+    {nhsNumbers: allowedSitesAndSystemsData.map(e => e.PatientNHSNumber)}
+  )
+
   // SQS batch calls are limited to 10 messages per request, so chunk the data
   const batches = chunkArray(allEntries, 10)
 
