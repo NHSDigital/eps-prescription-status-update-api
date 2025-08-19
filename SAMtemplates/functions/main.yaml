@@ -421,6 +421,11 @@ Resources:
       Parameters:
         StackName: !Ref StackName
         LambdaName: !Sub ${StackName}-TestReportLambda
+        IncludeAdditionalPolicies: true
+        AdditionalPolicies: !Join
+          - ","
+          - - Fn::ImportValue: !Sub ${StackName}:tables:${PrescriptionStatusUpdatesTableName}:TableReadPolicyArn
+            - Fn::ImportValue: !Sub ${StackName}:tables:UsePrescriptionStatusUpdatesKMSKeyPolicyArn
         LambdaArn: !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:${StackName}-TestReportLambda
         LogRetentionInDays: !Ref LogRetentionInDays
         CloudWatchKMSKeyId: !ImportValue account-resources:CloudwatchLogsKmsKeyArn
@@ -428,10 +433,6 @@ Resources:
         SplunkSubscriptionFilterRole: !ImportValue lambda-resources:SplunkSubscriptionFilterRole
         SplunkDeliveryStreamArn: !ImportValue lambda-resources:SplunkDeliveryStream
         IncludeQueryLogGroupsPolicy: true
-        IncludeAdditionalPolicies: true
-        AdditionalPolicies: !Join
-          - ","
-          - - Fn::ImportValue: !Sub ${StackName}:tables:${PrescriptionStatusUpdatesTableName}:TableReadPolicyArn
 
 
   NotifyProcessorScheduleEventRolePolicy:
