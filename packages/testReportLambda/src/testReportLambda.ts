@@ -9,7 +9,7 @@ import httpHeaderNormalizer from "@middy/http-header-normalizer"
 
 import errorHandler from "@nhs/fhir-middy-error-handler"
 
-import {TestReportRequestBody} from "./utils/types"
+import {TestReportRequestBody, TestReportResponseBody} from "./utils/types"
 import {getItemsForPrescriptionIDs} from "./utils/dynamo"
 
 export const logger = new Logger({serviceName: "generateTestReport"})
@@ -44,24 +44,51 @@ const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPro
         applicationName
       }
     )
-    return response(
-      400,
-      {
-        message: "Mismatch between header application name, and request body connecting system name.",
-        bodyConnectingSystemName: requestBody.connectingSystemName,
-        applicationName
-      }
-    )
+
+    // In non-int environments, complain about mismatches but continue anyway.
+    // In int though, return an error.
+    if (process.env.ENVIRONMENT?.toLowerCase() === "int") {
+      return response(
+        400,
+        {
+          message: "Mismatch between header application name, and request body connecting system name.",
+          bodyConnectingSystemName: requestBody.connectingSystemName,
+          applicationName
+        }
+      )
+    }
   }
 
   const updateRecords = await getItemsForPrescriptionIDs(
-    requestBody.connectingSystemName, // TODO: Take this from the auth headers
+    requestBody.connectingSystemName,
     requestBody.prescriptionIds,
     logger
   )
   logger.info("Found matching events", {updateRecords})
 
-  return response(200, {message: "OK", updateRecords})
+  // Get the earliest and latest status update timestamps from LastModified fields
+  const firstStatusDate = "todo"
+  const lastStatusDate = "todo"
+
+  const responseBody: TestReportResponseBody = {
+    systemName: requestBody.connectingSystemName,
+    firstStatusDate,
+    lastStatusDate,
+    statusUpdates: updateRecords.map((el) => {
+      return {
+        prescriptionId: el.prescriptionId,
+        statusDataArray: el.PSUDataItems.map((ell) => {
+          return {
+            status: ell.Status,
+            timestamp: ell.LastModified,
+            isSuccess: "success"
+          }
+        })
+      }
+    })
+  }
+
+  return response(200, responseBody)
 }
 
 function response(statusCode: number, body: any) {

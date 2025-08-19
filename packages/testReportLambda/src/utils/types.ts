@@ -9,101 +9,35 @@ export interface TestReportRequestBody {
 
 export interface TestReportResponseBody {
   systemName: string;
-  /** UNIX timestamp of first PSU request in pack */
-  firstStatusDate: number;
-  /** UNIX timestamp of last PSU request in pack */
-  lastStatusDate: number;
-  prescriptionId: string;
-  statusDataArray: Array<StatusDataResponse>;
+  /** ISO 8061 timestamp of first PSU request in pack */
+  firstStatusDate: string;
+  /** ISO 8061 timestamp of last PSU request in pack */
+  lastStatusDate: string;
+  statusUpdates: Array<PrescriptionStatuses>;
 }
 
 export type PsuIsSuccess = "success" | "fail"
 
 export interface FailedDataResponse {
   submittedStatus: string;
-  /** UNIX timestamp */
-  submittedLastUpdatedTimestamp: number
+  /** ISO 8061 timestamp */
+  submittedLastUpdatedTimestamp: string
   submittedTerminalStatus: boolean;
   storedStatus: string;
-  /** UNIX timestamp */
-  storedTimestamp: number
+  /** ISO 8061 timestamp */
+  storedTimestamp: string
   storedTerminalStatus: boolean
+}
+
+export interface PrescriptionStatuses {
+  prescriptionId: string;
+  statusDataArray: Array<StatusDataResponse>;
 }
 
 export interface StatusDataResponse {
   status: string;
-  /* UNIX timestamp of this prescription status update */
-  timestamp: number;
+  /* ISO 8061 timestamp of this prescription status update */
+  timestamp: string;
   isSuccess: PsuIsSuccess;
   failureData?: FailedDataResponse;
 }
-
-/** LOG SEARCHING TYPES */
-
-export interface LogSearchOptions {
-  /** UNIX epoch, milliseconds */
-  startTime?: number
-  /** UNIX epoch, milliseconds */
-  endTime?: number
-  /** Max number of events to collect per term before stopping pagination. Defaults to 1000. */
-  limitPerTerm?: number
-  /** Max number of pages to request per term. Defaults to 50. */
-  pageLimit?: number
-  /** Optional explicit log stream name filter. */
-  logStreamNames?: Array<string>
-}
-
-export interface PrescriptionIdSearchResult {
-  prescriptionId: string
-  matches: ParsedMessages
-}
-
-/** Log message contents */
-
-export type LogLevel = "DEBUG" | "INFO" | "WARN" | "ERROR";
-
-// Our aws log envelope
-export interface BaseLogEnvelope {
-  level: LogLevel;
-  message: string;
-  /** ISO-8601 */
-  timestamp: string;
-  service: string;
-}
-
-export interface LambdaRuntimeMeta {
-  cold_start: boolean;
-  function_arn: string;
-  function_memory_size: `${number}` | number;
-  function_name: string;
-  function_request_id: string;
-  sampling_rate: number;
-  xray_trace_id: string;
-  "x-correlation-id"?: string;
-  "apigw-request-id"?: string;
-  "x-request-id"?: string;
-}
-
-export interface PrescriptionStatusUpdateFields {
-  prescriptionID: string;
-  lineItemID: string;
-  nhsNumber: string;
-  pharmacyODSCode: string;
-  applicationName: string;
-  /** ISO-8601 business timestamp */
-  when: string;
-  interval: number;
-  // Status strings (this is what we really care about)
-  newStatus: string;
-  previousStatus: string;
-  newTerminalStatus: string;
-  previousTerminalStatus: string;
-}
-
-export type UpdatePrescriptionStatusLog =
-  BaseLogEnvelope &
-  LambdaRuntimeMeta &
-  PrescriptionStatusUpdateFields;
-
-/** Convenience alias for your function’s return type */
-export type ParsedMessages = Array<UpdatePrescriptionStatusLog>;

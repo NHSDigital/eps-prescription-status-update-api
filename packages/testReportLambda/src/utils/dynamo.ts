@@ -56,6 +56,11 @@ async function fetchRecordsForPrescriptionID(
   return items
 }
 
+export interface PrescriptionRecords {
+  prescriptionId: string;
+  PSUDataItems: Array<PSUDataItem>;
+}
+
 /**
  * Fetch all items for a list of PrescriptionIDs.
  * Returns a map keyed by PrescriptionID.
@@ -65,15 +70,15 @@ export async function getItemsForPrescriptionIDs(
   prescriptionIDs: Array<string>,
   logger: Logger,
   num_workers: number = 5
-): Promise<Record<string, Array<PSUDataItem>>> {
+): Promise<Array<PrescriptionRecords>> {
   if (!prescriptionIDs || prescriptionIDs.length === 0) {
-    return {}
+    return []
   }
 
   // De-duplicate IDs just in case
   const uniqueIDs = Array.from(new Set(prescriptionIDs))
 
-  const results: Record<string, Array<PSUDataItem>> = {}
+  const results: Array<PrescriptionRecords> = []
 
   let idx = 0
   async function worker() {
@@ -81,13 +86,13 @@ export async function getItemsForPrescriptionIDs(
       const current = uniqueIDs[idx++]
       try {
         const items = await fetchRecordsForPrescriptionID(applicationName, current, logger)
-        results[current] = items
+        results.push({prescriptionId: current, PSUDataItems: items})
       } catch (e) {
         logger.error("Error querying PrescriptionID.", {prescriptionID: current, error: e})
         // Not sure if I should omit the ID entirely, or if I should return an empty array.
         // I'll do the latter for now since it can be ignored, and probably makes downstream
         // logic easier if each ID is guaranteed to have an entry.
-        results[current] = []
+        results.push({prescriptionId: current, PSUDataItems: []})
       }
     }
   }
