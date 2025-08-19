@@ -395,6 +395,7 @@ Resources:
       Environment:
         Variables:
           LOG_LEVEL: !Ref LogLevel
+          TABLE_NAME: !Ref PrescriptionStatusUpdatesTableName
           ENVIRONMENT: !Ref Environment
     Metadata:
       BuildMethod: esbuild
@@ -427,6 +428,10 @@ Resources:
         SplunkSubscriptionFilterRole: !ImportValue lambda-resources:SplunkSubscriptionFilterRole
         SplunkDeliveryStreamArn: !ImportValue lambda-resources:SplunkDeliveryStream
         IncludeQueryLogGroupsPolicy: true
+        IncludeAdditionalPolicies: true
+        AdditionalPolicies: !Join
+          - ","
+            - Fn::ImportValue: !Sub ${StackName}:tables:${PrescriptionStatusUpdatesTableName}:TableReadPolicyArn
 
 
   NotifyProcessorScheduleEventRolePolicy:

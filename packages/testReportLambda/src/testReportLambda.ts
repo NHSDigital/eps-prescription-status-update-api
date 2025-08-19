@@ -9,12 +9,10 @@ import httpHeaderNormalizer from "@middy/http-header-normalizer"
 
 import errorHandler from "@nhs/fhir-middy-error-handler"
 
-import {TestReportRequestBody, LogSearchOptions} from "./utils/types"
-import {searchLogGroupForPrescriptionIds} from "./utils/logSearching"
+import {TestReportRequestBody} from "./utils/types"
+import {getItemsForPrescriptionIDs} from "./utils/dynamo"
 
 export const logger = new Logger({serviceName: "generateTestReport"})
-
-const PSU_LOG_GROUP_NAME = "/aws/lambda/psu-pr-2036-UpdatePrescriptionStatus"
 
 const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
   logger.appendKeys({
@@ -26,28 +24,44 @@ const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPro
   })
 
   if (!event.body) {
-    return response(400, {"message": "Missing request body."})
+    return response(400, {message: "Missing request body."})
   }
 
   let requestBody: TestReportRequestBody
   try {
     requestBody = JSON.parse(event.body)
   } catch (err) {
-    return response(400, {"message": "Badly formed request body", "error": err})
+    return response(400, {message: "Badly formed request body", error: err})
   }
   logger.info("Received request body", {requestBody})
 
-  const searchOptions: LogSearchOptions = {}
-  const logEvents = await searchLogGroupForPrescriptionIds(
-    PSU_LOG_GROUP_NAME,
-    requestBody.connectingSystemName,
-    requestBody.prescriptionIds,
-    logger,
-    searchOptions
-  )
-  logger.info("Found matching events", {logEvents})
+  const applicationName = event.headers["attribute-name"] ?? "unknown"
+  if (requestBody.connectingSystemName !== applicationName) {
+    logger.error(
+      "Mismatch between header application name, and request body connecting system name.",
+      {
+        bodyConnectingSystemName: requestBody.connectingSystemName,
+        applicationName
+      }
+    )
+    return response(
+      400,
+      {
+        message: "Mismatch between header application name, and request body connecting system name.",
+        bodyConnectingSystemName: requestBody.connectingSystemName,
+        applicationName
+      }
+    )
+  }
 
-  return response(200, {"message": "OK", logEvents})
+  const updateRecords = await getItemsForPrescriptionIDs(
+    requestBody.connectingSystemName, // TODO: Take this from the auth headers
+    requestBody.prescriptionIds,
+    logger
+  )
+  logger.info("Found matching events", {updateRecords})
+
+  return response(200, {message: "OK", updateRecords})
 }
 
 function response(statusCode: number, body: any) {
