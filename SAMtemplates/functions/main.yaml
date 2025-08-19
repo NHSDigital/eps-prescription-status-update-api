@@ -431,7 +431,7 @@ Resources:
         IncludeAdditionalPolicies: true
         AdditionalPolicies: !Join
           - ","
-            - Fn::ImportValue: !Sub ${StackName}:tables:${PrescriptionStatusUpdatesTableName}:TableReadPolicyArn
+          - - Fn::ImportValue: !Sub ${StackName}:tables:${PrescriptionStatusUpdatesTableName}:TableReadPolicyArn
 
 
   NotifyProcessorScheduleEventRolePolicy:
