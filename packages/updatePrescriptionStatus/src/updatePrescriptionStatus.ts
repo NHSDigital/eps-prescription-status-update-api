@@ -132,8 +132,15 @@ const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPro
     testPrescriptionForcedError = !!interceptionResponse.testPrescriptionForcedError
   }
 
-  const dataItemsWithPrev = await Promise.all(dataItems.map((item) => getPreviousItem(item)))
-
+  let dataItemsWithPrev = []
+  try {
+    dataItemsWithPrev = await Promise.all(dataItems.map((item) => getPreviousItem(item)))
+  } catch (e) {
+    logger.error("Error getting previous data items from data store.", {error: e})
+    dataItemsWithPrev = dataItems.map((item) => {
+      return {current: item, previous: undefined}
+    })
+  }
   await logTransitions(dataItemsWithPrev)
 
   // Await the parameter promise before we continue
