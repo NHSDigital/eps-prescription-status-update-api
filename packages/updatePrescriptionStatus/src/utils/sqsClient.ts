@@ -7,6 +7,7 @@ import {createHmac} from "crypto"
 import {PSUDataItem, NotifyDataItem} from "@PrescriptionStatusUpdate_common/commonTypes"
 
 import {checkSiteOrSystemIsNotifyEnabled} from "../validation/notificationSiteAndSystemFilters"
+import {getPreviousItem} from "./databaseClient"
 
 const sqsUrl: string | undefined = process.env.NHS_NOTIFY_PRESCRIPTIONS_SQS_QUEUE_URL
 const fallbackSalt = "DEV SALT"
@@ -119,19 +120,46 @@ export async function pushPrescriptionToNotificationSQS(
     {numItemsAllowed: allowedSitesAndSystemsData.length}
   )
 
+  function norm(str: string) {
+    return str.toLowerCase().trim()
+  }
+
   // Only these statuses will be pushed to the SQS
   const updateStatuses: Array<string> = [
-    "ready to collect",
-    "ready to collect - partial"
+    norm("ready to collect"),
+    norm("ready to collect - partial")
   ]
   // Salt for the deduplication hash
   const sqsSalt = await getSaltValue(logger)
 
-  // Extract the required SQS payload data out of the filtered data
-  // We could do a round of deduplications here, but benefits would be minimal and AWS SQS will do it for us anyway.
-  const allEntries = allowedSitesAndSystemsData
-    .filter((item) => updateStatuses.includes(item.Status.toLowerCase()))
-    // Build SQS batch entries with FIFO parameters
+  // Get only items which have the correct current statuses
+  const candidates = allowedSitesAndSystemsData.filter(
+    (item) => updateStatuses.includes(norm(item.Status))
+  )
+
+  // Inject the previous items into the candidate array
+  const withPrev = await Promise.all(
+    candidates.map(async (item) => {
+      try {
+        const previous = await getPreviousItem(item) // This is a database hit!
+        return {item, previous}
+      } catch {
+        return {item, previous: undefined}
+      }
+    })
+  )
+
+  // we don't want items that have gone from "ready to collect" to "ready to collect"
+  // So chuck those out.
+  const changedStatus = withPrev
+    .filter(({item, previous}) => {
+      if (!previous) return true // no previous item (or hit an error getting one) -> treat as changed
+      return norm(item.Status) !== norm(previous.Status)
+    })
+    .map(({item}) => item)
+
+  // Build SQS batch entries with FIFO parameters
+  const allEntries = changedStatus
     .map((item, idx) => ({
       Id: idx.toString(),
       // Only post the required information to SQS
