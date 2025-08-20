@@ -11,7 +11,7 @@ import {
 } from "@aws-sdk/client-dynamodb"
 import {marshall, unmarshall} from "@aws-sdk/util-dynamodb"
 
-import {PSUDataItem} from "@PrescriptionStatusUpdate_common/commonTypes"
+import {PSUDataItem, PSUDataItemWithPrevious} from "@PrescriptionStatusUpdate_common/commonTypes"
 import {Timeout} from "./timeoutUtils"
 
 const client = new DynamoDBClient()
@@ -61,9 +61,9 @@ export async function persistDataItems(dataItems: Array<PSUDataItem>, logger: Lo
   }))
   const failed = results.filter(r => !r.success)
   if (failed.length > 0) {
-    const conditionalCheckFailures = failed.filter(r=> r.errorMessage === "conditional check failure")
+    const conditionalCheckFailures = failed.filter(r => r.errorMessage === "conditional check failure")
     if (conditionalCheckFailures.length > 0) {
-      throw(conditionalCheckFailures[0].error)
+      throw (conditionalCheckFailures[0].error)
     }
     return false
   } else {
@@ -94,7 +94,7 @@ export async function checkPrescriptionRecordExistence(
   }
 }
 
-export async function getPreviousItem(currentItem: PSUDataItem): Promise<PSUDataItem | undefined> {
+export async function getPreviousItem(currentItem: PSUDataItem): Promise<PSUDataItemWithPrevious> {
   const query: QueryCommandInput = {
     TableName: tableName,
     KeyConditions: {
@@ -129,5 +129,8 @@ export async function getPreviousItem(currentItem: PSUDataItem): Promise<PSUData
   } while (lastEvaluatedKey)
 
   items.sort((a, b) => new Date(a.LastModified).valueOf() - new Date(b.LastModified).valueOf())
-  return items.pop()
+  return {
+    current: currentItem,
+    previous: items.pop()
+  }
 }
