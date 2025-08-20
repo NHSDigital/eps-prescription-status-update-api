@@ -115,38 +115,3 @@ jobs:
       CLOUD_FORMATION_DEPLOY_ROLE: ${{ secrets.DEV_CLOUD_FORMATION_DEPLOY_ROLE }}
       PROXYGEN_ROLE: ${{ secrets.PROXYGEN_PTL_ROLE }}
       REGRESSION_TESTS_PEM: ${{ secrets.REGRESSION_TESTS_PEM }}
-
-  release_ref:
-    needs:
-      [
-        release_code,
-        release_sandbox_code,
-        package_code,
-        get_commit_id,
-      ]
-    uses: ./.github/workflows/run_release_code_and_api.yml
-    with:
-      ARTIFACT_BUCKET_PREFIX: aea000-notification-table-index-scaling
-      STACK_NAME: psu
-      AWS_ENVIRONMENT: ref
-      APIGEE_ENVIRONMENT: ref
-      ENABLE_MUTUAL_TLS: true
-      BUILD_ARTIFACT: packaged_code
-      TRUSTSTORE_FILE: psu-truststore.pem
-      VERSION_NUMBER: aea000-notification-table-index-scaling
-      COMMIT_ID: ${{needs.get_commit_id.outputs.commit_id}}
-      LOG_LEVEL: DEBUG
-      LOG_RETENTION_DAYS: 30
-      DEPLOY_APIGEE: true
-      DYNAMODB_AUTOSCALE: true
-      DEPLOY_APIGEE_CPSU: true
-      DEPLOY_CHECK_PRESCRIPTION_STATUS_UPDATE: true
-      ENABLE_ALERTS: true
-      RUN_REGRESSION_TEST: false
-      STATE_MACHINE_LOG_LEVEL: ERROR
-      ENABLE_NOTIFICATIONS_INTERNAL: false
-      ENABLE_NOTIFICATIONS_EXTERNAL: false
-    secrets:
-      CLOUD_FORMATION_DEPLOY_ROLE: ${{ secrets.REF_CLOUD_FORMATION_DEPLOY_ROLE }}
-      PROXYGEN_ROLE: ${{ secrets.PROXYGEN_PTL_ROLE }}
-      REGRESSION_TESTS_PEM: ${{ secrets.REGRESSION_TESTS_PEM }}
