@@ -155,7 +155,7 @@ describe("Unit tests for pushPrescriptionToNotificationSQS", () => {
       const original = payload[idx]
       expect(entry.Id).toBe(idx.toString())
       expect(entry.MessageBody).toBe(
-        JSON.stringify({...original})
+        JSON.stringify({...original.current})
       )
       // FIFO params
       expect(entry.MessageGroupId).toBe("req-789")
@@ -306,7 +306,7 @@ describe("Unit tests for checkSiteOrSystemIsNotifyEnabled", () => {
       ApplicationName: "not a real test supplier"
     })
     const result = await checkSiteOrSystemIsNotifyEnabled([{previous, current}])
-    expect(result).toEqual([previous, current])
+    expect(result).toStrictEqual([{previous, current}])
   })
 
   it("includes an item with an enabled ApplicationName", async () => {
