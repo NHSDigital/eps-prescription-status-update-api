@@ -118,6 +118,9 @@ export async function getPreviousItem(currentItem: PSUDataItem): Promise<PSUData
       query.ExclusiveStartKey = lastEvaluatedKey
     }
     const result = await client.send(new QueryCommand(query))
+
+    if (!result || !result.Items) break
+
     if (result.Items) {
       items = items.concat(
         result.Items
