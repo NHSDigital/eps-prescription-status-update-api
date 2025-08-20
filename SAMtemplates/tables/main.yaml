@@ -600,6 +600,58 @@ Resources:
         PredefinedMetricSpecification:
           PredefinedMetricType: DynamoDBWriteCapacityUtilization
 
+  PatientPharmacyIndexScalingReadTarget:
+    Type: AWS::ApplicationAutoScaling::ScalableTarget
+    DependsOn: PrescriptionNotificationStatesTableV1
+    Condition: EnableDynamoDBAutoScalingCondition
+    Properties:
+      MinCapacity: 1
+      MaxCapacity: 100
+      ResourceId: !Sub table/${PrescriptionNotificationStatesTableV1}/index/PatientPharmacyIndex
+      RoleARN: !GetAtt DynamoDbScalingRole.Arn
+      ScalableDimension: dynamodb:index:ReadCapacityUnits
+      ServiceNamespace: dynamodb
+
+  PatientPharmacyIndexScalingReadPolicy:
+    Type: AWS::ApplicationAutoScaling::ScalingPolicy
+    Condition: EnableDynamoDBAutoScalingCondition
+    Properties:
+      PolicyName: PatientPharmacyIndexReadScalingPolicy
+      PolicyType: TargetTrackingScaling
+      ScalingTargetId: !Ref PatientPharmacyIndexScalingReadTarget
+      TargetTrackingScalingPolicyConfiguration:
+        TargetValue: 70
+        ScaleInCooldown: 60
+        ScaleOutCooldown: 60
+        PredefinedMetricSpecification:
+          PredefinedMetricType: DynamoDBReadCapacityUtilization
+
+  NotifyMessageIDIndexScalingReadTarget:
+    Type: AWS::ApplicationAutoScaling::ScalableTarget
+    DependsOn: PrescriptionNotificationStatesTableV1
+    Condition: EnableDynamoDBAutoScalingCondition
+    Properties:
+      MinCapacity: 1
+      MaxCapacity: 100
+      ResourceId: !Sub table/${PrescriptionNotificationStatesTableV1}/index/NotifyMessageIDIndex
+      RoleARN: !GetAtt DynamoDbScalingRole.Arn
+      ScalableDimension: dynamodb:index:ReadCapacityUnits
+      ServiceNamespace: dynamodb
+
+  NotifyMessageIDIndexScalingReadPolicy:
+    Type: AWS::ApplicationAutoScaling::ScalingPolicy
+    Condition: EnableDynamoDBAutoScalingCondition
+    Properties:
+      PolicyName: NotifyMessageIDIndexReadScalingPolicy
+      PolicyType: TargetTrackingScaling
+      ScalingTargetId: !Ref NotifyMessageIDIndexScalingReadTarget
+      TargetTrackingScalingPolicyConfiguration:
+        TargetValue: 70
+        ScaleInCooldown: 60
+        ScaleOutCooldown: 60
+        PredefinedMetricSpecification:
+          PredefinedMetricType: DynamoDBReadCapacityUtilization
+
 Outputs:
   PrescriptionStatusUpdatesTableName:
     Description: PrescriptionStatusUpdates table name
