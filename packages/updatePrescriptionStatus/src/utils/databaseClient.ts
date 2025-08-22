@@ -13,7 +13,6 @@ import {marshall, unmarshall} from "@aws-sdk/util-dynamodb"
 
 import {PSUDataItem, PSUDataItemWithPrevious} from "@PrescriptionStatusUpdate_common/commonTypes"
 import {Timeout} from "./timeoutUtils"
-import {logger} from "../updatePrescriptionStatus"
 
 const client = new DynamoDBClient()
 const tableName = process.env.TABLE_NAME ?? "PrescriptionStatusUpdates"
@@ -95,7 +94,7 @@ export async function checkPrescriptionRecordExistence(
   }
 }
 
-export async function getPreviousItem(currentItem: PSUDataItem): Promise<PSUDataItemWithPrevious> {
+export async function getPreviousItem(currentItem: PSUDataItem, logger: Logger): Promise<PSUDataItemWithPrevious> {
   const query: QueryCommandInput = {
     TableName: tableName,
     KeyConditions: {

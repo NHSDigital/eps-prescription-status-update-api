@@ -134,7 +134,7 @@ const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPro
 
   let dataItemsWithPrev = []
   try {
-    dataItemsWithPrev = await Promise.all(dataItems.map((item) => getPreviousItem(item)))
+    dataItemsWithPrev = await Promise.all(dataItems.map((item) => getPreviousItem(item, logger)))
   } catch (e) {
     logger.error("Error getting previous data items from data store.", {error: e})
     dataItemsWithPrev = dataItems.map((item) => {
