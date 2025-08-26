@@ -72,7 +72,7 @@ export async function addPrescriptionMessagesToNotificationStateStore(
 export async function checkCooldownForUpdate(
   logger: Logger,
   update: NotifyDataItem,
-  cooldownPeriod: number = 900
+  cooldownPeriod: number = 7200
 ): Promise<boolean> {
   if (!dynamoTable) {
     logger.error("DynamoDB table not configured")
