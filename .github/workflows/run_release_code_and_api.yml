@@ -81,6 +81,12 @@ on:
         required: false
         type: boolean
         default: false
+      IS_PULL_REQUEST:
+        type: boolean
+        default: true
+      MTLS_KEY:
+        type: string
+        required: true
     secrets:
       CLOUD_FORMATION_DEPLOY_ROLE:
         required: true
@@ -203,6 +209,9 @@ jobs:
           PROXYGEN_KID: "eps-cli-key-1"
           DRY_RUN: false
           DEPLOY_CHECK_PRESCRIPTION_STATUS_UPDATE: ${{ inputs.DEPLOY_CHECK_PRESCRIPTION_STATUS_UPDATE }}
+          IS_PULL_REQUEST: ${{ inputs.IS_PULL_REQUEST }}
+          MTLS_KEY: ${{ inputs.MTLS_KEY }}
+          ENABLE_MUTUAL_TLS: ${{ inputs.ENABLE_MUTUAL_TLS }}
         run: ./deploy_api.sh
 
       - name: Deploy CPSU API
@@ -221,6 +230,9 @@ jobs:
           PROXYGEN_KID: eps-cli-key-cpsu-1
           DRY_RUN: false
           DEPLOY_CHECK_PRESCRIPTION_STATUS_UPDATE: ${{ inputs.DEPLOY_CHECK_PRESCRIPTION_STATUS_UPDATE }}
+          IS_PULL_REQUEST: ${{ inputs.IS_PULL_REQUEST }}
+          MTLS_KEY: ${{ inputs.MTLS_KEY }}
+          ENABLE_MUTUAL_TLS: ${{ inputs.ENABLE_MUTUAL_TLS }}
         run: ./deploy_api.sh
 
       - name: create_int_release_notes

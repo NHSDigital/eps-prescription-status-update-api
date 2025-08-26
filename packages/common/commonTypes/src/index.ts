@@ -34,3 +34,8 @@ export interface LastNotificationStateType {
   LastNotificationRequestTimestamp: string // ISO-8601 string
   ExpiryTime: number // DynamoDB expiration time (UNIX timestamp)
 }
+
+export interface PSUDataItemWithPrevious {
+  current: PSUDataItem;
+  previous: PSUDataItem | undefined;
+}

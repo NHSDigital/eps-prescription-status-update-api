@@ -90,9 +90,18 @@ describe("Unit tests for pushPrescriptionToNotificationSQS", () => {
 
   it("does nothing when there are no eligible statuses", async () => {
     const data = [
-      createMockDataItem({Status: "foo"}),
-      createMockDataItem({Status: "bar"}),
-      createMockDataItem({Status: "baz"})
+      {
+        current: createMockDataItem({Status: "foo_previous"}),
+        previous: createMockDataItem({Status: "foo"})
+      },
+      {
+        current: createMockDataItem({Status: "bar_previous"}),
+        previous: createMockDataItem({Status: "bar"})
+      },
+      {
+        current: createMockDataItem({Status: "baz_previous"}),
+        previous: createMockDataItem({Status: "baz"})
+      }
     ]
 
     await expect(
@@ -109,9 +118,18 @@ describe("Unit tests for pushPrescriptionToNotificationSQS", () => {
 
   it("sends only 'ready to collect' messages and succeeds", async () => {
     const payload = [
-      createMockDataItem({Status: "rEaDy To CoLlEcT"}), // Test case-insensitivity
-      createMockDataItem({Status: "ready to collect - partial"}),
-      createMockDataItem({Status: "a status that will never be real"})
+      {
+        previous: createMockDataItem({Status: "Old Status"}), // Test case-insensitivity
+        current: createMockDataItem({Status: "rEaDy To CoLlEcT"})
+      },
+      {
+        previous: createMockDataItem({Status: "Old Status"}),
+        current: createMockDataItem({Status: "ready to collect - partial"})
+      },
+      {
+        previous: createMockDataItem({Status: "Old Status"}),
+        current: createMockDataItem({Status: "a status that will never be real"})
+      }
     ]
 
     mockSend.mockImplementationOnce(() => Promise.resolve({Successful: [{}]}))
@@ -137,12 +155,12 @@ describe("Unit tests for pushPrescriptionToNotificationSQS", () => {
       const original = payload[idx]
       expect(entry.Id).toBe(idx.toString())
       expect(entry.MessageBody).toBe(
-        JSON.stringify({...original})
+        JSON.stringify({...original.current})
       )
       // FIFO params
       expect(entry.MessageGroupId).toBe("req-789")
       expect(entry.MessageDeduplicationId).toBe(
-        saltedHash(`${original.PatientNHSNumber}:${original.PharmacyODSCode}`, "salt")
+        saltedHash(`${original.current.PatientNHSNumber}:${original.current.PharmacyODSCode}`, "salt")
       )
     })
 
@@ -153,7 +171,12 @@ describe("Unit tests for pushPrescriptionToNotificationSQS", () => {
   })
 
   it("rethrows and logs if SendMessageBatchCommand rejects", async () => {
-    const payload = [createMockDataItem({Status: "ready to collect"})]
+    const payload = [
+      {
+        previous: createMockDataItem({Status: "previous status"}),
+        current: createMockDataItem({Status: "ready to collect"})
+      }
+    ]
     const testError = new Error("SQS failure")
 
     mockSend.mockImplementationOnce(() => Promise.reject(testError))
@@ -169,8 +192,12 @@ describe("Unit tests for pushPrescriptionToNotificationSQS", () => {
   })
 
   it("chunks large payloads into batches of 10", async () => {
-    const payload = Array.from({length: 12}, () =>
-      createMockDataItem({Status: "ready to collect"})
+    const payload = Array.from({length: 12}, () => {
+      return {
+        previous: createMockDataItem({Status: "previous status"}),
+        current: createMockDataItem({Status: "ready to collect"})
+      }
+    }
     )
 
     mockSend
@@ -211,7 +238,7 @@ describe("Unit tests for getSaltValue", () => {
     warnSpy = jest.spyOn(logger, "warn")
 
     // re-import the function after resetModules so mocks are applied
-    ;({getSaltValue} = await import("../src/utils/sqsClient"))
+    ; ({getSaltValue} = await import("../src/utils/sqsClient"))
   })
 
   it("returns the fallback salt when SQS_SALT is not configured", async () => {
@@ -269,24 +296,34 @@ describe("Unit tests for getSaltValue", () => {
 })
 describe("Unit tests for checkSiteOrSystemIsNotifyEnabled", () => {
   it("includes an item with an enabled ODS code", async () => {
-    const item = createMockDataItem({
+    const previous = createMockDataItem({
+      PharmacyODSCode: "FA565",
+      ApplicationName: "not a real test supplier",
+      Status: "previous"
+    })
+    const current = createMockDataItem({
       PharmacyODSCode: "FA565",
       ApplicationName: "not a real test supplier"
     })
-    const result = await checkSiteOrSystemIsNotifyEnabled([item])
-    expect(result).toEqual([item])
+    const result = await checkSiteOrSystemIsNotifyEnabled([{previous, current}])
+    expect(result).toStrictEqual([{previous, current}])
   })
 
-  it("includes an item with an enabled ApplicationName", async() => {
-    const item = createMockDataItem({
+  it("includes an item with an enabled ApplicationName", async () => {
+    const previous = createMockDataItem({
+      PharmacyODSCode: "ZZZ999",
+      ApplicationName: "Internal Test System",
+      Status: "previous"
+    })
+    const current = createMockDataItem({
       PharmacyODSCode: "ZZZ999",
       ApplicationName: "Internal Test System"
     })
-    const result = await checkSiteOrSystemIsNotifyEnabled([item])
-    expect(result).toEqual([item])
+    const result = await checkSiteOrSystemIsNotifyEnabled([{previous, current}])
+    expect(result).toEqual([{previous, current}])
   })
 
-  it("is case insensitive for both ODS code and ApplicationName", async() => {
+  it("is case insensitive for both ODS code and ApplicationName", async () => {
     const item1 = createMockDataItem({
       PharmacyODSCode: "fa565",
       ApplicationName: "not a real test supplier"
@@ -295,26 +332,53 @@ describe("Unit tests for checkSiteOrSystemIsNotifyEnabled", () => {
       PharmacyODSCode: "zzz999",
       ApplicationName: "internal test SYSTEM"
     })
-    const result = await checkSiteOrSystemIsNotifyEnabled([item1, item2])
-    console.log(result)
-    expect(result).toEqual([item1, item2])
+    const result = await checkSiteOrSystemIsNotifyEnabled([
+      {
+        previous: item1,
+        current: item1
+      },
+      {
+        previous: item2,
+        current: item2
+      }
+    ])
+    expect(result).toEqual([
+      {
+        previous: item1,
+        current: item1
+      },
+      {
+        previous: item2,
+        current: item2
+      }
+    ])
   })
 
-  it("excludes an item when its ODS code is blocked, even if otherwise enabled", async() => {
-    const item = createMockDataItem({
+  it("excludes an item when its ODS code is blocked, even if otherwise enabled", async () => {
+    const previous = createMockDataItem({
+      PharmacyODSCode: "b3j1z",
+      ApplicationName: "Internal Test System",
+      Status: "previous"
+    })
+    const current = createMockDataItem({
       PharmacyODSCode: "b3j1z",
       ApplicationName: "Internal Test System"
     })
-    const result = await checkSiteOrSystemIsNotifyEnabled([item])
+    const result = await checkSiteOrSystemIsNotifyEnabled([{previous, current}])
     expect(result).toEqual([])
   })
 
   it("excludes items that are neither enabled nor blocked", async () => {
-    const item = createMockDataItem({
+    const previous = createMockDataItem({
+      PharmacyODSCode: "NOTINLIST",
+      ApplicationName: "Some Other System",
+      Status: "previous"
+    })
+    const current = createMockDataItem({
       PharmacyODSCode: "NOTINLIST",
       ApplicationName: "Some Other System"
     })
-    const result = await checkSiteOrSystemIsNotifyEnabled([item])
+    const result = await checkSiteOrSystemIsNotifyEnabled([{previous, current}])
     expect(result).toEqual([])
   })
 

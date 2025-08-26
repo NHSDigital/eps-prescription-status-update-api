@@ -17,12 +17,12 @@
     "@aws-lambda-powertools/commons": "^2.25.1",
     "@aws-lambda-powertools/logger": "^2.25.1",
     "@aws-sdk/client-dynamodb": "^3.868.0",
-    "@aws-sdk/client-sqs": "^3.864.0",
-    "@aws-sdk/util-dynamodb": "^3.868.0",
-    "@middy/core": "^6.4.3",
-    "@middy/http-header-normalizer": "^6.4.3",
+    "@aws-sdk/client-sqs": "^3.873.0",
+    "@aws-sdk/util-dynamodb": "^3.873.0",
+    "@middy/core": "^6.4.4",
+    "@middy/http-header-normalizer": "^6.4.4",
     "@middy/input-output-logger": "^6.4.3",
-    "@nhs/fhir-middy-error-handler": "^2.1.44"
+    "@nhs/fhir-middy-error-handler": "^2.1.45"
   },
   "devDependencies": {
     "@faker-js/faker": "^9.9.0",

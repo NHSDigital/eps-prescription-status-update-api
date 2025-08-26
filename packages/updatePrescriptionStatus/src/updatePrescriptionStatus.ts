@@ -12,7 +12,7 @@ import httpHeaderNormalizer from "@middy/http-header-normalizer"
 import errorHandler from "@nhs/fhir-middy-error-handler"
 import {Bundle, BundleEntry, Task} from "fhir/r4"
 
-import {PSUDataItem} from "@PrescriptionStatusUpdate_common/commonTypes"
+import {PSUDataItem, PSUDataItemWithPrevious} from "@PrescriptionStatusUpdate_common/commonTypes"
 
 import {transactionBundle, validateEntry} from "./validation/content"
 import {getPreviousItem, persistDataItems} from "./utils/databaseClient"
@@ -132,7 +132,16 @@ const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPro
     testPrescriptionForcedError = !!interceptionResponse.testPrescriptionForcedError
   }
 
-  await logTransitions(dataItems)
+  let dataItemsWithPrev = []
+  try {
+    dataItemsWithPrev = await Promise.all(dataItems.map((item) => getPreviousItem(item, logger)))
+  } catch (e) {
+    logger.error("Error getting previous data items from data store.", {error: e})
+    dataItemsWithPrev = dataItems.map((item) => {
+      return {current: item, previous: undefined}
+    })
+  }
+  await logTransitions(dataItemsWithPrev)
 
   // Await the parameter promise before we continue
   let enableNotificationsFlag = false
@@ -147,7 +156,7 @@ const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPro
   if (enableNotificationsFlag) {
     try {
       const requestId = event.headers["x-request-id"] ?? "x-request-id-not-found"
-      created_messageIds = await pushPrescriptionToNotificationSQS(requestId, dataItems, logger)
+      created_messageIds = await pushPrescriptionToNotificationSQS(requestId, dataItemsWithPrev, logger)
     } catch (err) {
       logger.error("Failed to push prescriptions to the notifications SQS", {err})
       return response(500, responseEntries)
@@ -330,29 +339,31 @@ function response(statusCode: number, responseEntries: Array<BundleEntry>) {
   }
 }
 
-async function logTransitions(dataItems: Array<PSUDataItem>): Promise<void> {
-  for (const dataItem of dataItems) {
+async function logTransitions(dataItems: Array<PSUDataItemWithPrevious>): Promise<void> {
+  for (const el of dataItems) {
+    const currentItem = el.current
+    const previousItem = el.previous
+
     try {
-      const previousItem = await getPreviousItem(dataItem)
       if (previousItem) {
-        const newDate = new Date(dataItem.LastModified)
+        const newDate = new Date(currentItem.LastModified)
         const previousDate = new Date(previousItem.LastModified)
         logger.info("Transitioning item status.", {
-          prescriptionID: dataItem.PrescriptionID,
-          lineItemID: dataItem.LineItemID,
-          nhsNumber: dataItem.PatientNHSNumber,
-          pharmacyODSCode: dataItem.PharmacyODSCode,
-          applicationName: dataItem.ApplicationName,
-          when: dataItem.LastModified,
+          prescriptionID: currentItem.PrescriptionID,
+          lineItemID: currentItem.LineItemID,
+          nhsNumber: currentItem.PatientNHSNumber,
+          pharmacyODSCode: currentItem.PharmacyODSCode,
+          applicationName: currentItem.ApplicationName,
+          when: currentItem.LastModified,
           interval: (newDate.valueOf() - previousDate.valueOf()) / 1000,
-          newStatus: dataItem.Status,
+          newStatus: currentItem.Status,
           previousStatus: previousItem.Status,
-          newTerminalStatus: dataItem.TerminalStatus,
+          newTerminalStatus: currentItem.TerminalStatus,
           previousTerminalStatus: previousItem.TerminalStatus
         })
       }
     } catch (e) {
-      logger.error("Error logging transition.", {taskID: dataItem.TaskID, error: e})
+      logger.error("Error logging transition.", {taskID: currentItem.TaskID, error: e})
     }
   }
 }
