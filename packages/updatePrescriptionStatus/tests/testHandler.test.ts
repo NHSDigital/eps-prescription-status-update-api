@@ -411,11 +411,13 @@ describe("Integration tests for updatePrescriptionStatus handler", () => {
     dynamoDBMockSend.mockImplementation(
       async (command) => {
         if (command instanceof QueryCommand) {
-          return new Object({Items: [
-            itemQueryResult("71a3cf0d-c096-4b72-be0c-b1dd5f94ab0b", "in-progress", "With Pharmacy", "2023-09-11T10:09:12Z"),
-            itemQueryResult("c523a80a-5346-46b3-81d2-a7420959c26b", "in-progress", "Ready to Dispatch", "2023-09-11T10:10:12Z"),
-            itemQueryResult(TASK_VALUES[0].id, TASK_VALUES[0].status, TASK_VALUES[0].businessStatus, TASK_VALUES[0].lastModified)
-          ]})
+          return new Object({
+            Items: [
+              itemQueryResult("71a3cf0d-c096-4b72-be0c-b1dd5f94ab0b", "in-progress", "With Pharmacy", "2023-09-11T10:09:12Z"),
+              itemQueryResult("c523a80a-5346-46b3-81d2-a7420959c26b", "in-progress", "Ready to Dispatch", "2023-09-11T10:10:12Z"),
+              itemQueryResult(TASK_VALUES[0].id, TASK_VALUES[0].status, TASK_VALUES[0].businessStatus, TASK_VALUES[0].lastModified)
+            ]
+          })
         }
       }
     )
@@ -515,5 +517,25 @@ describe("Integration tests for updatePrescriptionStatus handler", () => {
     const successful_response: APIGatewayProxyResult = await tmpfn(successful_event, {})
     expect(successful_response.statusCode).toBe(201)
     expect(mockPushPrescriptionToNotificationSQS).toHaveBeenCalled()
+  })
+
+  it("When the application-name header is missing but required, the lambda returns 400", async () => {
+    process.env.REQUIRE_APPLICATION_NAME = "TRUE"
+    const {handler: tmpfn} = await import("../src/updatePrescriptionStatus")
+
+    let event: APIGatewayProxyEvent = generateMockEvent(requestDispatched)
+    event.headers["attribute-name"] = undefined
+    const response: APIGatewayProxyResult = await tmpfn(event, {})
+    expect(response.statusCode).toBe(400)
+  })
+
+  it("When the application-name header is missing and NOT required, the lambda returns 201", async () => {
+    process.env.REQUIRE_APPLICATION_NAME = "false"
+    const {handler: tmpfn} = await import("../src/updatePrescriptionStatus")
+
+    let event: APIGatewayProxyEvent = generateMockEvent(requestDispatched)
+    event.headers["attribute-name"] = APPLICATION_NAME // explicitly check this is set
+    const response: APIGatewayProxyResult = await tmpfn(event, {})
+    expect(response.statusCode).toBe(201)
   })
 })

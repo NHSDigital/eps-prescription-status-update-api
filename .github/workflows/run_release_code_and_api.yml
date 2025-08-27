@@ -64,6 +64,9 @@ on:
       ENABLE_ALERTS:
         type: boolean
         default: true
+      REQUIRE_APPLICATION_NAME:
+        type: boolean
+        default: true
       RUN_REGRESSION_TEST:
         required: true
         type: boolean
@@ -208,6 +211,7 @@ jobs:
           IS_PULL_REQUEST: ${{ inputs.IS_PULL_REQUEST }}
           MTLS_KEY: ${{ inputs.MTLS_KEY }}
           ENABLE_MUTUAL_TLS: ${{ inputs.ENABLE_MUTUAL_TLS }}
+          REQUIRE_APPLICATION_NAME: ${{ inputs.REQUIRE_APPLICATION_NAME }}
         run: ./deploy_api.sh
 
       - name: Deploy CPSU API
