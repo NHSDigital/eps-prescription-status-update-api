@@ -64,6 +64,9 @@ on:
       ENABLE_ALERTS:
         type: boolean
         default: true
+      REQUIRE_APPLICATION_NAME:
+        type: boolean
+        default: true
       RUN_REGRESSION_TEST:
         required: true
         type: boolean
@@ -171,6 +174,7 @@ jobs:
           STATE_MACHINE_LOG_LEVEL: ${{ inputs.STATE_MACHINE_LOG_LEVEL }}
           ENABLE_NOTIFICATIONS_INTERNAL: ${{ inputs.ENABLE_NOTIFICATIONS_INTERNAL }}
           ENABLE_NOTIFICATIONS_EXTERNAL: ${{ inputs.ENABLE_NOTIFICATIONS_EXTERNAL }}
+          REQUIRE_APPLICATION_NAME: ${{ inputs.REQUIRE_APPLICATION_NAME }}
         run: ./release_code.sh
 
       - name: get mtls secrets

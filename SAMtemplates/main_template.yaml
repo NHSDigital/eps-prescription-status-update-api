@@ -95,7 +95,7 @@ Parameters:
     AllowedValues:
       - true
       - false
-  
+
   EnableNotificationsExternal:
     Type: String
     Default: false
@@ -103,14 +103,21 @@ Parameters:
       - true
       - false
 
+  RequireApplicationName:
+    Type: String
+    Default: false
+    AllowedValues:
+      - true
+      - false
+
 Resources:
-  Secrets: 
+  Secrets:
     Type: AWS::Serverless::Application
     Properties:
       Location: secrets/main.yaml
       Parameters:
         StackName: !Ref AWS::StackName
-  
+
   Parameters:
     Type: AWS::Serverless::Application
     Properties:
@@ -184,6 +191,7 @@ Resources:
         CommitId: !Ref CommitId
         DeployCheckPrescriptionStatusUpdate: !Ref DeployCheckPrescriptionStatusUpdate
         Environment: !Ref Environment
+        RequireApplicationName: !Ref RequireApplicationName
 
   StateMachines:
     Type: AWS::Serverless::Application

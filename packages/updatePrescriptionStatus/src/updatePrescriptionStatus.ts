@@ -75,6 +75,13 @@ const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPro
   })
   let responseEntries: Array<BundleEntry> = []
 
+  // Proxygen can't check for this in a granular enough way (it cannot be on the notify callback)
+  // So check manually here.
+  if ((!event.headers["attribute-name"]) && (process.env.REQUIRE_APPLICATION_NAME?.toLocaleLowerCase() === "true")) {
+    logger.error("Missing `attribute-name` in request headers, and it is required in this environment")
+    return response(400, responseEntries)
+  }
+
   const xRequestID = getXRequestID(event, responseEntries)
   const applicationName = event.headers["attribute-name"] ?? "unknown"
 

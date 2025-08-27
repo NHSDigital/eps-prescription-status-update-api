@@ -57,6 +57,13 @@ Parameters:
   EnableNotificationsInternalParam:
     Type: AWS::SSM::Parameter::Name<String>
 
+  RequireApplicationName:
+    Type: String
+    Default: false
+    AllowedValues:
+      - true
+      - false
+
   LogLevel:
     Type: String
 
@@ -104,6 +111,7 @@ Resources:
           ENVIRONMENT: !Ref Environment
           TEST_PRESCRIPTIONS_1: "None"
           TEST_PRESCRIPTIONS_2: "None"
+          REQUIRE_APPLICATION_NAME: !Ref RequireApplicationName
     Metadata:
       BuildMethod: esbuild
       guard:
