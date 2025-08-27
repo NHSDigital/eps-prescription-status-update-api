@@ -75,6 +75,12 @@ const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPro
   })
   let responseEntries: Array<BundleEntry> = []
 
+  // Check for target attribute name header
+  if (!event.headers["attribute-name"]) {
+    logger.error("Missing `attribute-name` in request headers")
+    return response(400, responseEntries)
+  }
+
   const xRequestID = getXRequestID(event, responseEntries)
   const applicationName = event.headers["attribute-name"] ?? "unknown"
 
