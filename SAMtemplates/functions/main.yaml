@@ -111,7 +111,7 @@ Resources:
           ENVIRONMENT: !Ref Environment
           TEST_PRESCRIPTIONS_1: "None"
           TEST_PRESCRIPTIONS_2: "None"
-          REQUIRE_APPLICATION_NAME_HEADER: !Ref RequireApplicationNameHeader
+          REQUIRE_APPLICATION_NAME: !Ref RequireApplicationNameHeader
     Metadata:
       BuildMethod: esbuild
       guard:
