@@ -103,7 +103,7 @@ Parameters:
       - true
       - false
 
-  RequireApplicationNameHeader:
+  RequireApplicationName:
     Type: String
     Default: false
     AllowedValues:
@@ -191,7 +191,7 @@ Resources:
         CommitId: !Ref CommitId
         DeployCheckPrescriptionStatusUpdate: !Ref DeployCheckPrescriptionStatusUpdate
         Environment: !Ref Environment
-        RequireApplicationNameHeader: !Ref RequireApplicationNameHeader
+        RequireApplicationName: !Ref RequireApplicationName
 
   StateMachines:
     Type: AWS::Serverless::Application
