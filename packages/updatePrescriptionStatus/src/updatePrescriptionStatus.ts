@@ -79,7 +79,7 @@ const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPro
   // So check manually here.
   if ((!event.headers["attribute-name"]) && (process.env.REQUIRE_APPLICATION_NAME?.toLocaleLowerCase() === "true")) {
     logger.error("Missing `attribute-name` in request headers, and it is required in this environment")
-    return response(400, responseEntries)
+    return response(401, responseEntries)
   }
 
   const xRequestID = getXRequestID(event, responseEntries)
