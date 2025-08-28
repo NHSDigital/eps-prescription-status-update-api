@@ -5,7 +5,7 @@ import {NotifyDataItem} from "@PrescriptionStatusUpdate_common/commonTypes"
 // and helps track the nhs notify results
 export interface NotifyDataItemMessage extends Message {
   PSUDataItem: NotifyDataItem
-  deliveryStatus?: string
+  messageStatus?: string
   messageBatchReference?: string,
   // message reference is our internal UUID for the message
   messageReference: string

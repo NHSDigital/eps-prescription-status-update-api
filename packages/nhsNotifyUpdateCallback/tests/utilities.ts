@@ -6,6 +6,8 @@ import {
   Channel,
   MessageStatusResource,
   MessageStatusResponse,
+  ChannelStatusResource,
+  ChannelStatusResponse,
   RoutingPlan
 } from "../src/types"
 
@@ -100,6 +102,54 @@ export function generateMockMessageStatusResponse(
           ...(attrsOverride.routingPlan as DeepPartial<RoutingPlan> ?? {})
         },
         channels: mergedChannels
+      },
+      links: {...defaultResource.links, ...(override.links ?? {})},
+      meta: {...defaultResource.meta, ...(override.meta ?? {})}
+    }
+
+    return data
+  })
+
+  return {data: mergedData}
+}
+
+/**
+ * Generates a mock ChannelStatusResponse for testing, with optional deep overrides.
+ * @param dataOverrides Array of partial resource overrides to apply (one per data item).
+ *                        If you pass fewer overrides than numData, the rest will be empty.
+ * @param numData        Number of items to generate. Defaults to 1.
+ */
+export function generateMockChannelStatusResponse(
+  dataOverrides: Array<DeepPartial<ChannelStatusResource>> = [],
+  numData: number = 1
+): ChannelStatusResponse {
+  const defaultResource: ChannelStatusResource = {
+    type: CallbackType.channel,
+    attributes: {
+      messageId: "msg-123",
+      messageReference: "ref-123",
+      channel: "nhsapp",
+      channelStatus: "delivered",
+      supplierStatus: "delivered",
+      retryCount: 0,
+      timestamp: new Date().toISOString()
+    },
+    links: {message: "/messages/msg-123"},
+    meta: {idempotencyKey: "idem-123"}
+  }
+
+  // Build an array of exactly numData overrides, using {} when none provided
+  const overrides = Array.from({length: numData}, (_, i) => dataOverrides[i] ?? {})
+
+  const mergedData = overrides.map((override) => {
+    const attrsOverride = override.attributes ?? {}
+
+    const data: ChannelStatusResource = {
+      ...defaultResource,
+      ...override, // top‐level overrides
+      attributes: {
+        ...defaultResource.attributes,
+        ...attrsOverride
       },
       links: {...defaultResource.links, ...(override.links ?? {})},
       meta: {...defaultResource.meta, ...(override.meta ?? {})}
