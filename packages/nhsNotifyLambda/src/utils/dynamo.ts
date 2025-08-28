@@ -37,7 +37,7 @@ export async function addPrescriptionMessagesToNotificationStateStore(
       RequestId: data.PSUDataItem.RequestID,
       SQSMessageID: data.MessageId,
       LastNotifiedPrescriptionStatus: data.PSUDataItem.Status,
-      DeliveryStatus: data.deliveryStatus ?? "unknown", // Fall back to unknown if not set
+      MessageStatus: data.messageStatus ?? "unknown", // Fall back to unknown if not set
       NotifyMessageID: data.notifyMessageId, // This is a GSI, but leaving it blank is fine
       NotifyMessageReference: data.messageReference,
       NotifyMessageBatchReference: data.messageBatchReference, // Will be undefined when request fails

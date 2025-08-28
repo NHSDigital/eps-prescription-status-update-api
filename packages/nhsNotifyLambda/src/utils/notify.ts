@@ -108,7 +108,7 @@ export async function makeBatchNotifyRequest(
     logger.info("Not doing real Notify requests. Simply waiting for some time and returning success on all messages")
     await new Promise(f => setTimeout(f, DUMMY_NOTIFY_DELAY_MS))
 
-    const deliveryStatus = "silent running"
+    const messageStatus = "silent running"
 
     logger.info("Requested notifications OK!", {
       messageBatchReference,
@@ -117,7 +117,7 @@ export async function makeBatchNotifyRequest(
         messageReference: e.messageReference,
         psuRequestId: data.find((el) => el.messageReference === e.messageReference)?.PSUDataItem.RequestID
       })),
-      deliveryStatus
+      deliveryStatus: messageStatus // TODO: change splunk report query to messageStatus
     })
 
     // Map each input item to a "successful" NotifyDataItemMessage
@@ -125,7 +125,7 @@ export async function makeBatchNotifyRequest(
       return {
         ...item,
         messageBatchReference,
-        deliveryStatus,
+        messageStatus,
         notifyMessageId: v4() // Create a dummy UUID
       }
     })
@@ -169,7 +169,7 @@ export async function makeBatchNotifyRequest(
           messageReference: e.messageReference,
           psuRequestId: data.find((el) => el.messageReference === e.messageReference)?.PSUDataItem.RequestID
         })),
-        deliveryStatus: "requested"
+        deliveryStatus: "requested" // TODO: change splunk report query to messageStatus
       })
 
       // Map each input item to a NotifyDataItemMessage, marking success and attaching the notify ID
@@ -182,7 +182,7 @@ export async function makeBatchNotifyRequest(
         return {
           ...item,
           messageBatchReference,
-          deliveryStatus: match ? "requested" : "notify request failed",
+          messageStatus: match ? "requested" : "notify request failed",
           notifyMessageId: match?.id
         }
       })
@@ -197,7 +197,7 @@ export async function makeBatchNotifyRequest(
           messageReference: e.messageReference,
           psuRequestId: data.find((el) => el.messageReference === e.messageReference)?.PSUDataItem.RequestID
         })),
-        deliveryStatus: "notify request failed"
+        messageStatus: "notify request failed"
       })
       throw new Error("Notify batch request failed")
     }
@@ -206,7 +206,7 @@ export async function makeBatchNotifyRequest(
     logger.error("Notify batch request failed", {error})
     return data.map(item => ({
       ...item,
-      deliveryStatus: "notify request failed",
+      messageStatus: "notify request failed",
       messageBatchReference,
       messageReferences: messages.map(e => ({
         nhsNumber: e.recipient.nhsNumber,
