@@ -24,9 +24,10 @@ jest.unstable_mockModule("@aws-lambda-powertools/parameters/secrets", async () =
 }))
 
 import {DynamoDBDocumentClient, QueryCommand, UpdateCommand} from "@aws-sdk/lib-dynamodb"
+import type {UpdateCommandInput} from "@aws-sdk/lib-dynamodb"
 import {Logger} from "@aws-lambda-powertools/logger"
 import {MessageStatusResponse} from "../src/types"
-import {generateMockEvent, generateMockMessageStatusResponse} from "./utilities"
+import {generateMockChannelStatusResponse, generateMockEvent, generateMockMessageStatusResponse} from "./utilities"
 
 const {
   response,
@@ -71,13 +72,13 @@ describe("helpers.ts", () => {
       logger = new Logger({serviceName: "nhsNotifyUpdateCallback"})
       validHeaders = {
         "x-request-id": "requestid",
-        "apikey": "api-key", // TODO: Should be x-api-key
+        "apikey": "api-key",
         "x-hmac-sha256-signature": "deadbeef"
       }
     })
 
     it("401 when missing signature header", async () => {
-      const ev = generateMockEvent("{}", {"apikey": "foobar", "x-request-id": "rid"}) // TODO: Should be x-api-key
+      const ev = generateMockEvent("{}", {"apikey": "foobar", "x-request-id": "rid"})
       const resp = await checkSignature(logger, ev)
       expect(resp).toEqual({
         statusCode: 401,
@@ -164,13 +165,14 @@ describe("helpers.ts", () => {
       )
     })
 
-    it("updates records when matching items found", async () => {
+    it("updates records when matching items found (Message update callback)", async () => {
       const overrideTimestamp = "2025-01-01T00:00:00.000Z"
       const mockResponse = generateMockMessageStatusResponse([
         {
           attributes: {
             messageId: "msg-123",
             messageStatus: "delivered",
+            channels: [], // ensure channelStatus undefined
             timestamp: overrideTimestamp
           }
         }
@@ -180,6 +182,7 @@ describe("helpers.ts", () => {
         RequestId: "psu-request-id",
         NotifyMessageID: "msg-123"
       }
+
       // First call: QueryCommand
       // Subsequent calls: UpdateCommand
       sendSpy.mockImplementation((cmd) => {
@@ -194,24 +197,97 @@ describe("helpers.ts", () => {
 
       await updateNotificationsTable(logger, mockResponse)
 
-      const [updateCmd] = sendSpy.mock.calls[1]
-      expect((updateCmd).input).toMatchObject({
+      const [, [updateCmd]] = sendSpy.mock.calls
+      const input = updateCmd.input as UpdateCommandInput
+
+      // Basic keys/timestamps/TTL
+      expect(input).toMatchObject({
         TableName: process.env.TABLE_NAME,
         Key: {NHSNumber: mockItem.NHSNumber, RequestId: mockItem.RequestId},
         ExpressionAttributeValues: {
-          ":ds": mockResponse.data[0].attributes.messageStatus,
           ":ts": overrideTimestamp,
           ":et": Math.floor(100_000_000 / 1000) + 60 * 60 * 24 * 7
         }
+      })
+      // Should include MessageStatus and NOT Channel/Supplier when undefined
+      expect(input.UpdateExpression).toContain("MessageStatus = :ms")
+      expect(input.ExpressionAttributeValues?.[":ms"]).toBe("delivered")
+      expect(input.UpdateExpression).not.toContain("ChannelStatus = :cs")
+      expect(input.UpdateExpression).not.toContain("SupplierStatus = :ss")
+
+      expect(logger.info).toHaveBeenCalledWith(
+        "Updated notification state",
+        expect.objectContaining({
+          NotifyMessageID: mockItem.NotifyMessageID,
+          nhsNumber: mockItem.NHSNumber,
+          psuRequestId: mockItem.RequestId,
+          messageStatus: "delivered",
+          channelStatus: "undefined", // still needs to be logged - just undefined.
+          supplierStatus: "undefined",
+          newTimestamp: overrideTimestamp,
+          // new expiry time is any number
+          newExpiryTime: expect.any(Number)
+        })
+      )
+    })
+
+    it("updates only ChannelStatus and SupplierStatus for channel callback", async () => {
+      const ts = "2025-02-02T12:34:56.000Z"
+      const mockResponse = generateMockChannelStatusResponse([
+        {
+          attributes: {
+            messageId: "msg-chan-1",
+            channelStatus: "sending",
+            supplierStatus: "accepted",
+            timestamp: ts
+          }
+        }
+      ])
+      const mockItem = {
+        NHSNumber: "NHS456",
+        RequestId: "req-456",
+        NotifyMessageID: "msg-chan-1"
+      }
+
+      // First call: QueryCommand
+      // Subsequent calls: UpdateCommand
+      sendSpy.mockImplementation((cmd) => {
+        if (cmd instanceof QueryCommand) {
+          return Promise.resolve({Items: [mockItem]})
+        }
+        if (cmd instanceof UpdateCommand) {
+          return Promise.resolve({})
+        }
+        return Promise.resolve({})
+      })
+
+      await updateNotificationsTable(logger, mockResponse)
+
+      const [, [updateCmd]] = sendSpy.mock.calls
+      const input = updateCmd.input as UpdateCommandInput
+
+      expect(input.UpdateExpression).toContain("ChannelStatus = :cs")
+      expect(input.UpdateExpression).toContain("SupplierStatus = :ss")
+      expect(input.UpdateExpression).not.toContain("MessageStatus = :ms")
+      expect(input.ExpressionAttributeValues).toMatchObject({
+        ":cs": "sending",
+        ":ss": "accepted",
+        ":ts": ts,
+        ":et": Math.floor(100_000_000 / 1000) + 60 * 60 * 24 * 7
       })
 
       expect(logger.info).toHaveBeenCalledWith(
         "Updated notification state",
         expect.objectContaining({
           NotifyMessageID: mockItem.NotifyMessageID,
-          newStatus: mockResponse.data[0].attributes.messageStatus,
-          newTimestamp: overrideTimestamp,
-          newExpiryTime: Math.floor(100_000_000 / 1000) + 60 * 60 * 24 * 7
+          nhsNumber: mockItem.NHSNumber,
+          psuRequestId: mockItem.RequestId,
+          messageStatus: "undefined",
+          channelStatus: "sending",
+          supplierStatus: "accepted",
+          newTimestamp: ts,
+          // new expiry time is any number
+          newExpiryTime: expect.any(Number)
         })
       )
     })
