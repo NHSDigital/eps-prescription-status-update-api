@@ -238,6 +238,10 @@ export async function updateNotificationsTable(
             NotifyMessageID: item.NotifyMessageID,
             nhsNumber: item.NHSNumber,
             psuRequestId: item.RequestId,
+            // The overall delivery status is whichever of
+            // messageStatus or channelStatus is defined (prefer messageStatus)
+            // TODO: Update the splunk query to use the below statuses
+            deliveryStatus: messageStatus ?? channelStatus,
             // Parse to a string, or else undefined stuff doesn't get logged (thanks aws)
             messageStatus: `${messageStatus}`,
             channelStatus: `${channelStatus}`,
