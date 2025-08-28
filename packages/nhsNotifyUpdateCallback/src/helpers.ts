@@ -130,22 +130,30 @@ export async function updateNotificationsTable(
   // For each callback resource, return a promise
   const callbackPromises = bodyData.data.map(async (resource) => {
     let messageId: string
-    let messageStatus: string
+    let messageStatus: string | undefined
+    let channelStatus: string | undefined
+    let supplierStatus: string | undefined
     let timestamp: string
 
     if (resource.type === CallbackType.message) {
       messageId = resource.attributes.messageId
       messageStatus = resource.attributes.messageStatus
+      channelStatus = resource.attributes.channels?.[0]?.channelStatus // If missing, undefined
+      supplierStatus = undefined
       timestamp = resource.attributes.timestamp
     } else if (resource.type === CallbackType.channel) {
       messageId = resource.attributes.messageId
-      messageStatus = resource.attributes.channelStatus
+      messageStatus = undefined
+      channelStatus = resource.attributes.channelStatus
+      supplierStatus = resource.attributes.supplierStatus
       timestamp = resource.attributes.timestamp
     } else {
       logger.error("Unknown data structure - cannot store to notifications table.", {resource})
       // Set to junk data, so that when we try and update the table we will fail. This is fine, and handled later.
       messageId = "unknown"
-      messageStatus = "unknown"
+      messageStatus = undefined
+      channelStatus = undefined
+      supplierStatus = undefined
       timestamp = "unknown"
     }
 
@@ -190,28 +198,50 @@ export async function updateNotificationsTable(
         NHSNumber: item.NHSNumber,
         RequestId: item.RequestId
       }
+
+      // Build UpdateExpression so undefined statuses are not written/updated.
+      const sets: Array<string> = [
+        "LastNotificationRequestTimestamp = :ts",
+        "ExpiryTime = :et"
+      ]
+      const eav: Record<string, unknown> = {
+        ":ts": timestamp,
+        ":et": newExpiry
+      }
+
+      if (messageStatus !== undefined) {
+        sets.push("MessageStatus = :ms")
+        eav[":ms"] = messageStatus
+      }
+      if (channelStatus !== undefined) {
+        sets.push("ChannelStatus = :cs")
+        eav[":cs"] = channelStatus
+      }
+      if (supplierStatus !== undefined) {
+        sets.push("SupplierStatus = :ss")
+        eav[":ss"] = supplierStatus
+      }
+
+      const UpdateExpression = `SET ${sets.join(", ")}`
+
       try {
         await docClient.send(new UpdateCommand({
           TableName: dynamoTable,
           Key: key,
-          UpdateExpression: [
-            "SET DeliveryStatus = :ds",
-            " , LastNotificationRequestTimestamp = :ts",
-            " , ExpiryTime = :et"
-          ].join(""),
-          ExpressionAttributeValues: {
-            ":ds": messageStatus,
-            ":ts": timestamp,
-            ":et": newExpiry
-          }
+          UpdateExpression,
+          ExpressionAttributeValues: eav
         }))
+
         logger.info(
           "Updated notification state",
           {
             NotifyMessageID: item.NotifyMessageID,
             nhsNumber: item.NHSNumber,
             psuRequestId: item.RequestId,
-            newStatus: messageStatus,
+            // Parse to a string, or else undefined stuff doesn't get logged (thanks aws)
+            messageStatus: `${messageStatus}`,
+            channelStatus: `${channelStatus}`,
+            supplierStatus: `${supplierStatus}`,
             newTimestamp: timestamp,
             newExpiryTime: newExpiry
           }

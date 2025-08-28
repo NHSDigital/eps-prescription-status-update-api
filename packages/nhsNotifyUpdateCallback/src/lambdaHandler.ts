@@ -16,13 +16,9 @@ export const logger = new Logger({serviceName: "nhsNotifyUpdateCallback"})
 
 const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
   logger.appendKeys({
-    "x-correlation-id": event.headers["x-correlation-id"],
     "apigw-request-id": event.headers["apigw-request-id"],
-    "x-request-id": event.headers["x-request-id"]
+    "nhsd-correlation-id": event.headers["nhsd-correlation-id"]
   })
-
-  // Require a request ID
-  if (!event.headers["x-request-id"]) return response(400, {message: "No x-request-id given"})
 
   // Check the request signature
   const isErr = await checkSignature(logger, event)
@@ -39,34 +35,26 @@ const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPro
   }
 
   let receivedUnknownCallbackType = false
-  payload.data.forEach(m => {
-    let logPayload = {}
-    if (m.type === CallbackType.message) {
-      logPayload = {
-        callbackType: m.type,
-        messageStatus: m.attributes.messageStatus,
-        messageReference: m.attributes.messageReference,
-        messageId: m.attributes.messageId,
-        receivedTimestamp: m.attributes.timestamp
-      }
 
-    } else if (m.type === CallbackType.channel) {
-      logPayload = {
-        callbackType: m.type,
-        messageStatus: m.attributes.channelStatus,
-        supplierStatus: m.attributes.supplierStatus ?? "not given",
-        retryCount: m.attributes.retryCount,
-        messageReference: m.attributes.messageReference,
-        messageId: m.attributes.messageId,
-        receivedTimestamp: m.attributes.timestamp
-      }
-    } else {
+  payload.data.forEach(m => {
+    let logPayload = {
+      callbackType: m.type,
+      messageId: m.attributes.messageId,
+      // Only defined for message status callbacks
+      messageStatus: m.type === CallbackType.message ? m.attributes.messageStatus : undefined,
+      // Only defined for channel/supplier status callbacks
+      channelStatus: m.type === CallbackType.channel ? m.attributes.channelStatus : undefined,
+      supplierStatus: m.type === CallbackType.channel ? m.attributes.supplierStatus : undefined,
+      retryCount: m.type === CallbackType.channel ? m.attributes.retryCount : undefined,
+      timestamp: m.attributes.timestamp,
+      messageReference: m.attributes.messageReference
+    }
+    logger.info("Message state updated", logPayload)
+
+    if ((m.type !== CallbackType.message) && (m.type !== CallbackType.channel)) {
       logger.warn("Unknown callback data structure.", {data: m})
       receivedUnknownCallbackType = true
     }
-
-    // If we have populated the logPayload object, then log it.
-    if (Object.keys(logPayload).length > 0) logger.info("Message state updated", logPayload)
   })
 
   try {
