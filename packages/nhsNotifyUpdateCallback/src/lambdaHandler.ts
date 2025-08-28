@@ -46,7 +46,7 @@ const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPro
       channelStatus: m.type === CallbackType.channel ? m.attributes.channelStatus : undefined,
       supplierStatus: m.type === CallbackType.channel ? m.attributes.supplierStatus : undefined,
       retryCount: m.type === CallbackType.channel ? m.attributes.retryCount : undefined,
-      timestamp: m.attributes.timestamp,
+      callbackMessageTimestamp: m.attributes.timestamp,
       messageReference: m.attributes.messageReference
     }
     logger.info("Message state updated", logPayload)
