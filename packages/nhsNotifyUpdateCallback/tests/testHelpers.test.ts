@@ -10,8 +10,8 @@ import {createHmac} from "crypto"
 
 // Mock the getSecret call
 const mockGetSecret = jest.fn((secretName: string) => {
-  if (secretName === process.env.APP_NAME_SECRET) {
-    return Promise.resolve(process.env.APP_NAME)
+  if (secretName === process.env.APP_ID_SECRET) {
+    return Promise.resolve(process.env.APP_ID)
   }
   if (secretName === process.env.API_KEY_SECRET) {
     return Promise.resolve(process.env.API_KEY)
@@ -67,7 +67,7 @@ describe("helpers.ts", () => {
 
   describe("checkSignature()", () => {
     let logger: Logger
-    let validHeaders: { "x-request-id": string; "apikey": string; "x-hmac-sha256-signature": string }
+    let validHeaders: {"x-request-id": string; "apikey": string; "x-hmac-sha256-signature": string}
     beforeEach(() => {
       logger = new Logger({serviceName: "nhsNotifyUpdateCallback"})
       validHeaders = {
@@ -104,7 +104,7 @@ describe("helpers.ts", () => {
       const payload = "payload"
       const wrongSig = createHmac(
         "sha256",
-        `${process.env.APP_NAME}.${process.env.API_KEY}`
+        `${process.env.APP_ID}.${process.env.API_KEY}`
       )
         .update("different", "utf8")
         .digest("hex")
@@ -123,7 +123,7 @@ describe("helpers.ts", () => {
 
     it("returns undefined when signature is valid", async () => {
       const payload = "hi there"
-      const secret = `${process.env.APP_NAME}.${process.env.API_KEY}`
+      const secret = `${process.env.APP_ID}.${process.env.API_KEY}`
       const goodSig = createHmac("sha256", secret)
         .update(payload, "utf8")
         .digest("hex")
@@ -371,11 +371,11 @@ describe("helpers.ts", () => {
       logger = new Logger({serviceName: "nhsNotifyUpdateCallback"})
     })
 
-    it("throws if APP_NAME_SECRET env var is not set", async () => {
-      delete process.env.APP_NAME_SECRET
+    it("throws if APP_ID_SECRET env var is not set", async () => {
+      delete process.env.APP_ID_SECRET
 
       const {fetchSecrets: fn} = await import("../src/helpers")
-      await expect(fn(logger)).rejects.toThrow("APP_NAME_SECRET environment variable is not set.")
+      await expect(fn(logger)).rejects.toThrow("APP_ID_SECRET environment variable is not set.")
     })
 
     it("throws if API_KEY_SECRET env var is not set", async () => {
@@ -386,7 +386,7 @@ describe("helpers.ts", () => {
     })
 
     it("throws if getting either secret returns a falsy value", async () => {
-      process.env.APP_NAME = ""
+      process.env.APP_ID = ""
 
       const {fetchSecrets: fn} = await import("../src/helpers")
       await expect(fn(logger)).rejects.toThrow(
@@ -398,7 +398,7 @@ describe("helpers.ts", () => {
       const {fetchSecrets: fn} = await import("../src/helpers")
       await expect(fn(logger)).resolves.toBeUndefined()
 
-      expect(mockGetSecret).toHaveBeenCalledWith(process.env.APP_NAME_SECRET!)
+      expect(mockGetSecret).toHaveBeenCalledWith(process.env.APP_ID_SECRET!)
       expect(mockGetSecret).toHaveBeenCalledWith(process.env.API_KEY_SECRET!)
     })
   })

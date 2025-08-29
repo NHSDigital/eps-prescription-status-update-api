@@ -46,13 +46,26 @@ jest.unstable_mockModule(
   })
 )
 
+let mockNotifyRequestMaxItems = 5
+let mockNotifyRequestMaxBytes = 5 * 1024 * 1024 // 5 MB
+jest.unstable_mockModule(
+  "../src/utils/constants",
+  async () => ({
+    __esModule: true,
+    NOTIFY_REQUEST_MAX_ITEMS: mockNotifyRequestMaxItems,
+    NOTIFY_REQUEST_MAX_BYTES: mockNotifyRequestMaxBytes,
+    DUMMY_NOTIFY_DELAY_MS: 100,
+    TTL_DELTA: 60 * 60 * 24 * 14 // Keep records for 2 weeks
+  })
+)
+
 const {
   addPrescriptionMessagesToNotificationStateStore,
   removeSQSMessages,
   checkCooldownForUpdate,
   reportQueueStatus,
   drainQueue,
-  makeBatchNotifyRequest
+  handleNotifyRequests
 } = await import("../src/utils")
 
 const ORIGINAL_ENV = {...process.env}
@@ -446,9 +459,10 @@ describe("NHS notify lambda helper functions", () => {
     })
   })
 
-  describe("makeBatchNotifyRequest", () => {
+  describe("handleNotifyRequests", () => {
     let logger: Logger
     let errorSpy: SpiedFunction<(msg: string, ...meta: Array<unknown>) => void>
+    let infoSpy: SpiedFunction<(msg: string, ...meta: Array<unknown>) => void>
 
     beforeEach(() => {
       process.env = {...ORIGINAL_ENV}
@@ -458,6 +472,7 @@ describe("NHS notify lambda helper functions", () => {
 
       logger = new Logger({serviceName: "test-service"})
       errorSpy = jest.spyOn(logger, "error")
+      infoSpy = jest.spyOn(logger, "info")
     })
 
     afterEach(() => {
@@ -499,7 +514,7 @@ describe("NHS notify lambda helper functions", () => {
           data: {attributes: {messages: returnedMessages}}
         })
 
-      const result = await makeBatchNotifyRequest(
+      const result = await handleNotifyRequests(
         logger,
         "plan-123",
         data
@@ -540,7 +555,7 @@ describe("NHS notify lambda helper functions", () => {
         .post("/comms/v1/message-batches")
         .reply(500, "Internal Server Error")
 
-      const result = await makeBatchNotifyRequest(
+      const result = await handleNotifyRequests(
         logger,
         "plan-xyz",
         data
@@ -588,7 +603,7 @@ describe("NHS notify lambda helper functions", () => {
         .post("/comms/v1/message-batches")
         .replyWithError(new Error("Network failure"))
 
-      const result = await makeBatchNotifyRequest(
+      const result = await handleNotifyRequests(
         logger,
         "plan-error",
         data
@@ -610,14 +625,7 @@ describe("NHS notify lambda helper functions", () => {
     })
 
     it("splits very large payloads into two recursive batch requests", async () => {
-      jest
-        .spyOn(console, "info")
-        .mockImplementation(() => {})
-      jest
-        .spyOn(console, "error")
-        .mockImplementation(() => {})
-
-      const data = Array.from({length: 45001}, (_, i) =>
+      const data = Array.from({length: 7}, (_, i) =>
         constructPSUDataItemMessage({
           PSUDataItem: {
             RequestID: `r${i}`,
@@ -637,15 +645,28 @@ describe("NHS notify lambda helper functions", () => {
           data: {attributes: {messages: []}}
         })
 
-      const result = await makeBatchNotifyRequest(
+      const result = await handleNotifyRequests(
         logger,
         "plan-large",
         data
       )
 
-      // two recursive calls
-      expect(result).toHaveLength(45001)
+      expect(result).toHaveLength(7) // Returns all items
+
+      // Don't repeat the token exchange for each sub-batch
+      expect(mockTokenExchange).toHaveBeenCalledTimes(1)
+
       expect(errorSpy).not.toHaveBeenCalled()
+
+      // Two calls
+      expect(infoSpy).toHaveBeenCalledWith(
+        "Making a request for notifications to NHS notify",
+        {count: 3, routingPlanId: "plan-large"}
+      )
+      expect(infoSpy).toHaveBeenCalledWith(
+        "Making a request for notifications to NHS notify",
+        {count: 4, routingPlanId: "plan-large"}
+      )
     })
 
     it("retries after 425/429 with Retry-After header", async () => {
@@ -688,7 +709,7 @@ describe("NHS notify lambda helper functions", () => {
           data: {attributes: {messages: returnedMessages}}
         })
 
-      const resultPromise = makeBatchNotifyRequest(
+      const resultPromise = handleNotifyRequests(
         logger,
         "plan-retry",
         data
@@ -707,7 +728,7 @@ describe("NHS notify lambda helper functions", () => {
           [process.env.MAKE_REAL_NOTIFY_REQUESTS_PARAM!]: "false"
         }
       ))
-      const {makeBatchNotifyRequest: fn} = await import("../src/utils")
+      const {handleNotifyRequests: fn} = await import("../src/utils")
 
       const data = [
         constructPSUDataItemMessage({
