@@ -11,11 +11,11 @@ import {LastNotificationStateType} from "@PrescriptionStatusUpdate_common/common
 
 import {CallbackResponse, CallbackType} from "./types"
 
-const APP_NAME_SECRET = process.env.APP_NAME_SECRET
+const APP_ID_SECRET = process.env.APP_ID_SECRET
 const API_KEY_SECRET = process.env.API_KEY_SECRET
 
 // Actual secret values
-let APP_NAME: string | undefined
+let APP_ID: string | undefined
 let API_KEY: string | undefined
 
 // TTL is one week in seconds
@@ -37,35 +37,35 @@ export function response(statusCode: number, body: unknown = {}) {
  * Fetches all secret values from the AWS Secrets Manager
  */
 export async function fetchSecrets(logger: Logger): Promise<void> {
-  if (!APP_NAME_SECRET) {
-    throw new Error("APP_NAME_SECRET environment variable is not set.")
+  if (!APP_ID_SECRET) {
+    throw new Error("APP_ID_SECRET environment variable is not set.")
   }
   if (!API_KEY_SECRET) {
     throw new Error("API_KEY_SECRET environment variable is not set.")
   }
 
   // Fetch both secrets in parallel
-  const [appNameValue, apiKeyValue] = await Promise.all([
-    getSecret(APP_NAME_SECRET),
+  const [appIdValue, apiKeyValue] = await Promise.all([
+    getSecret(APP_ID_SECRET),
     getSecret(API_KEY_SECRET)
   ])
 
   if (
-    appNameValue === undefined
+    appIdValue === undefined
     || apiKeyValue === undefined
-    || appNameValue instanceof Uint8Array
+    || appIdValue instanceof Uint8Array
     || apiKeyValue instanceof Uint8Array
-    || !appNameValue?.toString()
+    || !appIdValue?.toString()
     || !apiKeyValue?.toString()
   ) {
     throw new Error("Failed to get secret values from the AWS secret manager")
   }
 
-  APP_NAME = appNameValue.toString()
+  APP_ID = appIdValue.toString()
   API_KEY = apiKeyValue.toString()
 
   // Check again to catch empty strings
-  if (!appNameValue || !apiKeyValue) {
+  if (!appIdValue || !apiKeyValue) {
     throw new Error("Failed to get secret values from the AWS secret manager")
   }
 
@@ -92,7 +92,7 @@ export async function checkSignature(logger: Logger, event: APIGatewayProxyEvent
   }
 
   // Compute the HMAC-SHA256 hash of the combination of the request body and the secret value
-  const secretValue = `${APP_NAME}.${API_KEY}`
+  const secretValue = `${APP_ID}.${API_KEY}`
   const payload = event.body ?? ""
 
   // compare hashes as Buffers, rather than hex

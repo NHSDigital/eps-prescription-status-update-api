@@ -474,7 +474,7 @@ Resources:
         Variables:
           LOG_LEVEL: !Ref LogLevel
           TABLE_NAME: !Ref PrescriptionNotificationStatesTableName
-          APP_NAME_SECRET: secrets-PSU-Notify-Application-Name
+          APP_ID_SECRET: secrets-PSU-Notify-KID
           API_KEY_SECRET:  secrets-PSU-Notify-API-Key
     Metadata:
       BuildMethod: esbuild
