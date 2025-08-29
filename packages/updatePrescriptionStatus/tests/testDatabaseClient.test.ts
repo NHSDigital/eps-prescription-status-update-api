@@ -11,7 +11,7 @@ import {Logger} from "@aws-lambda-powertools/logger"
 import {marshall} from "@aws-sdk/util-dynamodb"
 
 const {mockSend} = mockDynamoDBClient()
-const {persistDataItems, getPreviousItem} = await import("../src/utils/databaseClient")
+const {persistDataItems, getPreviousItem, rollbackDataItems} = await import("../src/utils/databaseClient")
 
 const logger = new Logger({serviceName: "updatePrescriptionStatus_TEST"})
 
@@ -223,7 +223,7 @@ describe("Unit test getPreviousItem", () => {
     ExpiryTime: 123
   }
 
-  it("Should return previous state when there is one", async() => {
+  it("Should return previous state when there is one", async () => {
     mockSend.mockReturnValue(
       {
         Items: [
@@ -240,7 +240,7 @@ describe("Unit test getPreviousItem", () => {
     expect(mockSend).toHaveBeenCalledTimes(1)
   })
 
-  it("Should return the most recent previous state when there are multiple previous", async() => {
+  it("Should return the most recent previous state when there are multiple previous", async () => {
     mockSend.mockReturnValue(
       {
         Items: [
@@ -258,7 +258,7 @@ describe("Unit test getPreviousItem", () => {
     expect(mockSend).toHaveBeenCalledTimes(1)
   })
 
-  it("Should call dynamo twice when there is pagination", async() => {
+  it("Should call dynamo twice when there is pagination", async () => {
     mockSend
       .mockReturnValueOnce(
         {
@@ -284,7 +284,7 @@ describe("Unit test getPreviousItem", () => {
     expect(mockSend).toHaveBeenCalledTimes(2)
   })
 
-  it("Should return undefined when no items returned", async() => {
+  it("Should return undefined when no items returned", async () => {
     mockSend
       .mockReturnValue(
         {
@@ -301,7 +301,7 @@ describe("Unit test getPreviousItem", () => {
     expect(mockSend).toHaveBeenCalledTimes(1)
   })
 
-  it("Should return undefined and log error when there is an error", async() => {
+  it("Should return undefined and log error when there is an error", async () => {
     mockSend.mockRejectedValue("Something went wrong" as never)
 
     const loggerSpy = jest.spyOn(logger, "error")
@@ -314,4 +314,115 @@ describe("Unit test getPreviousItem", () => {
     expect(loggerSpy).toHaveBeenCalledWith("Error retrieving previous item status", {"error": "Something went wrong"})
   })
 
+})
+
+describe("Unit test rollbackDataItems", () => {
+  beforeEach(() => {
+    jest.resetModules()
+    jest.clearAllMocks()
+    jest.resetAllMocks()
+  })
+
+  const makeItem = (overrides = {}) => ({
+    LastModified: "2023-01-02T00:00:00Z",
+    LineItemID: "LineItemID_1",
+    PatientNHSNumber: "PatientNHSNumber_1",
+    PharmacyODSCode: "PharmacyODSCode_1",
+    PrescriptionID: "PrescriptionID_1",
+    RequestID: "RID_MATCH",
+    Status: "Status_1",
+    TaskID: "TaskID_1",
+    TerminalStatus: "TerminalStatus_1",
+    ApplicationName: "name",
+    ExpiryTime: 10,
+    ...overrides
+  })
+
+  it("deletes all items when RequestID matches", async () => {
+    const items = [makeItem(), makeItem({PrescriptionID: "PrescriptionID_2", TaskID: "TaskID_2"})]
+
+    // success for each conditioned delete
+    mockSend.mockImplementation(async () => Promise.resolve())
+
+    const loggerWarn = jest.spyOn(logger, "warn")
+    const loggerError = jest.spyOn(logger, "error")
+
+    const result = await rollbackDataItems(items, logger)
+    expect(result).toBe(true)
+    expect(loggerWarn).not.toHaveBeenCalled()
+    expect(loggerError).not.toHaveBeenCalled()
+    expect(mockSend).toHaveBeenCalledTimes(2)
+  })
+
+  it("treats RequestID mismatch or missing item as safe skips", async () => {
+    const items = [makeItem(), makeItem({PrescriptionID: "PrescriptionID_2"})]
+
+    // First delete succeeds, second hits conditional check failure (skip it)
+    mockSend
+      .mockImplementationOnce(async () => Promise.resolve())
+      .mockImplementationOnce(async () => Promise.reject(
+        new TransactionCanceledException({
+          $metadata: {},
+          message: "Conditional check failed",
+          CancellationReasons: [{Code: "ConditionalCheckFailedException"}]
+        })
+      ))
+
+    const loggerWarn = jest.spyOn(logger, "warn")
+    const loggerError = jest.spyOn(logger, "error")
+
+    const result = await rollbackDataItems(items, logger)
+    expect(result).toBe(true) // still overall success (safe to skip)
+    expect(loggerWarn).toHaveBeenCalled()
+    expect(loggerError).not.toHaveBeenCalled()
+    expect(mockSend).toHaveBeenCalledTimes(2)
+  })
+
+  it("returns false when an unexpected error occurs", async () => {
+    const items = [makeItem()]
+
+    mockSend.mockImplementationOnce(async () => Promise.reject(new Error("error")))
+
+    const loggerError = jest.spyOn(logger, "error")
+
+    const result = await rollbackDataItems(items, logger)
+    expect(result).toBe(false)
+    expect(loggerError).toHaveBeenCalled()
+    expect(mockSend).toHaveBeenCalledTimes(1)
+  })
+
+  it("handles [success, conditional-failure, success] and still returns true", async () => {
+    const items = [makeItem({TaskID: "A"}), makeItem({TaskID: "B"}), makeItem({TaskID: "C"})]
+
+    mockSend
+      .mockImplementationOnce(async () => Promise.resolve()) // A: delete ok
+      .mockImplementationOnce(async () => Promise.reject( // B: condition failure -> skip
+        new TransactionCanceledException({
+          $metadata: {},
+          message: "Conditional check failed",
+          CancellationReasons: [{Code: "ConditionalCheckFailedException"}]
+        })
+      ))
+      .mockImplementationOnce(async () => Promise.resolve()) // C: delete ok
+
+    const loggerWarn = jest.spyOn(logger, "warn")
+    const loggerError = jest.spyOn(logger, "error")
+
+    const result = await rollbackDataItems(items, logger)
+    expect(result).toBe(true)
+    expect(loggerWarn).toHaveBeenCalled()
+    expect(loggerError).not.toHaveBeenCalled()
+    expect(mockSend).toHaveBeenCalledTimes(3)
+  })
+
+  it("does not fail if there are zero items", async () => {
+    const loggerWarn = jest.spyOn(logger, "warn")
+    const loggerError = jest.spyOn(logger, "error")
+
+    const result = await rollbackDataItems([], logger)
+    expect(result).toBe(true)
+    expect(loggerWarn).not.toHaveBeenCalled()
+    expect(loggerError).not.toHaveBeenCalled()
+    expect(mockSend).toHaveBeenCalledTimes(0)
+  })
 })

@@ -1,5 +1,5 @@
 import {Logger} from "@aws-lambda-powertools/logger"
-import {DeleteMessageBatchCommand, SQSClient, SendMessageBatchCommand} from "@aws-sdk/client-sqs"
+import {SQSClient, SendMessageBatchCommand} from "@aws-sdk/client-sqs"
 import {getSecret} from "@aws-lambda-powertools/parameters/secrets"
 
 import {createHmac} from "crypto"
@@ -209,63 +209,9 @@ export async function pushPrescriptionToNotificationSQS(
       }
     } catch (error) {
       logger.error("Failed to send a batch of prescriptions to the notifications SQS", {error})
-      await removeSqsMessages(logger, out)
       throw error
     }
   }
 
   return out
-}
-
-export async function removeSqsMessages(
-  logger: Logger,
-  receiptHandles: Array<string>
-): Promise<void> {
-  if (!sqsUrl) {
-    logger.error("Notifications SQS URL not found in environment variables")
-    throw new Error("Notifications SQS URL not configured")
-  }
-
-  try {
-    // If there is no data, just noop
-    if (receiptHandles.length === 0) return
-
-    logger.info("Removing SQS messages from the queue", {receiptHandles})
-
-    // batch at most 10 deletes per request
-    const batches = chunkArray(receiptHandles, 10)
-
-    for (const batch of batches) {
-      const entries = batch.map((handle, idx) => ({
-        Id: idx.toString(),
-        ReceiptHandle: handle
-      }))
-
-      try {
-        const command = new DeleteMessageBatchCommand({
-          QueueUrl: sqsUrl,
-          Entries: entries
-        })
-        const result = await sqs.send(command)
-
-        if (result.Successful && result.Successful.length > 0) {
-          logger.info("Successfully removed messages from the SQS queue", {
-            successfulIds: result.Successful.map((r) => r.Id)
-          })
-        }
-
-        if (result.Failed && result.Failed.length > 0) {
-          logger.error("Failed to remove some messages from the SQS queue", {
-            failures: result.Failed
-          })
-        }
-      } catch (error) {
-        logger.error("Error while removing messages from the SQS queue", {error})
-      }
-    }
-
-  } catch (error) {
-    // If we encounter an error, log it but don't prevent the logic from proceeding
-    logger.error("Error in removeSqsMessages", {error})
-  }
 }

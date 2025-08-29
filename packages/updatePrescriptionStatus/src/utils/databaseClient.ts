@@ -71,6 +71,79 @@ export async function persistDataItems(dataItems: Array<PSUDataItem>, logger: Lo
   }
 }
 
+/**
+ * Restore table to its state before a persistDataItems() call by deleting the
+ * items that call inserted. We only delete when RequestID matches, so we
+ * don't clobber newer versions written under the same TaskID.
+ *
+ * Returns:
+ *  - true  = all deletes either succeeded or were safely skipped
+ *                    (because RequestID didn't match or item absent)
+ *  - false = at least one delete failed with an unexpected error
+ */
+export async function rollbackDataItems(
+  dataItems: Array<PSUDataItem>,
+  logger: Logger
+): Promise<boolean> {
+  logger.info("Restoring table to pre-persist state based on RequestID match.")
+
+  const deleteTxnFor = (item: PSUDataItem): TransactWriteItemsCommand => {
+    const deleteOp: TransactWriteItem = {
+      Delete: {
+        TableName: tableName,
+        Key: marshall({PrescriptionID: item.PrescriptionID, TaskID: item.TaskID}),
+        // Only delete if the current item's RequestID equals the one we inserted.
+        // Since the TaskID might appear more than once, can't use that.
+        // We only care about this request's items anyway.
+        ConditionExpression:
+          "attribute_exists(PrescriptionID) AND attribute_exists(TaskID) AND #rid = :rid",
+        ExpressionAttributeNames: {"#rid": "RequestID"},
+        ExpressionAttributeValues: {":rid": {S: item.RequestID}},
+        ReturnValuesOnConditionCheckFailure: "ALL_OLD"
+      }
+    }
+    return new TransactWriteItemsCommand({TransactItems: [deleteOp]})
+  }
+
+  const results = await Promise.all(
+    dataItems.map(async (item) => {
+      const cmd = deleteTxnFor(item)
+      try {
+        logger.info("Attempting conditioned delete (by RequestID).", {
+          PrescriptionID: item.PrescriptionID,
+          TaskID: item.TaskID,
+          RequestID: item.RequestID
+        })
+        await client.send(cmd)
+        logger.info("Delete succeeded.", {
+          PrescriptionID: item.PrescriptionID,
+          TaskID: item.TaskID
+        })
+        return {success: true as const}
+      } catch (e) {
+        if (e instanceof TransactionCanceledException) {
+          logger.warn("Rollback skipped due to RequestID mismatch or missing item.", {
+            PrescriptionID: item.PrescriptionID,
+            TaskID: item.TaskID,
+            RequestID: item.RequestID,
+            reasons: e.CancellationReasons
+          })
+          return {success: true as const, skipped: true}
+        }
+        logger.error("Unexpected error during rollback.", {
+          PrescriptionID: item.PrescriptionID,
+          TaskID: item.TaskID,
+          RequestID: item.RequestID,
+          error: e
+        })
+        return {success: false as const}
+      }
+    })
+  )
+
+  return results.every(r => r.success)
+}
+
 export async function checkPrescriptionRecordExistence(
   prescriptionID: string,
   taskID: string,
