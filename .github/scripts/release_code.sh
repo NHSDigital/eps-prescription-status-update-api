@@ -49,4 +49,5 @@ sam deploy \
             EnableAlerts="$ENABLE_ALERTS" \
             StateMachineLogLevel="$STATE_MACHINE_LOG_LEVEL" \
             EnableNotificationsInternal="$ENABLE_NOTIFICATIONS_INTERNAL" \
-            EnableNotificationsExternal="$ENABLE_NOTIFICATIONS_EXTERNAL"
+            EnableNotificationsExternal="$ENABLE_NOTIFICATIONS_EXTERNAL" \
+            RequireApplicationName="$REQUIRE_APPLICATION_NAME"

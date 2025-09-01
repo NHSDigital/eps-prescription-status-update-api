@@ -96,6 +96,7 @@ Resources:
             Action:
               - sqs:SendMessage
               - sqs:SendMessageBatch
+              - sqs:DeleteMessage
               - sqs:GetQueueUrl
               - kms:GenerateDataKey
               - kms:Decrypt

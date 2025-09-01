@@ -4,7 +4,7 @@ import {getSecret} from "@aws-lambda-powertools/parameters/secrets"
 
 import {createHmac} from "crypto"
 
-import {PSUDataItem, NotifyDataItem} from "@PrescriptionStatusUpdate_common/commonTypes"
+import {NotifyDataItem, PSUDataItemWithPrevious} from "@PrescriptionStatusUpdate_common/commonTypes"
 
 import {checkSiteOrSystemIsNotifyEnabled} from "../validation/notificationSiteAndSystemFilters"
 
@@ -102,7 +102,7 @@ export async function getSaltValue(logger: Logger): Promise<string> {
  */
 export async function pushPrescriptionToNotificationSQS(
   requestId: string,
-  data: Array<PSUDataItem>,
+  data: Array<PSUDataItemWithPrevious>,
   logger: Logger
 ): Promise<Array<string>> {
   logger.info("Checking if any items require notifications", {numItemsToBeChecked: data.length, sqsUrl})
@@ -119,19 +119,34 @@ export async function pushPrescriptionToNotificationSQS(
     {numItemsAllowed: allowedSitesAndSystemsData.length}
   )
 
+  function norm(str: string) {
+    return str.toLowerCase().trim()
+  }
+
   // Only these statuses will be pushed to the SQS
   const updateStatuses: Array<string> = [
-    "ready to collect",
-    "ready to collect - partial"
+    norm("ready to collect"),
+    norm("ready to collect - partial")
   ]
   // Salt for the deduplication hash
   const sqsSalt = await getSaltValue(logger)
 
-  // Extract the required SQS payload data out of the filtered data
-  // We could do a round of deduplications here, but benefits would be minimal and AWS SQS will do it for us anyway.
-  const allEntries = allowedSitesAndSystemsData
-    .filter((item) => updateStatuses.includes(item.Status.toLowerCase()))
-    // Build SQS batch entries with FIFO parameters
+  // Get only items which have the correct current statuses
+  const candidates = allowedSitesAndSystemsData.filter(
+    (item) => updateStatuses.includes(norm(item.current.Status))
+  )
+
+  // we don't want items that have gone from "ready to collect" to "ready to collect"
+  // So chuck those out.
+  const changedStatus = candidates
+    .filter(({current, previous}) => {
+      if (!previous) return true // no previous item (or hit an error getting one) -> treat as changed
+      return norm(current.Status) !== norm(previous.Status)
+    })
+    .map(({current}) => current)
+
+  // Build SQS batch entries with FIFO parameters
+  const allEntries = changedStatus
     .map((item, idx) => ({
       Id: idx.toString(),
       // Only post the required information to SQS
@@ -156,7 +171,7 @@ export async function pushPrescriptionToNotificationSQS(
 
   logger.info(
     "The following patients will have prescription update app notifications requested",
-    {nhsNumbers: allowedSitesAndSystemsData.map(e => e.PatientNHSNumber)}
+    {nhsNumbers: allowedSitesAndSystemsData.map(e => e.current.PatientNHSNumber)}
   )
 
   // SQS batch calls are limited to 10 messages per request, so chunk the data

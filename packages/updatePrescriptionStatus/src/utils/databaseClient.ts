@@ -11,7 +11,7 @@ import {
 } from "@aws-sdk/client-dynamodb"
 import {marshall, unmarshall} from "@aws-sdk/util-dynamodb"
 
-import {PSUDataItem} from "@PrescriptionStatusUpdate_common/commonTypes"
+import {PSUDataItem, PSUDataItemWithPrevious} from "@PrescriptionStatusUpdate_common/commonTypes"
 import {Timeout} from "./timeoutUtils"
 
 const client = new DynamoDBClient()
@@ -61,9 +61,9 @@ export async function persistDataItems(dataItems: Array<PSUDataItem>, logger: Lo
   }))
   const failed = results.filter(r => !r.success)
   if (failed.length > 0) {
-    const conditionalCheckFailures = failed.filter(r=> r.errorMessage === "conditional check failure")
+    const conditionalCheckFailures = failed.filter(r => r.errorMessage === "conditional check failure")
     if (conditionalCheckFailures.length > 0) {
-      throw(conditionalCheckFailures[0].error)
+      throw (conditionalCheckFailures[0].error)
     }
     return false
   } else {
@@ -94,7 +94,7 @@ export async function checkPrescriptionRecordExistence(
   }
 }
 
-export async function getPreviousItem(currentItem: PSUDataItem): Promise<PSUDataItem | undefined> {
+export async function getPreviousItem(currentItem: PSUDataItem, logger: Logger): Promise<PSUDataItemWithPrevious> {
   const query: QueryCommandInput = {
     TableName: tableName,
     KeyConditions: {
@@ -113,21 +113,37 @@ export async function getPreviousItem(currentItem: PSUDataItem): Promise<PSUData
 
   let lastEvaluatedKey
   let items: Array<PSUDataItem> = []
-  do {
-    if (lastEvaluatedKey) {
-      query.ExclusiveStartKey = lastEvaluatedKey
-    }
-    const result = await client.send(new QueryCommand(query))
-    if (result.Items) {
-      items = items.concat(
-        result.Items
-          .map((item) => unmarshall(item) as PSUDataItem)
-          .filter((item) => item.TaskID !== currentItem.TaskID) // Can't do NE in the query so filter here
-      )
-    }
-    lastEvaluatedKey = result.LastEvaluatedKey
-  } while (lastEvaluatedKey)
+  // this is in a try catch block so that it always return something, even if there is an error
+  // so that the promise map where it is called does not error
+  try {
+    do {
+      if (lastEvaluatedKey) {
+        query.ExclusiveStartKey = lastEvaluatedKey
+      }
+      const result = await client.send(new QueryCommand(query))
 
-  items.sort((a, b) => new Date(a.LastModified).valueOf() - new Date(b.LastModified).valueOf())
-  return items.pop()
+      if (!result || !result.Items) break
+
+      if (result.Items) {
+        items = items.concat(
+          result.Items
+            .map((item) => unmarshall(item) as PSUDataItem)
+            .filter((item) => item.TaskID !== currentItem.TaskID) // Can't do NE in the query so filter here
+        )
+      }
+      lastEvaluatedKey = result.LastEvaluatedKey
+    } while (lastEvaluatedKey)
+
+    items.sort((a, b) => new Date(a.LastModified).valueOf() - new Date(b.LastModified).valueOf())
+    return {
+      current: currentItem,
+      previous: items.pop()
+    }
+  } catch (err) {
+    logger.error("Error retrieving previous item status", {error: err})
+    return {
+      current: currentItem,
+      previous: undefined
+    }
+  }
 }

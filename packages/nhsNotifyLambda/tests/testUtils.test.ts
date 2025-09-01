@@ -509,14 +509,14 @@ describe("NHS notify lambda helper functions", () => {
       expect(result).toHaveLength(2)
       expect(result[0]).toMatchObject({
         PSUDataItem: data[0].PSUDataItem,
-        deliveryStatus: "requested",
+        messageStatus: "requested",
         notifyMessageId: "msg-id-1",
         messageBatchReference: expect.any(String),
         messageReference: expect.any(String)
       })
       expect(result[1]).toMatchObject({
         PSUDataItem: data[1].PSUDataItem,
-        deliveryStatus: "notify request failed",
+        messageStatus: "notify request failed",
         notifyMessageId: undefined,
         messageBatchReference: expect.any(String),
         messageReference: expect.any(String)
@@ -549,7 +549,7 @@ describe("NHS notify lambda helper functions", () => {
       expect(result).toMatchObject([
         {
           PSUDataItem: data[0].PSUDataItem,
-          deliveryStatus: "notify request failed",
+          messageStatus: "notify request failed",
           notifyMessageId: undefined,
           messageBatchReference: expect.any(String),
           messageReference: expect.any(String)
@@ -598,7 +598,7 @@ describe("NHS notify lambda helper functions", () => {
       result.forEach((r) =>
         expect(r).toEqual(
           expect.objectContaining({
-            deliveryStatus: "notify request failed",
+            messageStatus: "notify request failed",
             notifyMessageId: undefined
           })
         )
@@ -745,14 +745,14 @@ describe("NHS notify lambda helper functions", () => {
       expect(result).toHaveLength(2)
       expect(result[0]).toMatchObject({
         PSUDataItem: data[0].PSUDataItem,
-        deliveryStatus: "silent running",
+        messageStatus: "silent running",
         notifyMessageId: expect.any(String), // it will be assigned a dummy ID
         messageBatchReference: expect.any(String),
         messageReference: expect.any(String)
       })
       expect(result[1]).toMatchObject({
         PSUDataItem: data[1].PSUDataItem,
-        deliveryStatus: "silent running",
+        messageStatus: "silent running",
         notifyMessageId: expect.any(String),
         messageBatchReference: expect.any(String),
         messageReference: expect.any(String)

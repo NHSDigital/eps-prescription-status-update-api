@@ -26,11 +26,19 @@ export interface LastNotificationStateType {
   ODSCode: string
   RequestId: string // x-request-id header
   SQSMessageID?: string // The SQS message ID
-  DeliveryStatus: string
+  MessageStatus: string
+  // These are undefined until we get callbacks from Notify
+  ChannelStatus?: string
+  SupplierStatus?: string
   NotifyMessageID?: string // The UUID we got back from Notify for the submitted message
   NotifyMessageReference: string // The references we generated for the message
   NotifyMessageBatchReference?: string // As above
   LastNotifiedPrescriptionStatus: string
   LastNotificationRequestTimestamp: string // ISO-8601 string
   ExpiryTime: number // DynamoDB expiration time (UNIX timestamp)
+}
+
+export interface PSUDataItemWithPrevious {
+  current: PSUDataItem;
+  previous: PSUDataItem | undefined;
 }

@@ -12,7 +12,8 @@ echo "Proxygen KID: ${PROXYGEN_KID}"
 echo "Deploy Check Prescription Status Update: ${DEPLOY_CHECK_PRESCRIPTION_STATUS_UPDATE}"
 echo "Deploy Test Report Lambda: ${DEPLOY_TEST_REPORT_LAMBDA}"
 echo "Dry run: ${DRY_RUN}"
-
+# shellcheck disable=SC2153
+echo "is_pull_request: ${IS_PULL_REQUEST}"
 
 client_private_key=$(cat ~/.proxygen/tmp/client_private_key)
 client_cert=$(cat ~/.proxygen/tmp/client_cert)
@@ -37,10 +38,8 @@ if [[ "$APIGEE_ENVIRONMENT" =~ ^(int|sandbox|prod)$ ]]; then
 fi
 
 
-is_pull_request=false
 instance_suffix=""
-if [[ ${STACK_NAME} == psu-pr-* ]]; then
-    is_pull_request=true
+if [[ "${IS_PULL_REQUEST}" == "true" ]]; then
     # Extracting the PR ID from $STACK_NAME
     pr_id=$(echo "${STACK_NAME}" | cut -d'-' -f3)
     instance_suffix=-"pr-${pr_id}"
@@ -55,7 +54,6 @@ else
     apigee_api=custom-prescription-status-update-api
 fi
 
-echo "Is pull request: ${is_pull_request}"
 echo "Proxy instance: ${instance}"
 echo "Apigee api: ${apigee_api}"
 
@@ -65,7 +63,7 @@ echo
 echo "Fixing the spec"
 # Find and replace the title
 title=$(jq -r '.info.title' "${SPEC_PATH}")
-if [[ "${is_pull_request}" == "true" ]]; then
+if [[ "${IS_PULL_REQUEST}" == "true" ]]; then
     jq --arg title "[PR-${pr_id}] $title" '.info.title = $title' "${SPEC_PATH}" > temp.json && mv temp.json "${SPEC_PATH}"
     echo "disabling monitoring for pull request deployment"
     jq '."x-nhsd-apim".monitoring = false' "${SPEC_PATH}" > temp.json && mv temp.json "${SPEC_PATH}"
@@ -115,6 +113,8 @@ if [[ "${DEPLOY_TEST_REPORT_LAMBDA}" == "false" ]]; then
     fi
 fi
 
+# Find and replace the x-nhsd-apim.target.secret value
+jq --arg mtls_key "${MTLS_KEY}"  '.["x-nhsd-apim"].target.security.secret = "\($mtls_key)"' "${SPEC_PATH}" > temp.json && mv temp.json "${SPEC_PATH}"
 
 echo
 
@@ -123,13 +123,13 @@ echo "Retrieving proxygen credentials"
 # Retrieve the proxygen private key and client private key and cert from AWS Secrets Manager
 proxygen_private_key_arn=$(aws cloudformation list-exports --query "Exports[?Name=='account-resources:${PROXYGEN_PRIVATE_KEY_NAME}'].Value" --output text)
 
-if [[ "${is_pull_request}" == "false" ]]; then
+if [[ "${ENABLE_MUTUAL_TLS}" == "true" ]]; then
     echo
     echo "Store the secret used for mutual TLS to AWS using Proxygen proxy lambda"
     if [[ "${DRY_RUN}" == "false" ]]; then
         jq -n --arg apiName "${apigee_api}" \
             --arg environment "${APIGEE_ENVIRONMENT}" \
-            --arg secretName "psu-mtls-1" \
+            --arg secretName "${MTLS_KEY}" \
             --arg secretKey "${client_private_key}" \
             --arg secretCert "${client_cert}" \
             --arg kid "${PROXYGEN_KID}" \
@@ -198,7 +198,7 @@ if [[ "${APIGEE_ENVIRONMENT}" == "int" ]]; then
     fi
 fi
 
-if [[ "${APIGEE_ENVIRONMENT}" == "internal-dev" && "${is_pull_request}" == "false" ]]; then
+if [[ "${APIGEE_ENVIRONMENT}" == "internal-dev" && "${IS_PULL_REQUEST}" == "false" ]]; then
     echo
     echo "Deploy the API spec to uat catalogue as it is internal-dev environment"
     if [[ "${DRY_RUN}" == "false" ]]; then

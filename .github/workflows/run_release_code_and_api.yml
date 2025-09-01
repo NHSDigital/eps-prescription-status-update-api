@@ -67,6 +67,9 @@ on:
       ENABLE_ALERTS:
         type: boolean
         default: true
+      REQUIRE_APPLICATION_NAME:
+        type: boolean
+        default: true
       RUN_REGRESSION_TEST:
         required: true
         type: boolean
@@ -81,6 +84,12 @@ on:
         required: false
         type: boolean
         default: false
+      IS_PULL_REQUEST:
+        type: boolean
+        default: true
+      MTLS_KEY:
+        type: string
+        required: true
     secrets:
       CLOUD_FORMATION_DEPLOY_ROLE:
         required: true
@@ -169,6 +178,7 @@ jobs:
           STATE_MACHINE_LOG_LEVEL: ${{ inputs.STATE_MACHINE_LOG_LEVEL }}
           ENABLE_NOTIFICATIONS_INTERNAL: ${{ inputs.ENABLE_NOTIFICATIONS_INTERNAL }}
           ENABLE_NOTIFICATIONS_EXTERNAL: ${{ inputs.ENABLE_NOTIFICATIONS_EXTERNAL }}
+          REQUIRE_APPLICATION_NAME: ${{ inputs.REQUIRE_APPLICATION_NAME }}
         run: ./release_code.sh
 
       - name: get mtls secrets
@@ -204,6 +214,9 @@ jobs:
           DRY_RUN: false
           DEPLOY_CHECK_PRESCRIPTION_STATUS_UPDATE: ${{ inputs.DEPLOY_CHECK_PRESCRIPTION_STATUS_UPDATE }}
           DEPLOY_TEST_REPORT_LAMBDA: ${{ inputs.DEPLOY_TEST_REPORT_LAMBDA }}
+          IS_PULL_REQUEST: ${{ inputs.IS_PULL_REQUEST }}
+          MTLS_KEY: ${{ inputs.MTLS_KEY }}
+          ENABLE_MUTUAL_TLS: ${{ inputs.ENABLE_MUTUAL_TLS }}
         run: ./deploy_api.sh
 
       - name: Deploy CPSU API
@@ -223,6 +236,9 @@ jobs:
           DRY_RUN: false
           DEPLOY_CHECK_PRESCRIPTION_STATUS_UPDATE: ${{ inputs.DEPLOY_CHECK_PRESCRIPTION_STATUS_UPDATE }}
           DEPLOY_TEST_REPORT_LAMBDA: ${{ inputs.DEPLOY_TEST_REPORT_LAMBDA }}
+          IS_PULL_REQUEST: ${{ inputs.IS_PULL_REQUEST }}
+          MTLS_KEY: ${{ inputs.MTLS_KEY }}
+          ENABLE_MUTUAL_TLS: ${{ inputs.ENABLE_MUTUAL_TLS }}
         run: ./deploy_api.sh
 
       - name: create_int_release_notes

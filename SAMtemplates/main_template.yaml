@@ -106,6 +106,13 @@ Parameters:
       - true
       - false
 
+  RequireApplicationName:
+    Type: String
+    Default: false
+    AllowedValues:
+      - true
+      - false
+
 Resources:
   Secrets:
     Type: AWS::Serverless::Application
@@ -191,6 +198,7 @@ Resources:
         DeployCheckPrescriptionStatusUpdate: !Ref DeployCheckPrescriptionStatusUpdate
         DeployTestReportLambda: !Ref DeployTestReportLambda
         Environment: !Ref Environment
+        RequireApplicationName: !Ref RequireApplicationName
 
   StateMachines:
     Type: AWS::Serverless::Application
