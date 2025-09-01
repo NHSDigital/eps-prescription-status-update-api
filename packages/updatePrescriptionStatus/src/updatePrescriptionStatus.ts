@@ -208,6 +208,7 @@ const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPro
       // We're considering this a bust, and if they send a retry before undoing the table
       // bits then they will get a collision. Delete the newly created records then return the error
       await rollbackDataItems(dataItems, logger)
+      responseEntries = [serverError()]
       return response(500, responseEntries)
     }
   } else {
