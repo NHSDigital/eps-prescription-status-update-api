@@ -319,11 +319,7 @@ describe("NHS notify lambda helper functions", () => {
         addPrescriptionMessagesToNotificationStateStore(logger, [item])
       ).rejects.toThrow("AWS error")
 
-      // first info for count
-      expect(infoSpy).toHaveBeenCalledWith(
-        "Attempting to push data to DynamoDB",
-        {count: 1}
-      )
+      expect(sendSpy).toHaveBeenCalledTimes(1)
       // error log includes the item that failed, and the error
       expect(errorSpy).toHaveBeenCalledWith(
         "Failed to write to DynamoDB",
@@ -349,8 +345,6 @@ describe("NHS notify lambda helper functions", () => {
       expect(sendSpy).toHaveBeenCalledTimes(1)
       const cmd = sendSpy.mock.calls[0][0] as PutCommand
       expect(cmd).toBeInstanceOf(PutCommand)
-
-      expect(infoSpy).toHaveBeenCalledWith("Upserted prescription")
 
       // No errors
       expect(errorSpy).not.toHaveBeenCalled()
@@ -408,9 +402,14 @@ describe("NHS notify lambda helper functions", () => {
 
     it("returns true when last notification is older than default cooldown", async () => {
       const pastTs = new Date(Date.now() - (1000 * 901)).toISOString() // 901s ago
-      sendSpy.mockImplementationOnce(() =>
-        Promise.resolve({Item: {LastNotificationRequestTimestamp: pastTs}})
-      )
+      sendSpy.mockImplementationOnce(() => {
+        return {
+          Items: [
+            {LastNotificationRequestTimestamp: {S: new Date(Date.now() - 1000 * 5000).toISOString()}}, // very old
+            {LastNotificationRequestTimestamp: {S: pastTs}}
+          ]
+        }
+      })
 
       const update = constructPSUDataItemMessage().PSUDataItem
       const result = await checkCooldownForUpdate(logger, update, 900)
@@ -418,11 +417,18 @@ describe("NHS notify lambda helper functions", () => {
       expect(result).toBe(true)
     })
 
-    it("returns false when last notification is within default cooldown", async () => {
-      const recentTs = new Date(Date.now() - (1000 * 300)).toISOString() // 300s ago
-      sendSpy.mockImplementationOnce(() =>
-        Promise.resolve({Items: [{LastNotificationRequestTimestamp: recentTs}]})
-      )
+    it("returns false when ANY item is within the cooldown window", async () => {
+      const recentTs = new Date(Date.now() - 1000 * 300).toISOString() // 300s ago
+      const oldTs = new Date(Date.now() - 1000 * 10_000).toISOString() // old
+
+      sendSpy.mockImplementationOnce(() => {
+        return {
+          Items: [
+            {LastNotificationRequestTimestamp: {S: oldTs}},
+            {LastNotificationRequestTimestamp: {S: recentTs}} // within cooldown → should suppress
+          ]
+        }
+      })
 
       const update = constructPSUDataItemMessage().PSUDataItem
       const result = await checkCooldownForUpdate(logger, update, 900)
@@ -433,12 +439,30 @@ describe("NHS notify lambda helper functions", () => {
     it("honours a custom cooldownPeriod", async () => {
       // custom cooldown = 60 seconds, but timestamp is only 30s ago
       const recentTs = new Date(Date.now() - 30000).toISOString()
-      sendSpy.mockImplementationOnce(() =>
-        Promise.resolve({Items: [{LastNotificationRequestTimestamp: recentTs}]})
-      )
+      sendSpy.mockImplementationOnce(() => {
+        return {
+          Items: [{LastNotificationRequestTimestamp: {S: recentTs}}]
+        }
+      })
 
       const update = constructPSUDataItemMessage().PSUDataItem
       const result = await checkCooldownForUpdate(logger, update, 60)
+
+      expect(result).toBe(false)
+    })
+
+    it("returns false when items exist but none have valid timestamps", async () => {
+      sendSpy.mockImplementationOnce(() => {
+        return {
+          Items: [
+            {}, // no timestamp attribute
+            {SomeOtherField: {S: "foo"}}
+          ]
+        }
+      })
+
+      const update = constructPSUDataItemMessage().PSUDataItem
+      const result = await checkCooldownForUpdate(logger, update, 900)
 
       expect(result).toBe(false)
     })
