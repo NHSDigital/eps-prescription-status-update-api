@@ -50,7 +50,7 @@ export async function addPrescriptionMessagesToNotificationStateStore(
         TableName: dynamoTable,
         Item: item
       }))
-      logger.info("Upserted prescription")
+      logger.debug("Upserted prescription")
     } catch (err) {
       logger.error("Failed to write to DynamoDB", {
         error: err,
@@ -58,6 +58,10 @@ export async function addPrescriptionMessagesToNotificationStateStore(
       })
       throw err
     }
+    logger.info(
+      "Finished upserting records to the dynamo table",
+      {nhsNumbers: dataArray.map(el => el.PSUDataItem.PatientNHSNumber)}
+    )
   }
 }
 
@@ -80,7 +84,7 @@ export async function checkCooldownForUpdate(
   }
 
   try {
-    // Retrieve the last notification state for this patient/pharmacy combo
+    // Retrieve the notification states for this patient/pharmacy combo
     const q = new QueryCommand({
       TableName: dynamoTable,
       IndexName: "PatientPharmacyIndex",
@@ -88,9 +92,7 @@ export async function checkCooldownForUpdate(
       ExpressionAttributeValues: {
         ":n": {S: update.PatientNHSNumber},
         ":o": {S: update.PharmacyODSCode}
-      },
-      ScanIndexForward: false, // descending on the ODSCode key (i.e. newest RequestID)
-      Limit: 1
+      }
     })
 
     let result
@@ -101,18 +103,41 @@ export async function checkCooldownForUpdate(
       throw err
     }
 
-    const Item = result.Items?.[0]
-    if (!Item?.LastNotificationRequestTimestamp) {
-      logger.debug("No previous notification state found. Notification allowed.", {
-        NHSNumber: update.PatientNHSNumber,
-        ODSCode: update.PharmacyODSCode,
-        requestID: update.RequestID
-      })
+    const items = result.Items ?? []
+
+    if (items.length === 0) {
+      logger.debug(
+        "No previous notification states. Notification allowed",
+        {
+          NHSNumber: update.PatientNHSNumber,
+          ODSCode: update.PharmacyODSCode,
+          requestID: update.RequestID
+        }
+      )
       return true
     }
 
+    const timestamps = items
+      .map(i => i.LastNotificationRequestTimestamp?.S)
+      .filter((ts): ts is string => Boolean(ts)) // If we get some weird variable type, ignore it
+      .map(ts => new Date(ts).getTime())
+
+    if (!timestamps.length) {
+      logger.debug(
+        "No valid timestamps found in the returned records. " +
+        "Assuming something is broken for this patient, and blocking notifications",
+        {
+          LastNotificationRequestTimestamps: items.map(i => i.LastNotificationRequestTimestamp?.S),
+          NHSNumber: update.PatientNHSNumber,
+          ODSCode: update.PharmacyODSCode,
+          requestID: update.RequestID
+        }
+      )
+      return false
+    }
+
     // Compute seconds since last notification
-    const lastTs = new Date(Item.LastNotificationRequestTimestamp.S as string).getTime()
+    const lastTs = Math.max(...timestamps)
     const nowTs = Date.now()
     const secondsSince = Math.floor((nowTs - lastTs) / 1000)
 

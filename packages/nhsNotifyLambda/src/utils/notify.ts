@@ -98,8 +98,7 @@ export async function handleNotifyRequests(
       messageReference: item.messageReference,
       recipient: {nhsNumber: item.PSUDataItem.PatientNHSNumber},
       originator: {odsCode: item.PSUDataItem.PharmacyODSCode},
-      personalisation: {},
-      PSURequestId: item.PSUDataItem.RequestID
+      personalisation: {}
     }]
   })
 
