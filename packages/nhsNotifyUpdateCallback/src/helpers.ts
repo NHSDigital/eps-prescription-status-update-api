@@ -158,60 +158,42 @@ function extractStatusesAndDescriptions(logger: Logger, resource: CallbackResour
   }
 }
 
-function buildUpdateExpressions(
-  messageStatus: string | undefined,
-  messageStatusDescription: string | undefined,
-  channelStatus: string | undefined,
-  channelStatusDescription: string | undefined,
-  supplierStatus: string | undefined,
-  retryCount: number | undefined,
-  timestamp: string,
-  expiryTime: number
-) {
+/**
+ * Helper for constructing the dynamo call.
+ * Returns the UpdateExpression, and the accompanying objects for names and values.
+ * If a field is undefined, it is not updated.
+ *
+ * @param updates: Records are keyed by the dynamo table field name, e.g. {Count: 5}. Undefined values are omitted.
+ */
+function buildUpdateExpression(updates: Record<string, unknown>) {
+  const names: Record<string, string> = {}
+  const values: Record<string, unknown> = {}
+  const sets: Array<string> = []
 
-  // Build UpdateExpressions
-  const sets: Array<string> = [
-    "ExpiryTime = :et",
-    "LastNotificationRequestTimestamp = :ts" // We DO count a failure as blocking the cooldown period!
-  ]
-  const eav: Record<string, unknown> = {
-    ":et": expiryTime,
-    ":ts": timestamp
+  let i = 0
+  for (const [key, value] of Object.entries(updates)) {
+    if (value === undefined) continue
+
+    const name = `#n${i}`
+    const val = `:v${i}`
+
+    names[name] = key // avoid reserved word collisions
+    values[val] = value
+    sets.push(`${name} = ${val}`)
+
+    i++
   }
 
-  // Only update statuses that are defined (dynamo can't handle undefined fields).
-  // Store descriptions if we have them (they're only present if a failure is being recorded)
-  if (messageStatus) {
-    sets.push("MessageStatus = :ms")
-    eav[":ms"] = messageStatus
-  }
-  if (messageStatusDescription) {
-    sets.push("MessageStatusDescription = :msd")
-    eav[":msd"] = messageStatusDescription
+  if (sets.length === 0) {
+    // Dynamo doesn't allow empty set
+    throw new Error("No defined fields provided for update")
   }
 
-  if (channelStatus) {
-    sets.push("ChannelStatus = :cs")
-    eav[":cs"] = channelStatus
+  return {
+    UpdateExpression: `SET ${sets.join(", ")}`,
+    ExpressionAttributeNames: names,
+    ExpressionAttributeValues: values
   }
-  if (channelStatusDescription) {
-    sets.push("ChannelStatusDescription = :csd")
-    eav[":csd"] = channelStatusDescription
-  }
-
-  if (supplierStatus) {
-    sets.push("SupplierStatus = :ss")
-    eav[":ss"] = supplierStatus
-  }
-
-  if (retryCount) {
-    sets.push("RetryCount = :rc")
-    eav[":rc"] = retryCount
-  }
-
-  const exp = `SET ${sets.join(", ")}`
-
-  return {exp, eav}
 }
 
 /**
@@ -274,24 +256,27 @@ export async function updateNotificationsTable(
         RequestId: item.RequestId
       }
 
-      // FIXME: This should be cleaned up - too many args.
-      const {exp, eav} = buildUpdateExpressions(
-        statuses.messageStatus,
-        statuses.messageStatusDescription,
-        statuses.channelStatus,
-        statuses.channelStatusDescription,
-        statuses.supplierStatus,
-        statuses.retryCount,
-        statuses.timestamp,
-        newExpiry
-      )
+      const updates = {
+        // DynamoFieldName: Value | undefined
+        ExpiryTime: newExpiry,
+        LastNotificationRequestTimestamp: statuses.timestamp,
+        MessageStatus: statuses.messageStatus,
+        MessageStatusDescription: statuses.messageStatusDescription,
+        ChannelStatus: statuses.channelStatus,
+        ChannelStatusDescription: statuses.channelStatusDescription,
+        SupplierStatus: statuses.supplierStatus,
+        RetryCount: statuses.retryCount
+      }
+
+      const {UpdateExpression, ExpressionAttributeNames, ExpressionAttributeValues} = buildUpdateExpression(updates)
 
       try {
         await docClient.send(new UpdateCommand({
           TableName: dynamoTable,
           Key: key,
-          UpdateExpression: exp,
-          ExpressionAttributeValues: eav
+          UpdateExpression,
+          ExpressionAttributeValues,
+          ExpressionAttributeNames
         }))
 
         logger.info(
