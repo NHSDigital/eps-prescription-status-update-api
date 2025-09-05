@@ -82,6 +82,9 @@ Parameters:
   DeployCheckPrescriptionStatusUpdate:
     Type: String
 
+  DeployTestReportLambda:
+    Type: String
+
   Environment:
     Type: String
 
@@ -89,6 +92,10 @@ Conditions:
   ShouldDeployCheckPrescriptionStatusUpdate: !Equals
     - true
     - !Ref DeployCheckPrescriptionStatusUpdate
+
+  ShouldDeployTestReportLambda: !Equals
+    - true
+    - !Ref DeployTestReportLambda
 
 Resources:
   UpdatePrescriptionStatus:
@@ -385,6 +392,57 @@ Resources:
       ManagedPolicyArns:
         - !Ref NotifyProcessorScheduleEventRolePolicy
 
+  TestReportLambda:
+    Condition: ShouldDeployTestReportLambda
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub ${StackName}-TestReportLambda
+      CodeUri: ../../packages/
+      Handler: testReportLambda.handler
+      Role: !GetAtt TestReportLambdaResources.Outputs.LambdaRoleArn
+      Environment:
+        Variables:
+          LOG_LEVEL: !Ref LogLevel
+          TABLE_NAME: !Ref PrescriptionStatusUpdatesTableName
+          ENVIRONMENT: !Ref Environment
+    Metadata:
+      BuildMethod: esbuild
+      guard:
+        SuppressedRules:
+          - LAMBDA_DLQ_CHECK
+          - LAMBDA_INSIDE_VPC
+          - LAMBDA_CONCURRENCY_CHECK
+      BuildProperties:
+        Minify: true
+        Target: es2020
+        Sourcemap: true
+        tsconfig: testReportLambda/tsconfig.json
+        packages: bundle
+        EntryPoints:
+          - testReportLambda/src/testReportLambda.ts
+
+  TestReportLambdaResources:
+    Condition: ShouldDeployTestReportLambda
+    Type: AWS::Serverless::Application
+    Properties:
+      Location: lambda_resources.yaml
+      Parameters:
+        StackName: !Ref StackName
+        LambdaName: !Sub ${StackName}-TestReportLambda
+        IncludeAdditionalPolicies: true
+        AdditionalPolicies: !Join
+          - ","
+          - - Fn::ImportValue: !Sub ${StackName}:tables:${PrescriptionStatusUpdatesTableName}:TableReadPolicyArn
+            - Fn::ImportValue: !Sub ${StackName}:tables:UsePrescriptionStatusUpdatesKMSKeyPolicyArn
+        LambdaArn: !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:${StackName}-TestReportLambda
+        LogRetentionInDays: !Ref LogRetentionInDays
+        CloudWatchKMSKeyId: !ImportValue account-resources:CloudwatchLogsKmsKeyArn
+        EnableSplunk: !Ref EnableSplunk
+        SplunkSubscriptionFilterRole: !ImportValue lambda-resources:SplunkSubscriptionFilterRole
+        SplunkDeliveryStreamArn: !ImportValue lambda-resources:SplunkDeliveryStream
+        IncludeQueryLogGroupsPolicy: true
+
+
   NotifyProcessorScheduleEventRolePolicy:
     Type: AWS::IAM::ManagedPolicy
     Properties:
@@ -569,6 +627,20 @@ Outputs:
     Value: !If
       - ShouldDeployCheckPrescriptionStatusUpdate
       - !GetAtt CheckPrescriptionStatusUpdates.Arn
+      - ""
+
+  TestReportFunctionName:
+    Description: The function name of the TestReport lambda
+    Value: !If
+      - ShouldDeployTestReportLambda
+      - !Ref TestReportLambda
+      - ""
+
+  TestReportFunctionArn:
+    Description: The function ARN of the TestReport lambda
+    Value: !If
+      - ShouldDeployTestReportLambda
+      - !GetAtt TestReportLambda.Arn
       - ""
 
   NotifyProcessorFunctionName:

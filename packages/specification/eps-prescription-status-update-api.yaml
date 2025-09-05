@@ -327,6 +327,36 @@ paths:
       security:
         - app-level0: []
 
+  /test-report:
+    get:
+      operationId: prescription-status-update-test-report
+      summary: "Testing: summarises the NPPTS updates made by a specific supplier as part of the test pack"
+      description: |
+        ## This endpoint is for test verification purposes only - it is not available in production.
+        ## Overview
+        TODO: Write this. How does someone interact with the endpoint? What will it return?
+      responses:
+        "200":
+          description: Successful retrieval of a test report.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TestReport"
+              example: {"message": "OK"}
+
+        4XX:
+          description: |
+            An error occurred as follows:
+            | HTTP status | Error code          | Description                                                                                                                               |
+            | ----------- | ------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
+            | 401         | `processing`        | Missing or invalid OAuth 2.0 bearer token in request                                                                                      |
+            | 408         | `timeout`           | Request timed out                                                                                                                         |
+            | 429         | `throttled`         | You have exceeded your application's [rate limit](https://digital.nhs.uk/developer/guides-and-documentation/reference-guide#rate-limits). |
+
+      security:
+        - app-level3: []
+
+
 components:
   securitySchemes:
     app-level0:
@@ -433,6 +463,8 @@ components:
       $ref: schemas/resources/OperationOutcome.yaml
     CheckPrescriptionStatusUpdates:
       $ref: schemas/resources/CheckPrescriptionStatusUpdates.yaml
+    TestReport:
+      $ref: schemas/resources/TestReport.yaml
 security:
   - app-level3: []
   - app-level0: []
