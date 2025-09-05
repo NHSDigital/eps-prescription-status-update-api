@@ -10,7 +10,12 @@ import httpHeaderNormalizer from "@middy/http-header-normalizer"
 import errorHandler from "@nhs/fhir-middy-error-handler"
 
 import {CallbackType, CallbackResponse} from "./types"
-import {checkSignature, response, updateNotificationsTable} from "./helpers"
+import {
+  checkSignature,
+  extractStatusesAndDescriptions,
+  response,
+  updateNotificationsTable
+} from "./helpers"
 
 export const logger = new Logger({serviceName: "nhsNotifyUpdateCallback"})
 
@@ -37,17 +42,10 @@ const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPro
   let receivedUnknownCallbackType = false
 
   payload.data.forEach(m => {
+    const statuses = extractStatusesAndDescriptions(logger, m)
     let logPayload = {
       callbackType: m.type,
-      messageId: m.attributes.messageId,
-      // Only defined for message status callbacks
-      messageStatus: m.type === CallbackType.message ? m.attributes.messageStatus : undefined,
-      // Only defined for channel/supplier status callbacks
-      channelStatus: m.type === CallbackType.channel ? m.attributes.channelStatus : undefined,
-      supplierStatus: m.type === CallbackType.channel ? m.attributes.supplierStatus : undefined,
-      retryCount: m.type === CallbackType.channel ? m.attributes.retryCount : undefined,
-      callbackMessageTimestamp: m.attributes.timestamp,
-      messageReference: m.attributes.messageReference
+      ...statuses
     }
     logger.info("Message state updated", logPayload)
 
