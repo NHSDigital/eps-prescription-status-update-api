@@ -117,7 +117,7 @@ export async function checkSignature(logger: Logger, event: APIGatewayProxyEvent
   return undefined
 }
 
-function extractStatusesAndDescriptions(logger: Logger, resource: CallbackResource) {
+export function extractStatusesAndDescriptions(logger: Logger, resource: CallbackResource) {
   let messageId: string | undefined
   let messageStatus: string | undefined
   let messageStatusDescription: string | undefined
@@ -125,10 +125,10 @@ function extractStatusesAndDescriptions(logger: Logger, resource: CallbackResour
   let channelStatusDescription: string | undefined
   let supplierStatus: string | undefined
   let retryCount: number | undefined
-  let timestamp: string
+  let callbackTimestamp: string
 
   messageId = resource.attributes.messageId
-  timestamp = resource.attributes.timestamp
+  callbackTimestamp = resource.attributes.timestamp
   if (resource.type === CallbackType.message) {
     messageStatus = resource.attributes.messageStatus
     messageStatusDescription = resource.attributes.messageStatusDescription
@@ -154,7 +154,7 @@ function extractStatusesAndDescriptions(logger: Logger, resource: CallbackResour
     channelStatusDescription,
     supplierStatus,
     retryCount,
-    timestamp
+    callbackTimestamp
   }
 }
 
@@ -259,7 +259,7 @@ export async function updateNotificationsTable(
       const updates = {
         // DynamoFieldName: Value | undefined
         ExpiryTime: newExpiry,
-        LastNotificationRequestTimestamp: statuses.timestamp,
+        LastNotificationRequestTimestamp: statuses.callbackTimestamp,
         MessageStatus: statuses.messageStatus,
         MessageStatusDescription: statuses.messageStatusDescription,
         ChannelStatus: statuses.channelStatus,
@@ -293,7 +293,7 @@ export async function updateNotificationsTable(
             messageStatus: `${statuses.messageStatus}`,
             channelStatus: `${statuses.channelStatus}`,
             supplierStatus: `${statuses.supplierStatus}`,
-            newTimestamp: statuses.timestamp,
+            newTimestamp: statuses.callbackTimestamp,
             newExpiryTime: newExpiry
           }
         )
