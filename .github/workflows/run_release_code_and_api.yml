@@ -133,7 +133,7 @@ jobs:
           DEV_CLOUD_FORMATION_EXECUTE_LAMBDA_ROLE: ${{ secrets.DEV_CLOUD_FORMATION_EXECUTE_LAMBDA_ROLE }}
 
       - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v4
+        uses: aws-actions/configure-aws-credentials@v5
         with:
           aws-region: eu-west-2
           role-to-assume: ${{ secrets.CLOUD_FORMATION_DEPLOY_ROLE }}
@@ -187,7 +187,7 @@ jobs:
           aws secretsmanager get-secret-value --secret-id "${client_cert_arn}" --query SecretString --output text > ~/.proxygen/tmp/client_cert
 
       - name: Configure AWS Credentials for api release
-        uses: aws-actions/configure-aws-credentials@v4
+        uses: aws-actions/configure-aws-credentials@v5
         with:
           aws-region: eu-west-2
           role-to-assume: ${{ secrets.PROXYGEN_ROLE }}
