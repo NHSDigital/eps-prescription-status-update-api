@@ -25,7 +25,7 @@
     "json-schema-to-ts": "^3.1.1",
     "pratica": "^2.3.0",
     "ts-md5": "^2.0.1",
-    "uuid": "^11.1.0"
+    "uuid": "^12.0.0"
   },
   "devDependencies": {
     "@faker-js/faker": "^10.0.0",
