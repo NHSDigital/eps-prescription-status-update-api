@@ -57,6 +57,13 @@ Parameters:
   EnableNotificationsInternalParam:
     Type: AWS::SSM::Parameter::Name<String>
 
+  RequireApplicationName:
+    Type: String
+    Default: false
+    AllowedValues:
+      - true
+      - false
+
   LogLevel:
     Type: String
 
@@ -111,6 +118,7 @@ Resources:
           ENVIRONMENT: !Ref Environment
           TEST_PRESCRIPTIONS_1: "None"
           TEST_PRESCRIPTIONS_2: "None"
+          REQUIRE_APPLICATION_NAME: !Ref RequireApplicationName
     Metadata:
       BuildMethod: esbuild
       guard:
@@ -473,7 +481,7 @@ Resources:
         Variables:
           LOG_LEVEL: !Ref LogLevel
           TABLE_NAME: !Ref PrescriptionNotificationStatesTableName
-          APP_NAME_SECRET: secrets-PSU-Notify-Application-Name
+          APP_ID_SECRET: secrets-PSU-Notify-Application-ID
           API_KEY_SECRET:  secrets-PSU-Notify-API-Key
     Metadata:
       BuildMethod: esbuild

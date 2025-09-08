@@ -15,9 +15,9 @@ import {Bundle, BundleEntry, Task} from "fhir/r4"
 import {PSUDataItem, PSUDataItemWithPrevious} from "@PrescriptionStatusUpdate_common/commonTypes"
 
 import {transactionBundle, validateEntry} from "./validation/content"
-import {getPreviousItem, persistDataItems} from "./utils/databaseClient"
+import {getPreviousItem, persistDataItems, rollbackDataItems} from "./utils/databaseClient"
 import {jobWithTimeout, hasTimedOut} from "./utils/timeoutUtils"
-import {pushPrescriptionToNotificationSQS, removeSqsMessages} from "./utils/sqsClient"
+import {pushPrescriptionToNotificationSQS} from "./utils/sqsClient"
 import {
   accepted,
   badRequest,
@@ -74,6 +74,13 @@ const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPro
     "apigw-request-id": event.headers["apigw-request-id"]
   })
   let responseEntries: Array<BundleEntry> = []
+
+  // Proxygen can't check for this in a granular enough way (it cannot be on the notify callback)
+  // So check manually here.
+  if ((!event.headers["attribute-name"]) && (process.env.REQUIRE_APPLICATION_NAME?.toLocaleLowerCase() === "true")) {
+    logger.error("Missing `attribute-name` in request headers, and it is required in this environment")
+    return response(400, responseEntries)
+  }
 
   const xRequestID = getXRequestID(event, responseEntries)
   const applicationName = event.headers["attribute-name"] ?? "unknown"
@@ -152,22 +159,6 @@ const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPro
     logger.error("Failed to load parameters from SSM", {err})
   }
 
-  let created_messageIds: Array<string> = []
-  if (enableNotificationsFlag) {
-    try {
-      const requestId = event.headers["x-request-id"] ?? "x-request-id-not-found"
-      created_messageIds = await pushPrescriptionToNotificationSQS(requestId, dataItemsWithPrev, logger)
-    } catch (err) {
-      logger.error("Failed to push prescriptions to the notifications SQS", {err})
-      return response(500, responseEntries)
-    }
-  } else {
-    logger.info(
-      "enableNotifications is not true, skipping the notification request.",
-      {enableNotificationsFlag}
-    )
-  }
-
   try {
     const persistSuccess = persistDataItems(dataItems, logger)
     const persistResponse = await jobWithTimeout(LAMBDA_TIMEOUT_MS, persistSuccess)
@@ -175,15 +166,11 @@ const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPro
     if (hasTimedOut(persistResponse)) {
       responseEntries = [timeoutResponse()]
       logger.error("DynamoDB operation timed out.")
-      // It's okay to just call the function here, since if the enableNotifications
-      //  boolean is False, this function does nothing
-      await removeSqsMessages(logger, created_messageIds)
       return response(504, responseEntries)
     }
 
     if (!persistResponse) {
       responseEntries = [serverError()]
-      await removeSqsMessages(logger, created_messageIds)
       return response(500, responseEntries)
     }
 
@@ -195,11 +182,11 @@ const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPro
       if (testPrescription1Forced201) {
         logger.info("Forcing 201 response for INT test prescription 1")
         responseEntries = createSuccessResponseEntries(requestEntries)
+        // Don't attempt to send notifications for these test prescriptions
         return response(201, responseEntries)
       }
 
       handleTransactionCancelledException(e, responseEntries)
-      await removeSqsMessages(logger, created_messageIds)
       return response(409, responseEntries)
     }
   }
@@ -208,8 +195,27 @@ const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPro
   if (testPrescriptionForcedError) {
     logger.info("Forcing error for INT test prescription")
     responseEntries = [serverError()]
-    await removeSqsMessages(logger, created_messageIds)
     return response(500, responseEntries)
+  }
+
+  // If all the PSU stuff went well, then send the notification requests out
+  if (enableNotificationsFlag) {
+    try {
+      const requestId = event.headers["x-request-id"] ?? "x-request-id-not-found"
+      await pushPrescriptionToNotificationSQS(requestId, dataItemsWithPrev, logger)
+    } catch (err) {
+      logger.error("Failed to push prescriptions to the notifications SQS", {err})
+      // We're considering this a bust, and if they send a retry before undoing the table
+      // bits then they will get a collision. Delete the newly created records then return the error
+      await rollbackDataItems(dataItems, logger)
+      responseEntries = [serverError()]
+      return response(500, responseEntries)
+    }
+  } else {
+    logger.info(
+      "enableNotifications is not true, skipping the notification request.",
+      {enableNotificationsFlag}
+    )
   }
 
   return response(201, responseEntries)

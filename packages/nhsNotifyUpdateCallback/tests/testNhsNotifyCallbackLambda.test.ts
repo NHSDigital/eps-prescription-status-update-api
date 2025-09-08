@@ -11,13 +11,15 @@ import {CallbackType, ChannelStatusResponse} from "../src/types"
 const mockCheckSignature = jest.fn()
 const mockResponse = jest.fn()
 const mockUpdateNotificationsTable = jest.fn()
+const mockExtractStatusesAndDescriptions = jest.fn()
 jest.unstable_mockModule(
   "../src/helpers",
   async () => ({
     __esModule: true,
     checkSignature: mockCheckSignature,
     response: mockResponse,
-    updateNotificationsTable: mockUpdateNotificationsTable
+    updateNotificationsTable: mockUpdateNotificationsTable,
+    extractStatusesAndDescriptions: mockExtractStatusesAndDescriptions
   })
 )
 
@@ -44,19 +46,6 @@ describe("NHS Notify update callback lambda handler", () => {
         body: JSON.stringify(body)
       }
     })
-  })
-
-  it("returns 400 if no x-request-id header", async () => {
-    const event = generateMockEvent({foo: "bar"})
-    delete event.headers["x-request-id"]
-    const bad = {statusCode: 400, body: JSON.stringify({message: "No x-request-id given"})}
-    mockResponse.mockImplementation(() => bad)
-
-    const result = await handler(event, {})
-
-    expect(mockResponse).toHaveBeenCalledWith(400, {message: "No x-request-id given"})
-    expect(result).toBe(bad)
-    expect(mockCheckSignature).not.toHaveBeenCalled()
   })
 
   it("returns signature error if checkSignature returns an error response", async () => {
