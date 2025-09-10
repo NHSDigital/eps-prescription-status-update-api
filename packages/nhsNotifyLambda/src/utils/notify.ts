@@ -43,16 +43,13 @@ function estimateSize(obj: unknown) {
 function setupAxios(
   logger: Logger,
   notifyBaseUrl: string,
-  bearerToken: string,
   request_timeout: number = 30_000
 ): ReturnType<typeof axios.create> {
   const axiosInstance = axios.create({
-    baseURL: notifyBaseUrl + "/comms",
+    baseURL: notifyBaseUrl,
     timeout: request_timeout,
     headers: {
-      Accept: "*/*",
-      "Content-Type": "application/vnd.api+json",
-      Authorization: `Bearer ${bearerToken}`
+      Accept: "*/*"
     }
   })
 
@@ -199,8 +196,8 @@ export async function makeRealNotifyRequest(
   }
 
   // Lazily get the bearer token and axios instance, so we only do it once even if we recurse
-  if (!bearerToken) bearerToken = await tokenExchange(logger, notifyBaseUrl)
-  if (!axiosInstance) axiosInstance = setupAxios(logger, notifyBaseUrl, bearerToken)
+  if (!axiosInstance) axiosInstance = setupAxios(logger, notifyBaseUrl)
+  if (!bearerToken) bearerToken = await tokenExchange(logger, axiosInstance, notifyBaseUrl)
 
   // Recursive split if too large
   if (messages.length >= NOTIFY_REQUEST_MAX_ITEMS || estimateSize(body) > NOTIFY_REQUEST_MAX_BYTES) {
@@ -222,7 +219,15 @@ export async function makeRealNotifyRequest(
   logger.info("Making a request for notifications to NHS notify", {count: messages.length, routingPlanId})
 
   try {
-    const resp = await axiosInstance.post<CreateMessageBatchResponse>("/v1/message-batches", body)
+    const headers = {
+      "Content-Type": "application/vnd.api+json",
+      Authorization: `Bearer ${bearerToken}`
+    }
+    const resp = await axiosInstance.post<CreateMessageBatchResponse>(
+      "/comms/v1/message-batches",
+      body,
+      {headers}
+    )
 
     // From here is just logging stuff for reporting, and mapping the response back to the input data
 
