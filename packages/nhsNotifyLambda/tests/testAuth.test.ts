@@ -3,6 +3,7 @@ import {SpiedFunction} from "jest-mock"
 import nock from "nock"
 
 import {Logger} from "@aws-lambda-powertools/logger"
+import axios, {AxiosInstance} from "axios"
 
 const mockGetSecret = jest.fn()
 jest.unstable_mockModule(
@@ -27,7 +28,7 @@ jest.unstable_mockModule("uuid", async () => ({
   v4: mockUuidv4
 }))
 
-let tokenExchange: (logger: Logger, host: string) => Promise<string>
+let tokenExchange: (logger: Logger, axiosInstance: AxiosInstance, host: string) => Promise<string>
 beforeAll(async () => {
   ({tokenExchange} = await import("../src/utils/auth"))
 })
@@ -39,11 +40,15 @@ describe("tokenExchange", () => {
   let errorSpy: SpiedFunction<(msg: string, ...meta: Array<unknown>) => void>
   let infoSpy: SpiedFunction<(msg: string, ...meta: Array<unknown>) => void>
 
+  let axiosInstance: AxiosInstance
+
   beforeEach(() => {
     jest.clearAllMocks()
     logger = new Logger({serviceName: "test-service"})
     errorSpy = jest.spyOn(logger, "error")
     infoSpy = jest.spyOn(logger, "info")
+
+    axiosInstance = axios.create({baseURL: host})
   })
 
   it("should successfully exchange secrets for a bearer token", async () => {
@@ -75,22 +80,22 @@ describe("tokenExchange", () => {
     // Mock the HTTP call
     nock(`${host}`)
       .post("/oauth2/token", (body) => {
-      // if Nock gives a raw string:
+        // if Nock gives a raw string:
         if (typeof body === "string") {
           return (
             body.includes("grant_type=client_credentials") &&
-          body.includes("client_assertion=signed.jwt.token")
+            body.includes("client_assertion=signed.jwt.token")
           )
         }
         // otherwise it's the parsed object
         return (
           body.grant_type === "client_credentials" &&
-        body.client_assertion === "signed.jwt.token"
+          body.client_assertion === "signed.jwt.token"
         )
       })
       .reply(200, {access_token: "access-token-xyz"})
 
-    const bearerToken = await tokenExchange(logger, host)
+    const bearerToken = await tokenExchange(logger, axiosInstance, host)
 
     expect(bearerToken).toBe("access-token-xyz")
     expect(infoSpy).toHaveBeenCalledWith(
@@ -107,7 +112,7 @@ describe("tokenExchange", () => {
       .mockImplementationOnce(() => Promise.resolve("x"))
       .mockImplementationOnce(() => Promise.resolve("y"))
 
-    await expect(tokenExchange(logger, host)).rejects.toThrow(
+    await expect(tokenExchange(logger, axiosInstance, host)).rejects.toThrow(
       "Missing one of API_KEY, PRIVATE_KEY or KID from Secrets Manager"
     )
     expect(infoSpy).not.toHaveBeenCalled()
@@ -136,7 +141,7 @@ describe("tokenExchange", () => {
       .post("/oauth2/token")
       .reply(500, {error: "oops"})
 
-    await expect(tokenExchange(logger, host)).rejects.toThrow(
+    await expect(tokenExchange(logger, axiosInstance, host)).rejects.toThrow(
       "Failed to exchange token"
     )
     expect(errorSpy).toHaveBeenCalledWith(
@@ -166,7 +171,7 @@ describe("tokenExchange", () => {
       .post("/oauth2/token")
       .reply(200, {not_token: "nope"})
 
-    await expect(tokenExchange(logger, host)).rejects.toThrow(
+    await expect(tokenExchange(logger, axiosInstance, host)).rejects.toThrow(
       "Failed to exchange token"
     )
     expect(errorSpy).toHaveBeenCalledWith(
