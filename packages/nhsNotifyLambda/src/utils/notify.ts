@@ -70,7 +70,7 @@ function setupAxios(
       const status = error?.response?.status as number | undefined
       return (
         axiosRetry.isNetworkError(error) || // DNS/TCP reset/etc.
-        (typeof status === "number" && status >= 401) || // catch all error codes
+        (typeof status === "number" && status >= 400) || // catch all error codes
         error?.code === "ECONNABORTED" // request timeout
       )
     },
