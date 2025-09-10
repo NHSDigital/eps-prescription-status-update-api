@@ -40,10 +40,15 @@ function estimateSize(obj: unknown) {
  * @param bearerToken - The CIS2 OAuth bearer token to use for authentication
  * @returns
  */
-function setupAxios(logger: Logger, notifyBaseUrl: string, bearerToken: string): ReturnType<typeof axios.create> {
-
+function setupAxios(
+  logger: Logger,
+  notifyBaseUrl: string,
+  bearerToken: string,
+  request_timeout: number = 30_000
+): ReturnType<typeof axios.create> {
   const axiosInstance = axios.create({
     baseURL: notifyBaseUrl + "/comms",
+    timeout: request_timeout,
     headers: {
       Accept: "*/*",
       "Content-Type": "application/vnd.api+json",
@@ -51,15 +56,27 @@ function setupAxios(logger: Logger, notifyBaseUrl: string, bearerToken: string):
     }
   })
 
-  // Retry configuration for rate limiting
+  // Retry configuration for transient failures and throttling
   const onAxiosRetry = (retryCount: number, error: unknown) => {
     logger.warn(`Call to notify failed - retrying. Retry count ${retryCount}`, {error})
   }
 
-  // Axios-retry respects the `Retry-After` header OOTB
   axiosRetry(axiosInstance, {
     retries: 5,
-    onRetry: onAxiosRetry
+    // exponential backoff honors Retry-After automatically if present
+    retryDelay: axiosRetry.exponentialDelay,
+    // IMPORTANT: Retry POSTs too — on network errors, 5xx, 429, or timeouts
+    retryCondition: (error) => {
+      const status = error?.response?.status as number | undefined
+      return (
+        axiosRetry.isNetworkError(error) || // DNS/TCP reset/etc.
+        status === 429 || // rate limited
+        (typeof status === "number" && status >= 500) || // server errors
+        error?.code === "ECONNABORTED" // request timeout
+      )
+    },
+    onRetry: onAxiosRetry,
+    shouldResetTimeout: true
   })
 
   return axiosInstance
