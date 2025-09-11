@@ -64,7 +64,7 @@ function setupAxios(
     retryDelay: axiosRetry.exponentialDelay,
     // IMPORTANT: Retry POSTs too — on network errors, 5xx, 429, or timeouts
     retryCondition: (error) => {
-      const status = error?.response?.status as number | undefined
+      const status = error.response?.status
       return (
         axiosRetry.isNetworkError(error) || // DNS/TCP reset/etc.
         (typeof status === "number" && status >= 400) || // catch all error codes
@@ -196,8 +196,8 @@ export async function makeRealNotifyRequest(
   }
 
   // Lazily get the bearer token and axios instance, so we only do it once even if we recurse
-  if (!axiosInstance) axiosInstance = setupAxios(logger, notifyBaseUrl)
-  if (!bearerToken) bearerToken = await tokenExchange(logger, axiosInstance, notifyBaseUrl)
+  axiosInstance ??= setupAxios(logger, notifyBaseUrl)
+  bearerToken ??= await tokenExchange(logger, axiosInstance, notifyBaseUrl)
 
   // Recursive split if too large
   if (messages.length >= NOTIFY_REQUEST_MAX_ITEMS || estimateSize(body) > NOTIFY_REQUEST_MAX_BYTES) {
