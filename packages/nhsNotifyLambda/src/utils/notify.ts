@@ -43,11 +43,11 @@ function estimateSize(obj: unknown) {
 function setupAxios(
   logger: Logger,
   notifyBaseUrl: string,
-  request_timeout: number = 30_000
+  requestTimeout: number = 30_000
 ): ReturnType<typeof axios.create> {
   const axiosInstance = axios.create({
     baseURL: notifyBaseUrl,
-    timeout: request_timeout,
+    timeout: requestTimeout,
     headers: {
       Accept: "*/*"
     }
