@@ -21,8 +21,8 @@ export function setupAxios(
     logger.warn(`Call to notify failed - retrying. Retry count ${retryCount}`, {error})
   }
 
-  const onFinalRetry = () => {
-    logger.error("Call to notify failed, and retry budget exceeded. Stopping")
+  const onFinalRetry = (error: unknown) => {
+    logger.error("Call to notify failed, and retry budget exceeded. Stopping", {error})
   }
 
   axiosRetry(axiosInstance, {
