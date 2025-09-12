@@ -59,12 +59,11 @@ export async function tokenExchange(
     "/oauth2/token",
     params.toString(),
     {
-      headers: {"Content-Type": "application/x-www-form-urlencoded"},
-      validateStatus: () => true
+      headers: {"Content-Type": "application/x-www-form-urlencoded"}
     }
   )
 
-  if (resp.status !== 200 || !resp.data.access_token) {
+  if (!resp.data.access_token) {
     logger.error("Token exchange failed", {
       status: resp.status,
       body: resp.data

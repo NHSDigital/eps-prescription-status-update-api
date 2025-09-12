@@ -142,11 +142,7 @@ describe("tokenExchange", () => {
       .reply(500, {error: "oops"})
 
     await expect(tokenExchange(logger, axiosInstance, host)).rejects.toThrow(
-      "Failed to exchange token"
-    )
-    expect(errorSpy).toHaveBeenCalledWith(
-      "Token exchange failed",
-      expect.objectContaining({status: 500, body: {error: "oops"}})
+      "Request failed with status code 500"
     )
   })
 
