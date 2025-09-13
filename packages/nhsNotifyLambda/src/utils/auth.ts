@@ -55,23 +55,19 @@ export async function tokenExchange(
     client_assertion: jwt
   })
 
-  const resp = await axiosInstance.post(
-    "/oauth2/token",
-    params.toString(),
-    {
-      headers: {"Content-Type": "application/x-www-form-urlencoded"},
-      validateStatus: () => true
-    }
-  )
+  try {
+    const resp = await axiosInstance.post(
+      "/oauth2/token",
+      params,
+      {
+        headers: {"Content-Type": "application/x-www-form-urlencoded"}
+      }
+    )
+    if (!resp.data.access_token) throw new Error("No token in response")
+    return resp.data.access_token
 
-  if (resp.status !== 200 || !resp.data.access_token) {
-    logger.error("Token exchange failed", {
-      status: resp.status,
-      body: resp.data
-    })
-    throw new Error("Failed to exchange token")
+  } catch (error) {
+    logger.error("Token exchange failed", {error})
+    throw error
   }
-
-  logger.info("Token exchange successful")
-  return resp.data.access_token as string
 }

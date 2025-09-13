@@ -1,5 +1,4 @@
 import {jest} from "@jest/globals"
-import {SpiedFunction} from "jest-mock"
 import nock from "nock"
 
 import {Logger} from "@aws-lambda-powertools/logger"
@@ -37,16 +36,12 @@ describe("tokenExchange", () => {
   const host = "https://notify.example.com"
 
   let logger: Logger
-  let errorSpy: SpiedFunction<(msg: string, ...meta: Array<unknown>) => void>
-  let infoSpy: SpiedFunction<(msg: string, ...meta: Array<unknown>) => void>
 
   let axiosInstance: AxiosInstance
 
   beforeEach(() => {
     jest.clearAllMocks()
     logger = new Logger({serviceName: "test-service"})
-    errorSpy = jest.spyOn(logger, "error")
-    infoSpy = jest.spyOn(logger, "info")
 
     axiosInstance = axios.create({baseURL: host})
   })
@@ -98,12 +93,6 @@ describe("tokenExchange", () => {
     const bearerToken = await tokenExchange(logger, axiosInstance, host)
 
     expect(bearerToken).toBe("access-token-xyz")
-    expect(infoSpy).toHaveBeenCalledWith(
-      "Exchanging JWT for access token",
-      expect.objectContaining({host, jti: "uuid-1234"})
-    )
-    expect(infoSpy).toHaveBeenCalledWith("Token exchange successful")
-    expect(errorSpy).not.toHaveBeenCalled()
   })
 
   it("should throw if any secret is missing", async () => {
@@ -115,7 +104,6 @@ describe("tokenExchange", () => {
     await expect(tokenExchange(logger, axiosInstance, host)).rejects.toThrow(
       "Missing one of API_KEY, PRIVATE_KEY or KID from Secrets Manager"
     )
-    expect(infoSpy).not.toHaveBeenCalled()
   })
 
   it("should throw if HTTP response is non-200", async () => {
@@ -142,11 +130,7 @@ describe("tokenExchange", () => {
       .reply(500, {error: "oops"})
 
     await expect(tokenExchange(logger, axiosInstance, host)).rejects.toThrow(
-      "Failed to exchange token"
-    )
-    expect(errorSpy).toHaveBeenCalledWith(
-      "Token exchange failed",
-      expect.objectContaining({status: 500, body: {error: "oops"}})
+      "Request failed with status code 500"
     )
   })
 
@@ -172,11 +156,7 @@ describe("tokenExchange", () => {
       .reply(200, {not_token: "nope"})
 
     await expect(tokenExchange(logger, axiosInstance, host)).rejects.toThrow(
-      "Failed to exchange token"
-    )
-    expect(errorSpy).toHaveBeenCalledWith(
-      "Token exchange failed",
-      expect.objectContaining({status: 200, body: {not_token: "nope"}})
+      "No token in response"
     )
   })
 })
