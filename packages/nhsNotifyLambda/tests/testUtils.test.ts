@@ -1,6 +1,7 @@
 import {jest} from "@jest/globals"
 import {SpiedFunction} from "jest-mock"
 import nock from "nock"
+import axiosRetry from "axios-retry"
 
 import {Logger} from "@aws-lambda-powertools/logger"
 import {DynamoDBDocumentClient, PutCommand} from "@aws-sdk/lib-dynamodb"
@@ -501,6 +502,9 @@ describe("NHS notify lambda helper functions", () => {
 
     afterEach(() => {
       process.env = {...ORIGINAL_ENV}
+
+      jest.runOnlyPendingTimers()
+      jest.useRealTimers()
     })
 
     it("sends a batch and maps successful messages correctly", async () => {
@@ -579,11 +583,19 @@ describe("NHS notify lambda helper functions", () => {
         .post("/comms/v1/message-batches")
         .reply(500, "Internal Server Error")
 
-      const result = await handleNotifyRequests(
+      jest.useFakeTimers()
+      // force retryDelay to 0 so retries happen immediately in tests
+      jest.spyOn(axiosRetry, "exponentialDelay").mockImplementation(() => 0)
+
+      const resultPromise = handleNotifyRequests(
         logger,
         "plan-xyz",
         data
       )
+
+      // flush retries immediately
+      await jest.runAllTimersAsync()
+      const result = await resultPromise
 
       expect(result).toMatchObject([
         {
