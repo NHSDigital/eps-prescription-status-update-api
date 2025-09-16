@@ -11,13 +11,15 @@ import {CallbackType, ChannelStatusResponse} from "../src/types"
 const mockCheckSignature = jest.fn()
 const mockResponse = jest.fn()
 const mockUpdateNotificationsTable = jest.fn()
+const mockExtractStatusesAndDescriptions = jest.fn()
 jest.unstable_mockModule(
   "../src/helpers",
   async () => ({
     __esModule: true,
     checkSignature: mockCheckSignature,
     response: mockResponse,
-    updateNotificationsTable: mockUpdateNotificationsTable
+    updateNotificationsTable: mockUpdateNotificationsTable,
+    extractStatusesAndDescriptions: mockExtractStatusesAndDescriptions
   })
 )
 

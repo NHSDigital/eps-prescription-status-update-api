@@ -10,8 +10,8 @@ import {createHmac} from "crypto"
 
 // Mock the getSecret call
 const mockGetSecret = jest.fn((secretName: string) => {
-  if (secretName === process.env.APP_NAME_SECRET) {
-    return Promise.resolve(process.env.APP_NAME)
+  if (secretName === process.env.APP_ID_SECRET) {
+    return Promise.resolve(process.env.APP_ID)
   }
   if (secretName === process.env.API_KEY_SECRET) {
     return Promise.resolve(process.env.API_KEY)
@@ -67,7 +67,7 @@ describe("helpers.ts", () => {
 
   describe("checkSignature()", () => {
     let logger: Logger
-    let validHeaders: { "x-request-id": string; "apikey": string; "x-hmac-sha256-signature": string }
+    let validHeaders: {"x-request-id": string; "apikey": string; "x-hmac-sha256-signature": string}
     beforeEach(() => {
       logger = new Logger({serviceName: "nhsNotifyUpdateCallback"})
       validHeaders = {
@@ -104,7 +104,7 @@ describe("helpers.ts", () => {
       const payload = "payload"
       const wrongSig = createHmac(
         "sha256",
-        `${process.env.APP_NAME}.${process.env.API_KEY}`
+        `${process.env.APP_ID}.${process.env.API_KEY}`
       )
         .update("different", "utf8")
         .digest("hex")
@@ -123,7 +123,7 @@ describe("helpers.ts", () => {
 
     it("returns undefined when signature is valid", async () => {
       const payload = "hi there"
-      const secret = `${process.env.APP_NAME}.${process.env.API_KEY}`
+      const secret = `${process.env.APP_ID}.${process.env.API_KEY}`
       const goodSig = createHmac("sha256", secret)
         .update(payload, "utf8")
         .digest("hex")
@@ -200,21 +200,28 @@ describe("helpers.ts", () => {
       const [, [updateCmd]] = sendSpy.mock.calls
       const input = updateCmd.input as UpdateCommandInput
 
-      // Basic keys/timestamps/TTL
-      expect(input).toMatchObject({
-        TableName: process.env.TABLE_NAME,
-        Key: {NHSNumber: mockItem.NHSNumber, RequestId: mockItem.RequestId},
-        ExpressionAttributeValues: {
-          ":ts": overrideTimestamp,
-          ":et": Math.floor(100_000_000 / 1000) + 60 * 60 * 24 * 7
-        }
-      })
-      // Should include MessageStatus and NOT Channel/Supplier when undefined
-      expect(input.UpdateExpression).toContain("MessageStatus = :ms")
-      expect(input.ExpressionAttributeValues?.[":ms"]).toBe("delivered")
-      expect(input.UpdateExpression).not.toContain("ChannelStatus = :cs")
-      expect(input.UpdateExpression).not.toContain("SupplierStatus = :ss")
+      // Note that Javascript guarantees the order of this to be preserved, so we're okay to check values like this.
+      // We should have only three statuses
+      expect(input.UpdateExpression).toContain("#n0 = :v0")
+      expect(input.UpdateExpression).toContain("#n1 = :v1")
+      expect(input.UpdateExpression).toContain("#n2 = :v2")
+      expect(input.UpdateExpression).not.toContain("#n3 = :v3")
 
+      // The names should match the values
+      expect(input.ExpressionAttributeNames).toMatchObject({
+        "#n0": "ExpiryTime",
+        "#n1": "LastNotificationRequestTimestamp",
+        "#n2": "MessageStatus"
+      })
+
+      // Should include MessageStatus and NOT Channel/Supplier when undefined
+      expect(input.ExpressionAttributeValues).toMatchObject({
+        ":v0": Math.floor(100_000_000 / 1000) + 60 * 60 * 24 * 7,
+        ":v1": overrideTimestamp,
+        ":v2": "delivered"
+      })
+
+      // Splunk reporting
       expect(logger.info).toHaveBeenCalledWith(
         "Updated notification state",
         expect.objectContaining({
@@ -266,16 +273,34 @@ describe("helpers.ts", () => {
       const [, [updateCmd]] = sendSpy.mock.calls
       const input = updateCmd.input as UpdateCommandInput
 
-      expect(input.UpdateExpression).toContain("ChannelStatus = :cs")
-      expect(input.UpdateExpression).toContain("SupplierStatus = :ss")
-      expect(input.UpdateExpression).not.toContain("MessageStatus = :ms")
-      expect(input.ExpressionAttributeValues).toMatchObject({
-        ":cs": "sending",
-        ":ss": "accepted",
-        ":ts": ts,
-        ":et": Math.floor(100_000_000 / 1000) + 60 * 60 * 24 * 7
+      // Note that Javascript guarantees the order of this to be preserved, so we're okay to check values like this.
+      // 5 defined key value pairs should be in there
+      expect(input.UpdateExpression).toContain("#n0 = :v0")
+      expect(input.UpdateExpression).toContain("#n1 = :v1")
+      expect(input.UpdateExpression).toContain("#n2 = :v2")
+      expect(input.UpdateExpression).toContain("#n3 = :v3")
+      expect(input.UpdateExpression).toContain("#n4 = :v4")
+      // And no more
+      expect(input.UpdateExpression).not.toContain("#n5 = :v5")
+
+      // The names should match the values
+      expect(input.ExpressionAttributeNames).toMatchObject({
+        "#n0": "ExpiryTime",
+        "#n1": "LastNotificationRequestTimestamp",
+        "#n2": "ChannelStatus",
+        "#n3": "SupplierStatus",
+        "#n4": "RetryCount"
       })
 
+      expect(input.ExpressionAttributeValues).toMatchObject({
+        ":v0": Math.floor(100_000_000 / 1000) + 60 * 60 * 24 * 7,
+        ":v1": ts,
+        ":v2": "sending",
+        ":v3": "accepted",
+        ":v4": 0 // retryCount
+      })
+
+      // For splunk reporting
       expect(logger.info).toHaveBeenCalledWith(
         "Updated notification state",
         expect.objectContaining({
@@ -371,11 +396,11 @@ describe("helpers.ts", () => {
       logger = new Logger({serviceName: "nhsNotifyUpdateCallback"})
     })
 
-    it("throws if APP_NAME_SECRET env var is not set", async () => {
-      delete process.env.APP_NAME_SECRET
+    it("throws if APP_ID_SECRET env var is not set", async () => {
+      delete process.env.APP_ID_SECRET
 
       const {fetchSecrets: fn} = await import("../src/helpers")
-      await expect(fn(logger)).rejects.toThrow("APP_NAME_SECRET environment variable is not set.")
+      await expect(fn(logger)).rejects.toThrow("APP_ID_SECRET environment variable is not set.")
     })
 
     it("throws if API_KEY_SECRET env var is not set", async () => {
@@ -386,7 +411,7 @@ describe("helpers.ts", () => {
     })
 
     it("throws if getting either secret returns a falsy value", async () => {
-      process.env.APP_NAME = ""
+      process.env.APP_ID = ""
 
       const {fetchSecrets: fn} = await import("../src/helpers")
       await expect(fn(logger)).rejects.toThrow(
@@ -398,7 +423,7 @@ describe("helpers.ts", () => {
       const {fetchSecrets: fn} = await import("../src/helpers")
       await expect(fn(logger)).resolves.toBeUndefined()
 
-      expect(mockGetSecret).toHaveBeenCalledWith(process.env.APP_NAME_SECRET!)
+      expect(mockGetSecret).toHaveBeenCalledWith(process.env.APP_ID_SECRET!)
       expect(mockGetSecret).toHaveBeenCalledWith(process.env.API_KEY_SECRET!)
     })
   })

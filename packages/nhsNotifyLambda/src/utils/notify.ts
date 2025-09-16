@@ -1,9 +1,9 @@
 import {Logger} from "@aws-lambda-powertools/logger"
 
 import axios from "axios"
-import axiosRetry from "axios-retry"
 import {v4} from "uuid"
 
+import {setupAxios} from "./axios"
 import {
   NotifyDataItemMessage,
   CreateMessageBatchRequest,
@@ -34,32 +34,25 @@ function estimateSize(obj: unknown) {
 }
 
 /**
- * Returns the original data, updated with the status returned by NHS notify.
- * Does not return data for messages that failed to send.
- *
- * @param logger AWS logging object
- * @param routingPlanId The Notify routing plan ID with which to process the data
- * @param data The details for the notification
+ * Handles making requests to NHS Notify for a batch of messages.
+ * Decides whether to make real requests or fake ones based on config.
+ * @param logger
+ * @param routingPlanId - The Notify routing plan ID with which to process the data
+ * @param data - PSU SQS messages to process
+ * @returns
  */
-export async function makeBatchNotifyRequest(
+export async function handleNotifyRequests(
   logger: Logger,
   routingPlanId: string,
   data: Array<NotifyDataItemMessage>
 ): Promise<Array<NotifyDataItemMessage>> {
-  const {makeRealNotifyRequests, notifyApiBaseUrlRaw} = await loadConfig()
-
-  if (!notifyApiBaseUrlRaw) throw new Error("NOTIFY_API_BASE_URL is not defined in the environment variables!")
-
-  // Just to be safe, trim any whitespace. Also, secrets may be bytes, so make sure it's a string
-  const BASE_URL = notifyApiBaseUrlRaw.trim()
 
   // Early break for empty data
   if (data.length === 0) {
     return []
   }
 
-  // Shared between all messages in this batch
-  const messageBatchReference = v4()
+  const configPromise = loadConfig()
 
   // Map the NotifyDataItems into the structure needed for notify
   const messages: Array<MessageBatchItem> = data.flatMap(item => {
@@ -77,6 +70,75 @@ export async function makeBatchNotifyRequest(
     }]
   })
 
+  // Check if we should make real requests
+  const {makeRealNotifyRequestsFlag, notifyApiBaseUrlRaw} = await configPromise
+  if (!makeRealNotifyRequestsFlag || !notifyApiBaseUrlRaw) return await makeFakeNotifyRequest(logger, data, messages)
+
+  if (!notifyApiBaseUrlRaw) throw new Error("NOTIFY_API_BASE_URL is not defined in the environment variables!")
+  // Just to be safe, trim any whitespace. Also, secrets may be bytes, so make sure it's a string
+  const notifyBaseUrl = notifyApiBaseUrlRaw.trim()
+
+  return await makeRealNotifyRequest(logger, routingPlanId, notifyBaseUrl, data, messages)
+}
+
+/**
+ * Simulates making requests to NHS Notify for a batch of messages.
+ * Waits a short time, then returns "successful" responses for all messages.
+ */
+async function makeFakeNotifyRequest(
+  logger: Logger,
+  data: Array<NotifyDataItemMessage>,
+  messages: Array<MessageBatchItem>
+): Promise<Array<NotifyDataItemMessage>> {
+
+  logger.info("Not doing real Notify requests. Simply waiting for some time and returning success on all messages")
+  await new Promise(f => setTimeout(f, DUMMY_NOTIFY_DELAY_MS))
+
+  const messageStatus = "silent running"
+  const messageBatchReference = v4()
+
+  logger.info("Requested notifications OK!", {
+    messageBatchReference,
+    messageReferences: messages.map(e => ({
+      nhsNumber: e.recipient.nhsNumber,
+      messageReference: e.messageReference,
+      psuRequestId: data.find((el) => el.messageReference === e.messageReference)?.PSUDataItem.RequestID
+    })),
+    deliveryStatus: messageStatus // TODO: change splunk report query to messageStatus
+  })
+
+  // Map each input item to a "successful" NotifyDataItemMessage
+  return data.map(item => {
+    return {
+      ...item,
+      messageBatchReference,
+      messageStatus,
+      notifyMessageId: v4() // Create a dummy UUID
+    }
+  })
+}
+
+/**
+ * Makes real requests to NHS Notify for a batch of messages.
+ * Handles splitting large batches into smaller ones as needed.
+ *
+ * @param logger - AWS logging object
+ * @param routingPlanId - The Notify routing plan ID with which to process the data
+ * @param data - The details for the notification
+ */
+export async function makeRealNotifyRequest(
+  logger: Logger,
+  routingPlanId: string,
+  notifyBaseUrl: string,
+  data: Array<NotifyDataItemMessage>,
+  messages: Array<MessageBatchItem>,
+  bearerToken?: string,
+  axiosInstance?: ReturnType<typeof axios.create>
+): Promise<Array<NotifyDataItemMessage>> {
+
+  // Shared between all messages in this batch
+  const messageBatchReference = v4()
+
   const body: CreateMessageBatchRequest = {
     data: {
       type: "MessageBatch" as const,
@@ -88,80 +150,43 @@ export async function makeBatchNotifyRequest(
     }
   }
 
+  // Lazily get the bearer token and axios instance, so we only do it once even if we recurse
+  axiosInstance ??= setupAxios(logger, notifyBaseUrl)
+  bearerToken ??= await tokenExchange(logger, axiosInstance, notifyBaseUrl)
+
   // Recursive split if too large
-  if (data.length >= NOTIFY_REQUEST_MAX_ITEMS || estimateSize(body) > NOTIFY_REQUEST_MAX_BYTES) {
+  if (messages.length >= NOTIFY_REQUEST_MAX_ITEMS || estimateSize(body) > NOTIFY_REQUEST_MAX_BYTES) {
     logger.info("Received a large payload - splitting in half and trying again",
-      {messageCount: data.length, estimatedSize: estimateSize(body)}
+      {messageCount: messages.length, estimatedSize: estimateSize(body)}
     )
-    const mid = Math.floor(data.length / 2)
-    const firstHalf = data.slice(0, mid)
-    const secondHalf = data.slice(mid)
+    const mid = Math.floor(messages.length / 2)
+    const firstHalf = messages.slice(0, mid)
+    const secondHalf = messages.slice(mid)
+
     // send both halves in parallel
     const [res1, res2] = await Promise.all([
-      makeBatchNotifyRequest(logger, routingPlanId, firstHalf),
-      makeBatchNotifyRequest(logger, routingPlanId, secondHalf)
+      makeRealNotifyRequest(logger, routingPlanId, notifyBaseUrl, data, firstHalf, bearerToken, axiosInstance),
+      makeRealNotifyRequest(logger, routingPlanId, notifyBaseUrl, data, secondHalf, bearerToken, axiosInstance)
     ])
     return [...res1, ...res2]
   }
 
-  if (!makeRealNotifyRequests) {
-    logger.info("Not doing real Notify requests. Simply waiting for some time and returning success on all messages")
-    await new Promise(f => setTimeout(f, DUMMY_NOTIFY_DELAY_MS))
+  logger.info("Making a request for notifications to NHS notify", {count: messages.length, routingPlanId})
 
-    const messageStatus = "silent running"
-
-    logger.info("Requested notifications OK!", {
-      messageBatchReference,
-      messageReferences: messages.map(e => ({
-        nhsNumber: e.recipient.nhsNumber,
-        messageReference: e.messageReference,
-        psuRequestId: data.find((el) => el.messageReference === e.messageReference)?.PSUDataItem.RequestID
-      })),
-      deliveryStatus: messageStatus // TODO: change splunk report query to messageStatus
-    })
-
-    // Map each input item to a "successful" NotifyDataItemMessage
-    return data.map(item => {
-      return {
-        ...item,
-        messageBatchReference,
-        messageStatus,
-        notifyMessageId: v4() // Create a dummy UUID
-      }
-    })
-  }
-
-  // This is actually going to hit notify, so get the bearer token
-  const bearerToken = await tokenExchange(logger, BASE_URL)
-
-  logger.info("Making a request for notifications to NHS notify", {count: data.length, routingPlanId})
-
-  // Create an axios instance configured for Notify
-  const axiosInstance = axios.create({
-    baseURL: BASE_URL + "/comms",
-    headers: {
-      Accept: "*/*",
+  try {
+    const headers = {
       "Content-Type": "application/vnd.api+json",
       Authorization: `Bearer ${bearerToken}`
     }
-  })
+    const resp = await axiosInstance.post<CreateMessageBatchResponse>(
+      "/comms/v1/message-batches",
+      body,
+      {headers}
+    )
 
-  // Retry configuration for rate limiting
-  const onAxiosRetry = (retryCount: number, error: unknown) => {
-    logger.warn(`Call to notify failed - retrying. Retry count ${retryCount}`, {error})
-  }
-
-  // Axios-retry respects the `Retry-After` header
-  axiosRetry(axiosInstance, {
-    retries: 5,
-    onRetry: onAxiosRetry
-  })
-
-  try {
-    const resp = await axiosInstance.post<CreateMessageBatchResponse>("/v1/message-batches", body)
+    // From here is just logging stuff for reporting, and mapping the response back to the input data
 
     if (resp.status === 201) {
-      const returnedMessages = resp.data.data.attributes.messages
       logger.info("Requested notifications OK!", {
         messageBatchReference,
         messageReferences: messages.map(e => ({
@@ -172,20 +197,24 @@ export async function makeBatchNotifyRequest(
         deliveryStatus: "requested" // TODO: change splunk report query to messageStatus
       })
 
-      // Map each input item to a NotifyDataItemMessage, marking success and attaching the notify ID
-      return data.map(item => {
-        const match = returnedMessages.find(
-          m => m.messageReference === item.messageReference
-        )
+      // Map each input item to a NotifyDataItemMessage, marking success and attaching the notify ID.
+      // Only return items that belong to *this* batch (so we handle recursive splits correctly).
+      const batchRefs = new Set(messages.map(m => m.messageReference))
+      const returnedByRef = new Map(
+        resp.data.data.attributes.messages.map(m => [m.messageReference, m])
+      )
 
-        // SUCCESS
-        return {
-          ...item,
-          messageBatchReference,
-          messageStatus: match ? "requested" : "notify request failed",
-          notifyMessageId: match?.id
-        }
-      })
+      return data
+        .filter(item => batchRefs.has(item.messageReference))
+        .map(item => {
+          const match = returnedByRef.get(item.messageReference)
+          return {
+            ...item,
+            messageBatchReference,
+            messageStatus: match ? "requested" : "notify request failed",
+            notifyMessageId: match?.id
+          }
+        })
 
     } else {
       logger.error("Notify batch request failed", {

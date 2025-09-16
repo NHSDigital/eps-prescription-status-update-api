@@ -33,7 +33,7 @@ jest.unstable_mockModule(
     addPrescriptionMessagesToNotificationStateStore: mockAddPrescriptionMessagesToNotificationStateStore,
     removeSQSMessages: mockRemoveSQSMessages,
     checkCooldownForUpdate: mockCheckCooldownForUpdate,
-    makeBatchNotifyRequest: mockMakeBatchNotifyRequest
+    handleNotifyRequests: mockMakeBatchNotifyRequest
   })
 )
 
@@ -205,7 +205,7 @@ describe("Unit test for NHS Notify lambda handler", () => {
 
     // returns true if the request ID is "fresh"
     mockCheckCooldownForUpdate.mockImplementation((logger, update) => {
-      const u = update as { RequestID: string }
+      const u = update as {RequestID: string}
       return Promise.resolve(u.RequestID === "fresh")
     })
 
@@ -261,7 +261,7 @@ describe("Unit test for NHS Notify lambda handler", () => {
 
     // returns true if the request ID is "fresh"
     mockCheckCooldownForUpdate.mockImplementation((logger, update) => {
-      const u = update as { RequestID: string }
+      const u = update as {RequestID: string}
       return Promise.resolve(u.RequestID === "fresh")
     })
 
