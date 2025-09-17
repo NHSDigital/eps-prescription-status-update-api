@@ -114,6 +114,7 @@ Resources:
           ENABLED_SYSTEMS_PARAM: !Ref EnabledSystemsParam
           BLOCKED_SITE_ODS_CODES_PARAM: !Ref BlockedSiteODSCodesParam
           ENABLE_NOTIFICATIONS_PARAM: !Ref EnableNotificationsInternalParam
+          ENABLE_TEST_REPORT_LOGS: !Ref ShouldDeployTestReportLambda
           LOG_LEVEL: !Ref LogLevel
           ENVIRONMENT: !Ref Environment
           TEST_PRESCRIPTIONS_1: "None"

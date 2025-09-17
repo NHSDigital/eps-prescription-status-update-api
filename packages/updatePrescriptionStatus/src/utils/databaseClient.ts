@@ -32,6 +32,25 @@ function createTransactionCommand(dataItems: Array<PSUDataItem>, logger: Logger)
   return new TransactWriteItemsCommand({TransactItems: transactItems})
 }
 
+function logPersistFailureForTestReport(logger: Logger, transactionCommand: TransactWriteItemsCommand) {
+  // Don't log this in prod
+  if (!process.env["ENABLE_TEST_REPORT_LOGS"]) return
+
+  // This is pretty ugly, but needed to pull the PSU data item back out of the transaction command.
+  const recoveredItems = transactionCommand.input
+    .TransactItems
+    ?.map(item => item.Put?.Item)
+    .filter((i) => i !== undefined)
+    .map(item => unmarshall(item) as PSUDataItem) ?? []
+
+  logger.info(
+    "[AEA0-4318] - Dynamo condition check failure; TaskID and PrescriptionID collide with previous record",
+    {
+      prescriptionIDs: recoveredItems.map(i => i.PrescriptionID)
+    }
+  )
+}
+
 export async function persistDataItems(dataItems: Array<PSUDataItem>, logger: Logger): Promise<boolean | Timeout> {
   // break the array of data items into batches less than 100
   // to prevent dynamodb error with too many items
@@ -52,8 +71,11 @@ export async function persistDataItems(dataItems: Array<PSUDataItem>, logger: Lo
       if (e instanceof TransactionCanceledException) {
         logger.error(
           "DynamoDB transaction cancelled due to conditional check failure.", {reasons: e.CancellationReasons})
+        logPersistFailureForTestReport(logger, transactionCommand)
+
         return {success: false, errorMessage: "conditional check failure", error: e}
       } else {
+        // This will usually be caused by the throughput exceeding the provisioned level.
         logger.error("Error sending TransactWriteItemsCommand to DynamoDB.", {error: e})
       }
       return {success: false, errorMessage: "other error", error: e}
@@ -163,8 +185,23 @@ export async function checkPrescriptionRecordExistence(
     return !!result?.Item
   } catch (e) {
     logger.error("Error querying DynamoDB.", {error: e})
+    logger.info("[AEA-4318] - error checking prior prescription record in DynamoDB", {prescriptionID, taskID})
     return false
   }
+}
+
+function logPreviousTimeNotFountForTestReport(logger: Logger, currentItem: PSUDataItem) {
+  // Don't log this in prod
+  if (!process.env["ENABLE_TEST_REPORT_LOGS"]) return
+
+  logger.info(
+    "[AEA-4318] - No prior statuses in the data store",
+    {
+      prescriptionID: currentItem.PrescriptionID,
+      taskID: currentItem.TaskID,
+      currentStatus: currentItem.Status
+    }
+  )
 }
 
 export async function getPreviousItem(currentItem: PSUDataItem, logger: Logger): Promise<PSUDataItemWithPrevious> {
@@ -208,9 +245,12 @@ export async function getPreviousItem(currentItem: PSUDataItem, logger: Logger):
     } while (lastEvaluatedKey)
 
     items.sort((a, b) => new Date(a.LastModified).valueOf() - new Date(b.LastModified).valueOf())
+    const mostRecentItem = items.pop()
+    if (!mostRecentItem) logPreviousTimeNotFountForTestReport(logger, currentItem)
+
     return {
       current: currentItem,
-      previous: items.pop()
+      previous: mostRecentItem
     }
   } catch (err) {
     logger.error("Error retrieving previous item status", {error: err})
