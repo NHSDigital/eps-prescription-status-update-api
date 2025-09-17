@@ -1,9 +1,9 @@
 import {Logger} from "@aws-lambda-powertools/logger"
 
 import axios from "axios"
-import axiosRetry from "axios-retry"
 import {v4} from "uuid"
 
+import {setupAxios} from "./axios"
 import {
   NotifyDataItemMessage,
   CreateMessageBatchRequest,
@@ -31,51 +31,6 @@ export function chunkArray<T>(arr: Array<T>, size: number): Array<Array<T>> {
 
 function estimateSize(obj: unknown) {
   return Buffer.byteLength(JSON.stringify(obj), "utf8")
-}
-
-/**
- * Create and configure an axios instance for Notify
- * @param logger
- * @param notifyBaseUrl - The base URL for the Notify API. DOES NOT include /comms, or anything after that.
- * @param bearerToken - The CIS2 OAuth bearer token to use for authentication
- * @returns
- */
-function setupAxios(
-  logger: Logger,
-  notifyBaseUrl: string,
-  requestTimeout: number = 30_000
-): ReturnType<typeof axios.create> {
-  const axiosInstance = axios.create({
-    baseURL: notifyBaseUrl,
-    timeout: requestTimeout,
-    headers: {
-      Accept: "*/*"
-    }
-  })
-
-  // Retry configuration for transient failures and throttling
-  const onAxiosRetry = (retryCount: number, error: unknown) => {
-    logger.warn(`Call to notify failed - retrying. Retry count ${retryCount}`, {error})
-  }
-
-  axiosRetry(axiosInstance, {
-    retries: 5,
-    // exponential backoff honors Retry-After automatically if present
-    retryDelay: axiosRetry.exponentialDelay,
-    // IMPORTANT: Retry POSTs too — on network errors, 5xx, 429, or timeouts
-    retryCondition: (error) => {
-      const status = error.response?.status
-      return (
-        axiosRetry.isNetworkError(error) || // DNS/TCP reset/etc.
-        (typeof status === "number" && status >= 400) || // catch all error codes
-        error?.code === "ECONNABORTED" // request timeout
-      )
-    },
-    onRetry: onAxiosRetry,
-    shouldResetTimeout: true
-  })
-
-  return axiosInstance
 }
 
 /**

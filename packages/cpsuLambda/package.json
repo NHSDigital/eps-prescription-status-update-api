@@ -14,8 +14,8 @@
     "check-licenses": "license-checker --failOn GPL --failOn LGPL --start ../.."
   },
   "dependencies": {
-    "@aws-lambda-powertools/commons": "^2.26.0",
-    "@aws-lambda-powertools/logger": "^2.26.0",
+    "@aws-lambda-powertools/commons": "^2.26.1",
+    "@aws-lambda-powertools/logger": "^2.26.1",
     "@aws-sdk/client-dynamodb": "^3.868.0",
     "@aws-sdk/util-dynamodb": "^3.886.0",
     "@middy/core": "^6.4.5",
@@ -30,7 +30,7 @@
   "devDependencies": {
     "@faker-js/faker": "^10.0.0",
     "@types/fhir": "^0.0.41",
-    "@types/uuid": "^10.0.0",
+    "@types/uuid": "^11.0.0",
     "aws-sdk-client-mock": "^4.1.0"
   }
 }
