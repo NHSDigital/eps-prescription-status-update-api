@@ -67,8 +67,25 @@ const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPro
   logger.info("Found matching events", {updateRecords})
 
   // Get the earliest and latest status update timestamps from LastModified fields
-  const firstStatusDate = "todo"
-  const lastStatusDate = "todo"
+  const firstStatusDate = updateRecords.reduce((earliest, record) => {
+    record.PSUDataItems.forEach((item) => {
+      const itemDate = new Date(item.LastModified)
+      if (itemDate < earliest) {
+        earliest = itemDate
+      }
+    })
+    return earliest
+  }, new Date()).toISOString()
+
+  const lastStatusDate = updateRecords.reduce((latest, record) => {
+    record.PSUDataItems.forEach((item) => {
+      const itemDate = new Date(item.LastModified)
+      if (itemDate > latest) {
+        latest = itemDate
+      }
+    })
+    return latest
+  }, new Date(0)).toISOString()
 
   const responseBody: TestReportResponseBody = {
     systemName: requestBody.connectingSystemName,
