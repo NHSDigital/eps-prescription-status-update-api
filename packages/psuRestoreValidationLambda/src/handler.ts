@@ -39,7 +39,7 @@ const lambdaHandler = async (event: EventBridgeEvent<"Restore Job State Change",
       const response = await backup.putRestoreValidationResult({
         RestoreJobId: event.detail.restoreJobId,
         ValidationStatus: "FAILED",
-        ValidationStatusMessage: "Resource validation succeeded"
+        ValidationStatusMessage: "Resource validation failed"
       })
       logger.info("PutRestoreValidationResult", {response})
 

@@ -42,7 +42,7 @@ export const compareTables = async(
     }
     for (const sourceTableItem of sourceTableItems.Items) {
       const lastModified = new Date(sourceTableItem.LastModified.S as string)
-      const yesterday = new Date(new Date().setDate(new Date().getDate()-1))
+      const yesterday = new Date(Date.now() - 24*60*60*1000)
       if (lastModified > yesterday) {
         logger.info("scanned item is too new", {sourceTableItem})
         continue
