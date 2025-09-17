@@ -111,6 +111,8 @@ const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPro
 
   const dataItems = buildDataItems(requestEntries, xRequestID, applicationName)
 
+  logIncomingPrescriptionIDsForTestReport(logger, dataItems)
+
   // AEA-4317 (AEA-4365) - Intercept INT test prescriptions
   let testPrescription1Forced201 = false
   let testPrescriptionForcedError = false
@@ -139,7 +141,7 @@ const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPro
     testPrescriptionForcedError = !!interceptionResponse.testPrescriptionForcedError
   }
 
-  let dataItemsWithPrev = []
+  let dataItemsWithPrev: Array<PSUDataItemWithPrevious> = []
   try {
     dataItemsWithPrev = await Promise.all(dataItems.map((item) => getPreviousItem(item, logger)))
   } catch (e) {
@@ -372,6 +374,27 @@ async function logTransitions(dataItems: Array<PSUDataItemWithPrevious>): Promis
       logger.error("Error logging transition.", {taskID: currentItem.TaskID, error: e})
     }
   }
+}
+
+function logIncomingPrescriptionIDsForTestReport(logger: Logger, dataItems: Array<PSUDataItem>) {
+  // Don't log this in prod
+  if (!process.env["ENABLE_TEST_REPORT_LOGS"]) return
+  if (!dataItems.length) return
+
+  logger.info(
+    "[AEA-4318] - Received the following prescription updates",
+    {
+      prescriptions: dataItems.map(i => {
+        return {
+          prescriptionID: i.PrescriptionID,
+          taskID: i.TaskID,
+          appName: i.ApplicationName,
+          LineItemID: i.LineItemID
+        }
+      })
+    }
+  )
+
 }
 
 export const handler = middy(lambdaHandler)
