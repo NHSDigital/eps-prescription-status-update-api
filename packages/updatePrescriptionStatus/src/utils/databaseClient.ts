@@ -38,7 +38,8 @@ function createTransactionCommand(dataItems: Array<PSUDataItem>, logger: Logger)
 
 function logPersistFailureForTestReport(logger: Logger, transactionCommand: TransactWriteItemsCommand) {
   // Don't log this in prod
-  if (!process.env["ENABLE_TEST_REPORT_LOGS"]) return
+  const isEnabled = process.env["ENABLE_TEST_REPORT_LOGS"].toLowerCase().trim() === "true"
+  if (!isEnabled) return
 
   // This is pretty ugly, but needed to pull the PSU data item back out of the transaction command.
   const recoveredItems = transactionCommand.input
@@ -207,7 +208,8 @@ export async function checkPrescriptionRecordExistence(
 
 function logPreviousTimeNotFountForTestReport(logger: Logger, currentItem: PSUDataItem) {
   // Don't log this in prod
-  if (!process.env["ENABLE_TEST_REPORT_LOGS"]) return
+  const isEnabled = process.env["ENABLE_TEST_REPORT_LOGS"].toLowerCase().trim() === "true"
+  if (!isEnabled) return
 
   logger.info(
     "[AEA-4318] - No prior statuses in the data store",

@@ -382,8 +382,8 @@ async function logTransitions(dataItems: Array<PSUDataItemWithPrevious>): Promis
 
 function logIncomingPrescriptionIDsForTestReport(logger: Logger, dataItems: Array<PSUDataItem>) {
   // Don't log this in prod
-  if (!process.env["ENABLE_TEST_REPORT_LOGS"]) return
-  if (!dataItems.length) return
+  const isEnabled = process.env["ENABLE_TEST_REPORT_LOGS"].toLowerCase().trim() === "true"
+  if (!isEnabled || !dataItems.length) return
 
   // One log per item - the log searching matches against a single prescription ID field at the top level!
   dataItems.map(i => {
