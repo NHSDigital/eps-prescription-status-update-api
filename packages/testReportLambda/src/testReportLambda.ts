@@ -10,9 +10,13 @@ import httpHeaderNormalizer from "@middy/http-header-normalizer"
 import errorHandler from "@nhs/fhir-middy-error-handler"
 
 import {TestReportRequestBody, TestReportResponseBody} from "./utils/types"
+import {LogSearchOptions} from "./utils/logSearchTypes"
+import {searchLogGroupForPrescriptionIds} from "./utils/logSearching"
 import {getItemsForPrescriptionIDs} from "./utils/dynamo"
 
 export const logger = new Logger({serviceName: "generateTestReport"})
+
+const PSU_LOG_GROUP_NAME = "/aws/lambda/psu-pr-2036-UpdatePrescriptionStatus"
 
 const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
   logger.appendKeys({
@@ -87,6 +91,17 @@ const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPro
     return latest
   }, new Date(0)).toISOString()
 
+  // Search the logs for failed update attempts, and their reasons
+  const searchOptions: LogSearchOptions = {}
+  const logEvents = await searchLogGroupForPrescriptionIds(
+    PSU_LOG_GROUP_NAME,
+    requestBody.connectingSystemName,
+    requestBody.prescriptionIds,
+    logger,
+    searchOptions
+  )
+  logger.info("Found matching events", {logEvents})
+
   const responseBody: TestReportResponseBody = {
     systemName: requestBody.connectingSystemName,
     firstStatusDate,
@@ -100,7 +115,8 @@ const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPro
             timestamp: ell.LastModified,
             isSuccess: "success"
           }
-        })
+        }),
+        logEvents
       }
     })
   }

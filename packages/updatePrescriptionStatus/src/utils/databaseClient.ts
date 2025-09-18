@@ -11,7 +11,11 @@ import {
 } from "@aws-sdk/client-dynamodb"
 import {marshall, unmarshall} from "@aws-sdk/util-dynamodb"
 
-import {PSUDataItem, PSUDataItemWithPrevious} from "@PrescriptionStatusUpdate_common/commonTypes"
+import {
+  PSUDataItem,
+  PSUDataItemWithPrevious,
+  TestReportLogMessagePayload
+} from "@PrescriptionStatusUpdate_common/commonTypes"
 import {Timeout} from "./timeoutUtils"
 
 const client = new DynamoDBClient()
@@ -185,7 +189,18 @@ export async function checkPrescriptionRecordExistence(
     return !!result?.Item
   } catch (e) {
     logger.error("Error querying DynamoDB.", {error: e})
-    logger.info("[AEA-4318] - error checking prior prescription record in DynamoDB", {prescriptionID, taskID})
+    logger.info(
+      "[AEA-4318] - error checking prior prescription record in DynamoDB",
+      {
+        prescriptionID,
+        taskID,
+        // FIXME: This needs to be supplied
+        appName: "FIXME!!!",
+        // These are optional, I think
+        lineItemID: undefined,
+        currentStatus: undefined
+      } satisfies TestReportLogMessagePayload
+    )
     return false
   }
 }
@@ -198,9 +213,11 @@ function logPreviousTimeNotFountForTestReport(logger: Logger, currentItem: PSUDa
     "[AEA-4318] - No prior statuses in the data store",
     {
       prescriptionID: currentItem.PrescriptionID,
+      lineItemID: currentItem.LineItemID,
       taskID: currentItem.TaskID,
+      appName: currentItem.ApplicationName,
       currentStatus: currentItem.Status
-    }
+    } satisfies TestReportLogMessagePayload
   )
 }
 
@@ -246,6 +263,8 @@ export async function getPreviousItem(currentItem: PSUDataItem, logger: Logger):
 
     items.sort((a, b) => new Date(a.LastModified).valueOf() - new Date(b.LastModified).valueOf())
     const mostRecentItem = items.pop()
+
+    // For AEA-4318 test report
     if (!mostRecentItem) logPreviousTimeNotFountForTestReport(logger, currentItem)
 
     return {

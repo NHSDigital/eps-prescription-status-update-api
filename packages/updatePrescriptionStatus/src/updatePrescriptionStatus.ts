@@ -12,7 +12,11 @@ import httpHeaderNormalizer from "@middy/http-header-normalizer"
 import errorHandler from "@nhs/fhir-middy-error-handler"
 import {Bundle, BundleEntry, Task} from "fhir/r4"
 
-import {PSUDataItem, PSUDataItemWithPrevious} from "@PrescriptionStatusUpdate_common/commonTypes"
+import {
+  PSUDataItem,
+  PSUDataItemWithPrevious,
+  TestReportLogMessagePayload
+} from "@PrescriptionStatusUpdate_common/commonTypes"
 
 import {transactionBundle, validateEntry} from "./validation/content"
 import {getPreviousItem, persistDataItems, rollbackDataItems} from "./utils/databaseClient"
@@ -381,18 +385,19 @@ function logIncomingPrescriptionIDsForTestReport(logger: Logger, dataItems: Arra
   if (!process.env["ENABLE_TEST_REPORT_LOGS"]) return
   if (!dataItems.length) return
 
-  logger.info(
-    "[AEA-4318] - Received the following prescription updates",
-    {
-      prescriptions: dataItems.map(i => {
-        return {
-          prescriptionID: i.PrescriptionID,
-          taskID: i.TaskID,
-          appName: i.ApplicationName,
-          LineItemID: i.LineItemID
-        }
-      })
-    }
+  // One log per item - the log searching matches against a single prescription ID field at the top level!
+  dataItems.map(i => {
+    logger.info(
+      "[AEA-4318] - Received the following prescription updates",
+      {
+        prescriptionID: i.PrescriptionID,
+        lineItemID: i.LineItemID,
+        taskID: i.TaskID,
+        appName: i.ApplicationName,
+        currentStatus: i.Status
+      } satisfies TestReportLogMessagePayload
+    )
+  }
   )
 
 }
