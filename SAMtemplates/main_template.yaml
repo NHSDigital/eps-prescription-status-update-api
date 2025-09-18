@@ -92,6 +92,12 @@ Parameters:
   StateMachineLogLevel:
     Type: String
 
+  EnableBackup:
+    Type: String
+    Default: false
+    AllowedValues:
+      - True
+      - False
   EnableNotificationsInternal:
     Type: String
     Default: false
@@ -138,6 +144,7 @@ Resources:
       Parameters:
         StackName: !Ref AWS::StackName
         EnableDynamoDBAutoScaling: !Ref EnableDynamoDBAutoScaling
+        EnableBackup: !Ref EnableBackup
 
   Messaging:
     Type: AWS::Serverless::Application
@@ -198,6 +205,7 @@ Resources:
         DeployCheckPrescriptionStatusUpdate: !Ref DeployCheckPrescriptionStatusUpdate
         DeployTestReportLambda: !Ref DeployTestReportLambda
         Environment: !Ref Environment
+        EnableBackup: !Ref EnableBackup
         RequireApplicationName: !Ref RequireApplicationName
 
   StateMachines:

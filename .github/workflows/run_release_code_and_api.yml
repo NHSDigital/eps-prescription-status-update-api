@@ -76,6 +76,9 @@ on:
       STATE_MACHINE_LOG_LEVEL:
         required: true
         type: string
+      ENABLE_BACKUP:
+        required: true
+        type: string
       ENABLE_NOTIFICATIONS_INTERNAL:
         required: false
         type: boolean
@@ -176,6 +179,7 @@ jobs:
           DEPLOY_TEST_REPORT_LAMBDA: ${{ inputs.DEPLOY_TEST_REPORT_LAMBDA }}
           ENABLE_ALERTS: ${{ inputs.ENABLE_ALERTS }}
           STATE_MACHINE_LOG_LEVEL: ${{ inputs.STATE_MACHINE_LOG_LEVEL }}
+          ENABLE_BACKUP: ${{ inputs.ENABLE_BACKUP }}
           ENABLE_NOTIFICATIONS_INTERNAL: ${{ inputs.ENABLE_NOTIFICATIONS_INTERNAL }}
           ENABLE_NOTIFICATIONS_EXTERNAL: ${{ inputs.ENABLE_NOTIFICATIONS_EXTERNAL }}
           REQUIRE_APPLICATION_NAME: ${{ inputs.REQUIRE_APPLICATION_NAME }}

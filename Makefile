@@ -102,7 +102,8 @@ sam-deploy-package: guard-artifact_bucket guard-artifact_bucket_prefix guard-sta
 			  EnableAlerts=$$ENABLE_ALERTS \
 			  StateMachineLogLevel=$$STATE_MACHINE_LOG_LEVEL \
 			  EnableNotificationsInternal=$$ENABLE_NOTIFICATIONS_INTERNAL \
-			  EnableNotificationsExternal=$$ENABLE_NOTIFICATIONS_EXTERNAL
+			  EnableNotificationsExternal=$$ENABLE_NOTIFICATIONS_EXTERNAL \
+			  EnableBackup=$$ENABLE_BACKUP
 
 compile-node:
 	npx tsc --build tsconfig.build.json
@@ -127,6 +128,7 @@ lint-node: compile-node
 	npm run lint --workspace packages/common/testing
 	npm run lint --workspace packages/common/middyErrorHandler
 	npm run lint --workspace packages/common/commonTypes
+	npm run lint --workspace packages/psuRestoreValidationLambda
 
 lint-specification: compile-specification
 	npm run lint --workspace packages/specification
@@ -157,6 +159,7 @@ test: compile
 	npm run test --workspace packages/nhsNotifyLambda
 	npm run test --workspace packages/nhsNotifyUpdateCallback
 	npm run test --workspace packages/common/middyErrorHandler
+	npm run test --workspace packages/psuRestoreValidationLambda
 
 clean:
 	rm -rf packages/updatePrescriptionStatus/coverage
