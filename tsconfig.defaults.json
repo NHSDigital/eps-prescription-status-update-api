@@ -13,6 +13,17 @@
     "forceConsistentCasingInFileNames": true,
     "preserveConstEnums": true,
     "resolveJsonModule": true,
-    "allowJs": true
+    "allowJs": true,
+    "paths": {
+      "@/cpt-ui-common/commonTypes": [
+        "./packages/common/commonTypes/src/*"
+      ],
+      "@/cpt-ui-common/middyErrorHandler": [
+        "./packages/common/middyErrorHandler/src/*"
+      ],
+      "@/cpt-ui-common/testing": [
+        "./packages/common/testing/src/*"
+      ]
+    }
   }
 }
