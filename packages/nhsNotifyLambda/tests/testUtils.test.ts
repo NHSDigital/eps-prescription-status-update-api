@@ -1,6 +1,7 @@
 import {jest} from "@jest/globals"
 import {SpiedFunction} from "jest-mock"
 import nock from "nock"
+import axiosRetry from "axios-retry"
 
 import {Logger} from "@aws-lambda-powertools/logger"
 import {DynamoDBDocumentClient, PutCommand} from "@aws-sdk/lib-dynamodb"
@@ -46,13 +47,26 @@ jest.unstable_mockModule(
   })
 )
 
+let mockNotifyRequestMaxItems = 5
+let mockNotifyRequestMaxBytes = 5 * 1024 * 1024 // 5 MB
+jest.unstable_mockModule(
+  "../src/utils/constants",
+  async () => ({
+    __esModule: true,
+    NOTIFY_REQUEST_MAX_ITEMS: mockNotifyRequestMaxItems,
+    NOTIFY_REQUEST_MAX_BYTES: mockNotifyRequestMaxBytes,
+    DUMMY_NOTIFY_DELAY_MS: 100,
+    TTL_DELTA: 60 * 60 * 24 * 14 // Keep records for 2 weeks
+  })
+)
+
 const {
   addPrescriptionMessagesToNotificationStateStore,
   removeSQSMessages,
   checkCooldownForUpdate,
   reportQueueStatus,
   drainQueue,
-  makeBatchNotifyRequest
+  handleNotifyRequests
 } = await import("../src/utils")
 
 const ORIGINAL_ENV = {...process.env}
@@ -306,11 +320,7 @@ describe("NHS notify lambda helper functions", () => {
         addPrescriptionMessagesToNotificationStateStore(logger, [item])
       ).rejects.toThrow("AWS error")
 
-      // first info for count
-      expect(infoSpy).toHaveBeenCalledWith(
-        "Attempting to push data to DynamoDB",
-        {count: 1}
-      )
+      expect(sendSpy).toHaveBeenCalledTimes(1)
       // error log includes the item that failed, and the error
       expect(errorSpy).toHaveBeenCalledWith(
         "Failed to write to DynamoDB",
@@ -336,8 +346,6 @@ describe("NHS notify lambda helper functions", () => {
       expect(sendSpy).toHaveBeenCalledTimes(1)
       const cmd = sendSpy.mock.calls[0][0] as PutCommand
       expect(cmd).toBeInstanceOf(PutCommand)
-
-      expect(infoSpy).toHaveBeenCalledWith("Upserted prescription")
 
       // No errors
       expect(errorSpy).not.toHaveBeenCalled()
@@ -395,9 +403,14 @@ describe("NHS notify lambda helper functions", () => {
 
     it("returns true when last notification is older than default cooldown", async () => {
       const pastTs = new Date(Date.now() - (1000 * 901)).toISOString() // 901s ago
-      sendSpy.mockImplementationOnce(() =>
-        Promise.resolve({Item: {LastNotificationRequestTimestamp: pastTs}})
-      )
+      sendSpy.mockImplementationOnce(() => {
+        return {
+          Items: [
+            {LastNotificationRequestTimestamp: {S: new Date(Date.now() - 1000 * 5000).toISOString()}}, // very old
+            {LastNotificationRequestTimestamp: {S: pastTs}}
+          ]
+        }
+      })
 
       const update = constructPSUDataItemMessage().PSUDataItem
       const result = await checkCooldownForUpdate(logger, update, 900)
@@ -405,11 +418,18 @@ describe("NHS notify lambda helper functions", () => {
       expect(result).toBe(true)
     })
 
-    it("returns false when last notification is within default cooldown", async () => {
-      const recentTs = new Date(Date.now() - (1000 * 300)).toISOString() // 300s ago
-      sendSpy.mockImplementationOnce(() =>
-        Promise.resolve({Items: [{LastNotificationRequestTimestamp: recentTs}]})
-      )
+    it("returns false when ANY item is within the cooldown window", async () => {
+      const recentTs = new Date(Date.now() - 1000 * 300).toISOString() // 300s ago
+      const oldTs = new Date(Date.now() - 1000 * 10_000).toISOString() // old
+
+      sendSpy.mockImplementationOnce(() => {
+        return {
+          Items: [
+            {LastNotificationRequestTimestamp: {S: oldTs}},
+            {LastNotificationRequestTimestamp: {S: recentTs}} // within cooldown → should suppress
+          ]
+        }
+      })
 
       const update = constructPSUDataItemMessage().PSUDataItem
       const result = await checkCooldownForUpdate(logger, update, 900)
@@ -420,12 +440,30 @@ describe("NHS notify lambda helper functions", () => {
     it("honours a custom cooldownPeriod", async () => {
       // custom cooldown = 60 seconds, but timestamp is only 30s ago
       const recentTs = new Date(Date.now() - 30000).toISOString()
-      sendSpy.mockImplementationOnce(() =>
-        Promise.resolve({Items: [{LastNotificationRequestTimestamp: recentTs}]})
-      )
+      sendSpy.mockImplementationOnce(() => {
+        return {
+          Items: [{LastNotificationRequestTimestamp: {S: recentTs}}]
+        }
+      })
 
       const update = constructPSUDataItemMessage().PSUDataItem
       const result = await checkCooldownForUpdate(logger, update, 60)
+
+      expect(result).toBe(false)
+    })
+
+    it("returns false when items exist but none have valid timestamps", async () => {
+      sendSpy.mockImplementationOnce(() => {
+        return {
+          Items: [
+            {}, // no timestamp attribute
+            {SomeOtherField: {S: "foo"}}
+          ]
+        }
+      })
+
+      const update = constructPSUDataItemMessage().PSUDataItem
+      const result = await checkCooldownForUpdate(logger, update, 900)
 
       expect(result).toBe(false)
     })
@@ -446,9 +484,10 @@ describe("NHS notify lambda helper functions", () => {
     })
   })
 
-  describe("makeBatchNotifyRequest", () => {
+  describe("handleNotifyRequests", () => {
     let logger: Logger
     let errorSpy: SpiedFunction<(msg: string, ...meta: Array<unknown>) => void>
+    let infoSpy: SpiedFunction<(msg: string, ...meta: Array<unknown>) => void>
 
     beforeEach(() => {
       process.env = {...ORIGINAL_ENV}
@@ -458,10 +497,14 @@ describe("NHS notify lambda helper functions", () => {
 
       logger = new Logger({serviceName: "test-service"})
       errorSpy = jest.spyOn(logger, "error")
+      infoSpy = jest.spyOn(logger, "info")
     })
 
     afterEach(() => {
       process.env = {...ORIGINAL_ENV}
+
+      jest.runOnlyPendingTimers()
+      jest.useRealTimers()
     })
 
     it("sends a batch and maps successful messages correctly", async () => {
@@ -499,7 +542,7 @@ describe("NHS notify lambda helper functions", () => {
           data: {attributes: {messages: returnedMessages}}
         })
 
-      const result = await makeBatchNotifyRequest(
+      const result = await handleNotifyRequests(
         logger,
         "plan-123",
         data
@@ -509,14 +552,14 @@ describe("NHS notify lambda helper functions", () => {
       expect(result).toHaveLength(2)
       expect(result[0]).toMatchObject({
         PSUDataItem: data[0].PSUDataItem,
-        deliveryStatus: "requested",
+        messageStatus: "requested",
         notifyMessageId: "msg-id-1",
         messageBatchReference: expect.any(String),
         messageReference: expect.any(String)
       })
       expect(result[1]).toMatchObject({
         PSUDataItem: data[1].PSUDataItem,
-        deliveryStatus: "notify request failed",
+        messageStatus: "notify request failed",
         notifyMessageId: undefined,
         messageBatchReference: expect.any(String),
         messageReference: expect.any(String)
@@ -540,16 +583,24 @@ describe("NHS notify lambda helper functions", () => {
         .post("/comms/v1/message-batches")
         .reply(500, "Internal Server Error")
 
-      const result = await makeBatchNotifyRequest(
+      jest.useFakeTimers()
+      // force retryDelay to 0 so retries happen immediately in tests
+      jest.spyOn(axiosRetry, "exponentialDelay").mockImplementation(() => 0)
+
+      const resultPromise = handleNotifyRequests(
         logger,
         "plan-xyz",
         data
       )
 
+      // flush retries immediately
+      await jest.runAllTimersAsync()
+      const result = await resultPromise
+
       expect(result).toMatchObject([
         {
           PSUDataItem: data[0].PSUDataItem,
-          deliveryStatus: "notify request failed",
+          messageStatus: "notify request failed",
           notifyMessageId: undefined,
           messageBatchReference: expect.any(String),
           messageReference: expect.any(String)
@@ -588,7 +639,7 @@ describe("NHS notify lambda helper functions", () => {
         .post("/comms/v1/message-batches")
         .replyWithError(new Error("Network failure"))
 
-      const result = await makeBatchNotifyRequest(
+      const result = await handleNotifyRequests(
         logger,
         "plan-error",
         data
@@ -598,7 +649,7 @@ describe("NHS notify lambda helper functions", () => {
       result.forEach((r) =>
         expect(r).toEqual(
           expect.objectContaining({
-            deliveryStatus: "notify request failed",
+            messageStatus: "notify request failed",
             notifyMessageId: undefined
           })
         )
@@ -610,14 +661,7 @@ describe("NHS notify lambda helper functions", () => {
     })
 
     it("splits very large payloads into two recursive batch requests", async () => {
-      jest
-        .spyOn(console, "info")
-        .mockImplementation(() => {})
-      jest
-        .spyOn(console, "error")
-        .mockImplementation(() => {})
-
-      const data = Array.from({length: 45001}, (_, i) =>
+      const data = Array.from({length: 7}, (_, i) =>
         constructPSUDataItemMessage({
           PSUDataItem: {
             RequestID: `r${i}`,
@@ -637,15 +681,28 @@ describe("NHS notify lambda helper functions", () => {
           data: {attributes: {messages: []}}
         })
 
-      const result = await makeBatchNotifyRequest(
+      const result = await handleNotifyRequests(
         logger,
         "plan-large",
         data
       )
 
-      // two recursive calls
-      expect(result).toHaveLength(45001)
+      expect(result).toHaveLength(7) // Returns all items
+
+      // Don't repeat the token exchange for each sub-batch
+      expect(mockTokenExchange).toHaveBeenCalledTimes(1)
+
       expect(errorSpy).not.toHaveBeenCalled()
+
+      // Two calls
+      expect(infoSpy).toHaveBeenCalledWith(
+        "Making a request for notifications to NHS notify",
+        {count: 3, routingPlanId: "plan-large"}
+      )
+      expect(infoSpy).toHaveBeenCalledWith(
+        "Making a request for notifications to NHS notify",
+        {count: 4, routingPlanId: "plan-large"}
+      )
     })
 
     it("retries after 425/429 with Retry-After header", async () => {
@@ -688,7 +745,7 @@ describe("NHS notify lambda helper functions", () => {
           data: {attributes: {messages: returnedMessages}}
         })
 
-      const resultPromise = makeBatchNotifyRequest(
+      const resultPromise = handleNotifyRequests(
         logger,
         "plan-retry",
         data
@@ -707,7 +764,7 @@ describe("NHS notify lambda helper functions", () => {
           [process.env.MAKE_REAL_NOTIFY_REQUESTS_PARAM!]: "false"
         }
       ))
-      const {makeBatchNotifyRequest: fn} = await import("../src/utils")
+      const {handleNotifyRequests: fn} = await import("../src/utils")
 
       const data = [
         constructPSUDataItemMessage({
@@ -745,14 +802,14 @@ describe("NHS notify lambda helper functions", () => {
       expect(result).toHaveLength(2)
       expect(result[0]).toMatchObject({
         PSUDataItem: data[0].PSUDataItem,
-        deliveryStatus: "silent running",
+        messageStatus: "silent running",
         notifyMessageId: expect.any(String), // it will be assigned a dummy ID
         messageBatchReference: expect.any(String),
         messageReference: expect.any(String)
       })
       expect(result[1]).toMatchObject({
         PSUDataItem: data[1].PSUDataItem,
-        deliveryStatus: "silent running",
+        messageStatus: "silent running",
         notifyMessageId: expect.any(String),
         messageBatchReference: expect.any(String),
         messageReference: expect.any(String)

@@ -8,7 +8,7 @@ env:
 
 jobs:
   quality_checks:
-    uses: NHSDigital/eps-workflow-quality-checks/.github/workflows/quality-checks.yml@v4.1.0
+    uses: NHSDigital/eps-workflow-quality-checks/.github/workflows/quality-checks.yml@v4.1.1
     secrets:
       SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
@@ -132,8 +132,10 @@ jobs:
       DEPLOY_APIGEE_CPSU: true
       DEPLOY_CHECK_PRESCRIPTION_STATUS_UPDATE: true
       ENABLE_ALERTS: true
+      REQUIRE_APPLICATION_NAME: false
       RUN_REGRESSION_TEST: true
       STATE_MACHINE_LOG_LEVEL: ALL
+      ENABLE_BACKUP: True
       ENABLE_NOTIFICATIONS_INTERNAL: false
       ENABLE_NOTIFICATIONS_EXTERNAL: false
       MTLS_KEY: psu-mtls-1
@@ -167,6 +169,7 @@ jobs:
       DEPLOY_CHECK_PRESCRIPTION_STATUS_UPDATE: true
       RUN_REGRESSION_TEST: false
       STATE_MACHINE_LOG_LEVEL: ALL
+      ENABLE_BACKUP: False
       ENABLE_NOTIFICATIONS_INTERNAL: false
       ENABLE_NOTIFICATIONS_EXTERNAL: false
       MTLS_KEY: psu-mtls-1
@@ -205,6 +208,7 @@ jobs:
       ENABLE_ALERTS: true
       RUN_REGRESSION_TEST: false
       STATE_MACHINE_LOG_LEVEL: ERROR
+      ENABLE_BACKUP: False
       ENABLE_NOTIFICATIONS_INTERNAL: false
       ENABLE_NOTIFICATIONS_EXTERNAL: false
       MTLS_KEY: psu-mtls-1
@@ -243,6 +247,7 @@ jobs:
       ENABLE_ALERTS: true
       RUN_REGRESSION_TEST: true
       STATE_MACHINE_LOG_LEVEL: ALL
+      ENABLE_BACKUP: False
       ENABLE_NOTIFICATIONS_INTERNAL: false
       ENABLE_NOTIFICATIONS_EXTERNAL: false
       MTLS_KEY: psu-mtls-1
@@ -276,6 +281,7 @@ jobs:
       ENABLE_ALERTS: true
       RUN_REGRESSION_TEST: true
       STATE_MACHINE_LOG_LEVEL: ALL
+      ENABLE_BACKUP: True
       ENABLE_NOTIFICATIONS_INTERNAL: true
       ENABLE_NOTIFICATIONS_EXTERNAL: false
       MTLS_KEY: psu-mtls-1
@@ -309,6 +315,7 @@ jobs:
       DEPLOY_CHECK_PRESCRIPTION_STATUS_UPDATE: true
       RUN_REGRESSION_TEST: false
       STATE_MACHINE_LOG_LEVEL: ALL
+      ENABLE_BACKUP: False
       ENABLE_NOTIFICATIONS_INTERNAL: false
       ENABLE_NOTIFICATIONS_EXTERNAL: false
       MTLS_KEY: psu-mtls-1
@@ -349,6 +356,7 @@ jobs:
       ENABLE_ALERTS: true
       RUN_REGRESSION_TEST: false
       STATE_MACHINE_LOG_LEVEL: ERROR
+      ENABLE_BACKUP: True
       ENABLE_NOTIFICATIONS_INTERNAL: true
       ENABLE_NOTIFICATIONS_EXTERNAL: false
       MTLS_KEY: psu-mtls-1

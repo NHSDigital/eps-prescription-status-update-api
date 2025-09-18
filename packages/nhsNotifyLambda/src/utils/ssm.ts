@@ -3,12 +3,12 @@ import {SSMProvider} from "@aws-lambda-powertools/parameters/ssm"
 const ssm = new SSMProvider()
 
 export interface NotifyConfig {
-  makeRealNotifyRequests: boolean
+  makeRealNotifyRequestsFlag: boolean
   notifyApiBaseUrlRaw: string
 }
 
 export async function loadConfig(): Promise<{
-  makeRealNotifyRequests: boolean,
+  makeRealNotifyRequestsFlag: boolean,
   notifyApiBaseUrlRaw: string
 }> {
   const paramNames = {
@@ -24,7 +24,7 @@ export async function loadConfig(): Promise<{
     .trim()
 
   return {
-    makeRealNotifyRequests: realNotifyParam === "true",
+    makeRealNotifyRequestsFlag: realNotifyParam === "true",
     notifyApiBaseUrlRaw: all[process.env.NOTIFY_API_BASE_URL_PARAM!] as string
   }
 }

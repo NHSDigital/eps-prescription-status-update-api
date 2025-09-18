@@ -1,7 +1,7 @@
 import {NotifyDataItemMessage} from "./types"
 import {checkCooldownForUpdate, addPrescriptionMessagesToNotificationStateStore} from "./dynamo"
 import {removeSQSMessages, drainQueue, reportQueueStatus} from "./sqs"
-import {makeBatchNotifyRequest} from "./notify"
+import {handleNotifyRequests, makeRealNotifyRequest} from "./notify"
 
 export {
   NotifyDataItemMessage,
@@ -10,5 +10,6 @@ export {
   removeSQSMessages,
   drainQueue,
   reportQueueStatus,
-  makeBatchNotifyRequest
+  handleNotifyRequests,
+  makeRealNotifyRequest
 }

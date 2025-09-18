@@ -14,13 +14,13 @@ import {
   removeSQSMessages,
   reportQueueStatus,
   drainQueue,
-  makeBatchNotifyRequest,
+  handleNotifyRequests,
   NotifyDataItemMessage
 } from "./utils"
 
 const logger = new Logger({serviceName: "nhsNotify"})
 
-const MAX_QUEUE_RUNTIME = 14*60*1000 // 14 minutes, to avoid Lambda timeout issues (timeout is 15 minutes)
+const MAX_QUEUE_RUNTIME = 14 * 60 * 1000 // 14 minutes, to avoid Lambda timeout issues (timeout is 15 minutes)
 
 /**
  * Process a single batch of SQS messages: filter, notify, persist, and clean up.
@@ -52,7 +52,7 @@ async function processBatch(
   // Send notifications
   let processed: Array<NotifyDataItemMessage> = []
   try {
-    processed = await makeBatchNotifyRequest(logger, routingId, toProcess)
+    processed = await handleNotifyRequests(logger, routingId, toProcess)
   } catch (err) {
     logger.error("Notification request failed, will retry", {error: err, toProcess})
   }
