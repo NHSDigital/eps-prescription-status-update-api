@@ -83,7 +83,7 @@ describe("Unit test for psuRestoreValidationLambda", function () {
       {
         "RestoreJobId": "dummy_restore_job_id",
         "ValidationStatus": "FAILED",
-        "ValidationStatusMessage": "Resource validation succeeded"
+        "ValidationStatusMessage": "Resource validation failed"
       }
     )
   })
