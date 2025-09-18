@@ -38,7 +38,7 @@ function createTransactionCommand(dataItems: Array<PSUDataItem>, logger: Logger)
 
 function logPersistFailureForTestReport(logger: Logger, transactionCommand: TransactWriteItemsCommand) {
   // Don't log this in prod
-  const isEnabled = process.env["ENABLE_TEST_REPORT_LOGS"].toLowerCase().trim() === "true"
+  const isEnabled = process.env["ENABLE_TEST_REPORT_LOGS"]?.toLowerCase().trim() === "true"
   if (!isEnabled) return
 
   // This is pretty ugly, but needed to pull the PSU data item back out of the transaction command.
@@ -48,12 +48,18 @@ function logPersistFailureForTestReport(logger: Logger, transactionCommand: Tran
     .filter((i) => i !== undefined)
     .map(item => unmarshall(item) as PSUDataItem) ?? []
 
-  logger.info(
-    "[AEA0-4318] - Dynamo condition check failure; TaskID and PrescriptionID collide with previous record",
-    {
-      prescriptionIDs: recoveredItems.map(i => i.PrescriptionID)
-    }
-  )
+  recoveredItems.forEach(i => {
+    logger.info(
+      "[AEA-4318] - Dynamo condition check failure; TaskID and PrescriptionID collide with previous record",
+      {
+        prescriptionID: i.PrescriptionID,
+        lineItemID: i.LineItemID,
+        appName: i.ApplicationName,
+        taskID: i.TaskID,
+        currentStatus: i.Status
+      } satisfies TestReportLogMessagePayload
+    )
+  })
 }
 
 export async function persistDataItems(dataItems: Array<PSUDataItem>, logger: Logger): Promise<boolean | Timeout> {
@@ -208,7 +214,7 @@ export async function checkPrescriptionRecordExistence(
 
 function logPreviousTimeNotFountForTestReport(logger: Logger, currentItem: PSUDataItem) {
   // Don't log this in prod
-  const isEnabled = process.env["ENABLE_TEST_REPORT_LOGS"].toLowerCase().trim() === "true"
+  const isEnabled = process.env["ENABLE_TEST_REPORT_LOGS"]?.toLowerCase().trim() === "true"
   if (!isEnabled) return
 
   logger.info(
@@ -266,7 +272,6 @@ export async function getPreviousItem(currentItem: PSUDataItem, logger: Logger):
     items.sort((a, b) => new Date(a.LastModified).valueOf() - new Date(b.LastModified).valueOf())
     const mostRecentItem = items.pop()
 
-    // For AEA-4318 test report
     if (!mostRecentItem) logPreviousTimeNotFountForTestReport(logger, currentItem)
 
     return {
