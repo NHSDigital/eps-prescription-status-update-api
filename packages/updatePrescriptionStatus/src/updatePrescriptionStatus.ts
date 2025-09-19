@@ -121,7 +121,6 @@ const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPro
   let testPrescription1Forced201 = false
   let testPrescriptionForcedError = false
   if (INT_ENVIRONMENT) {
-    // Find indices
     const testPrescription1Index = dataItems.findIndex((item) => TEST_PRESCRIPTIONS_1.includes(item.PrescriptionID))
     const testPrescription2Index = dataItems.findIndex((item) => TEST_PRESCRIPTIONS_2.includes(item.PrescriptionID))
 
@@ -138,7 +137,7 @@ const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPro
       interceptionResponse2 = await testPrescription2Intercept(logger, dataItem)
     }
 
-    // Combine outcomes (true if either interceptor set them)
+    // outcomes are true if either interceptor set them
     testPrescription1Forced201 =
       !!interceptionResponse1.testPrescription1Forced201 || !!interceptionResponse2.testPrescription1Forced201
 
