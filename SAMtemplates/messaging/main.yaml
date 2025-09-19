@@ -115,6 +115,12 @@ Outputs:
     Export:
       Name: !Sub ${StackName}-NHSNotifyPrescriptionsSQSQueueArn
 
+  NHSNotifyPrescriptionsDeadLetterQueueArn:
+    Description: The ARN of the NHS Notify Prescriptions Dead Letter Queue
+    Value: !GetAtt NHSNotifyPrescriptionsDeadLetterQueue.Arn
+    Export:
+      Name: !Sub ${StackName}-NHSNotifyPrescriptionsDeadLetterQueueArn
+
   ReadNHSNotifyPrescriptionsSQSQueuePolicyArn:
     Description: ARN of policy granting permission to read the prescriptions queue
     Value: !Ref ReadNHSNotifyPrescriptionsSQSQueuePolicy
