@@ -9,7 +9,7 @@
     {"path": "packages/common/commonTypes"},
     {"path": "packages/gsul"},
     {"path": "packages/updatePrescriptionStatus"},
-    {"path": "packages/sandbox"},
+    {"path": "packages/nhsd-psu-sandbox"},
     {"path": "packages/statusLambda"},
     {"path": "packages/capabilityStatement"},
     {"path": "packages/cpsuLambda"},

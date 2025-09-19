@@ -117,7 +117,7 @@ Resources:
         Sourcemap: true
         tsconfig: sandbox/tsconfig.json
         EntryPoints:
-          - sandbox/src/sandbox.ts
+          - nhsd-psu-sandbox/src/sandbox.ts
 
   Status:
     Type: AWS::Serverless::Function
