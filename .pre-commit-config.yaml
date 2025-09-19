@@ -46,7 +46,7 @@ repos:
         entry: npm
         args: ["run", "--prefix=packages/nhsd-psu-sandbox", "lint"]
         language: system
-        files: ^packages\/sandbox
+        files: ^packages\/nhsd-psu-sandbox
         types_or: [ts, tsx, javascript, jsx, json]
         pass_filenames: false
 
