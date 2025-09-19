@@ -177,17 +177,24 @@ export async function rollbackDataItems(
   return results.every(r => r.success)
 }
 
+/**
+ * This is run as part of the AEA-4317 (AEA-4365) - Intercept INT test prescriptions case.
+ * It is not executed in prod
+ */
 export async function checkPrescriptionRecordExistence(
-  prescriptionID: string,
-  taskID: string,
+  dataItem: PSUDataItem,
   logger: Logger
 ): Promise<boolean> {
-  logger.info("Checking if prescription record exists in DynamoDB.", {prescriptionID}, {taskID})
+  logger.info(
+    "Checking if prescription record exists in DynamoDB.",
+    {prescriptionID: dataItem.PrescriptionID},
+    {taskID: dataItem.TaskID}
+  )
   const query: GetItemCommandInput = {
     TableName: tableName,
     Key: {
-      PrescriptionID: {S: prescriptionID},
-      TaskID: {S: taskID}
+      PrescriptionID: {S: dataItem.PrescriptionID},
+      TaskID: {S: dataItem.TaskID}
     }
   }
   try {
@@ -199,15 +206,14 @@ export async function checkPrescriptionRecordExistence(
     logger.info(
       "[AEA-4318] - error checking prior prescription record in DynamoDB",
       {
-        prescriptionID,
-        taskID,
-        // FIXME: This needs to be supplied
-        appName: "FIXME!!!",
-        // These are optional, I think
-        lineItemID: undefined,
-        currentStatus: undefined
+        prescriptionID: dataItem.PrescriptionID,
+        taskID: dataItem.TaskID,
+        appName: dataItem.ApplicationName,
+        lineItemID: dataItem.LineItemID,
+        currentStatus: dataItem.Status
       } satisfies TestReportLogMessagePayload
     )
+
     return false
   }
 }
