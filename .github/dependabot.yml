@@ -1,4 +1,4 @@
-#########################################################################
+  #########################################################################
 # Dependabot configuration file
 #########################################################################
 
@@ -9,7 +9,10 @@ updates:
     # default location of `.github/workflows`
     directory: "/"
     schedule:
-      interval: "daily"
+      interval: "weekly"
+      day: "friday"
+      time: "18:00" # UTC
+    open-pull-requests-limit: 20
     commit-message:
       prefix: "Upgrade: [dependabot] - "
 
@@ -19,11 +22,13 @@ updates:
   - package-ecosystem: "npm"
     directory: "/"
     schedule:
-      interval: "daily"
+      interval: "weekly"
+      day: "friday"
+      time: "18:00" # UTC
+    open-pull-requests-limit: 20
     versioning-strategy: increase
     commit-message:
       prefix: "Upgrade: [dependabot] - "
-    open-pull-requests-limit: 20
 
   ###################################
   # Poetry  #########################
@@ -31,7 +36,10 @@ updates:
   - package-ecosystem: "pip"
     directory: "/"
     schedule:
-      interval: "daily"
+      interval: "weekly"
+      day: "friday"
+      time: "18:00" # UTC
+    open-pull-requests-limit: 20  
     versioning-strategy: increase
     commit-message:
       prefix: "Upgrade: [dependabot] - "

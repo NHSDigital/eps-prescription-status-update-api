@@ -55,6 +55,10 @@
     {
       "name": "packages/common/middyErrorHandler",
       "path": "../packages/common/middyErrorHandler"
+    },
+    {
+      "name": "packages/psuRestoreValidationLambda",
+      "path": "../packages/psuRestoreValidationLambda"
     }
   ],
   "settings": {

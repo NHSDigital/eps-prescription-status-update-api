@@ -27,16 +27,18 @@ Parameters:
     Type: Number
     Default: 600
 
+  EnableBackup:
+    Type: String
+
 Conditions:
   EnableDynamoDBAutoScalingCondition: !Equals
     - "true"
     - !Ref EnableDynamoDBAutoScaling
 
 Resources:
-
-#---------------------#
-#    Common things    #
-#---------------------#
+  #---------------------#
+  #    Common things    #
+  #---------------------#
 
   DynamoDbScalingRolePolicy:
     Type: AWS::IAM::ManagedPolicy
@@ -80,10 +82,9 @@ Resources:
       ManagedPolicyArns:
         - !Ref DynamoDbScalingRolePolicy
 
-
-#-----------------------------------------#
-#    Prescription Status Updates Table    #
-#-----------------------------------------#
+  #-----------------------------------------#
+  #    Prescription Status Updates Table    #
+  #-----------------------------------------#
 
   PrescriptionStatusUpdatesKMSKey:
     Type: AWS::KMS::Key
@@ -200,6 +201,11 @@ Resources:
             - ReadCapacityUnits: 1
               WriteCapacityUnits: !Ref MinWritePrescriptionStatusUpdatesCapacity
             - !Ref "AWS::NoValue"
+      Tags:
+        - Key: "EPS-Tablename"
+          Value: "PrescriptionStatusUpdates"
+        - Key: "NHSE-Enable-Backup"
+          Value: !Ref EnableBackup
 
   PrescriptionStatusUpdatesResources:
     Type: AWS::Serverless::Application
@@ -366,10 +372,9 @@ Resources:
         PredefinedMetricSpecification:
           PredefinedMetricType: DynamoDBReadCapacityUtilization
 
-
-#--------------------------------#
-#    Notification State Table    #
-#--------------------------------#
+  #--------------------------------#
+  #    Notification State Table    #
+  #--------------------------------#
 
   PrescriptionNotificationStatesKMSKey:
     Type: AWS::KMS::Key
@@ -464,9 +469,9 @@ Resources:
 
       KeySchema:
         - AttributeName: NHSNumber
-          KeyType: HASH       # Partition key
+          KeyType: HASH # Partition key
         - AttributeName: RequestId
-          KeyType: RANGE      # Sort key
+          KeyType: RANGE # Sort key
       BillingMode: !If
         - EnableDynamoDBAutoScalingCondition
         - PROVISIONED
@@ -483,6 +488,9 @@ Resources:
       TimeToLiveSpecification:
         AttributeName: ExpiryTime
         Enabled: true
+      Tags:
+        - Key: "NHSE-Enable-Backup"
+          Value: "False"
 
   PrescriptionNotificationStatesV1Resources:
     Type: AWS::Serverless::Application
