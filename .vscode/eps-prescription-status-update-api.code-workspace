@@ -9,8 +9,8 @@
       "path": "../packages/gsul"
     },
     {
-      "name": "packages/sandbox",
-      "path": "../packages/sandbox"
+      "name": "packages/nhsd-psu-sandbox",
+      "path": "../packages/nhsd-psu-sandbox"
     },
     {
       "name": "packages/specification",

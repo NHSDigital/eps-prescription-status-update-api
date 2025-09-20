@@ -133,7 +133,7 @@ if [[ "${ENABLE_MUTUAL_TLS}" == "true" ]]; then
             cat out.txt
             exit 1
         fi
-        echo "Secret stored succesfully"
+        echo "Secret stored successfully"
 
     else
         echo "Would call ${put_secret_lambda}"

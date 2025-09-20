@@ -15,7 +15,7 @@
   "license": "MIT",
   "workspaces": [
     "packages/gsul",
-    "packages/sandbox",
+    "packages/nhsd-psu-sandbox",
     "packages/specification",
     "packages/statusLambda",
     "packages/updatePrescriptionStatus",
