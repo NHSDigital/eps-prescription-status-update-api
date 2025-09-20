@@ -71,6 +71,9 @@ Parameters:
   DeployCheckPrescriptionStatusUpdate:
     Type: String
 
+  DeployTestReportLambda:
+    Type: String
+
   Environment:
     Type: String
 
@@ -170,9 +173,12 @@ Resources:
         CheckPrescriptionStatusUpdatesFunctionArn: !GetAtt Functions.Outputs.CheckPrescriptionStatusUpdatesFunctionArn
         NHSNotifyUpdateCallbackFunctionName: !GetAtt Functions.Outputs.NHSNotifyUpdateCallbackFunctionName
         NHSNotifyUpdateCallbackFunctionArn: !GetAtt Functions.Outputs.NHSNotifyUpdateCallbackFunctionArn
+        TestReportFunctionName: !GetAtt Functions.Outputs.TestReportFunctionName
+        TestReportFunctionArn: !GetAtt Functions.Outputs.TestReportFunctionArn
         LogRetentionInDays: !Ref LogRetentionInDays
         EnableSplunk: !Ref EnableSplunk
         DeployCheckPrescriptionStatusUpdate: !Ref DeployCheckPrescriptionStatusUpdate
+        DeployTestReportLambda: !Ref DeployTestReportLambda
 
   Functions:
     Type: AWS::Serverless::Application
@@ -197,6 +203,7 @@ Resources:
         VersionNumber: !Ref VersionNumber
         CommitId: !Ref CommitId
         DeployCheckPrescriptionStatusUpdate: !Ref DeployCheckPrescriptionStatusUpdate
+        DeployTestReportLambda: !Ref DeployTestReportLambda
         Environment: !Ref Environment
         EnableBackup: !Ref EnableBackup
         RequireApplicationName: !Ref RequireApplicationName

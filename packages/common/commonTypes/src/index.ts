@@ -1,3 +1,6 @@
+import {TestReportLogMessagePayload} from "./testReport"
+export {TestReportLogMessagePayload}
+
 export interface PSUDataItem {
   LastModified: string
   LineItemID: string

@@ -11,7 +11,11 @@ import {
 } from "@aws-sdk/client-dynamodb"
 import {marshall, unmarshall} from "@aws-sdk/util-dynamodb"
 
-import {PSUDataItem, PSUDataItemWithPrevious} from "@PrescriptionStatusUpdate_common/commonTypes"
+import {
+  PSUDataItem,
+  PSUDataItemWithPrevious,
+  TestReportLogMessagePayload
+} from "@PrescriptionStatusUpdate_common/commonTypes"
 import {Timeout} from "./timeoutUtils"
 
 const client = new DynamoDBClient()
@@ -30,6 +34,32 @@ function createTransactionCommand(dataItems: Array<PSUDataItem>, logger: Logger)
     }
   })
   return new TransactWriteItemsCommand({TransactItems: transactItems})
+}
+
+function logPersistFailureForTestReport(logger: Logger, transactionCommand: TransactWriteItemsCommand) {
+  // Don't log this in prod
+  const isEnabled = process.env["ENABLE_TEST_REPORT_LOGS"]?.toLowerCase().trim() === "true"
+  if (!isEnabled) return
+
+  // This is pretty ugly, but needed to pull the PSU data item back out of the transaction command.
+  const recoveredItems = transactionCommand.input
+    .TransactItems
+    ?.map(item => item.Put?.Item)
+    .filter((i) => i !== undefined)
+    .map(item => unmarshall(item) as PSUDataItem) ?? []
+
+  recoveredItems.forEach(i => {
+    logger.info(
+      "[AEA-4318] - Dynamo condition check failure; TaskID and PrescriptionID collide with previous record",
+      {
+        prescriptionID: i.PrescriptionID,
+        lineItemID: i.LineItemID,
+        appName: i.ApplicationName,
+        taskID: i.TaskID,
+        currentStatus: i.Status
+      } satisfies TestReportLogMessagePayload
+    )
+  })
 }
 
 export async function persistDataItems(dataItems: Array<PSUDataItem>, logger: Logger): Promise<boolean | Timeout> {
@@ -52,8 +82,11 @@ export async function persistDataItems(dataItems: Array<PSUDataItem>, logger: Lo
       if (e instanceof TransactionCanceledException) {
         logger.error(
           "DynamoDB transaction cancelled due to conditional check failure.", {reasons: e.CancellationReasons})
+        logPersistFailureForTestReport(logger, transactionCommand)
+
         return {success: false, errorMessage: "conditional check failure", error: e}
       } else {
+        // This will usually be caused by the throughput exceeding the provisioned level.
         logger.error("Error sending TransactWriteItemsCommand to DynamoDB.", {error: e})
       }
       return {success: false, errorMessage: "other error", error: e}
@@ -144,17 +177,24 @@ export async function rollbackDataItems(
   return results.every(r => r.success)
 }
 
+/**
+ * This is run as part of the AEA-4317 (AEA-4365) - Intercept INT test prescriptions case.
+ * It is not executed in prod
+ */
 export async function checkPrescriptionRecordExistence(
-  prescriptionID: string,
-  taskID: string,
+  dataItem: PSUDataItem,
   logger: Logger
 ): Promise<boolean> {
-  logger.info("Checking if prescription record exists in DynamoDB.", {prescriptionID}, {taskID})
+  logger.info(
+    "Checking if prescription record exists in DynamoDB.",
+    {prescriptionID: dataItem.PrescriptionID},
+    {taskID: dataItem.TaskID}
+  )
   const query: GetItemCommandInput = {
     TableName: tableName,
     Key: {
-      PrescriptionID: {S: prescriptionID},
-      TaskID: {S: taskID}
+      PrescriptionID: {S: dataItem.PrescriptionID},
+      TaskID: {S: dataItem.TaskID}
     }
   }
   try {
@@ -163,8 +203,36 @@ export async function checkPrescriptionRecordExistence(
     return !!result?.Item
   } catch (e) {
     logger.error("Error querying DynamoDB.", {error: e})
+    logger.info(
+      "[AEA-4318] - error checking prior prescription record in DynamoDB",
+      {
+        prescriptionID: dataItem.PrescriptionID,
+        taskID: dataItem.TaskID,
+        appName: dataItem.ApplicationName,
+        lineItemID: dataItem.LineItemID,
+        currentStatus: dataItem.Status
+      } satisfies TestReportLogMessagePayload
+    )
+
     return false
   }
+}
+
+function logPreviousTimeNotFountForTestReport(logger: Logger, currentItem: PSUDataItem) {
+  // Don't log this in prod
+  const isEnabled = process.env["ENABLE_TEST_REPORT_LOGS"]?.toLowerCase().trim() === "true"
+  if (!isEnabled) return
+
+  logger.info(
+    "[AEA-4318] - No prior statuses in the data store",
+    {
+      prescriptionID: currentItem.PrescriptionID,
+      lineItemID: currentItem.LineItemID,
+      taskID: currentItem.TaskID,
+      appName: currentItem.ApplicationName,
+      currentStatus: currentItem.Status
+    } satisfies TestReportLogMessagePayload
+  )
 }
 
 export async function getPreviousItem(currentItem: PSUDataItem, logger: Logger): Promise<PSUDataItemWithPrevious> {
@@ -208,9 +276,13 @@ export async function getPreviousItem(currentItem: PSUDataItem, logger: Logger):
     } while (lastEvaluatedKey)
 
     items.sort((a, b) => new Date(a.LastModified).valueOf() - new Date(b.LastModified).valueOf())
+    const mostRecentItem = items.pop()
+
+    if (!mostRecentItem) logPreviousTimeNotFountForTestReport(logger, currentItem)
+
     return {
       current: currentItem,
-      previous: items.pop()
+      previous: mostRecentItem
     }
   } catch (err) {
     logger.error("Error retrieving previous item status", {error: err})

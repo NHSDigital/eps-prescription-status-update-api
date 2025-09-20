@@ -12,7 +12,11 @@ import httpHeaderNormalizer from "@middy/http-header-normalizer"
 import errorHandler from "@nhs/fhir-middy-error-handler"
 import {Bundle, BundleEntry, Task} from "fhir/r4"
 
-import {PSUDataItem, PSUDataItemWithPrevious} from "@PrescriptionStatusUpdate_common/commonTypes"
+import {
+  PSUDataItem,
+  PSUDataItemWithPrevious,
+  TestReportLogMessagePayload
+} from "@PrescriptionStatusUpdate_common/commonTypes"
 
 import {transactionBundle, validateEntry} from "./validation/content"
 import {getPreviousItem, persistDataItems, rollbackDataItems} from "./utils/databaseClient"
@@ -109,37 +113,40 @@ const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPro
     return response(400, responseEntries)
   }
 
-  const dataItems = buildDataItems(requestEntries, xRequestID, applicationName)
+  const dataItems: Array<PSUDataItem> = buildDataItems(requestEntries, xRequestID, applicationName)
+
+  logIncomingPrescriptionIDsForTestReport(logger, dataItems)
 
   // AEA-4317 (AEA-4365) - Intercept INT test prescriptions
   let testPrescription1Forced201 = false
   let testPrescriptionForcedError = false
   if (INT_ENVIRONMENT) {
-    let interceptionResponse: InterceptionResult = {}
-    const prescriptionIDs = dataItems.map((item) => item.PrescriptionID)
-    const taskIDs = dataItems.map((item) => item.TaskID)
+    const testPrescription1Index = dataItems.findIndex((item) => TEST_PRESCRIPTIONS_1.includes(item.PrescriptionID))
+    const testPrescription2Index = dataItems.findIndex((item) => TEST_PRESCRIPTIONS_2.includes(item.PrescriptionID))
 
-    const testPrescription1Index = prescriptionIDs.findIndex((id) => TEST_PRESCRIPTIONS_1.includes(id))
-    const isTestPrescription1 = testPrescription1Index !== -1
-    if (isTestPrescription1) {
-      const taskID = taskIDs[testPrescription1Index]
-      const matchingPrescription1ID = prescriptionIDs[testPrescription1Index]
-      interceptionResponse = await testPrescription1Intercept(logger, matchingPrescription1ID, taskID)
+    let interceptionResponse1: InterceptionResult = {}
+    let interceptionResponse2: InterceptionResult = {}
+
+    if (testPrescription1Index !== -1) {
+      const dataItem = dataItems[testPrescription1Index]
+      interceptionResponse1 = await testPrescription1Intercept(logger, dataItem)
     }
 
-    const testPrescription2Index = prescriptionIDs.findIndex((id) => TEST_PRESCRIPTIONS_2.includes(id))
-    const isTestPrescription2 = testPrescription2Index !== -1
-    if (isTestPrescription2) {
-      const taskID = taskIDs[testPrescription2Index]
-      const matchingPrescription2ID = prescriptionIDs[testPrescription2Index]
-      interceptionResponse = await testPrescription2Intercept(logger, matchingPrescription2ID, taskID)
+    if (testPrescription2Index !== -1) {
+      const dataItem = dataItems[testPrescription2Index]
+      interceptionResponse2 = await testPrescription2Intercept(logger, dataItem)
     }
 
-    testPrescription1Forced201 = !!interceptionResponse.testPrescription1Forced201
-    testPrescriptionForcedError = !!interceptionResponse.testPrescriptionForcedError
+    // outcomes are true if either interceptor set them
+    testPrescription1Forced201 =
+      !!interceptionResponse1.testPrescription1Forced201 || !!interceptionResponse2.testPrescription1Forced201
+
+    testPrescriptionForcedError =
+      !!interceptionResponse1.testPrescriptionForcedError || !!interceptionResponse2.testPrescriptionForcedError
   }
 
-  let dataItemsWithPrev = []
+  // Gather the previous statuses of any items in this bundle, and attach them to the PSU data item objects we have
+  let dataItemsWithPrev: Array<PSUDataItemWithPrevious> = []
   try {
     dataItemsWithPrev = await Promise.all(dataItems.map((item) => getPreviousItem(item, logger)))
   } catch (e) {
@@ -148,6 +155,8 @@ const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPro
       return {current: item, previous: undefined}
     })
   }
+
+  // ITOC reporting
   await logTransitions(dataItemsWithPrev)
 
   // Await the parameter promise before we continue
@@ -372,6 +381,28 @@ async function logTransitions(dataItems: Array<PSUDataItemWithPrevious>): Promis
       logger.error("Error logging transition.", {taskID: currentItem.TaskID, error: e})
     }
   }
+}
+
+function logIncomingPrescriptionIDsForTestReport(logger: Logger, dataItems: Array<PSUDataItem>) {
+  // Don't log this in prod
+  const isEnabled = process.env["ENABLE_TEST_REPORT_LOGS"]?.toLowerCase().trim() === "true"
+  if (!isEnabled || !dataItems.length) return
+
+  // One log per item - the log searching matches against a single prescription ID field at the top level!
+  dataItems.map(i => {
+    logger.info(
+      "[AEA-4318] - Received the following prescription updates",
+      {
+        prescriptionID: i.PrescriptionID,
+        lineItemID: i.LineItemID,
+        taskID: i.TaskID,
+        appName: i.ApplicationName,
+        currentStatus: i.Status
+      } satisfies TestReportLogMessagePayload
+    )
+  }
+  )
+
 }
 
 export const handler = middy(lambdaHandler)
