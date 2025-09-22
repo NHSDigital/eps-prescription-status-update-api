@@ -12,7 +12,11 @@ import httpHeaderNormalizer from "@middy/http-header-normalizer"
 import errorHandler from "@nhs/fhir-middy-error-handler"
 import {Bundle, BundleEntry, Task} from "fhir/r4"
 
-import {PSUDataItem, PSUDataItemWithPrevious} from "@PrescriptionStatusUpdate_common/commonTypes"
+import {
+  PSUDataItem,
+  PSUDataItemWithPrevious,
+  TestReportLogMessagePayload
+} from "@PrescriptionStatusUpdate_common/commonTypes"
 
 import {transactionBundle, validateEntry} from "./validation/content"
 import {getPreviousItem, persistDataItems, rollbackDataItems} from "./utils/databaseClient"
@@ -144,10 +148,12 @@ const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPro
   try {
     dataItemsWithPrev = await Promise.all(dataItems.map((item) => getPreviousItem(item, logger)))
   } catch (e) {
-    logger.error("Error getting previous data items from data store.", {error: e})
+    const msg = "Error getting previous data items from data store."
+    logger.error(msg, {error: e})
     dataItemsWithPrev = dataItems.map((item) => {
       return {current: item, previous: undefined}
     })
+    dataItemsWithPrev.forEach(({current, previous}) => logForTestPack(logger, msg, current, previous))
   }
 
   // ITOC reporting
@@ -159,7 +165,9 @@ const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPro
     const {enableNotifications} = await loadConfig()
     enableNotificationsFlag = enableNotifications
   } catch (err) {
-    logger.error("Failed to load parameters from SSM. Continuing with notifications DISABLED", {err})
+    const msg = "Failed to load parameters from SSM. Continuing with notifications DISABLED"
+    logger.error(msg, {err})
+    dataItemsWithPrev.forEach(({current, previous}) => logForTestPack(logger, msg, current, previous))
   }
 
   try {
@@ -168,12 +176,16 @@ const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPro
 
     if (hasTimedOut(persistResponse)) {
       responseEntries = [timeoutResponse()]
-      logger.error("DynamoDB operation timed out.")
+      const msg = "DynamoDB operation timed out."
+      logger.error(msg)
+      dataItemsWithPrev.forEach(({current, previous}) => logForTestPack(logger, msg, current, previous))
       return response(504, responseEntries)
     }
 
     if (!persistResponse) {
       responseEntries = [serverError()]
+      const msg = "Failed to persist data to DynamoDB table"
+      dataItemsWithPrev.forEach(({current, previous}) => logForTestPack(logger, msg, current, previous))
       return response(500, responseEntries)
     }
 
@@ -190,6 +202,8 @@ const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPro
       }
 
       handleTransactionCancelledException(e, responseEntries)
+      const msg = "DynamoDB transaction cancelled exception encountered"
+      dataItemsWithPrev.forEach(({current, previous}) => logForTestPack(logger, msg, current, previous))
       return response(409, responseEntries)
     }
   }
@@ -207,7 +221,9 @@ const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPro
       const requestId = event.headers["x-request-id"] ?? "x-request-id-not-found"
       await pushPrescriptionToNotificationSQS(requestId, dataItemsWithPrev, logger)
     } catch (err) {
-      logger.error("Failed to push prescriptions to the notifications SQS", {err})
+      const msg = "Failed to push prescriptions to the notifications SQS"
+      logger.error(msg, {err})
+      dataItemsWithPrev.forEach(({current, previous}) => logForTestPack(logger, msg, current, previous))
       // We're considering this a bust, and if they send a retry before undoing the table
       // bits then they will get a collision. Delete the newly created records then return the error
       await rollbackDataItems(dataItems, logger)
@@ -335,6 +351,30 @@ export function buildDataItems(
     dataItems.push(dataItem)
   }
   return dataItems
+}
+
+function logForTestPack(logger: Logger, message: string, dataItem: PSUDataItem, previousDataItem?: PSUDataItem) {
+  // Don't log this in prod
+  const isEnabled = process.env["ENABLE_TEST_REPORT_LOGS"]?.toLowerCase().trim() === "true"
+  if (!isEnabled) return
+
+  message = "[AEA-4318] - " + message
+  logger.info(
+    message,
+    {
+      prescriptionID: dataItem.PrescriptionID,
+      taskID: dataItem.TaskID,
+      appName: dataItem.ApplicationName,
+      lineItemID: dataItem.LineItemID,
+      currentStatus: dataItem.Status,
+      currentTerminalStatus: dataItem.TerminalStatus,
+      currentTimestamp: dataItem.LastModified,
+      // And only set these if we're given the previous data item
+      previousStatus: previousDataItem ? previousDataItem.Status : undefined,
+      previousTerminalStatus: previousDataItem ? previousDataItem.TerminalStatus : undefined,
+      previousTimestamp: previousDataItem ? previousDataItem.LastModified : undefined
+    } satisfies TestReportLogMessagePayload
+  )
 }
 
 function response(statusCode: number, responseEntries: Array<BundleEntry>) {

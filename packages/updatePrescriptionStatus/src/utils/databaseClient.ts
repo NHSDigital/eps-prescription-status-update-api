@@ -36,7 +36,7 @@ function createTransactionCommand(dataItems: Array<PSUDataItem>, logger: Logger)
   return new TransactWriteItemsCommand({TransactItems: transactItems})
 }
 
-function logPersistFailureForTestReport(logger: Logger, transactionCommand: TransactWriteItemsCommand) {
+function logDatabaseCollisionForTestReport(logger: Logger, transactionCommand: TransactWriteItemsCommand) {
   // Don't log this in prod
   const isEnabled = process.env["ENABLE_TEST_REPORT_LOGS"]?.toLowerCase().trim() === "true"
   if (!isEnabled) return
@@ -84,7 +84,7 @@ export async function persistDataItems(dataItems: Array<PSUDataItem>, logger: Lo
       if (e instanceof TransactionCanceledException) {
         logger.error(
           "DynamoDB transaction cancelled due to conditional check failure.", {reasons: e.CancellationReasons})
-        logPersistFailureForTestReport(logger, transactionCommand)
+        logDatabaseCollisionForTestReport(logger, transactionCommand)
 
         return {success: false, errorMessage: "conditional check failure", error: e}
       } else {
