@@ -216,7 +216,7 @@ function logPreviousItemNotFountForTestReport(logger: Logger, currentItem: PSUDa
   if (!isEnabled) return
 
   logger.info(
-    "[AEA-4318] - No prior statuses in the data store",
+    "[AEA-4318] - No prior statuses in the data store (or the only record uses the same task ID as this update)",
     {
       prescriptionID: currentItem.PrescriptionID,
       lineItemID: currentItem.LineItemID,

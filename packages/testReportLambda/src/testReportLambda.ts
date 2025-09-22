@@ -114,6 +114,7 @@ const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPro
             storedStatus: event.previousStatus,
             storedTerminalStatus: event.previousTerminalStatus,
             storedTimestamp: event.previousTimestamp,
+            eventTimestamp: event.timestamp,
             message: event.message
           }
         })
