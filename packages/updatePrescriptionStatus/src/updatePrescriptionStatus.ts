@@ -12,11 +12,7 @@ import httpHeaderNormalizer from "@middy/http-header-normalizer"
 import errorHandler from "@nhs/fhir-middy-error-handler"
 import {Bundle, BundleEntry, Task} from "fhir/r4"
 
-import {
-  PSUDataItem,
-  PSUDataItemWithPrevious,
-  TestReportLogMessagePayload
-} from "@PrescriptionStatusUpdate_common/commonTypes"
+import {PSUDataItem, PSUDataItemWithPrevious} from "@PrescriptionStatusUpdate_common/commonTypes"
 
 import {transactionBundle, validateEntry} from "./validation/content"
 import {getPreviousItem, persistDataItems, rollbackDataItems} from "./utils/databaseClient"
@@ -115,8 +111,6 @@ const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPro
 
   const dataItems: Array<PSUDataItem> = buildDataItems(requestEntries, xRequestID, applicationName)
 
-  logIncomingPrescriptionIDsForTestReport(logger, dataItems)
-
   // AEA-4317 (AEA-4365) - Intercept INT test prescriptions
   let testPrescription1Forced201 = false
   let testPrescriptionForcedError = false
@@ -165,7 +159,7 @@ const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPro
     const {enableNotifications} = await loadConfig()
     enableNotificationsFlag = enableNotifications
   } catch (err) {
-    logger.error("Failed to load parameters from SSM", {err})
+    logger.error("Failed to load parameters from SSM. Continuing with notifications DISABLED", {err})
   }
 
   try {
@@ -381,30 +375,6 @@ async function logTransitions(dataItems: Array<PSUDataItemWithPrevious>): Promis
       logger.error("Error logging transition.", {taskID: currentItem.TaskID, error: e})
     }
   }
-}
-
-function logIncomingPrescriptionIDsForTestReport(logger: Logger, dataItems: Array<PSUDataItem>) {
-  // Don't log this in prod
-  const isEnabled = process.env["ENABLE_TEST_REPORT_LOGS"]?.toLowerCase().trim() === "true"
-  if (!isEnabled || !dataItems.length) return
-
-  // One log per item - the log searching matches against a single prescription ID field at the top level!
-  dataItems.map(i => {
-    logger.info(
-      "[AEA-4318] - PSU lambda received the following incoming prescription update",
-      {
-        prescriptionID: i.PrescriptionID,
-        lineItemID: i.LineItemID,
-        taskID: i.TaskID,
-        appName: i.ApplicationName,
-        currentStatus: i.Status,
-        currentTerminalStatus: i.TerminalStatus,
-        currentTimestamp: i.LastModified
-      } satisfies TestReportLogMessagePayload
-    )
-  }
-  )
-
 }
 
 export const handler = middy(lambdaHandler)
