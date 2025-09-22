@@ -1,9 +1,9 @@
 import {Logger} from "@aws-lambda-powertools/logger"
 
 import axios from "axios"
-import axiosRetry from "axios-retry"
 import {v4} from "uuid"
 
+import {setupAxios} from "./axios"
 import {
   NotifyDataItemMessage,
   CreateMessageBatchRequest,
@@ -31,38 +31,6 @@ export function chunkArray<T>(arr: Array<T>, size: number): Array<Array<T>> {
 
 function estimateSize(obj: unknown) {
   return Buffer.byteLength(JSON.stringify(obj), "utf8")
-}
-
-/**
- * Create and configure an axios instance for Notify
- * @param logger
- * @param notifyBaseUrl - The base URL for the Notify API. DOES NOT include /comms, or anything after that.
- * @param bearerToken - The CIS2 OAuth bearer token to use for authentication
- * @returns
- */
-function setupAxios(logger: Logger, notifyBaseUrl: string, bearerToken: string): ReturnType<typeof axios.create> {
-
-  const axiosInstance = axios.create({
-    baseURL: notifyBaseUrl + "/comms",
-    headers: {
-      Accept: "*/*",
-      "Content-Type": "application/vnd.api+json",
-      Authorization: `Bearer ${bearerToken}`
-    }
-  })
-
-  // Retry configuration for rate limiting
-  const onAxiosRetry = (retryCount: number, error: unknown) => {
-    logger.warn(`Call to notify failed - retrying. Retry count ${retryCount}`, {error})
-  }
-
-  // Axios-retry respects the `Retry-After` header OOTB
-  axiosRetry(axiosInstance, {
-    retries: 5,
-    onRetry: onAxiosRetry
-  })
-
-  return axiosInstance
 }
 
 /**
@@ -183,8 +151,8 @@ export async function makeRealNotifyRequest(
   }
 
   // Lazily get the bearer token and axios instance, so we only do it once even if we recurse
-  if (!bearerToken) bearerToken = await tokenExchange(logger, notifyBaseUrl)
-  if (!axiosInstance) axiosInstance = setupAxios(logger, notifyBaseUrl, bearerToken)
+  axiosInstance ??= setupAxios(logger, notifyBaseUrl)
+  bearerToken ??= await tokenExchange(logger, axiosInstance, notifyBaseUrl)
 
   // Recursive split if too large
   if (messages.length >= NOTIFY_REQUEST_MAX_ITEMS || estimateSize(body) > NOTIFY_REQUEST_MAX_BYTES) {
@@ -206,7 +174,15 @@ export async function makeRealNotifyRequest(
   logger.info("Making a request for notifications to NHS notify", {count: messages.length, routingPlanId})
 
   try {
-    const resp = await axiosInstance.post<CreateMessageBatchResponse>("/v1/message-batches", body)
+    const headers = {
+      "Content-Type": "application/vnd.api+json",
+      Authorization: `Bearer ${bearerToken}`
+    }
+    const resp = await axiosInstance.post<CreateMessageBatchResponse>(
+      "/comms/v1/message-batches",
+      body,
+      {headers}
+    )
 
     // From here is just logging stuff for reporting, and mapping the response back to the input data
 

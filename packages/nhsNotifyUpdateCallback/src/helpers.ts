@@ -9,7 +9,7 @@ import {createHmac, timingSafeEqual} from "crypto"
 
 import {LastNotificationStateType} from "@PrescriptionStatusUpdate_common/commonTypes"
 
-import {CallbackResponse, CallbackType} from "./types"
+import {CallbackResource, CallbackResponse, CallbackType} from "./types"
 
 const APP_ID_SECRET = process.env.APP_ID_SECRET
 const API_KEY_SECRET = process.env.API_KEY_SECRET
@@ -117,6 +117,85 @@ export async function checkSignature(logger: Logger, event: APIGatewayProxyEvent
   return undefined
 }
 
+export function extractStatusesAndDescriptions(logger: Logger, resource: CallbackResource) {
+  let messageId: string | undefined
+  let messageStatus: string | undefined
+  let messageStatusDescription: string | undefined
+  let channelStatus: string | undefined
+  let channelStatusDescription: string | undefined
+  let supplierStatus: string | undefined
+  let retryCount: number | undefined
+  let callbackTimestamp: string
+
+  messageId = resource.attributes.messageId
+  callbackTimestamp = resource.attributes.timestamp
+  if (resource.type === CallbackType.message) {
+    messageStatus = resource.attributes.messageStatus
+    messageStatusDescription = resource.attributes.messageStatusDescription
+    channelStatus = resource.attributes.channels?.[0]?.channelStatus // If missing, undefined
+    supplierStatus = undefined
+  } else if (resource.type === CallbackType.channel) {
+    messageStatus = undefined
+    retryCount = resource.attributes.retryCount
+    channelStatus = resource.attributes.channelStatus
+    channelStatusDescription = resource.attributes.channelStatusDescription
+    supplierStatus = resource.attributes.supplierStatus
+  } else {
+    logger.error("Unknown data structure - cannot store to notifications table.", {resource})
+    // Set to junk data, so that when we try and update the table we will fail. This is fine, and handled later.
+    messageId = undefined
+  }
+
+  return {
+    messageId,
+    messageStatus,
+    messageStatusDescription,
+    channelStatus,
+    channelStatusDescription,
+    supplierStatus,
+    retryCount,
+    callbackTimestamp
+  }
+}
+
+/**
+ * Helper for constructing the dynamo call.
+ * Returns the UpdateExpression, and the accompanying objects for names and values.
+ * If a field is undefined, it is not updated.
+ *
+ * @param updates: Records are keyed by the dynamo table field name, e.g. {Count: 5}. Undefined values are omitted.
+ */
+function buildUpdateExpression(updates: Record<string, unknown>) {
+  const names: Record<string, string> = {}
+  const values: Record<string, unknown> = {}
+  const sets: Array<string> = []
+
+  let i = 0
+  for (const [key, value] of Object.entries(updates)) {
+    if (value === undefined) continue
+
+    const name = `#n${i}`
+    const val = `:v${i}`
+
+    names[name] = key // avoid reserved word collisions
+    values[val] = value
+    sets.push(`${name} = ${val}`)
+
+    i++
+  }
+
+  if (sets.length === 0) {
+    // Dynamo doesn't allow empty set
+    throw new Error("No defined fields provided for update")
+  }
+
+  return {
+    UpdateExpression: `SET ${sets.join(", ")}`,
+    ExpressionAttributeNames: names,
+    ExpressionAttributeValues: values
+  }
+}
+
 /**
  * For each incoming NHS Notify message-status callback,
  * find the matching record in DynamoDB by NotifyMessageID,
@@ -129,33 +208,9 @@ export async function updateNotificationsTable(
 ): Promise<void> {
   // For each callback resource, return a promise
   const callbackPromises = bodyData.data.map(async (resource) => {
-    let messageId: string
-    let messageStatus: string | undefined
-    let channelStatus: string | undefined
-    let supplierStatus: string | undefined
-    let timestamp: string
-
-    if (resource.type === CallbackType.message) {
-      messageId = resource.attributes.messageId
-      messageStatus = resource.attributes.messageStatus
-      channelStatus = resource.attributes.channels?.[0]?.channelStatus // If missing, undefined
-      supplierStatus = undefined
-      timestamp = resource.attributes.timestamp
-    } else if (resource.type === CallbackType.channel) {
-      messageId = resource.attributes.messageId
-      messageStatus = undefined
-      channelStatus = resource.attributes.channelStatus
-      supplierStatus = resource.attributes.supplierStatus
-      timestamp = resource.attributes.timestamp
-    } else {
-      logger.error("Unknown data structure - cannot store to notifications table.", {resource})
-      // Set to junk data, so that when we try and update the table we will fail. This is fine, and handled later.
-      messageId = "unknown"
-      messageStatus = undefined
-      channelStatus = undefined
-      supplierStatus = undefined
-      timestamp = "unknown"
-    }
+    const statuses = extractStatusesAndDescriptions(logger, resource)
+    // prevent db hit
+    if (!statuses.messageId) return
 
     // Query matching records
     let queryResult
@@ -165,17 +220,20 @@ export async function updateNotificationsTable(
         IndexName: "NotifyMessageIDIndex",
         KeyConditionExpression: "NotifyMessageID = :nm",
         ExpressionAttributeValues: {
-          ":nm": messageId
+          ":nm": statuses.messageId
         }
       }))
     } catch (error) {
-      logger.error("Error querying by NotifyMessageID", {messageId, error})
+      logger.error("Error querying by NotifyMessageID", {messageId: statuses.messageId, error})
       throw error
     }
 
     const items = queryResult.Items as Array<LastNotificationStateType> ?? []
     if (items.length === 0) {
-      logger.warn("No matching record found for NotifyMessageID. Counting this as a successful update.", {messageId})
+      logger.warn(
+        "No matching record found for NotifyMessageID. Counting this as a successful update.",
+        {messageId: statuses.messageId}
+      )
       return
     }
     if (items.length !== bodyData.data.length) {
@@ -192,44 +250,33 @@ export async function updateNotificationsTable(
 
     const newExpiry = Math.floor(Date.now() / 1000) + TTL_DELTA
 
-    // For each match, update in parallel
     const updatePromises = items.map(async item => {
       const key = {
         NHSNumber: item.NHSNumber,
         RequestId: item.RequestId
       }
 
-      // Build UpdateExpression so undefined statuses are not written/updated.
-      const sets: Array<string> = [
-        "LastNotificationRequestTimestamp = :ts",
-        "ExpiryTime = :et"
-      ]
-      const eav: Record<string, unknown> = {
-        ":ts": timestamp,
-        ":et": newExpiry
+      const updates = {
+        // DynamoFieldName: Value | undefined
+        ExpiryTime: newExpiry,
+        LastNotificationRequestTimestamp: statuses.callbackTimestamp,
+        MessageStatus: statuses.messageStatus,
+        MessageStatusDescription: statuses.messageStatusDescription,
+        ChannelStatus: statuses.channelStatus,
+        ChannelStatusDescription: statuses.channelStatusDescription,
+        SupplierStatus: statuses.supplierStatus,
+        RetryCount: statuses.retryCount
       }
 
-      if (messageStatus !== undefined) {
-        sets.push("MessageStatus = :ms")
-        eav[":ms"] = messageStatus
-      }
-      if (channelStatus !== undefined) {
-        sets.push("ChannelStatus = :cs")
-        eav[":cs"] = channelStatus
-      }
-      if (supplierStatus !== undefined) {
-        sets.push("SupplierStatus = :ss")
-        eav[":ss"] = supplierStatus
-      }
-
-      const UpdateExpression = `SET ${sets.join(", ")}`
+      const {UpdateExpression, ExpressionAttributeNames, ExpressionAttributeValues} = buildUpdateExpression(updates)
 
       try {
         await docClient.send(new UpdateCommand({
           TableName: dynamoTable,
           Key: key,
           UpdateExpression,
-          ExpressionAttributeValues: eav
+          ExpressionAttributeValues,
+          ExpressionAttributeNames
         }))
 
         logger.info(
@@ -241,12 +288,12 @@ export async function updateNotificationsTable(
             // The overall delivery status is whichever of
             // messageStatus or channelStatus is defined (prefer messageStatus)
             // TODO: Update the splunk query to use the below statuses
-            deliveryStatus: messageStatus ?? channelStatus,
+            deliveryStatus: statuses.messageStatus ?? statuses.channelStatus,
             // Parse to a string, or else undefined stuff doesn't get logged (thanks aws)
-            messageStatus: `${messageStatus}`,
-            channelStatus: `${channelStatus}`,
-            supplierStatus: `${supplierStatus}`,
-            newTimestamp: timestamp,
+            messageStatus: `${statuses.messageStatus}`,
+            channelStatus: `${statuses.channelStatus}`,
+            supplierStatus: `${statuses.supplierStatus}`,
+            newTimestamp: statuses.callbackTimestamp,
             newExpiryTime: newExpiry
           }
         )
@@ -263,10 +310,8 @@ export async function updateNotificationsTable(
       }
     })
 
-    // wait for all updates for this callback
     await Promise.all(updatePromises)
   })
 
-  // wait for all callbacks to be processed
   await Promise.all(callbackPromises)
 }
