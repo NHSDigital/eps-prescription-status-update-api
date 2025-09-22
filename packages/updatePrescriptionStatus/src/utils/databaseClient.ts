@@ -56,7 +56,9 @@ function logPersistFailureForTestReport(logger: Logger, transactionCommand: Tran
         lineItemID: i.LineItemID,
         appName: i.ApplicationName,
         taskID: i.TaskID,
-        currentStatus: i.Status
+        currentStatus: i.Status,
+        currentTerminalStatus: i.TerminalStatus,
+        currentTimestamp: i.LastModified
       } satisfies TestReportLogMessagePayload
     )
   })
@@ -203,22 +205,12 @@ export async function checkPrescriptionRecordExistence(
     return !!result?.Item
   } catch (e) {
     logger.error("Error querying DynamoDB.", {error: e})
-    logger.info(
-      "[AEA-4318] - error checking prior prescription record in DynamoDB",
-      {
-        prescriptionID: dataItem.PrescriptionID,
-        taskID: dataItem.TaskID,
-        appName: dataItem.ApplicationName,
-        lineItemID: dataItem.LineItemID,
-        currentStatus: dataItem.Status
-      } satisfies TestReportLogMessagePayload
-    )
 
     return false
   }
 }
 
-function logPreviousTimeNotFountForTestReport(logger: Logger, currentItem: PSUDataItem) {
+function logPreviousItemNotFountForTestReport(logger: Logger, currentItem: PSUDataItem) {
   // Don't log this in prod
   const isEnabled = process.env["ENABLE_TEST_REPORT_LOGS"]?.toLowerCase().trim() === "true"
   if (!isEnabled) return
@@ -230,7 +222,9 @@ function logPreviousTimeNotFountForTestReport(logger: Logger, currentItem: PSUDa
       lineItemID: currentItem.LineItemID,
       taskID: currentItem.TaskID,
       appName: currentItem.ApplicationName,
-      currentStatus: currentItem.Status
+      currentStatus: currentItem.Status,
+      currentTerminalStatus: currentItem.TerminalStatus,
+      currentTimestamp: currentItem.LastModified
     } satisfies TestReportLogMessagePayload
   )
 }
@@ -278,7 +272,7 @@ export async function getPreviousItem(currentItem: PSUDataItem, logger: Logger):
     items.sort((a, b) => new Date(a.LastModified).valueOf() - new Date(b.LastModified).valueOf())
     const mostRecentItem = items.pop()
 
-    if (!mostRecentItem) logPreviousTimeNotFountForTestReport(logger, currentItem)
+    if (!mostRecentItem) logPreviousItemNotFountForTestReport(logger, currentItem)
 
     return {
       current: currentItem,

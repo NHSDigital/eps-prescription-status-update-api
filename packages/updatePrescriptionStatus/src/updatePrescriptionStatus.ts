@@ -391,13 +391,15 @@ function logIncomingPrescriptionIDsForTestReport(logger: Logger, dataItems: Arra
   // One log per item - the log searching matches against a single prescription ID field at the top level!
   dataItems.map(i => {
     logger.info(
-      "[AEA-4318] - Received the following prescription updates",
+      "[AEA-4318] - PSU lambda received the following incoming prescription update",
       {
         prescriptionID: i.PrescriptionID,
         lineItemID: i.LineItemID,
         taskID: i.TaskID,
         appName: i.ApplicationName,
-        currentStatus: i.Status
+        currentStatus: i.Status,
+        currentTerminalStatus: i.TerminalStatus,
+        currentTimestamp: i.LastModified
       } satisfies TestReportLogMessagePayload
     )
   }

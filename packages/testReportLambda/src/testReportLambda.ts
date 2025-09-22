@@ -9,7 +9,13 @@ import httpHeaderNormalizer from "@middy/http-header-normalizer"
 
 import errorHandler from "@nhs/fhir-middy-error-handler"
 
-import {TestReportRequestBody, TestReportResponseBody} from "./utils/types"
+import {
+  TestReportRequestBody,
+  TestReportResponseBody,
+  TestReportPrescriptionPackage,
+  TestReportSuccesses,
+  TestReportFailures
+} from "./utils/types"
 import {LogSearchOptions} from "./utils/logSearchTypes"
 import {searchLogGroupForPrescriptionIds} from "./utils/logSearching"
 import {getItemsForPrescriptionIDs} from "./utils/dynamo"
@@ -50,7 +56,7 @@ const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPro
     )
 
     // In non-int environments, complain about mismatches but continue anyway.
-    // In int though, return an error.
+    // In int (which for this, is ""prod""), return an error.
     if (process.env.ENVIRONMENT?.toLowerCase() === "int") {
       return response(
         400,
@@ -68,28 +74,13 @@ const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPro
     requestBody.prescriptionIds,
     logger
   )
-  logger.info("Found matching events", {updateRecords})
+  if (updateRecords.length) logger.info("Found matching prescription update records", {updateRecords})
 
   // Get the earliest and latest status update timestamps from LastModified fields
-  const firstStatusDate = updateRecords.reduce((earliest, record) => {
-    record.PSUDataItems.forEach((item) => {
-      const itemDate = new Date(item.LastModified)
-      if (itemDate < earliest) {
-        earliest = itemDate
-      }
-    })
-    return earliest
-  }, new Date()).toISOString()
-
-  const lastStatusDate = updateRecords.reduce((latest, record) => {
-    record.PSUDataItems.forEach((item) => {
-      const itemDate = new Date(item.LastModified)
-      if (itemDate > latest) {
-        latest = itemDate
-      }
-    })
-    return latest
-  }, new Date(0)).toISOString()
+  const allDates: Array<string> = updateRecords.flatMap(record => record.LastModified)
+  const sortedDates = allDates.sort() // sorting iso timestamps alphabetically sorts them in time
+  const firstStatusDate = sortedDates.length > 0 ? sortedDates[0] : ""
+  const lastStatusDate = sortedDates.length > 0 ? sortedDates[sortedDates.length - 1] : ""
 
   // Search the logs for failed update attempts, and their reasons
   const searchOptions: LogSearchOptions = {}
@@ -100,25 +91,48 @@ const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPro
     logger,
     searchOptions
   )
-  logger.info("Found matching events", {logEvents})
+  if (logEvents.length) logger.info("Found matching events", {logEvents})
+
+  function getReportForPrescriptionID(id: string): TestReportPrescriptionPackage {
+    const successes: Array<TestReportSuccesses> = updateRecords
+      .filter(record => record.PrescriptionID === id)
+      .map(record => {
+        return {
+          status: record.Status,
+          timestamp: record.LastModified
+        }
+      })
+
+    const failures: Array<TestReportFailures> = logEvents
+      .filter(batch => batch.prescriptionId === id)
+      .flatMap(batch => {
+        return batch.logEvents.map(event => {
+          return {
+            submittedStatus: event.currentStatus,
+            submittedTerminalStatus: event.currentTerminalStatus,
+            submittedTimestamp: event.currentTimestamp,
+            storedStatus: event.previousStatus,
+            storedTerminalStatus: event.previousTerminalStatus,
+            storedTimestamp: event.previousTimestamp,
+            message: event.message
+          }
+        })
+      })
+
+    return {
+      prescriptionID: id,
+      successes,
+      failures
+    }
+  }
+
+  const packages: Array<TestReportPrescriptionPackage> = requestBody.prescriptionIds.map(getReportForPrescriptionID)
 
   const responseBody: TestReportResponseBody = {
     systemName: requestBody.connectingSystemName,
     firstStatusDate,
     lastStatusDate,
-    statusUpdates: updateRecords.map((el) => {
-      return {
-        prescriptionId: el.prescriptionId,
-        statusDataArray: el.PSUDataItems.map((ell) => {
-          return {
-            status: ell.Status,
-            timestamp: ell.LastModified,
-            isSuccess: "success"
-          }
-        }),
-        logEvents
-      }
-    })
+    prescriptionIdResults: packages
   }
 
   return response(200, responseBody)

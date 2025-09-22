@@ -70,7 +70,7 @@ export async function getItemsForPrescriptionIDs(
   prescriptionIDs: Array<string>,
   logger: Logger,
   num_workers: number = 5
-): Promise<Array<PrescriptionRecords>> {
+): Promise<Array<PSUDataItem>> {
   if (!prescriptionIDs || prescriptionIDs.length === 0) {
     return []
   }
@@ -78,7 +78,7 @@ export async function getItemsForPrescriptionIDs(
   // De-duplicate IDs just in case
   const uniqueIDs = Array.from(new Set(prescriptionIDs))
 
-  const results: Array<PrescriptionRecords> = []
+  const results: Array<PSUDataItem> = []
 
   let idx = 0
   async function worker() {
@@ -86,13 +86,9 @@ export async function getItemsForPrescriptionIDs(
       const current = uniqueIDs[idx++]
       try {
         const items = await fetchRecordsForPrescriptionID(applicationName, current, logger)
-        results.push({prescriptionId: current, PSUDataItems: items})
+        results.push(...items)
       } catch (e) {
         logger.error("Error querying PrescriptionID.", {prescriptionID: current, error: e})
-        // Not sure if I should omit the ID entirely, or if I should return an empty array.
-        // I'll do the latter for now since it can be ignored, and probably makes downstream
-        // logic easier if each ID is guaranteed to have an entry.
-        results.push({prescriptionId: current, PSUDataItems: []})
       }
     }
   }

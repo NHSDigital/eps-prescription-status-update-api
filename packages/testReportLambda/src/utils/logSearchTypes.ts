@@ -1,5 +1,7 @@
 /** LOG SEARCHING TYPES */
 
+import {TestReportLogMessagePayload} from "@PrescriptionStatusUpdate_common/commonTypes"
+
 export interface LogSearchOptions {
     /** UNIX epoch, milliseconds */
     startTime?: number
@@ -15,7 +17,7 @@ export interface LogSearchOptions {
 
 export interface PrescriptionIdSearchResult {
     prescriptionId: string
-    matches: ParsedMessages
+    logEvents: ParsedMessages
 }
 
 /** Log message contents */
@@ -44,26 +46,10 @@ export interface LambdaRuntimeMeta {
     "x-request-id"?: string
 }
 
-export interface PrescriptionStatusUpdateFields {
-    prescriptionID: string
-    lineItemID: string
-    nhsNumber: string
-    pharmacyODSCode: string
-    applicationName: string
-    /** ISO-8601 business timestamp */
-    when: string
-    interval: number
-    // Status strings (this is what we really care about)
-    newStatus: string
-    previousStatus: string
-    newTerminalStatus: string
-    previousTerminalStatus: string
-}
-
 export type UpdatePrescriptionStatusLog =
     BaseLogEnvelope &
     LambdaRuntimeMeta &
-    PrescriptionStatusUpdateFields
+    TestReportLogMessagePayload
 
 /** Convenience alias for your function’s return type */
 export type ParsedMessages = Array<UpdatePrescriptionStatusLog>

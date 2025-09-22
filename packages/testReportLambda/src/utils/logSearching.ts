@@ -27,6 +27,9 @@ export async function searchLogGroupForPrescriptionId(
   logger: Logger,
   opts: LogSearchOptions = {}
 ): Promise<ParsedMessages> {
+  // Defend against empty prescription IDs
+  if (!prescriptionId.length) return []
+
   const client = getClient()
 
   // Defaults
@@ -48,7 +51,6 @@ export async function searchLogGroupForPrescriptionId(
   const filterPattern =
     `{ $.message = ${JSON.stringify("[AEA-4318] - *")} && ` +
     `$.appName = ${JSON.stringify(applicationName)} && ` +
-    // FIXME: This needs to match against all relevant log messages
     `$.prescriptionID = ${JSON.stringify(prescriptionId)} }`
 
   let events: Array<UpdatePrescriptionStatusLog> = []
@@ -112,11 +114,13 @@ export async function searchLogGroupForPrescriptionIds(
   for (const prescriptionId of prescriptionIds) {
     // Skip empty strings to avoid a very broad query
     if (!prescriptionId || !prescriptionId.trim()) {
-      results.push({prescriptionId: prescriptionId, matches: []})
+      results.push({prescriptionId: prescriptionId, logEvents: []})
       continue
     }
 
-    const matches = await searchLogGroupForPrescriptionId(
+    // We only care that the TestReportLogMessagePayload subset is satisfied
+    // (remember - this doesn't transform the data!)
+    const logEvents = await searchLogGroupForPrescriptionId(
       logGroupName,
       applicationName,
       prescriptionId,
@@ -124,7 +128,7 @@ export async function searchLogGroupForPrescriptionIds(
       opts
     )
 
-    results.push({prescriptionId, matches})
+    results.push({prescriptionId, logEvents})
   }
 
   return results
