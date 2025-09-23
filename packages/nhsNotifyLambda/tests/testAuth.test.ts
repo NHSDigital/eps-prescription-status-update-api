@@ -21,12 +21,6 @@ jest.unstable_mockModule("jose", async () => ({
   SignJWT: mockSignJWTConstructor
 }))
 
-const mockUuidv4 = jest.fn()
-jest.unstable_mockModule("uuid", async () => ({
-  __esModule: true,
-  v4: mockUuidv4
-}))
-
 let tokenExchange: (logger: Logger, axiosInstance: AxiosInstance, host: string) => Promise<string>
 beforeAll(async () => {
   ({tokenExchange} = await import("../src/utils/auth"))
@@ -68,9 +62,6 @@ describe("tokenExchange", () => {
       sign: jest.fn().mockImplementation(() => Promise.resolve("signed.jwt.token"))
     }
     mockSignJWTConstructor.mockImplementation(() => fakeJwtInstance)
-
-    // Mock uuid
-    mockUuidv4.mockReturnValue("uuid-1234")
 
     // Mock the HTTP call
     nock(`${host}`)
@@ -123,7 +114,6 @@ describe("tokenExchange", () => {
       },
       sign: jest.fn().mockImplementation(() => Promise.resolve("jwt-tkn"))
     }))
-    mockUuidv4.mockReturnValue("uid")
 
     nock(`${host}`)
       .post("/oauth2/token")
@@ -149,7 +139,6 @@ describe("tokenExchange", () => {
       },
       sign: jest.fn().mockImplementation(() => Promise.resolve("jwt-tkn"))
     }))
-    mockUuidv4.mockReturnValue("uid")
 
     nock(`${host}`)
       .post("/oauth2/token")

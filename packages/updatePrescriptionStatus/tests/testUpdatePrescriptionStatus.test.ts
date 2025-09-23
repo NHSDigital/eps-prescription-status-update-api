@@ -7,7 +7,6 @@ import {
 } from "@jest/globals"
 
 import {BundleEntry} from "fhir/r4"
-import {v4} from "uuid"
 
 import {badRequest, conflictDuplicate} from "../src/utils/responses"
 import {
@@ -210,7 +209,7 @@ describe("handleTransactionCancelledException", () => {
 describe("buildDataItems", () => {
   it("should uppercase LineItemId, PharmacyODSCode and PrescriptionID", () => {
     const task = validTask()
-    const lineItemID = v4().toUpperCase()
+    const lineItemID = crypto.randomUUID().toUpperCase()
     const pharmacyODSCode = "X26"
     const prescriptionID = "4F00A8-A83008-2EB4D"
 
