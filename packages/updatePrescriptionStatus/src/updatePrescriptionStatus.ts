@@ -210,8 +210,10 @@ const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPro
 
   // AEA-4317 - Forcing error for INT test prescription
   if (testPrescriptionForcedError) {
-    logger.info("Forcing error for INT test prescription")
+    const msg = "Forcing error for INT test prescription"
+    logger.info(msg)
     responseEntries = [serverError()]
+    dataItemsWithPrev.forEach(({current, previous}) => logForTestPack(logger, msg, current, previous))
     return response(500, responseEntries)
   }
 
