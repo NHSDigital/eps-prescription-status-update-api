@@ -68,7 +68,6 @@ jobs:
           VERSION_NUMBER: ${{ inputs.VERSION_NUMBER }}
           GITHUB-TOKEN: ${{ steps.generate-token.outputs.token }}
         run: |
-              env | sort
               if [[ "$TARGET_ENVIRONMENT" != "prod" && "$TARGET_ENVIRONMENT" != "ref" ]]; then
                 # this should be the tag of the tests you want to run
                 REGRESSION_TEST_REPO_TAG=v3.3.1
