@@ -20,7 +20,7 @@ const lambdaHandler = async (): Promise<APIGatewayProxyResult> => {
     statusCode: 201,
     body: JSON.stringify(successData),
     headers: {
-      "Content-Type": "application/fhir+json",
+      "Content-Type": "application/foo+json",
       "Cache-Control": "no-cache"
     }
   }
