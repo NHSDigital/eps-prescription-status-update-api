@@ -16,6 +16,7 @@ export function entryFields(entry: BundleEntry): Array<string> {
   return missingFields
 }
 
+// comment to force a new commit
 export function taskFields(task: Task): Array<string> {
   const requiredFields: Array<TaskValidation> = [
     (t: Task) => (t.lastModified ? undefined : "LastModified"),
