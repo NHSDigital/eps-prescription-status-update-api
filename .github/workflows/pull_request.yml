@@ -9,7 +9,7 @@ env:
 
 jobs:
   quality_checks:
-    uses: NHSDigital/eps-workflow-quality-checks/.github/workflows/quality-checks.yml@vfix_sonar_version
+    uses: NHSDigital/eps-workflow-quality-checks/.github/workflows/quality-checks.yml@fix_sonar_version
     secrets:
       SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
