@@ -114,7 +114,6 @@ compile: compile-node compile-specification
 lint-node: compile-node
 	npm run lint --workspace packages/updatePrescriptionStatus
 	npm run lint --workspace packages/gsul
-	npm run lint --workspace packages/nhsd-psu-sandbox
 	npm run lint --workspace packages/statusLambda
 	npm run lint --workspace packages/capabilityStatement
 	npm run lint --workspace packages/cpsuLambda
