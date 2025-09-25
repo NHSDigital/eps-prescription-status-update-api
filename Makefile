@@ -153,6 +153,7 @@ test: compile
 	npm run test --workspace packages/nhsNotifyUpdateCallback
 	npm run test --workspace packages/common/middyErrorHandler
 	npm run test --workspace packages/psuRestoreValidationLambda
+	npm run test --workspace packages/nhsd-psu-sandbox
 	./scripts/rewrite_lcov_files.sh
 
 clean:
