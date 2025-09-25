@@ -393,7 +393,7 @@ jobs:
       ENABLED_SYSTEMS: " "
       BLOCKED_SITE_ODS_CODES: " "
       NOTIFY_ROUTING_PLAN_ID: "e57fe5cc-0567-4854-abe2-b7dd9014a50c" # INT and PROD share a value
-      NOTIFY_API_BASE_URL: "https://prod.api.service.nhs.uk"
+      NOTIFY_API_BASE_URL: "https://api.service.nhs.uk"
       MTLS_KEY: psu-mtls-1
       IS_PULL_REQUEST: false
     secrets:
