@@ -153,6 +153,7 @@ test: compile
 	npm run test --workspace packages/nhsNotifyUpdateCallback
 	npm run test --workspace packages/common/middyErrorHandler
 	npm run test --workspace packages/psuRestoreValidationLambda
+	./scripts/rewrite_lcov_files.sh
 
 clean:
 	rm -rf packages/updatePrescriptionStatus/coverage
