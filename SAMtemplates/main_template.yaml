@@ -95,6 +95,7 @@ Parameters:
     AllowedValues:
       - True
       - False
+
   EnableNotificationsInternal:
     Type: String
     Default: false
@@ -108,6 +109,26 @@ Parameters:
     AllowedValues:
       - true
       - false
+
+  EnabledSiteODSCodesValue:
+    Type: String
+    Default: " "
+
+  EnabledSystemsValue:
+    Type: String
+    Default: " "
+
+  BlockedSiteODSCodesValue:
+    Type: String
+    Default: " "
+
+  NotifyRoutingPlanIDValue:
+    Type: String
+    Default: " "
+
+  NotifyAPIBaseURLValue:
+    Type: String
+    Default: " "
 
   RequireApplicationName:
     Type: String
@@ -130,9 +151,13 @@ Resources:
       Location: parameters/main.yaml
       Parameters:
         StackName: !Ref AWS::StackName
-        Environment: !Ref Environment
         EnableNotificationsInternalValue: !Ref EnableNotificationsInternal
         EnableNotificationsExternalValue: !Ref EnableNotificationsExternal
+        EnabledSiteODSCodesValue: !Ref EnabledSiteODSCodesValue
+        EnabledSystemsValue: !Ref EnabledSystemsValue
+        BlockedSiteODSCodesValue: !Ref BlockedSiteODSCodesValue
+        NotifyRoutingPlanIDValue: !Ref NotifyRoutingPlanIDValue
+        NotifyAPIBaseURLValue: !Ref NotifyAPIBaseURLValue
 
   Tables:
     Type: AWS::Serverless::Application
