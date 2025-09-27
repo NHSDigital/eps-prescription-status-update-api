@@ -45,6 +45,10 @@
       "path": "../packages/checkPrescriptionStatusUpdates"
     },
     {
+      "name": "packages/testReportLambda",
+      "path": "../packages/testReportLambda"
+    },
+    {
       "name": "packages/common/commonTypes",
       "path": "../packages/common/commonTypes"
     },
@@ -139,6 +143,7 @@
       "sourcetype",
       "timonwong",
       "Truststore",
+      "unmarshall",
       "Upserted",
       "URID",
       "URPID",
@@ -148,8 +153,14 @@
       "versionable",
       "whens"
     ],
-    "cSpell.dictionaries": ["en-GB"],
-    "cSpell.ignorePaths": ["package-lock.json", "node_modules", ".vscode"],
+    "cSpell.dictionaries": [
+      "en-GB"
+    ],
+    "cSpell.ignorePaths": [
+      "package-lock.json",
+      "node_modules",
+      ".vscode"
+    ],
     "jest.jestCommandLine": "NODE_OPTIONS=--experimental-vm-modules node_modules/.bin/jest --no-cache",
     "jest.nodeEnv": {
       "POWERTOOLS_DEV": true

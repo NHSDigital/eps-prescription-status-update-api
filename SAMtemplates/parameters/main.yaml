@@ -104,7 +104,7 @@ Resources:
       Description: "Toggle on or off if we make real requests to the NHS notify service"
       Type: String
       Value: !Ref EnableNotificationsExternalValue
-      
+
   EnableNotificationsInternal:
     Type: AWS::SSM::Parameter
     Properties:
