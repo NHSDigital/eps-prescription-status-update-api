@@ -111,6 +111,18 @@ const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPro
 
   const dataItems = buildDataItems(requestEntries, xRequestID, applicationName)
 
+  // If the dataItems contain any invalid ODS codes, then return an error
+  const invalidODSCodes = dataItems.filter(item => {
+    const odsCode = item.PharmacyODSCode
+    if (!odsCode || !/^[A-Z0-9]+$/.test(odsCode)) return true
+    return false
+  })
+  if (invalidODSCodes.length) {
+    logger.error("Received invalid ODS codes", {invalidODSCodes})
+    responseEntries = [badRequest(`Received invalid ODS codes: ${invalidODSCodes}`)]
+    return response(400, responseEntries)
+  }
+
   // AEA-4317 (AEA-4365) - Intercept INT test prescriptions
   let testPrescription1Forced201 = false
   let testPrescriptionForcedError = false
@@ -318,7 +330,7 @@ export function buildDataItems(
       LastModified: task.lastModified!,
       LineItemID: task.focus!.identifier!.value!.toUpperCase(),
       PatientNHSNumber: task.for!.identifier!.value!,
-      PharmacyODSCode: task.owner!.identifier!.value!.toUpperCase(),
+      PharmacyODSCode: task.owner!.identifier!.value!.toUpperCase().trim(),
       PrescriptionID: task.basedOn![0].identifier!.value!.toUpperCase(),
       ...(repeatNo !== undefined && {RepeatNo: repeatNo}),
       RequestID: xRequestID,
