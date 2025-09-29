@@ -119,7 +119,7 @@ const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPro
   })
   if (invalidODSCodes.length) {
     logger.error("Received invalid ODS codes", {invalidODSCodes})
-    responseEntries = [badRequest(`Received invalid ODS codes: ${invalidODSCodes}`)]
+    responseEntries = [badRequest(`Received invalid ODS codes: ${JSON.stringify(invalidODSCodes)}`)]
     return response(400, responseEntries)
   }
 
