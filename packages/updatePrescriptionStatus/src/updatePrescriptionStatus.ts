@@ -112,11 +112,13 @@ const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPro
   const dataItems = buildDataItems(requestEntries, xRequestID, applicationName)
 
   // If the dataItems contain any invalid ODS codes, then return an error
-  const invalidODSCodes = dataItems.filter(item => {
-    const odsCode = item.PharmacyODSCode
-    if (!odsCode || !/^[A-Z0-9]+$/.test(odsCode)) return true
-    return false
-  })
+  const invalidODSCodes = dataItems
+    .filter(item => {
+      const odsCode = item.PharmacyODSCode
+      if (!odsCode || !/^[A-Z0-9]+$/.test(odsCode)) return true
+      return false
+    })
+    .map(it => it.PharmacyODSCode)
   if (invalidODSCodes.length) {
     logger.error("Received invalid ODS codes", {invalidODSCodes})
     responseEntries = [badRequest(`Received invalid ODS codes: ${JSON.stringify(invalidODSCodes)}`)]
