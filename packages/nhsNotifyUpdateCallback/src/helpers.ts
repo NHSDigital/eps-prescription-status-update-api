@@ -133,7 +133,6 @@ export function extractStatusesAndDescriptions(logger: Logger, resource: Callbac
     messageStatus = resource.attributes.messageStatus
     messageStatusDescription = resource.attributes.messageStatusDescription
     channelStatus = resource.attributes.channels?.[0]?.channelStatus // If missing, undefined
-    supplierStatus = undefined
   } else if (resource.type === CallbackType.channel) {
     messageStatus = undefined
     retryCount = resource.attributes.retryCount
@@ -247,10 +246,24 @@ export async function updateNotificationsTable(
       // But we don't have enough information to do that so we ignore that edge case and
       // count it as a success.
     }
+    // TODO: need to refactor and fix tests
+    // const upToDateItems = items.filter(item => {
+    //   const isOld = item.LastNotificationRequestTimestamp &&
+    //     item.LastNotificationRequestTimestamp > resource.attributes.timestamp
+    //   if (isOld) {
+    //     logger.warn(
+    //       `Ignoring out-of-date callback ${resource.attributes.messageId} for msg ref: ` +
+    //       `${resource.attributes.messageReference} because ${item.LastNotificationRequestTimestamp} > ` +
+    //       `${resource.attributes.timestamp}`
+    //     )
+    //   }
+    //   return isOld
+    // })
+    const upToDateItems = items
 
     const newExpiry = Math.floor(Date.now() / 1000) + TTL_DELTA
 
-    const updatePromises = items.map(async item => {
+    const updatePromises = upToDateItems.map(async item => {
       const key = {
         NHSNumber: item.NHSNumber,
         RequestId: item.RequestId
