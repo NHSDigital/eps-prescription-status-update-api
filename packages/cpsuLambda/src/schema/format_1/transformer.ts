@@ -12,6 +12,7 @@ import {
   Nothing,
   Ok
 } from "pratica"
+import {v4 as uuidv4} from "uuid"
 import {Transformer} from "../../handler"
 import "../../utils"
 import {Md5} from "ts-md5"
@@ -156,7 +157,7 @@ function generate_uuid(prescriptionItem: itemType, prescriptionDetails: requestT
     .map((hex) => parseInt(hex, 16))
 
   // @ts-expect-error missing properties are not needed
-  return crypto.randomUUID({random: seed})
+  return uuidv4({random: seed})
 }
 
 export function getBusinessStatus(deliveryType: deliveryType, itemStatus: itemStatusType): string {
