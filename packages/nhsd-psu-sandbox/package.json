@@ -1,7 +1,7 @@
 {
-  "name": "sandbox",
+  "name": "nhsd-psu-sandbox",
   "version": "1.0.0",
-  "description": "Sandbox",
+  "description": "NHS Digital Prescription Status Update sandbox",
   "main": "sandbox.js",
   "author": "NHS Digital",
   "license": "MIT",
