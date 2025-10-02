@@ -165,6 +165,41 @@ describe("helpers.ts", () => {
       )
     })
 
+    it("skips update when callback is out of date", async () => {
+      const msgTimestamp = "2025-01-01T00:00:00.000Z"
+      const lastTimestamp = "2025-02-01T00:00:00.000Z" // newer than msg payload
+      const msgPayload: MessageStatusResponse = generateMockMessageStatusResponse([
+        {
+          attributes: {
+            timestamp: msgTimestamp
+          }
+        }])
+      const mockItem = {
+        NHSNumber: "NHS123",
+        RequestId: "psu-request-id",
+        NotifyMessageID: "msg-123",
+        LastNotificationRequestTimestamp: lastTimestamp
+      }
+      sendSpy.mockImplementation((cmd) => {
+        if (cmd instanceof QueryCommand) {
+          return Promise.resolve({Items: [mockItem]})
+        }
+      })
+
+      await updateNotificationsTable(logger, msgPayload)
+
+      expect(logger.warn).toHaveBeenCalledWith(
+        "Ignoring out-of-date callback",
+        expect.objectContaining({messageId: msgPayload.data[0].attributes.messageId})
+      )
+      expect(logger.info).toHaveBeenCalledWith(
+        "Number of up-to-date items remaining",
+        expect.objectContaining({count: 0})
+      )
+      // Only QueryCommand should be called
+      expect(sendSpy).toHaveBeenCalledTimes(1)
+    })
+
     it("updates records when matching items found (Message update callback)", async () => {
       const overrideTimestamp = "2025-01-01T00:00:00.000Z"
       const mockResponse = generateMockMessageStatusResponse([
@@ -180,7 +215,8 @@ describe("helpers.ts", () => {
       const mockItem = {
         NHSNumber: "NHS123",
         RequestId: "psu-request-id",
-        NotifyMessageID: "msg-123"
+        NotifyMessageID: "msg-123",
+        LastNotificationRequestTimestamp: "2024-01-01T00:00:00.000Z" // old timestamp
       }
 
       // First call: QueryCommand
