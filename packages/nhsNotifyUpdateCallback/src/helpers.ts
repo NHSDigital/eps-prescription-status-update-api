@@ -133,7 +133,6 @@ export function extractStatusesAndDescriptions(logger: Logger, resource: Callbac
     messageStatus = resource.attributes.messageStatus
     messageStatusDescription = resource.attributes.messageStatusDescription
     channelStatus = resource.attributes.channels?.[0]?.channelStatus // If missing, undefined
-    supplierStatus = undefined
   } else if (resource.type === CallbackType.channel) {
     messageStatus = undefined
     retryCount = resource.attributes.retryCount
@@ -247,10 +246,10 @@ export async function updateNotificationsTable(
       // But we don't have enough information to do that so we ignore that edge case and
       // count it as a success.
     }
+    const upToDateItems = filterOutOfDateItems(logger, resource, items)
 
     const newExpiry = Math.floor(Date.now() / 1000) + TTL_DELTA
-
-    const updatePromises = items.map(async item => {
+    const updatePromises = upToDateItems.map(async item => {
       const key = {
         NHSNumber: item.NHSNumber,
         RequestId: item.RequestId
@@ -314,4 +313,32 @@ export async function updateNotificationsTable(
   })
 
   await Promise.all(callbackPromises)
+}
+
+function filterOutOfDateItems(
+  logger: Logger,
+  resource: CallbackResource,
+  items: Array<LastNotificationStateType>
+) {
+  const upToDateItems = items.filter(item => {
+    const isOld = item.LastNotificationRequestTimestamp &&
+      item.LastNotificationRequestTimestamp > resource.attributes.timestamp
+    if (isOld) {
+      logger.warn(
+        "Ignoring out-of-date callback",
+        {
+          messageId: resource.attributes.messageId,
+          messageReference: resource.attributes.messageReference,
+          lastTimestamp: item.LastNotificationRequestTimestamp,
+          currentTimestamp: resource.attributes.timestamp
+        }
+      )
+    }
+    return !isOld
+  })
+  logger.info(
+    "Number of up-to-date items remaining",
+    {count: upToDateItems.length}
+  )
+  return upToDateItems
 }
