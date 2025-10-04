@@ -1,11 +1,27 @@
 #!/usr/bin/env bash
 
+AWS_MAX_ATTEMPTS=20
+export AWS_MAX_ATTEMPTS
+
 echo "$COMMIT_ID"
 
-artifact_bucket=$(aws cloudformation list-exports --output json | jq -r '.Exports[] | select(.Name == "account-resources:ArtifactsBucket") | .Value' | grep -o '[^:]*$')
+CF_LONDON_EXPORTS=$(aws cloudformation list-exports --region eu-west-2 --output json)
+artifact_bucket_arn=$(echo "$CF_LONDON_EXPORTS" | \
+    jq \
+    --arg EXPORT_NAME "account-resources:ArtifactsBucket" \
+    -r '.Exports[] | select(.Name == $EXPORT_NAME) | .Value')
+artifact_bucket=$(echo "$artifact_bucket_arn" | cut -d: -f6 | cut -d/ -f1)
 export artifact_bucket
 
-cloud_formation_execution_role=$(aws cloudformation list-exports --output json | jq -r '.Exports[] | select(.Name == "ci-resources:CloudFormationExecutionRole") | .Value' )
+cloud_formation_execution_role=$(echo "$CF_LONDON_EXPORTS" | \
+    jq \
+    --arg EXPORT_NAME "ci-resources:CloudFormationExecutionRole" \
+    -r '.Exports[] | select(.Name == $EXPORT_NAME) | .Value')
+
+if [ -z "${cloud_formation_execution_role}" ]; then
+    echo "could not retrieve ROLE from aws cloudformation list-exports"
+    exit 1
+fi
 export cloud_formation_execution_role
 
 TRUSTSTORE_BUCKET_ARN=$(aws cloudformation describe-stacks --stack-name account-resources --query "Stacks[0].Outputs[?OutputKey=='TrustStoreBucket'].OutputValue" --output text)
