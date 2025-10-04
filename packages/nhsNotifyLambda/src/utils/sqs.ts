@@ -7,8 +7,6 @@ import {
 } from "@aws-sdk/client-sqs"
 import {Logger} from "@aws-lambda-powertools/logger"
 
-import {v4} from "uuid"
-
 import {NotifyDataItem} from "@PrescriptionStatusUpdate_common/commonTypes"
 
 import {NotifyDataItemMessage} from "./types"
@@ -122,7 +120,7 @@ export async function drainQueue(
             ...m,
             PSUDataItem: parsedBody,
             messageBatchReference: undefined, // Only populated when notify request is made
-            messageReference: v4()
+            messageReference: crypto.randomUUID()
           }
         ]
       } catch (error) {
