@@ -84,6 +84,21 @@ on:
         required: false
         type: boolean
         default: false
+      ENABLED_SITE_ODS_CODES:
+        required: true
+        type: string
+      ENABLED_SYSTEMS:
+        required: true
+        type: string
+      BLOCKED_SITE_ODS_CODES:
+        required: true
+        type: string
+      NOTIFY_ROUTING_PLAN_ID:
+        required: true
+        type: string
+      NOTIFY_API_BASE_URL:
+        required: true
+        type: string
       IS_PULL_REQUEST:
         type: boolean
         default: true
@@ -179,6 +194,11 @@ jobs:
           ENABLE_NOTIFICATIONS_INTERNAL: ${{ inputs.ENABLE_NOTIFICATIONS_INTERNAL }}
           ENABLE_NOTIFICATIONS_EXTERNAL: ${{ inputs.ENABLE_NOTIFICATIONS_EXTERNAL }}
           REQUIRE_APPLICATION_NAME: ${{ inputs.REQUIRE_APPLICATION_NAME }}
+          ENABLED_SITE_ODS_CODES: ${{ inputs.ENABLED_SITE_ODS_CODES }}
+          ENABLED_SYSTEMS: ${{ inputs.ENABLED_SYSTEMS }}
+          BLOCKED_SITE_ODS_CODES: ${{ inputs.BLOCKED_SITE_ODS_CODES }}
+          NOTIFY_ROUTING_PLAN_ID: ${{ inputs.NOTIFY_ROUTING_PLAN_ID }}
+          NOTIFY_API_BASE_URL: ${{ inputs.NOTIFY_API_BASE_URL }}
         run: ./release_code.sh
 
       - name: get mtls secrets
