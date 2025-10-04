@@ -217,6 +217,44 @@ describe("Integration tests for updatePrescriptionStatus handler", () => {
     )
   })
 
+  it("When the ODS code contains a special character, the handler returns a 400 error", async () => {
+    const body = generateBody()
+    const entryResource: any = body.entry?.[0]?.resource
+    if (entryResource?.owner?.identifier) {
+      entryResource.owner.identifier.value = "AB1$%2"
+    }
+
+    const event: APIGatewayProxyEvent = generateMockEvent(body)
+
+    const response: APIGatewayProxyResult = await handler(event, {})
+
+    expect(response.statusCode).toBe(400)
+    expect(JSON.parse(response.body)).toEqual(
+      bundleWrap([
+        badRequest('Received invalid ODS codes: ["AB1$%2"]')
+      ])
+    )
+  })
+
+  it("When the ODS code is a space character, the handler returns a 400 error", async () => {
+    const body = generateBody()
+    const entryResource: any = body.entry?.[0]?.resource
+    if (entryResource?.owner?.identifier) {
+      entryResource.owner.identifier.value = " "
+    }
+
+    const event: APIGatewayProxyEvent = generateMockEvent(body)
+
+    const response: APIGatewayProxyResult = await handler(event, {})
+
+    expect(response.statusCode).toBe(400)
+    expect(JSON.parse(response.body)).toEqual(
+      bundleWrap([
+        badRequest('Received invalid ODS codes: [""]')
+      ])
+    )
+  })
+
   it("when dynamo call fails, expect 500 status code and internal server error message", async () => {
     const event = generateMockEvent(requestDispatched)
     dynamoDBMockSend.mockRejectedValue(new Error() as never)

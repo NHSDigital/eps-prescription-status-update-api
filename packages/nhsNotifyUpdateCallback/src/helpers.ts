@@ -61,8 +61,8 @@ export async function fetchSecrets(logger: Logger): Promise<void> {
     throw new Error("Failed to get secret values from the AWS secret manager")
   }
 
-  APP_ID = appIdValue.toString()
-  API_KEY = apiKeyValue.toString()
+  APP_ID = appIdValue.toString().trim()
+  API_KEY = apiKeyValue.toString().trim()
 
   // Check again to catch empty strings
   if (!appIdValue || !apiKeyValue) {
