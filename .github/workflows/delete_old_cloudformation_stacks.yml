@@ -5,6 +5,8 @@ on:
   workflow_dispatch:
   schedule:
     - cron: "0 1,13 * * *"
+  push:
+    branches: [main]
 
 jobs:
   delete-old-cloudformation-stacks:
@@ -46,7 +48,7 @@ jobs:
         with:
           ref: ${{ env.BRANCH_NAME }}
           fetch-depth: 0
-  
+
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v5
         with:

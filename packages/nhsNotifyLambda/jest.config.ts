@@ -1,17 +1,10 @@
-import defaultConfig from "../../jest.default.config"
 import type {JestConfigWithTsJest} from "ts-jest"
+import defaultConfig from "../../jest.default.config"
 
 const jestConfig: JestConfigWithTsJest = {
   ...defaultConfig,
   rootDir: "./",
-  setupFiles: ["<rootDir>/.jest/setEnvVars.js"],
-  coveragePathIgnorePatterns: ["<rootDir>/tests/"],
-  coverageReporters: [
-    "clover",
-    "json",
-    "text",
-    ["lcov", {projectRoot: "../../"}]
-  ]
+  setupFiles: ["<rootDir>/.jest/setEnvVars.js"]
 }
 
 export default jestConfig
