@@ -303,7 +303,7 @@ jobs:
       STATE_MACHINE_LOG_LEVEL: ALL
       ENABLE_BACKUP: True
       ENABLE_NOTIFICATIONS_INTERNAL: true
-      ENABLE_NOTIFICATIONS_EXTERNAL: false
+      ENABLE_NOTIFICATIONS_EXTERNAL: true
       ENABLED_SITE_ODS_CODES: "FA565,A83008"
       ENABLED_SYSTEMS: "Internal Test System, Apotec Ltd - Apotec CRM - Production, CrxPatientApp, nhsPrescriptionApp, Titan PSU Prod"
       BLOCKED_SITE_ODS_CODES: "B3J1Z"
@@ -401,8 +401,8 @@ jobs:
       RUN_REGRESSION_TEST: false
       STATE_MACHINE_LOG_LEVEL: ERROR
       ENABLE_BACKUP: True
-      ENABLE_NOTIFICATIONS_INTERNAL: false
-      ENABLE_NOTIFICATIONS_EXTERNAL: false
+      ENABLE_NOTIFICATIONS_INTERNAL: true
+      ENABLE_NOTIFICATIONS_EXTERNAL: true
       ENABLED_SITE_ODS_CODES: ${{ needs.read_ods_codes.outputs.ods_csv }}
       ENABLED_SYSTEMS: " "
       BLOCKED_SITE_ODS_CODES: " "
