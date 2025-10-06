@@ -364,7 +364,7 @@ jobs:
       - name: Read ODS codes and produce CSV
         id: read
         run: |
-          INPUT_FILE="./ods-codes.txt"
+          INPUT_FILE="${GITHUB_WORKSPACE}/.github/workflow/ods-codes.txt"
           CSV=$(sed ':a;N;$!ba;s/\r\?\n/,/g;s/,$//' < "$INPUT_FILE")
           echo "ods_csv=$CSV" >> "$GITHUB_OUTPUT"
 
