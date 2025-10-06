@@ -114,7 +114,7 @@ compile: compile-node compile-specification
 lint-node: compile-node
 	npm run lint --workspace packages/updatePrescriptionStatus
 	npm run lint --workspace packages/gsul
-	npm run lint --workspace packages/sandbox
+	npm run lint --workspace packages/nhsd-psu-sandbox
 	npm run lint --workspace packages/statusLambda
 	npm run lint --workspace packages/capabilityStatement
 	npm run lint --workspace packages/cpsuLambda
@@ -146,7 +146,7 @@ lint: lint-node lint-samtemplates lint-python lint-githubactions lint-githubacti
 test: compile
 	npm run test --workspace packages/updatePrescriptionStatus
 	npm run test --workspace packages/gsul
-	npm run test --workspace packages/sandbox
+	npm run test --workspace packages/nhsd-psu-sandbox
 	npm run test --workspace packages/statusLambda
 	npm run test --workspace packages/capabilityStatement
 	npm run test --workspace packages/cpsuLambda
@@ -159,8 +159,8 @@ test: compile
 clean:
 	rm -rf packages/updatePrescriptionStatus/coverage
 	rm -rf packages/updatePrescriptionStatus/lib
-	rm -rf packages/sandbox/coverage
-	rm -rf packages/sandbox/lib
+	rm -rf packages/nhsd-psu-sandbox/coverage
+	rm -rf packages/nhsd-psu-sandbox/lib
 	rm -rf packages/specification/coverage
 	rm -rf packages/specification/lib
 	rm -rf packages/statusLambda/coverage
