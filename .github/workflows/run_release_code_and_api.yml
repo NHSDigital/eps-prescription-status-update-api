@@ -84,9 +84,6 @@ on:
         required: false
         type: boolean
         default: false
-      ENABLED_SITE_ODS_CODES:
-        required: true
-        type: string
       ENABLED_SYSTEMS:
         required: true
         type: string
@@ -172,6 +169,13 @@ jobs:
           echo "CPSU Specification location: $CPSU_SPEC_PATH"
           echo "CPSU_SPEC_PATH=${CPSU_SPEC_PATH}" >> "$GITHUB_ENV"
 
+      - name: read ODS codes
+        id: read
+        run: |
+          INPUT_FILE="${GITHUB_WORKSPACE}/.github/cfg/ods_codes_${{ inputs.AWS_ENVIRONMENT }}.txt"
+          CSV=$(sed ':a;N;$!ba;s/\r\?\n/,/g;s/,$//' < "$INPUT_FILE")
+          echo "ods_csv=${CSV}" >> "$GITHUB_OUTPUT"
+
       - name: release code
         shell: bash
         working-directory: .github/scripts
@@ -194,7 +198,7 @@ jobs:
           ENABLE_NOTIFICATIONS_INTERNAL: ${{ inputs.ENABLE_NOTIFICATIONS_INTERNAL }}
           ENABLE_NOTIFICATIONS_EXTERNAL: ${{ inputs.ENABLE_NOTIFICATIONS_EXTERNAL }}
           REQUIRE_APPLICATION_NAME: ${{ inputs.REQUIRE_APPLICATION_NAME }}
-          ENABLED_SITE_ODS_CODES: ${{ inputs.ENABLED_SITE_ODS_CODES }}
+          ENABLED_SITE_ODS_CODES: ${{ steps.read.outputs.ods_csv }}
           ENABLED_SYSTEMS: ${{ inputs.ENABLED_SYSTEMS }}
           BLOCKED_SITE_ODS_CODES: ${{ inputs.BLOCKED_SITE_ODS_CODES }}
           NOTIFY_ROUTING_PLAN_ID: ${{ inputs.NOTIFY_ROUTING_PLAN_ID }}
