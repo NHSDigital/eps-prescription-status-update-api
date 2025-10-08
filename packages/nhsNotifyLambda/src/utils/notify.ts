@@ -1,7 +1,6 @@
 import {Logger} from "@aws-lambda-powertools/logger"
 
 import axios from "axios"
-import {v4} from "uuid"
 
 import {setupAxios} from "./axios"
 import {
@@ -95,7 +94,7 @@ async function makeFakeNotifyRequest(
   await new Promise(f => setTimeout(f, DUMMY_NOTIFY_DELAY_MS))
 
   const messageStatus = "silent running"
-  const messageBatchReference = v4()
+  const messageBatchReference = crypto.randomUUID()
 
   logger.info("Requested notifications OK!", {
     messageBatchReference,
@@ -113,7 +112,7 @@ async function makeFakeNotifyRequest(
       ...item,
       messageBatchReference,
       messageStatus,
-      notifyMessageId: v4() // Create a dummy UUID
+      notifyMessageId: crypto.randomUUID() // Create a dummy UUID
     }
   })
 }
@@ -137,7 +136,7 @@ export async function makeRealNotifyRequest(
 ): Promise<Array<NotifyDataItemMessage>> {
 
   // Shared between all messages in this batch
-  const messageBatchReference = v4()
+  const messageBatchReference = crypto.randomUUID()
 
   const body: CreateMessageBatchRequest = {
     data: {
