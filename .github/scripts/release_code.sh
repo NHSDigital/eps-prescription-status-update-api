@@ -65,9 +65,10 @@ sam deploy \
             StateMachineLogLevel="$STATE_MACHINE_LOG_LEVEL" \
             EnableNotificationsInternal="$ENABLE_NOTIFICATIONS_INTERNAL" \
             EnableNotificationsExternal="$ENABLE_NOTIFICATIONS_EXTERNAL" \
-            EnabledSiteODSCodesValue="$ENABLED_SITE_ODS_CODES" \
-            EnabledSystemsValue="$ENABLED_SYSTEMS" \
-            BlockedSiteODSCodesValue="$BLOCKED_SITE_ODS_CODES" \
+            EnabledSiteODSCodesValue="${ENABLED_SITE_ODS_CODES:-' '}" \
+            EnabledSystemsValue="${ENABLED_SYSTEMS:-' '}" \
+            BlockedSiteODSCodesValue="${BLOCKED_SITE_ODS_CODES:-' '}" \
             NotifyRoutingPlanIDValue="$NOTIFY_ROUTING_PLAN_ID" \
             NotifyAPIBaseURLValue="$NOTIFY_API_BASE_URL" \
-            RequireApplicationName="$REQUIRE_APPLICATION_NAME"
+            RequireApplicationName="$REQUIRE_APPLICATION_NAME" \
+            EnableBackup="$ENABLE_BACKUP"

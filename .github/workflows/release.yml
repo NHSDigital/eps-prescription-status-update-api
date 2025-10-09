@@ -138,9 +138,8 @@ jobs:
       ENABLE_BACKUP: True
       ENABLE_NOTIFICATIONS_INTERNAL: false
       ENABLE_NOTIFICATIONS_EXTERNAL: false
-      ENABLED_SITE_ODS_CODES: "FA565,A83008"
       ENABLED_SYSTEMS: "Internal Test System"
-      BLOCKED_SITE_ODS_CODES: "B3J1Z"
+      BLOCKED_SITE_ODS_CODES: "XXXXX" # Workaround empty string handling
       NOTIFY_ROUTING_PLAN_ID: "e57fe5cc-0567-4854-abe2-b7dd9014a50c"
       NOTIFY_API_BASE_URL: "https://int.api.service.nhs.uk"
       MTLS_KEY: psu-mtls-1
@@ -177,7 +176,6 @@ jobs:
       ENABLE_BACKUP: False
       ENABLE_NOTIFICATIONS_INTERNAL: false
       ENABLE_NOTIFICATIONS_EXTERNAL: false
-      ENABLED_SITE_ODS_CODES: "FA565,A83008"
       ENABLED_SYSTEMS: "Internal Test System"
       BLOCKED_SITE_ODS_CODES: "B3J1Z"
       NOTIFY_ROUTING_PLAN_ID: "e57fe5cc-0567-4854-abe2-b7dd9014a50c"
@@ -221,7 +219,6 @@ jobs:
       ENABLE_BACKUP: False
       ENABLE_NOTIFICATIONS_INTERNAL: false
       ENABLE_NOTIFICATIONS_EXTERNAL: false
-      ENABLED_SITE_ODS_CODES: "FA565,A83008"
       ENABLED_SYSTEMS: "Internal Test System, Apotec Ltd - Apotec CRM - Production, CrxPatientApp, nhsPrescriptionApp, Titan PSU Prod"
       BLOCKED_SITE_ODS_CODES: "B3J1Z"
       NOTIFY_ROUTING_PLAN_ID: "e57fe5cc-0567-4854-abe2-b7dd9014a50c"
@@ -265,7 +262,6 @@ jobs:
       ENABLE_BACKUP: False
       ENABLE_NOTIFICATIONS_INTERNAL: false
       ENABLE_NOTIFICATIONS_EXTERNAL: false
-      ENABLED_SITE_ODS_CODES: "FA565,A83008"
       ENABLED_SYSTEMS: "Internal Test System, Apotec Ltd - Apotec CRM - Production, CrxPatientApp, nhsPrescriptionApp, Titan PSU Prod"
       BLOCKED_SITE_ODS_CODES: "B3J1Z"
       NOTIFY_ROUTING_PLAN_ID: "e57fe5cc-0567-4854-abe2-b7dd9014a50c"
@@ -304,7 +300,6 @@ jobs:
       ENABLE_BACKUP: True
       ENABLE_NOTIFICATIONS_INTERNAL: true
       ENABLE_NOTIFICATIONS_EXTERNAL: true
-      ENABLED_SITE_ODS_CODES: "FA565,A83008"
       ENABLED_SYSTEMS: "Internal Test System, Apotec Ltd - Apotec CRM - Production, CrxPatientApp, nhsPrescriptionApp, Titan PSU Prod"
       BLOCKED_SITE_ODS_CODES: "B3J1Z"
       NOTIFY_ROUTING_PLAN_ID: "e57fe5cc-0567-4854-abe2-b7dd9014a50c"
@@ -343,7 +338,6 @@ jobs:
       ENABLE_BACKUP: False
       ENABLE_NOTIFICATIONS_INTERNAL: false
       ENABLE_NOTIFICATIONS_EXTERNAL: false
-      ENABLED_SITE_ODS_CODES: "FA565,A83008"
       ENABLED_SYSTEMS: "Internal Test System, Apotec Ltd - Apotec CRM - Production, CrxPatientApp, nhsPrescriptionApp, Titan PSU Prod"
       BLOCKED_SITE_ODS_CODES: "B3J1Z"
       NOTIFY_ROUTING_PLAN_ID: "e57fe5cc-0567-4854-abe2-b7dd9014a50c"
@@ -355,19 +349,6 @@ jobs:
       PROXYGEN_ROLE: ${{ secrets.PROXYGEN_PROD_ROLE }}
       REGRESSION_TESTS_PEM: ${{ secrets.REGRESSION_TESTS_PEM }}
 
-  read_ods_codes:
-    needs: quality_checks
-    runs-on: ubuntu-22.04
-    outputs:
-      ods_csv: ${{steps.read.outputs.ods_csv}}
-    steps:
-      - name: Read ODS codes and produce CSV
-        id: read
-        run: |
-          INPUT_FILE="./ods-codes.txt"
-          CSV=$(sed ':a;N;$!ba;s/\r\?\n/,/g;s/,$//' < "$INPUT_FILE")
-          echo "ods_csv=$CSV" >> "$GITHUB_OUTPUT"
-
   release_prod:
     needs:
       [
@@ -376,7 +357,6 @@ jobs:
         release_int_sandbox,
         package_code,
         get_commit_id,
-        read_ods_codes,
       ]
     uses: ./.github/workflows/run_release_code_and_api.yml
     with:
@@ -403,9 +383,8 @@ jobs:
       ENABLE_BACKUP: True
       ENABLE_NOTIFICATIONS_INTERNAL: true
       ENABLE_NOTIFICATIONS_EXTERNAL: true
-      ENABLED_SITE_ODS_CODES: ${{ needs.read_ods_codes.outputs.ods_csv }}
-      ENABLED_SYSTEMS: " "
-      BLOCKED_SITE_ODS_CODES: " "
+      ENABLED_SYSTEMS: "Internal Test System"
+      BLOCKED_SITE_ODS_CODES: "XXXXX" # Workaround empty string handling
       NOTIFY_ROUTING_PLAN_ID: "e57fe5cc-0567-4854-abe2-b7dd9014a50c" # INT and PROD share a value
       NOTIFY_API_BASE_URL: "https://api.service.nhs.uk"
       MTLS_KEY: psu-mtls-1
