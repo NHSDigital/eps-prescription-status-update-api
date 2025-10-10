@@ -91,7 +91,7 @@ Parameters:
 
   EnableBackup:
     Type: String
-    Default: False
+    Default: "False"
     AllowedValues:
       - "True"
       - "False"

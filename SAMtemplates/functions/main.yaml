@@ -59,10 +59,10 @@ Parameters:
 
   RequireApplicationName:
     Type: String
-    Default: False
+    Default: false
     AllowedValues:
-      - "True"
-      - "False"
+      - true
+      - false
 
   LogLevel:
     Type: String
