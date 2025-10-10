@@ -84,6 +84,18 @@ on:
         required: false
         type: boolean
         default: false
+      ENABLED_SYSTEMS:
+        required: true
+        type: string
+      BLOCKED_SITE_ODS_CODES:
+        required: true
+        type: string
+      NOTIFY_ROUTING_PLAN_ID:
+        required: true
+        type: string
+      NOTIFY_API_BASE_URL:
+        required: true
+        type: string
       IS_PULL_REQUEST:
         type: boolean
         default: true
@@ -157,6 +169,13 @@ jobs:
           echo "CPSU Specification location: $CPSU_SPEC_PATH"
           echo "CPSU_SPEC_PATH=${CPSU_SPEC_PATH}" >> "$GITHUB_ENV"
 
+      - name: read ODS codes
+        id: read
+        run: |
+          INPUT_FILE="${GITHUB_WORKSPACE}/.github/cfg/ods_codes_${{ inputs.AWS_ENVIRONMENT }}.txt"
+          CSV=$(sed ':a;N;$!ba;s/\r\?\n/,/g;s/,$//' < "$INPUT_FILE")
+          echo "ods_csv=${CSV}" >> "$GITHUB_OUTPUT"
+
       - name: release code
         shell: bash
         working-directory: .github/scripts
@@ -179,6 +198,11 @@ jobs:
           ENABLE_NOTIFICATIONS_INTERNAL: ${{ inputs.ENABLE_NOTIFICATIONS_INTERNAL }}
           ENABLE_NOTIFICATIONS_EXTERNAL: ${{ inputs.ENABLE_NOTIFICATIONS_EXTERNAL }}
           REQUIRE_APPLICATION_NAME: ${{ inputs.REQUIRE_APPLICATION_NAME }}
+          ENABLED_SITE_ODS_CODES: ${{ steps.read.outputs.ods_csv }}
+          ENABLED_SYSTEMS: ${{ inputs.ENABLED_SYSTEMS }}
+          BLOCKED_SITE_ODS_CODES: ${{ inputs.BLOCKED_SITE_ODS_CODES }}
+          NOTIFY_ROUTING_PLAN_ID: ${{ inputs.NOTIFY_ROUTING_PLAN_ID }}
+          NOTIFY_API_BASE_URL: ${{ inputs.NOTIFY_API_BASE_URL }}
         run: ./release_code.sh
 
       - name: get mtls secrets
@@ -189,6 +213,8 @@ jobs:
           client_cert_arn=$(aws cloudformation list-exports --query "Exports[?Name=='account-resources:PsuClientCertSecret'].Value" --output text)
           aws secretsmanager get-secret-value --secret-id "${client_private_key_arn}" --query SecretString --output text > ~/.proxygen/tmp/client_private_key
           aws secretsmanager get-secret-value --secret-id "${client_cert_arn}" --query SecretString --output text > ~/.proxygen/tmp/client_cert
+        env:
+          AWS_MAX_ATTEMPTS: 20
 
       - name: Configure AWS Credentials for api release
         uses: aws-actions/configure-aws-credentials@v5

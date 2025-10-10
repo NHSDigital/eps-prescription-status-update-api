@@ -3,7 +3,6 @@ import {getSecret} from "@aws-lambda-powertools/parameters/secrets"
 import {AxiosInstance} from "axios"
 
 import {SignJWT, importPKCS8} from "jose"
-import {v4 as uuidv4} from "uuid"
 
 /**
  * Exchange API key + JWT for a bearer token from NHS Notify.
@@ -30,7 +29,7 @@ export async function tokenExchange(
   // create and sign the JWT
   const alg = "RS512"
   const now = Math.floor(Date.now() / 1000)
-  const jti = uuidv4()
+  const jti = crypto.randomUUID()
 
   const key = await importPKCS8(PRIVATE_KEY, alg)
 

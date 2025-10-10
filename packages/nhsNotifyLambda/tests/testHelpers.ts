@@ -2,8 +2,6 @@ import {jest} from "@jest/globals"
 
 import * as sqs from "@aws-sdk/client-sqs"
 
-import {v4} from "uuid"
-
 import {PSUDataItem} from "@PrescriptionStatusUpdate_common/commonTypes"
 import {NotifyDataItemMessage} from "../src/utils"
 
@@ -25,7 +23,7 @@ export function constructMessage(overrides: Partial<sqs.Message> = {}): sqs.Mess
   return {
     MessageId: "messageId",
     Attributes: {
-      MessageDeduplicationId: v4()
+      MessageDeduplicationId: crypto.randomUUID()
     },
     Body: JSON.stringify(constructPSUDataItem()),
     ...overrides
@@ -36,9 +34,9 @@ export function constructPSUDataItemMessage(overrides: Partial<NotifyDataItemMes
   return {
     ...constructMessage(),
     PSUDataItem: constructPSUDataItem(),
-    messageBatchReference: v4(),
-    messageReference: v4(),
-    notifyMessageId: v4(),
+    messageBatchReference: crypto.randomUUID(),
+    messageReference: crypto.randomUUID(),
+    notifyMessageId: crypto.randomUUID(),
     ...overrides
   }
 }
