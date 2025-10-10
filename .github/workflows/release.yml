@@ -135,7 +135,7 @@ jobs:
       REQUIRE_APPLICATION_NAME: false
       RUN_REGRESSION_TEST: true
       STATE_MACHINE_LOG_LEVEL: ALL
-      ENABLE_BACKUP: True
+      ENABLE_BACKUP: "True"
       ENABLE_NOTIFICATIONS_INTERNAL: false
       ENABLE_NOTIFICATIONS_EXTERNAL: false
       ENABLED_SYSTEMS: "Internal Test System"
@@ -173,7 +173,7 @@ jobs:
       DEPLOY_CHECK_PRESCRIPTION_STATUS_UPDATE: true
       RUN_REGRESSION_TEST: false
       STATE_MACHINE_LOG_LEVEL: ALL
-      ENABLE_BACKUP: False
+      ENABLE_BACKUP: "False"
       ENABLE_NOTIFICATIONS_INTERNAL: false
       ENABLE_NOTIFICATIONS_EXTERNAL: false
       ENABLED_SYSTEMS: "Internal Test System"
@@ -216,7 +216,7 @@ jobs:
       ENABLE_ALERTS: true
       RUN_REGRESSION_TEST: false
       STATE_MACHINE_LOG_LEVEL: ERROR
-      ENABLE_BACKUP: False
+      ENABLE_BACKUP: "False"
       ENABLE_NOTIFICATIONS_INTERNAL: false
       ENABLE_NOTIFICATIONS_EXTERNAL: false
       ENABLED_SYSTEMS: "Internal Test System, Apotec Ltd - Apotec CRM - Production, CrxPatientApp, nhsPrescriptionApp, Titan PSU Prod"
@@ -259,7 +259,7 @@ jobs:
       ENABLE_ALERTS: true
       RUN_REGRESSION_TEST: true
       STATE_MACHINE_LOG_LEVEL: ALL
-      ENABLE_BACKUP: False
+      ENABLE_BACKUP: "False"
       ENABLE_NOTIFICATIONS_INTERNAL: false
       ENABLE_NOTIFICATIONS_EXTERNAL: false
       ENABLED_SYSTEMS: "Internal Test System, Apotec Ltd - Apotec CRM - Production, CrxPatientApp, nhsPrescriptionApp, Titan PSU Prod"
@@ -297,7 +297,7 @@ jobs:
       ENABLE_ALERTS: true
       RUN_REGRESSION_TEST: true
       STATE_MACHINE_LOG_LEVEL: ALL
-      ENABLE_BACKUP: True
+      ENABLE_BACKUP: "True"
       ENABLE_NOTIFICATIONS_INTERNAL: true
       ENABLE_NOTIFICATIONS_EXTERNAL: true
       ENABLED_SYSTEMS: "Internal Test System, Apotec Ltd - Apotec CRM - Production, CrxPatientApp, nhsPrescriptionApp, Titan PSU Prod"
@@ -335,7 +335,7 @@ jobs:
       DEPLOY_CHECK_PRESCRIPTION_STATUS_UPDATE: true
       RUN_REGRESSION_TEST: false
       STATE_MACHINE_LOG_LEVEL: ALL
-      ENABLE_BACKUP: False
+      ENABLE_BACKUP: "False"
       ENABLE_NOTIFICATIONS_INTERNAL: false
       ENABLE_NOTIFICATIONS_EXTERNAL: false
       ENABLED_SYSTEMS: "Internal Test System, Apotec Ltd - Apotec CRM - Production, CrxPatientApp, nhsPrescriptionApp, Titan PSU Prod"
@@ -380,7 +380,7 @@ jobs:
       ENABLE_ALERTS: true
       RUN_REGRESSION_TEST: false
       STATE_MACHINE_LOG_LEVEL: ERROR
-      ENABLE_BACKUP: True
+      ENABLE_BACKUP: "True"
       ENABLE_NOTIFICATIONS_INTERNAL: true
       ENABLE_NOTIFICATIONS_EXTERNAL: true
       ENABLED_SYSTEMS: "Internal Test System"
