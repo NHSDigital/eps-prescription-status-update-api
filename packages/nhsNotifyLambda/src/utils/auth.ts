@@ -19,7 +19,7 @@ export async function tokenExchange(
   ])
 
   const API_KEY = apiKeyRaw?.toString().trim()
-  const PRIVATE_KEY = privateKeyRaw?.toString()
+  const PRIVATE_KEY = privateKeyRaw?.toString().trim()
   const KID = kidRaw?.toString().trim()
 
   if (!API_KEY || !PRIVATE_KEY || !KID) {
