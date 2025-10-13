@@ -42,9 +42,11 @@ const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPro
     return response(500, {message: "Failed to update the notification state table"})
   }
 
-  payload.data.forEach(m => {
+  for (const m of payload.data) {
+    logger.info("Processed callback data item", {data: m.type})
     if ((m.type !== CallbackType.message) && (m.type !== CallbackType.channel)) {
       logger.warn("Unknown callback data structure. Returning 400 despite possible partial success.", {data: m})
+      // all db work done, so return early at first unsupported msg type
       return response(
         400,
         {
@@ -55,7 +57,7 @@ const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPro
         }
       )
     }
-  })
+  }
 
   // All's well that ends well
   return response(202)
