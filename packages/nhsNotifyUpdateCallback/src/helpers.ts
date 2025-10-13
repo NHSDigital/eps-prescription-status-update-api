@@ -125,7 +125,7 @@ export async function checkSignature(logger: Logger, event: APIGatewayProxyEvent
  *
  * @param updates: Records are keyed by the dynamo table field name, e.g. {Count: 5}. Undefined values are omitted.
  */
-function buildUpdateExpression(updates: Record<string, unknown>) {
+function buildUpdateExpression(updates: NotificationUpdate) {
   const names: Record<string, string> = {}
   const values: Record<string, unknown> = {}
   const sets: Array<string> = []
@@ -159,7 +159,7 @@ function buildUpdateExpression(updates: Record<string, unknown>) {
 /**
  * For each incoming NHS Notify message-status callback,
  * find the matching record in DynamoDB by NotifyMessageID,
- * and update it with the new delivery status, timestamp, and channels.
+ * and update it with the new statuses, timestamp, and channels.
  * Do that all in parallel.
  */
 export async function updateNotificationsTable(
@@ -238,11 +238,7 @@ export async function updateNotificationsTable(
             pharmacyODSCode: item.ODSCode,
             psuRequestId: item.RequestId,
             newTimestamp: resource.attributes.timestamp,
-            ...updates,
-            // The overall delivery status is whichever of
-            // messageStatus or channelStatus is defined (prefer messageStatus)
-            // TODO: Update the splunk query to use the below statuses
-            deliveryStatus: updates.MessageStatus ?? updates.ChannelStatus
+            ...updates
           }
         )
       } catch (err) {
