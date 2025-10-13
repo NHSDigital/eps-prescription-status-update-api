@@ -145,7 +145,7 @@ export function extractStatusesAndDescriptions(logger: Logger, resource: Callbac
     messageId = undefined
   }
 
-  return {
+  const statuses = {
     messageId,
     messageStatus,
     messageStatusDescription,
@@ -155,6 +155,12 @@ export function extractStatusesAndDescriptions(logger: Logger, resource: Callbac
     retryCount,
     callbackTimestamp
   }
+  let logPayload = {
+    callbackType: resource.type,
+    ...statuses
+  }
+  logger.info("Message state updated", logPayload)
+  return statuses
 }
 
 /**
@@ -208,6 +214,7 @@ export async function updateNotificationsTable(
   // For each callback resource, return a promise
   const callbackPromises = bodyData.data.map(async (resource) => {
     const statuses = extractStatusesAndDescriptions(logger, resource)
+
     // prevent db hit
     if (!statuses.messageId) return
 

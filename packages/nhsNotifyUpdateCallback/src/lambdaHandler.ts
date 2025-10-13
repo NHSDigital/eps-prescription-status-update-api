@@ -10,12 +10,7 @@ import httpHeaderNormalizer from "@middy/http-header-normalizer"
 import errorHandler from "@nhs/fhir-middy-error-handler"
 
 import {CallbackType, CallbackResponse} from "./types"
-import {
-  checkSignature,
-  extractStatusesAndDescriptions,
-  response,
-  updateNotificationsTable
-} from "./helpers"
+import {checkSignature, response, updateNotificationsTable} from "./helpers"
 
 export const logger = new Logger({serviceName: "nhsNotifyUpdateCallback"})
 
@@ -25,35 +20,20 @@ const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPro
     "nhsd-correlation-id": event.headers["nhsd-correlation-id"]
   })
 
-  // Check the request signature
+  // Validate the request
   const isErr = await checkSignature(logger, event)
   if (isErr) return isErr
+  if (!event.body) return response(400, {message: "No request body given"})
 
   // Parse out the request body
-  if (!event.body) return response(400, {message: "No request body given"})
   let payload: CallbackResponse
   try {
     payload = JSON.parse(event.body)
+    logger.info("Parsed payload", {payload})
   } catch (error) {
     logger.error("Failed to parse payload", {error, payload: event.body})
     return response(400, {message: "Request body failed to parse"})
   }
-
-  let receivedUnknownCallbackType = false
-
-  payload.data.forEach(m => {
-    const statuses = extractStatusesAndDescriptions(logger, m)
-    let logPayload = {
-      callbackType: m.type,
-      ...statuses
-    }
-    logger.info("Message state updated", logPayload)
-
-    if ((m.type !== CallbackType.message) && (m.type !== CallbackType.channel)) {
-      logger.warn("Unknown callback data structure.", {data: m})
-      receivedUnknownCallbackType = true
-    }
-  })
 
   try {
     await updateNotificationsTable(logger, payload)
@@ -62,20 +42,20 @@ const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPro
     return response(500, {message: "Failed to update the notification state table"})
   }
 
-  if (receivedUnknownCallbackType) {
-    logger.info(
-      "Detected some unknown callback types. Returning 400 despite possible partial success."
-    )
-    return response(
-      400,
-      {
-        message: (
-          "Received an unknown callback data type. expected data[].type"
-          + " to always be either ChannelStatus or MessageStatus"
-        )
-      }
-    )
-  }
+  payload.data.forEach(m => {
+    if ((m.type !== CallbackType.message) && (m.type !== CallbackType.channel)) {
+      logger.warn("Unknown callback data structure. Returning 400 despite possible partial success.", {data: m})
+      return response(
+        400,
+        {
+          message: (
+            "Received an unknown callback data type. expected data[].type"
+            + " to always be either ChannelStatus or MessageStatus"
+          )
+        }
+      )
+    }
+  })
 
   // All's well that ends well
   return response(202)
