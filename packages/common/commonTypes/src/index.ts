@@ -25,6 +25,7 @@ export interface NotifyDataItem {
  * The fields stored in the Notifications table potentially updated by the Notify callback.
  */
 export interface NotificationUpdate {
+  // normal convention is camelCase, however preserving as we already have records in DynamoDB
   MessageStatus?: string
   MessageStatusDescription?: string
   ChannelStatus?: string
@@ -39,6 +40,7 @@ export interface NotificationUpdate {
  * The full record stored in the Notifications table.
  */
 export interface LastNotificationStateType extends NotificationUpdate {
+  // normal convention is camelCase, however preserving as we already have records in DynamoDB
   NHSNumber: string
   ODSCode: string
   RequestId: string // x-request-id header
