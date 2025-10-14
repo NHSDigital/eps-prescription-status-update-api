@@ -29,7 +29,6 @@ const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPro
   let payload: CallbackResponse
   try {
     payload = JSON.parse(event.body)
-    logger.info("Parsed payload", {payload})
   } catch (error) {
     logger.error("Failed to parse payload", {error, payload: event.body})
     return response(400, {message: "Request body failed to parse"})
