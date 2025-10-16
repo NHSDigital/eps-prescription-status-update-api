@@ -7,7 +7,7 @@ import {getSecret} from "@aws-lambda-powertools/parameters/secrets"
 
 import {createHmac, timingSafeEqual} from "crypto"
 
-import {LastNotificationStateType} from "@PrescriptionStatusUpdate_common/commonTypes"
+import {LastNotificationStateType, NotificationUpdate} from "@PrescriptionStatusUpdate_common/commonTypes"
 
 import {CallbackResource, CallbackResponse, CallbackType} from "./types"
 
@@ -117,46 +117,6 @@ export async function checkSignature(logger: Logger, event: APIGatewayProxyEvent
   return undefined
 }
 
-export function extractStatusesAndDescriptions(logger: Logger, resource: CallbackResource) {
-  let messageId: string | undefined
-  let messageStatus: string | undefined
-  let messageStatusDescription: string | undefined
-  let channelStatus: string | undefined
-  let channelStatusDescription: string | undefined
-  let supplierStatus: string | undefined
-  let retryCount: number | undefined
-  let callbackTimestamp: string
-
-  messageId = resource.attributes.messageId
-  callbackTimestamp = resource.attributes.timestamp
-  if (resource.type === CallbackType.message) {
-    messageStatus = resource.attributes.messageStatus
-    messageStatusDescription = resource.attributes.messageStatusDescription
-    channelStatus = resource.attributes.channels?.[0]?.channelStatus // If missing, undefined
-  } else if (resource.type === CallbackType.channel) {
-    messageStatus = undefined
-    retryCount = resource.attributes.retryCount
-    channelStatus = resource.attributes.channelStatus
-    channelStatusDescription = resource.attributes.channelStatusDescription
-    supplierStatus = resource.attributes.supplierStatus
-  } else {
-    logger.error("Unknown data structure - cannot store to notifications table.", {resource})
-    // Set to junk data, so that when we try and update the table we will fail. This is fine, and handled later.
-    messageId = undefined
-  }
-
-  return {
-    messageId,
-    messageStatus,
-    messageStatusDescription,
-    channelStatus,
-    channelStatusDescription,
-    supplierStatus,
-    retryCount,
-    callbackTimestamp
-  }
-}
-
 /**
  * Helper for constructing the dynamo call.
  * Returns the UpdateExpression, and the accompanying objects for names and values.
@@ -164,7 +124,7 @@ export function extractStatusesAndDescriptions(logger: Logger, resource: Callbac
  *
  * @param updates: Records are keyed by the dynamo table field name, e.g. {Count: 5}. Undefined values are omitted.
  */
-function buildUpdateExpression(updates: Record<string, unknown>) {
+function buildUpdateExpression(updates: NotificationUpdate) {
   const names: Record<string, string> = {}
   const values: Record<string, unknown> = {}
   const sets: Array<string> = []
@@ -198,7 +158,7 @@ function buildUpdateExpression(updates: Record<string, unknown>) {
 /**
  * For each incoming NHS Notify message-status callback,
  * find the matching record in DynamoDB by NotifyMessageID,
- * and update it with the new delivery status, timestamp, and channels.
+ * and update it with the new statuses, timestamp, and channels.
  * Do that all in parallel.
  */
 export async function updateNotificationsTable(
@@ -207,9 +167,10 @@ export async function updateNotificationsTable(
 ): Promise<void> {
   // For each callback resource, return a promise
   const callbackPromises = bodyData.data.map(async (resource) => {
-    const statuses = extractStatusesAndDescriptions(logger, resource)
+    const msgId = resource.attributes.messageId
+
     // prevent db hit
-    if (!statuses.messageId) return
+    if (!msgId) return
 
     // Query matching records
     let queryResult
@@ -219,11 +180,11 @@ export async function updateNotificationsTable(
         IndexName: "NotifyMessageIDIndex",
         KeyConditionExpression: "NotifyMessageID = :nm",
         ExpressionAttributeValues: {
-          ":nm": statuses.messageId
+          ":nm": msgId
         }
       }))
     } catch (error) {
-      logger.error("Error querying by NotifyMessageID", {messageId: statuses.messageId, error})
+      logger.error("Error querying by NotifyMessageID", {messageId: msgId, error})
       throw error
     }
 
@@ -231,7 +192,7 @@ export async function updateNotificationsTable(
     if (items.length === 0) {
       logger.warn(
         "No matching record found for NotifyMessageID. Counting this as a successful update.",
-        {messageId: statuses.messageId}
+        {messageId: msgId}
       )
       return
     }
@@ -255,17 +216,7 @@ export async function updateNotificationsTable(
         RequestId: item.RequestId
       }
 
-      const updates = {
-        // DynamoFieldName: Value | undefined
-        ExpiryTime: newExpiry,
-        LastNotificationRequestTimestamp: statuses.callbackTimestamp,
-        MessageStatus: statuses.messageStatus,
-        MessageStatusDescription: statuses.messageStatusDescription,
-        ChannelStatus: statuses.channelStatus,
-        ChannelStatusDescription: statuses.channelStatusDescription,
-        SupplierStatus: statuses.supplierStatus,
-        RetryCount: statuses.retryCount
-      }
+      const updates: NotificationUpdate = extractUpdate(newExpiry, resource)
 
       const {UpdateExpression, ExpressionAttributeNames, ExpressionAttributeValues} = buildUpdateExpression(updates)
 
@@ -283,17 +234,10 @@ export async function updateNotificationsTable(
           {
             NotifyMessageID: item.NotifyMessageID,
             nhsNumber: item.NHSNumber,
+            pharmacyODSCode: item.ODSCode,
             psuRequestId: item.RequestId,
-            // The overall delivery status is whichever of
-            // messageStatus or channelStatus is defined (prefer messageStatus)
-            // TODO: Update the splunk query to use the below statuses
-            deliveryStatus: statuses.messageStatus ?? statuses.channelStatus,
-            // Parse to a string, or else undefined stuff doesn't get logged (thanks aws)
-            messageStatus: `${statuses.messageStatus}`,
-            channelStatus: `${statuses.channelStatus}`,
-            supplierStatus: `${statuses.supplierStatus}`,
-            newTimestamp: statuses.callbackTimestamp,
-            newExpiryTime: newExpiry
+            newTimestamp: resource.attributes.timestamp,
+            ...updates
           }
         )
       } catch (err) {
@@ -313,6 +257,30 @@ export async function updateNotificationsTable(
   })
 
   await Promise.all(callbackPromises)
+}
+
+function extractUpdate(newExpiry: number, resource: CallbackResource) {
+  const updates: NotificationUpdate = {
+    ExpiryTime: newExpiry,
+    LastNotificationRequestTimestamp: resource.attributes.timestamp
+  }
+
+  if (resource.type === CallbackType.message) {
+    Object.assign(updates, {
+      MessageStatus: resource.attributes.messageStatus,
+      MessageStatusDescription: resource.attributes.messageStatusDescription,
+      ChannelStatus: resource.attributes.channels?.[0]?.channelStatus // If missing, undefined
+    })
+  } else if (resource.type === CallbackType.channel) {
+    Object.assign(updates, {
+      MessageStatus: undefined,
+      RetryCount: resource.attributes.retryCount,
+      ChannelStatus: resource.attributes.channelStatus,
+      ChannelStatusDescription: resource.attributes.channelStatusDescription,
+      SupplierStatus: resource.attributes.supplierStatus
+    })
+  }
+  return updates
 }
 
 function filterOutOfDateItems(
