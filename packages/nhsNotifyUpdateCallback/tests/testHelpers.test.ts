@@ -268,7 +268,6 @@ describe("helpers.ts", () => {
           pharmacyODSCode: mockItem.ODSCode,
           MessageStatus: "delivered",
           newTimestamp: overrideTimestamp,
-          // Expiry time is updated from the previous one
           ExpiryTime: expect.any(Number)
         })
       )
@@ -348,7 +347,6 @@ describe("helpers.ts", () => {
           ChannelStatus: "sending",
           SupplierStatus: "accepted",
           newTimestamp: ts,
-          // Expiry time is updated from the previous one
           ExpiryTime: expect.any(Number)
         })
       )
