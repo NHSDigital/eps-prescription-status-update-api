@@ -133,7 +133,7 @@ Resources:
                 - !Split
                   - ":"
                   - !ImportValue account-resources:TrustStoreBucket
-              - psu-truststore.pem
+              - psu-truststore-pr.pem
           - !Ref AWS::NoValue
         TruststoreVersion: !If
           - ShouldUseMutualTLS
