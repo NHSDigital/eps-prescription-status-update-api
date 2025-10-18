@@ -71,4 +71,5 @@ sam deploy \
             NotifyRoutingPlanIDValue="$NOTIFY_ROUTING_PLAN_ID" \
             NotifyAPIBaseURLValue="$NOTIFY_API_BASE_URL" \
             RequireApplicationName="$REQUIRE_APPLICATION_NAME" \
-            EnableBackup="$ENABLE_BACKUP"
+            EnableBackup="$ENABLE_BACKUP" \
+            ForwardCsocLogs="$FORWARD_CSOC_LOGS"
