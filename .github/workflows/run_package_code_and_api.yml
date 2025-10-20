@@ -32,7 +32,7 @@ jobs:
         with:
           path: |
             ~/.asdf
-          key: ${{ runner.os }}-asdf-${{ hashFiles('**/.tool-versions') }}
+          key: ${{ runner.os }}-asdf-${{ hashFiles('**/.tool-versions') }}-${{ steps.asdf-version.outputs.version }}
           restore-keys: |
             ${{ runner.os }}-asdf-
 
