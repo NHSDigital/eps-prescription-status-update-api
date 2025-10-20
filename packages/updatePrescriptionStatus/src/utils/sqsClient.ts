@@ -113,7 +113,7 @@ export async function pushPrescriptionToNotificationSQS(
   }
 
   // Only allow through sites and systems that are allowedSitesAndSystems
-  const allowedSitesAndSystemsData = await checkSiteOrSystemIsNotifyEnabled(data, logger)
+  const allowedSitesAndSystemsData = await checkSiteOrSystemIsNotifyEnabled(data)
 
   function norm(str: string) {
     return str.toLowerCase().trim()

@@ -1,6 +1,6 @@
 import {PSUDataItemWithPrevious} from "@PrescriptionStatusUpdate_common/commonTypes"
 import {SSMProvider} from "@aws-lambda-powertools/parameters/ssm"
-import {Logger} from "@aws-lambda-powertools/logger"
+import {logger} from "../updatePrescriptionStatus"
 
 const ssm = new SSMProvider()
 
@@ -45,8 +45,7 @@ async function loadConfig(): Promise<{
  * @returns - the filtered array
  */
 export async function checkSiteOrSystemIsNotifyEnabled(
-  data: Array<PSUDataItemWithPrevious>,
-  logger: Logger
+  data: Array<PSUDataItemWithPrevious>
 ): Promise<Array<PSUDataItemWithPrevious>> {
   // Get the configuration from either the cache or SSM
   const {enabledSiteODSCodes, enabledSystems, blockedSiteODSCodes} = await loadConfig()
@@ -69,9 +68,13 @@ export async function checkSiteOrSystemIsNotifyEnabled(
 
     return true
   })
-  logger.info(
-    "Filtered out sites and suppliers that are not enabled, or are explicitly disabled",
-    {numItemsReceived: unfilteredItemCount, numItemsAllowed: filteredItems.length}
-  )
+
+  if (logger) {
+    logger.info(
+      "Filtered out sites and suppliers that are not enabled, or are explicitly disabled",
+      {numItemsReceived: unfilteredItemCount, numItemsAllowed: filteredItems.length}
+    )
+  }
+
   return filteredItems
 }
