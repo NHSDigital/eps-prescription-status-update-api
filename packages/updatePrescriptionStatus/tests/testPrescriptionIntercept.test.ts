@@ -32,10 +32,12 @@ jest.unstable_mockModule(
 
 const {mockSend} = mockDynamoDBClient()
 process.env.ENVIRONMENT = "int"
-process.env.TEST_PRESCRIPTIONS_1 = ["abc", TASK_VALUES[0].prescriptionID, "def"].join(",")
-process.env.TEST_PRESCRIPTIONS_2 = ["abc", TASK_VALUES[1].prescriptionID, "def"].join(",")
-process.env.TEST_PRESCRIPTIONS_3 = ["abc", TASK_VALUES[2].prescriptionID, "def"].join(",")
-process.env.TEST_PRESCRIPTIONS_4 = ["abc", TASK_VALUES[3].prescriptionID, "def"].join(",")
+/*
+  Using task values 1 and 3 (Instead of 0 and 2) to test the interception when the test prescription
+  is not the first in the bundle.
+*/
+process.env.TEST_PRESCRIPTIONS_1 = ["abc", TASK_VALUES[1].prescriptionID, "def"].join(",")
+process.env.TEST_PRESCRIPTIONS_2 = ["abc", TASK_VALUES[3].prescriptionID, "def"].join(",")
 
 function setupExistingDynamoEntry() {
   mockSend.mockImplementation(async (command) => {
@@ -179,11 +181,22 @@ describe("testPrescription3Intercept", () => {
   beforeEach(() => {
     jest.useFakeTimers().setSystemTime(DEFAULT_DATE)
     jest.resetAllMocks()
+    // Set TEST_PRESCRIPTIONS_3 only for these tests
+    process.env.TEST_PRESCRIPTIONS_3 = ["abc", TASK_VALUES[2].prescriptionID, "def"].join(",")
+    // Clear the module cache so it re-reads the env var
+    jest.resetModules()
+  })
+
+  afterEach(() => {
+    // Clean up after each test to avoid affecting other test suites
+    delete process.env.TEST_PRESCRIPTIONS_3
+    // Clear module cache again to ensure clean state for other tests
+    jest.resetModules()
   })
 
   it("Return 400 when test prescription 3 is submitted", async () => {
-    const body = generateBody(4)
-    // body.entry = [body.entry[0], body.entry[1]]
+    const body = generateBody(3)
+    // Only include entries 0, 1, and 2. Entry 2 contains TASK_VALUES[2] which matches TEST_PRESCRIPTIONS_3
     const event: APIGatewayProxyEvent = generateMockEvent(body)
 
     const {handler, logger} = await import("../src/updatePrescriptionStatus")
