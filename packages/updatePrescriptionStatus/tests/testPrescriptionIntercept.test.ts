@@ -3,7 +3,8 @@ import {
   expect,
   it,
   describe,
-  jest
+  jest,
+  beforeEach
 } from "@jest/globals"
 import {
   DEFAULT_DATE,
@@ -37,6 +38,9 @@ process.env.ENVIRONMENT = "int"
 */
 process.env.TEST_PRESCRIPTIONS_1 = ["abc", TASK_VALUES[1].prescriptionID, "def"].join(",")
 process.env.TEST_PRESCRIPTIONS_2 = ["abc", TASK_VALUES[3].prescriptionID, "def"].join(",")
+process.env.TEST_PRESCRIPTIONS_3 = ["abc", TASK_VALUES[2].prescriptionID, "def"].join(",")
+process.env.TEST_PRESCRIPTIONS_4 = ["abc", TASK_VALUES[4].prescriptionID, "def"].join(",")
+
 
 function setupExistingDynamoEntry() {
   mockSend.mockImplementation(async (command) => {
@@ -173,5 +177,27 @@ describe("testPrescription2Intercept", () => {
     )
 
     expectGetItemCommand(TASK_VALUES[3].prescriptionID, TASK_VALUES[3].id)
+  })
+})
+
+describe("testPrescription3Intercept", () => {
+  beforeEach(() => {
+    jest.useFakeTimers().setSystemTime(DEFAULT_DATE)
+    jest.resetAllMocks()
+  })
+  
+  it("Return 400 when test prescription 3 is submitted", async () => {
+    const body = generateBody(2)
+    body.entry = [body.entry[0], body.entry[1]]
+    const event: APIGatewayProxyEvent = generateMockEvent(body)
+
+    const {handler, logger} = await import("../src/updatePrescriptionStatus")
+    const loggerInfo = jest.spyOn(logger, "info")
+    const response: APIGatewayProxyResult = await handler(event, {})
+
+    expect(response.statusCode).toEqual(400)
+    expect(loggerInfo).toHaveBeenCalledWith("Forcing error for INT test prescription. Simulating failure to write to database.")
+
+    expectGetItemCommand(TASK_VALUES[1].prescriptionID, TASK_VALUES[1].id)
   })
 })
