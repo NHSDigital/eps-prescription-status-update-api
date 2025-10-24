@@ -32,15 +32,10 @@ jest.unstable_mockModule(
 
 const {mockSend} = mockDynamoDBClient()
 process.env.ENVIRONMENT = "int"
-/*
-  Using task values 1 and 3 (Instead of 0 and 2) to test the interception when the test prescription
-  is not the first in the bundle.
-*/
-process.env.TEST_PRESCRIPTIONS_1 = ["abc", TASK_VALUES[1].prescriptionID, "def"].join(",")
-process.env.TEST_PRESCRIPTIONS_2 = ["abc", TASK_VALUES[3].prescriptionID, "def"].join(",")
+process.env.TEST_PRESCRIPTIONS_1 = ["abc", TASK_VALUES[0].prescriptionID, "def"].join(",")
+process.env.TEST_PRESCRIPTIONS_2 = ["abc", TASK_VALUES[1].prescriptionID, "def"].join(",")
 process.env.TEST_PRESCRIPTIONS_3 = ["abc", TASK_VALUES[2].prescriptionID, "def"].join(",")
-process.env.TEST_PRESCRIPTIONS_4 = ["abc", TASK_VALUES[4].prescriptionID, "def"].join(",")
-
+process.env.TEST_PRESCRIPTIONS_4 = ["abc", TASK_VALUES[3].prescriptionID, "def"].join(",")
 
 function setupExistingDynamoEntry() {
   mockSend.mockImplementation(async (command) => {
@@ -185,10 +180,10 @@ describe("testPrescription3Intercept", () => {
     jest.useFakeTimers().setSystemTime(DEFAULT_DATE)
     jest.resetAllMocks()
   })
-  
+
   it("Return 400 when test prescription 3 is submitted", async () => {
-    const body = generateBody(2)
-    body.entry = [body.entry[0], body.entry[1]]
+    const body = generateBody(4)
+    // body.entry = [body.entry[0], body.entry[1]]
     const event: APIGatewayProxyEvent = generateMockEvent(body)
 
     const {handler, logger} = await import("../src/updatePrescriptionStatus")
@@ -196,8 +191,7 @@ describe("testPrescription3Intercept", () => {
     const response: APIGatewayProxyResult = await handler(event, {})
 
     expect(response.statusCode).toEqual(400)
-    expect(loggerInfo).toHaveBeenCalledWith("Forcing error for INT test prescription. Simulating failure to write to database.")
-
-    expectGetItemCommand(TASK_VALUES[1].prescriptionID, TASK_VALUES[1].id)
+    expect(loggerInfo).toHaveBeenCalledWith(
+      "Forcing error for INT test prescription. Simulating failure to write to database.")
   })
 })

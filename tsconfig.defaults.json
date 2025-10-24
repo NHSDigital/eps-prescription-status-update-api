@@ -14,15 +14,25 @@
     "preserveConstEnums": true,
     "resolveJsonModule": true,
     "allowJs": true,
+    "baseUrl": ".",
     "paths": {
       "@/cpt-ui-common/commonTypes": [
-        "./packages/common/commonTypes/src/*"
+        "./packages/common/commonTypes/src"
       ],
       "@/cpt-ui-common/middyErrorHandler": [
-        "./packages/common/middyErrorHandler/src/*"
+        "./packages/common/middyErrorHandler/src"
       ],
       "@/cpt-ui-common/testing": [
-        "./packages/common/testing/src/*"
+        "./packages/common/testing/src"
+      ],
+      "@PrescriptionStatusUpdate_common/commonTypes": [
+        "./packages/common/commonTypes/src"
+      ],
+      "@PrescriptionStatusUpdate_common/middyErrorHandler": [
+        "./packages/common/middyErrorHandler/src"
+      ],
+      "@PrescriptionStatusUpdate_common/testing": [
+        "./packages/common/testing/src"
       ]
     }
   }
