@@ -10,14 +10,17 @@ const jestConfig: JestConfigWithTsJest = {
   preset: "ts-jest/presets/default-esm",
   moduleFileExtensions: ["js", "json", "ts", "d.ts"],
   moduleNameMapper: {
-    "^(\\.{1,2}/.*)\\.js$": "$1"
+    "^(\\.{1,2}/.*)\\.js$": "$1",
+    "^@PrescriptionStatusUpdate_common/commonTypes$": "<rootDir>/../../packages/common/commonTypes/src",
+    "^@PrescriptionStatusUpdate_common/middyErrorHandler$": "<rootDir>/../../packages/common/middyErrorHandler/src",
+    "^@PrescriptionStatusUpdate_common/testing$": "<rootDir>/../../packages/common/testing/src"
   },
   transform: {
     "^.+\\.ts?$": [
       "ts-jest",
       {
         useESM: true,
-        tsconfig: "./tsconfig.json"
+        tsconfig: "./tsconfig.test.json"
       }
     ]
   },
