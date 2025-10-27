@@ -11,6 +11,7 @@ const jestConfig: JestConfigWithTsJest = {
   moduleFileExtensions: ["js", "json", "ts", "d.ts"],
   moduleNameMapper: {
     "^(\\.{1,2}/.*)\\.js$": "$1",
+    "^@PrescriptionStatusUpdate_common/utilities$": "<rootDir>/../../packages/common/utilities/src",
     "^@PrescriptionStatusUpdate_common/commonTypes$": "<rootDir>/../../packages/common/commonTypes/src",
     "^@PrescriptionStatusUpdate_common/middyErrorHandler$": "<rootDir>/../../packages/common/middyErrorHandler/src",
     "^@PrescriptionStatusUpdate_common/testing$": "<rootDir>/../../packages/common/testing/src"

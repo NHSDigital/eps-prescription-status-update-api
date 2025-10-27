@@ -33,6 +33,9 @@
       ],
       "@PrescriptionStatusUpdate_common/testing": [
         "./packages/common/testing/src"
+      ],
+      "@PrescriptionStatusUpdate_common/utilities": [
+        "./packages/common/utilities/src"
       ]
     }
   }

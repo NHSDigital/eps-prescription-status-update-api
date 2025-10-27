@@ -1,7 +1,7 @@
 import {PSUDataItemWithPrevious} from "@PrescriptionStatusUpdate_common/commonTypes"
-import {SSMProvider} from "@aws-lambda-powertools/parameters/ssm"
+import {initiatedSSMProvider} from "@PrescriptionStatusUpdate_common/utilities"
 
-const ssm = new SSMProvider()
+const ssm = initiatedSSMProvider
 
 function str2set(value: string | undefined): Set<string> {
   const raw = value ?? ""

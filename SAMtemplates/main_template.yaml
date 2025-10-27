@@ -137,6 +137,22 @@ Parameters:
       - true
       - false
 
+  TestPresciptionsParamValue1:
+    Type: String
+    Default: " "
+
+  TestPresciptionsParamValue2:
+    Type: String
+    Default: " "
+
+  TestPresciptionsParamValue3:
+    Type: String
+    Default: " "
+
+  TestPresciptionsParamValue4:
+    Type: String
+    Default: " "
+
 Resources:
   Secrets:
     Type: AWS::Serverless::Application
@@ -158,6 +174,10 @@ Resources:
         BlockedSiteODSCodesValue: !Ref BlockedSiteODSCodesValue
         NotifyRoutingPlanIDValue: !Ref NotifyRoutingPlanIDValue
         NotifyAPIBaseURLValue: !Ref NotifyAPIBaseURLValue
+        TestPresciptionsParamValue1: !Ref TestPresciptionsParamValue1
+        TestPresciptionsParamValue2: !Ref TestPresciptionsParamValue2
+        TestPresciptionsParamValue3: !Ref TestPresciptionsParamValue3
+        TestPresciptionsParamValue4: !Ref TestPresciptionsParamValue4
 
   Tables:
     Type: AWS::Serverless::Application
@@ -225,6 +245,10 @@ Resources:
         Environment: !Ref Environment
         EnableBackup: !Ref EnableBackup
         RequireApplicationName: !Ref RequireApplicationName
+        TestPrescriptionsParamName1: !GetAtt Parameters.Outputs.TestPrescriptionsParameterName1
+        TestPrescriptionsParamName2: !GetAtt Parameters.Outputs.TestPrescriptionsParameterName2
+        TestPrescriptionsParamName3: !GetAtt Parameters.Outputs.TestPrescriptionsParameterName3
+        TestPrescriptionsParamName4: !GetAtt Parameters.Outputs.TestPrescriptionsParameterName4
 
   StateMachines:
     Type: AWS::Serverless::Application

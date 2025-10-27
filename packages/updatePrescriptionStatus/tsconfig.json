@@ -6,9 +6,10 @@
     "outDir": "lib"
   },
   "references": [
+    {"path": "../common/utilities"},
     {"path": "../common/commonTypes"},
     {"path": "../common/middyErrorHandler"},
-    {"path": "../common/testing"}
+    {"path": "../common/testing"},
   ],
   "include": ["src/**/*", "tests/**/*", "tests/tasks/*.json"],
   "exclude": ["node_modules"]

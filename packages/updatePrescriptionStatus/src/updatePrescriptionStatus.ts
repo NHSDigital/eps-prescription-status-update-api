@@ -3,7 +3,6 @@ import {APIGatewayProxyEvent, APIGatewayProxyResult} from "aws-lambda"
 import {Logger} from "@aws-lambda-powertools/logger"
 import {injectLambdaContext} from "@aws-lambda-powertools/logger/middleware"
 import {TransactionCanceledException} from "@aws-sdk/client-dynamodb"
-import {SSMProvider} from "@aws-lambda-powertools/parameters/ssm"
 
 import middy from "@middy/core"
 import inputOutputLogger from "@middy/input-output-logger"
@@ -32,45 +31,19 @@ import {
   testPrescription1Intercept,
   testPrescription2Intercept
 } from "./utils/testPrescriptionIntercept"
+import {getNotificationsConfig, getTestPrescriptions} from "@PrescriptionStatusUpdate_common/utilities"
 
 export const LAMBDA_TIMEOUT_MS = 9500
 // this is length of time from now when records in dynamodb will automatically be expired
 export const TTL_DELTA = 60 * 60 * 24 * 365 * 2 // Keep records for 2 years
 export const logger = new Logger({serviceName: "updatePrescriptionStatus"})
 
-// AEA-4317 (AEA-4365) - Env vars for INT test prescriptions
+// AEA-4317 AEA-4365 & AEA-5913 - Env vars for INT test prescriptions
 const INT_ENVIRONMENT = process.env.ENVIRONMENT === "int"
-export const TEST_PRESCRIPTIONS_1 = (process.env.TEST_PRESCRIPTIONS_1 ?? "")
-  .split(",").map(item => item.trim()) || []
-export const TEST_PRESCRIPTIONS_2 = (process.env.TEST_PRESCRIPTIONS_2 ?? "")
-  .split(",").map(item => item.trim()) || []
-// AEA-5913 - Return 400
-export const TEST_PRESCRIPTIONS_3 = (process.env.TEST_PRESCRIPTIONS_3 ?? "")
-  .split(",").map(item => item.trim()) || []
-// AEA-5913 - Return 429
-export const TEST_PRESCRIPTIONS_4 = (process.env.TEST_PRESCRIPTIONS_4 ?? "")
-  .split(",").map(item => item.trim()) || []
-
-// Fetching the parameters from SSM using a dedicated provider, so that the values can be cached
-// and reused across invocations, reducing the number of calls to SSM.
-// (it was failing load tests using getParameter directly)
-const ssm = new SSMProvider()
-
-async function loadConfig() {
-  const paramNames = {
-    [process.env.ENABLE_NOTIFICATIONS_PARAM!]: {maxAge: 5}
-  }
-  const all = await ssm.getParametersByName(paramNames)
-
-  const enableNotificationsValue = (all[process.env.ENABLE_NOTIFICATIONS_PARAM!] as string)
-    .toString()
-    .trim()
-    .toLowerCase()
-
-  return {
-    enableNotifications: enableNotificationsValue === "true"
-  }
-}
+export const TEST_PRESCRIPTIONS_1 = await getTestPrescriptions("TEST_PRESCRIPTIONS_PARAM_1")
+export const TEST_PRESCRIPTIONS_2 = await getTestPrescriptions("TEST_PRESCRIPTIONS_PARAM_2")
+export const TEST_PRESCRIPTIONS_3 = await getTestPrescriptions("TEST_PRESCRIPTIONS_PARAM_3")
+export const TEST_PRESCRIPTIONS_4 = await getTestPrescriptions("TEST_PRESCRIPTIONS_PARAM_4")
 
 const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
   logger.appendKeys({
@@ -189,7 +162,7 @@ const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPro
   // Await the parameter promise before we continue
   let enableNotificationsFlag = false
   try {
-    const {enableNotifications} = await loadConfig()
+    const {enableNotifications} = await getNotificationsConfig()
     enableNotificationsFlag = enableNotifications
   } catch (err) {
     logger.error("Failed to load parameters from SSM", {err})
