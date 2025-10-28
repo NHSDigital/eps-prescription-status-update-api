@@ -15,6 +15,7 @@
     {"path": "packages/cpsuLambda"},
     {"path": "packages/checkPrescriptionStatusUpdates"},
     {"path": "packages/nhsNotifyLambda"},
-    {"path": "packages/nhsNotifyUpdateCallback"}
+    {"path": "packages/nhsNotifyUpdateCallback"},
+    {"path": "packages/psuRestoreValidationLambda"}
   ]
 }

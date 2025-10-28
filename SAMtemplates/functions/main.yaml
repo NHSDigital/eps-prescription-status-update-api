@@ -88,6 +88,22 @@ Parameters:
   EnableBackup:
     Type: String
 
+  TEST_PRESCRIPTIONS_1:
+    Type: String
+    Default: None
+  
+  TEST_PRESCRIPTIONS_2:
+    Type: String
+    Default: None
+
+  TEST_PRESCRIPTIONS_3:
+    Type: String
+    Default: None
+
+  TEST_PRESCRIPTIONS_4:
+    Type: String
+    Default: None
+
 Conditions:
   ShouldDeployCheckPrescriptionStatusUpdate: !Equals
     - true
@@ -118,6 +134,8 @@ Resources:
           ENVIRONMENT: !Ref Environment
           TEST_PRESCRIPTIONS_1: "None"
           TEST_PRESCRIPTIONS_2: "None"
+          TEST_PRESCRIPTIONS_3: "None"
+          TEST_PRESCRIPTIONS_4: "None"
           REQUIRE_APPLICATION_NAME: !Ref RequireApplicationName
     Metadata:
       BuildMethod: esbuild
