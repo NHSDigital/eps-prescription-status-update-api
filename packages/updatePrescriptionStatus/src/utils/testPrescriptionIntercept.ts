@@ -5,7 +5,6 @@ import {hasTimedOut, jobWithTimeout} from "./timeoutUtils"
 export interface InterceptionResult {
   testPrescriptionForcedError?: boolean
   testPrescription1Forced201?: boolean
-  testPrescriptionForcedStatus?: number
 }
 
 export async function testPrescription1Intercept(
