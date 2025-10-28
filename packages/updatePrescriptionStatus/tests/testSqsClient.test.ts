@@ -293,6 +293,14 @@ describe("Unit tests for getSaltValue", () => {
   })
 })
 describe("Unit tests for checkSiteOrSystemIsNotifyEnabled", () => {
+  let logger: Logger
+  let infoSpy: SpiedFunction<(input: LogItemMessage, ...extraInput: LogItemExtraInput) => void>
+  beforeEach(() => {
+    // Fresh logger and spies
+    logger = new Logger({serviceName: "test-service"})
+    infoSpy = jest.spyOn(logger, "info")
+  })
+
   it("includes an item with an enabled ODS code", async () => {
     const previous = createMockDataItem({
       PharmacyODSCode: "FA565",
@@ -303,8 +311,9 @@ describe("Unit tests for checkSiteOrSystemIsNotifyEnabled", () => {
       PharmacyODSCode: "FA565",
       ApplicationName: "not a real test supplier"
     })
-    const result = await checkSiteOrSystemIsNotifyEnabled([{previous, current}])
+    const result = await checkSiteOrSystemIsNotifyEnabled([{previous, current}], logger)
     expect(result).toStrictEqual([{previous, current}])
+    expectLogReceivedAndAllowed(infoSpy, 1, 1)
   })
 
   it("includes an item with an enabled ApplicationName", async () => {
@@ -317,8 +326,9 @@ describe("Unit tests for checkSiteOrSystemIsNotifyEnabled", () => {
       PharmacyODSCode: "ZZZ999",
       ApplicationName: "Internal Test System"
     })
-    const result = await checkSiteOrSystemIsNotifyEnabled([{previous, current}])
+    const result = await checkSiteOrSystemIsNotifyEnabled([{previous, current}], logger)
     expect(result).toEqual([{previous, current}])
+    expectLogReceivedAndAllowed(infoSpy, 1, 1)
   })
 
   it("is case insensitive for both ODS code and ApplicationName", async () => {
@@ -339,7 +349,7 @@ describe("Unit tests for checkSiteOrSystemIsNotifyEnabled", () => {
         previous: item2,
         current: item2
       }
-    ])
+    ], logger)
     expect(result).toEqual([
       {
         previous: item1,
@@ -362,8 +372,9 @@ describe("Unit tests for checkSiteOrSystemIsNotifyEnabled", () => {
       PharmacyODSCode: "b3j1z",
       ApplicationName: "Internal Test System"
     })
-    const result = await checkSiteOrSystemIsNotifyEnabled([{previous, current}])
+    const result = await checkSiteOrSystemIsNotifyEnabled([{previous, current}], logger)
     expect(result).toEqual([])
+    expectLogReceivedAndAllowed(infoSpy, 1, 0)
   })
 
   it("excludes items that are neither enabled nor blocked", async () => {
@@ -376,8 +387,18 @@ describe("Unit tests for checkSiteOrSystemIsNotifyEnabled", () => {
       PharmacyODSCode: "NOTINLIST",
       ApplicationName: "Some Other System"
     })
-    const result = await checkSiteOrSystemIsNotifyEnabled([{previous, current}])
+    const result = await checkSiteOrSystemIsNotifyEnabled([{previous, current}], logger)
     expect(result).toEqual([])
+    expectLogReceivedAndAllowed(infoSpy, 1, 0)
   })
 
 })
+function expectLogReceivedAndAllowed(
+  infoSpy: SpiedFunction<(input: LogItemMessage, ...extraInput: LogItemExtraInput) => void>,
+  numItemsReceived: number,
+  numItemsAllowed: number) {
+  expect(infoSpy).toHaveBeenCalledWith(
+    expect.stringContaining("Filtered out sites and suppliers that are not enabled, or are explicitly disabled"),
+    expect.objectContaining({numItemsReceived, numItemsAllowed})
+  )
+}

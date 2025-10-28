@@ -121,6 +121,9 @@ on:
         type: string
         default: ""
 
+      FORWARD_CSOC_LOGS:
+        required: true
+        type: boolean
     secrets:
       CLOUD_FORMATION_DEPLOY_ROLE:
         required: true
@@ -226,6 +229,7 @@ jobs:
           TEST_PRESCRIPTIONS_2: ${{ inputs.TEST_PRESCRIPTIONS_2 }}
           TEST_PRESCRIPTIONS_3: ${{ inputs.TEST_PRESCRIPTIONS_3 }}
           TEST_PRESCRIPTIONS_4: ${{ inputs.TEST_PRESCRIPTIONS_4 }}
+          FORWARD_CSOC_LOGS: ${{ inputs.FORWARD_CSOC_LOGS }}
         run: ./release_code.sh
 
       - name: get mtls secrets
