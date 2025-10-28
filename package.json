@@ -30,31 +30,27 @@
     "packages/common/commonTypes"
   ],
   "devDependencies": {
-    "@semantic-release/changelog": "^6.0.3",
-    "@semantic-release/release-notes-generator": "^14.1.0",
-    "@types/aws-lambda": "^8.10.153",
+    "@types/aws-lambda": "^8.10.156",
     "@types/jest": "^30.0.0",
-    "@types/node": "^24.6.2",
-    "@typescript-eslint/eslint-plugin": "^8.44.0",
-    "@typescript-eslint/parser": "^8.44.0",
+    "@types/node": "^24.9.1",
+    "@typescript-eslint/eslint-plugin": "^8.46.2",
+    "@typescript-eslint/parser": "^8.46.2",
     "aws-lambda": "^1.0.7",
-    "eslint": "^9.36.0",
+    "eslint": "^9.38.0",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-import-newlines": "^1.3.4",
     "eslint-plugin-prettier": "^5.5.4",
     "jest": "^30.2.0",
     "jest-junit": "^16.0.0",
     "license-checker": "^25.0.1",
-    "semantic-release": "^24.2.8",
-    "ts-jest": "^29.4.4",
+    "ts-jest": "^29.4.5",
     "ts-node": "^10.9.2",
     "typescript": "^5.9.3",
-    "typescript-eslint": "^8.45.0"
+    "typescript-eslint": "^8.46.2"
   },
   "dependencies": {
-    "@PrescriptionStatusUpdate_common/middyErrorHandler": "^1.0.0",
     "@PrescriptionStatusUpdate_common/commonTypes": "^1.0.0",
-    "conventional-changelog-eslint": "^6.0.0",
-    "esbuild": "^0.25.9"
+    "@PrescriptionStatusUpdate_common/middyErrorHandler": "^1.0.0",
+    "esbuild": "^0.25.11"
   }
 }

@@ -91,10 +91,10 @@ Parameters:
 
   EnableBackup:
     Type: String
-    Default: false
+    Default: "False"
     AllowedValues:
-      - True
-      - False
+      - "True"
+      - "False"
 
   EnableNotificationsInternal:
     Type: String
@@ -131,6 +131,13 @@ Parameters:
     Default: " "
 
   RequireApplicationName:
+    Type: String
+    Default: false
+    AllowedValues:
+      - true
+      - false
+
+  ForwardCsocLogs:
     Type: String
     Default: false
     AllowedValues:
@@ -198,6 +205,7 @@ Resources:
         LogRetentionInDays: !Ref LogRetentionInDays
         EnableSplunk: !Ref EnableSplunk
         DeployCheckPrescriptionStatusUpdate: !Ref DeployCheckPrescriptionStatusUpdate
+        ForwardCsocLogs: !Ref ForwardCsocLogs
 
   Functions:
     Type: AWS::Serverless::Application

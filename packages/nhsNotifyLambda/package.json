@@ -14,13 +14,13 @@
     "check-licenses": "license-checker --failOn GPL --failOn LGPL --start ../.."
   },
   "dependencies": {
-    "@aws-lambda-powertools/commons": "^2.27.0",
-    "@aws-lambda-powertools/logger": "^2.27.0",
-    "@aws-lambda-powertools/parameters": "^2.27.0",
-    "@aws-sdk/client-ssm": "^3.901.0",
+    "@aws-lambda-powertools/commons": "^2.28.1",
+    "@aws-lambda-powertools/logger": "^2.28.1",
+    "@aws-lambda-powertools/parameters": "^2.28.1",
+    "@aws-sdk/client-ssm": "^3.917.0",
     "@middy/core": "^6.4.5",
     "@middy/input-output-logger": "^6.4.5",
-    "@nhs/fhir-middy-error-handler": "^2.1.51",
+    "@nhs/fhir-middy-error-handler": "^2.1.55",
     "axios": "^1.12.2",
     "axios-retry": "^4.5.0",
     "jose": "^6.1.0",
