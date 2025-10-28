@@ -105,21 +105,17 @@ on:
       TEST_PRESCRIPTIONS_1:
         required: false
         type: string
-        default: ""
       TEST_PRESCRIPTIONS_2:
         required: false
         type: string
-        default: ""
 
       TEST_PRESCRIPTIONS_3:
         required: false
         type: string
-        default: ""
 
       TEST_PRESCRIPTIONS_4:
         required: false
         type: string
-        default: ""
 
       FORWARD_CSOC_LOGS:
         required: true
@@ -225,10 +221,10 @@ jobs:
           BLOCKED_SITE_ODS_CODES: ${{ inputs.BLOCKED_SITE_ODS_CODES }}
           NOTIFY_ROUTING_PLAN_ID: ${{ inputs.NOTIFY_ROUTING_PLAN_ID }}
           NOTIFY_API_BASE_URL: ${{ inputs.NOTIFY_API_BASE_URL }}
-          TEST_PRESCRIPTIONS_1: ${{ inputs.TEST_PRESCRIPTIONS_1 }}
-          TEST_PRESCRIPTIONS_2: ${{ inputs.TEST_PRESCRIPTIONS_2 }}
-          TEST_PRESCRIPTIONS_3: ${{ inputs.TEST_PRESCRIPTIONS_3 }}
-          TEST_PRESCRIPTIONS_4: ${{ inputs.TEST_PRESCRIPTIONS_4 }}
+          TEST_PRESCRIPTIONS_1: ${{ inputs.TEST_PRESCRIPTIONS_1 || 'noval' }}
+          TEST_PRESCRIPTIONS_2: ${{ inputs.TEST_PRESCRIPTIONS_2 || 'noval' }}
+          TEST_PRESCRIPTIONS_3: ${{ inputs.TEST_PRESCRIPTIONS_3 || 'noval' }}
+          TEST_PRESCRIPTIONS_4: ${{ inputs.TEST_PRESCRIPTIONS_4 || 'noval' }}
           FORWARD_CSOC_LOGS: ${{ inputs.FORWARD_CSOC_LOGS }}
         run: ./release_code.sh
 
