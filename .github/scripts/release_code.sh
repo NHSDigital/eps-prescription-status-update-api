@@ -72,8 +72,8 @@ sam deploy \
             NotifyAPIBaseURLValue="$NOTIFY_API_BASE_URL" \
             RequireApplicationName="$REQUIRE_APPLICATION_NAME" \
             EnableBackup="$ENABLE_BACKUP" \
-            TEST_PRESCRIPTIONS_1="$TEST_PRESCRIPTIONS_1" \
-            TEST_PRESCRIPTIONS_2="$TEST_PRESCRIPTIONS_2" \
-            TEST_PRESCRIPTIONS_3="$TEST_PRESCRIPTIONS_3" \
-            TEST_PRESCRIPTIONS_4="$TEST_PRESCRIPTIONS_4" \
+            TestPrescriptionsValue1="$TEST_PRESCRIPTIONS_1" \
+            TestPrescriptionsValue2="$TEST_PRESCRIPTIONS_2" \
+            TestPrescriptionsValue3="$TEST_PRESCRIPTIONS_3" \
+            TestPrescriptionsValue4="$TEST_PRESCRIPTIONS_4" \
             ForwardCsocLogs="$FORWARD_CSOC_LOGS"

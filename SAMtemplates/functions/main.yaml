@@ -88,19 +88,19 @@ Parameters:
   EnableBackup:
     Type: String
 
-  TEST_PRESCRIPTIONS_1:
+  TestPrescriptions1:
     Type: String
     Default: None
   
-  TEST_PRESCRIPTIONS_2:
+  TestPrescriptions2:
     Type: String
     Default: None
 
-  TEST_PRESCRIPTIONS_3:
+  TestPrescriptions3:
     Type: String
     Default: None
 
-  TEST_PRESCRIPTIONS_4:
+  TestPrescriptions4:
     Type: String
     Default: None
 
@@ -132,10 +132,10 @@ Resources:
           ENABLE_NOTIFICATIONS_PARAM: !Ref EnableNotificationsInternalParam
           LOG_LEVEL: !Ref LogLevel
           ENVIRONMENT: !Ref Environment
-          TEST_PRESCRIPTIONS_1: "None"
-          TEST_PRESCRIPTIONS_2: "None"
-          TEST_PRESCRIPTIONS_3: "None"
-          TEST_PRESCRIPTIONS_4: "None"
+          TEST_PRESCRIPTIONS_1: !Ref TestPrescriptions1
+          TEST_PRESCRIPTIONS_2: !Ref TestPrescriptions2
+          TEST_PRESCRIPTIONS_3: !Ref TestPrescriptions3
+          TEST_PRESCRIPTIONS_4: !Ref TestPrescriptions4
           REQUIRE_APPLICATION_NAME: !Ref RequireApplicationName
     Metadata:
       BuildMethod: esbuild
