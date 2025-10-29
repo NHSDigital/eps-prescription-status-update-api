@@ -57,7 +57,7 @@ beforeAll(async () => {
   ({lambdaHandler} = await import("../src/nhsNotifyLambda"))
 })
 
-import {mockEventBridgeEvent} from "@PrescriptionStatusUpdate_common/testing"
+import {mockEventBridgeEvent} from "@psu-common/testing"
 
 const ORIGINAL_ENV = {...process.env}
 

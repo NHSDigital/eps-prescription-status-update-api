@@ -11,7 +11,7 @@ import {
 } from "@aws-sdk/client-dynamodb"
 import {marshall, unmarshall} from "@aws-sdk/util-dynamodb"
 
-import {PSUDataItem, PSUDataItemWithPrevious} from "@PrescriptionStatusUpdate_common/commonTypes"
+import {PSUDataItem, PSUDataItemWithPrevious} from "@psu-common/commonTypes"
 import {Timeout} from "./timeoutUtils"
 
 const client = new DynamoDBClient()
