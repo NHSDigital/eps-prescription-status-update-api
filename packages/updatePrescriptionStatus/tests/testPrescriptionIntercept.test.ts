@@ -20,15 +20,14 @@ import {GetItemCommand, TransactionCanceledException, TransactWriteItemsCommand}
 export const mockGetParametersByName = jest.fn(async () => {
   return {}
 })
-jest.unstable_mockModule(
-  "@aws-lambda-powertools/parameters/ssm",
-  async () => ({
-    __esModule: true,
-    SSMProvider: jest.fn().mockImplementation(() => ({
-      getParametersByName: mockGetParametersByName
-    }))
-  })
-)
+
+const mockInitiatedSSMProvider = {
+  getParametersByName: mockGetParametersByName
+}
+
+jest.unstable_mockModule("@PrescriptionStatusUpdate_common/utilities", async () => ({
+  initiatedSSMProvider: mockInitiatedSSMProvider
+}))
 
 const {mockSend} = mockDynamoDBClient()
 process.env.ENVIRONMENT = "int"

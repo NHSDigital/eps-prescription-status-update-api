@@ -13,7 +13,8 @@ import {
   DEFAULT_DATE,
   X_REQUEST_ID,
   mockInternalDependency,
-  validTask
+  validTask,
+  getTestPrescriptions
 } from "./utils/testUtils"
 import {APIGatewayProxyEvent} from "aws-lambda"
 
@@ -22,6 +23,10 @@ import {TransactionCanceledException} from "@aws-sdk/client-dynamodb"
 const mockValidateEntry = mockInternalDependency("../../src/validation/content", content, "validateEntry")
 const {castEventBody, getXRequestID, validateEntries, handleTransactionCancelledException, buildDataItems, TTL_DELTA} =
   await import("../src/updatePrescriptionStatus")
+
+jest.unstable_mockModule("@PrescriptionStatusUpdate_common/utilities", async () => ({
+  getTestPrescriptions: getTestPrescriptions
+}))
 
 describe("Unit test getXRequestID", () => {
   beforeAll(() => {

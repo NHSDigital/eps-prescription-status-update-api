@@ -20,21 +20,20 @@ export class TestPrescriptions implements TestPrescriptionsConfig {
   }
 
   async getTestPrescriptions(param: keyof typeof TestPrescriptions): Promise<Array<string>> {
-    const stackName = process.env.STACK_NAME || "psu"
-
-    const paramName = (TestPrescriptions[param] as string) || ""
-
-    const paramValuesString = await this.ssmProvider.get(`/${stackName}/${paramName}`)
-
-    if (!paramValuesString) {
-      return []
-    }
-
+    const paramName = (TestPrescriptions[param] as string)
     const prescriptions = new Array<string>()
 
-    paramValuesString.split(",")
-      .map(p => p.trim())
-      .forEach(p => prescriptions.push(p))
+    const paramValues = await this.ssmProvider.get(paramName) as string
+
+    if (paramValues.length > 0) {
+      paramValues
+        .toString()
+        .split(",")
+        .map(p => p.trim())
+        .forEach(p => prescriptions.push(p))
+    } else {
+      return []
+    }
 
     return prescriptions
   }

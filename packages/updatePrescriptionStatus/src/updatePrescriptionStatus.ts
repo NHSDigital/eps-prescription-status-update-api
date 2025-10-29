@@ -31,12 +31,33 @@ import {
   testPrescription1Intercept,
   testPrescription2Intercept
 } from "./utils/testPrescriptionIntercept"
-import {getNotificationsConfig, getTestPrescriptions} from "@PrescriptionStatusUpdate_common/utilities"
+import {getTestPrescriptions, initiatedSSMProvider} from "@PrescriptionStatusUpdate_common/utilities"
 
 export const LAMBDA_TIMEOUT_MS = 9500
 // this is length of time from now when records in dynamodb will automatically be expired
 export const TTL_DELTA = 60 * 60 * 24 * 365 * 2 // Keep records for 2 years
 export const logger = new Logger({serviceName: "updatePrescriptionStatus"})
+
+// Fetching the parameters from SSM using a dedicated provider, so that the values can be cached
+// and reused across invocations, reducing the number of calls to SSM.
+// (it was failing load tests using getParameter directly)
+const ssm = initiatedSSMProvider
+
+async function loadConfig() {
+  const paramNames = {
+    [process.env.ENABLE_NOTIFICATIONS_PARAM!]: {maxAge: 5}
+  }
+  const all = await ssm.getParametersByName(paramNames)
+
+  const enableNotificationsValue = (all[process.env.ENABLE_NOTIFICATIONS_PARAM!] as string)
+    .toString()
+    .trim()
+    .toLowerCase()
+
+  return {
+    enableNotifications: enableNotificationsValue === "true"
+  }
+}
 
 // AEA-4317 AEA-4365 & AEA-5913 - Env vars for INT test prescriptions
 const INT_ENVIRONMENT = process.env.ENVIRONMENT === "int"
@@ -162,7 +183,7 @@ const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPro
   // Await the parameter promise before we continue
   let enableNotificationsFlag = false
   try {
-    const {enableNotifications} = await getNotificationsConfig()
+    const {enableNotifications} = await loadConfig()
     enableNotificationsFlag = enableNotifications
   } catch (err) {
     logger.error("Failed to load parameters from SSM", {err})
