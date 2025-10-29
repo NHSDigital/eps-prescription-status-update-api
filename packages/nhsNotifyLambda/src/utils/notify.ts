@@ -103,7 +103,7 @@ async function makeFakeNotifyRequest(
       messageReference: e.messageReference,
       psuRequestId: data.find((el) => el.messageReference === e.messageReference)?.PSUDataItem.RequestID
     })),
-    deliveryStatus: messageStatus // TODO: change splunk report query to messageStatus
+    messageStatus: messageStatus
   })
 
   // Map each input item to a "successful" NotifyDataItemMessage
@@ -194,7 +194,6 @@ export async function makeRealNotifyRequest(
           psuRequestId: data.find((el) => el.messageReference === e.messageReference)?.PSUDataItem.RequestID,
           pharmacyODSCode: e.originator.odsCode
         })),
-        deliveryStatus: "requested", // TODO: remove once Splunk report adopts messageStatus
         messageStatus: "requested"
       })
 
