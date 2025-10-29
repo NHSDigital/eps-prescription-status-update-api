@@ -1,14 +1,10 @@
 {
   "extends": "../../tsconfig.defaults.json",
   "compilerOptions": {
-    "baseUrl": "../..",
+    "rootDir": ".",
     "outDir": "lib"
   },
-  "references": [
-    {"path": "../common/commonTypes"},
-    {"path": "../common/middyErrorHandler"},
-    {"path": "../common/testing"}
-  ],
+  "references": [],
   "include": ["src/**/*", "tests/**/*", "tests/tasks/*.json"],
   "exclude": ["node_modules"]
 }

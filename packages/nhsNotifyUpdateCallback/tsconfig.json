@@ -1,12 +1,10 @@
 {
   "extends": "../../tsconfig.defaults.json",
   "compilerOptions": {
+    "rootDir": ".",
     "outDir": "lib"
   },
-  "references": [
-    {"path": "../common/commonTypes"},
-    {"path": "../common/testing"}
-  ],
+  "references": [],
   "include": ["src/**/*", "tests/**/*"],
   "exclude": ["node_modules"]
 }
