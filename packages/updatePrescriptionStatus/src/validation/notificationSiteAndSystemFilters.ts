@@ -1,7 +1,8 @@
 import {PSUDataItemWithPrevious} from "@PrescriptionStatusUpdate_common/commonTypes"
-import {initiatedSSMProvider} from "@PrescriptionStatusUpdate_common/utilities"
+import {SSMProvider} from "@aws-lambda-powertools/parameters/ssm"
+import {Logger} from "@aws-lambda-powertools/logger"
 
-const ssm = initiatedSSMProvider
+const ssm = new SSMProvider()
 
 function str2set(value: string | undefined): Set<string> {
   const raw = value ?? ""
@@ -41,15 +42,18 @@ async function loadConfig(): Promise<{
  * - AND are NOT blocked at the site level.
  *
  * @param data - Array of PSUDataItem to be processed
+ * @param logger - Optional logger instance
  * @returns - the filtered array
  */
 export async function checkSiteOrSystemIsNotifyEnabled(
-  data: Array<PSUDataItemWithPrevious>
+  data: Array<PSUDataItemWithPrevious>,
+  logger?: Logger
 ): Promise<Array<PSUDataItemWithPrevious>> {
   // Get the configuration from either the cache or SSM
   const {enabledSiteODSCodes, enabledSystems, blockedSiteODSCodes} = await loadConfig()
+  const unfilteredItemCount = data.length
 
-  return data.filter((item) => {
+  const filteredItems = data.filter((item) => {
     const appName = item.current.ApplicationName.trim().toLowerCase()
     const odsCode = item.current.PharmacyODSCode.trim().toLowerCase()
 
@@ -66,4 +70,13 @@ export async function checkSiteOrSystemIsNotifyEnabled(
 
     return true
   })
+
+  if (logger) {
+    logger.info(
+      "Filtered out sites and suppliers that are not enabled, or are explicitly disabled",
+      {numItemsReceived: unfilteredItemCount, numItemsAllowed: filteredItems.length}
+    )
+  }
+
+  return filteredItems
 }

@@ -27,8 +27,8 @@ class MiddyErrorHandler {
 
         // if there are a `statusCode` and an `error` field
         // this is a valid http error object
-        if (typeof logger[level] === "function") {
-          logger[level](
+        if (typeof (logger as any)[level] === "function") {
+          (logger as any)[level](
             {
               error: ((e) => ({
                 name: e.name,

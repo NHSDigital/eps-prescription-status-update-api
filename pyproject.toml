@@ -34,22 +34,22 @@ jsonpath-rw = "^1.4.0"
 semver = "^3.0.4"
 gitpython = "^3.1.45"
 requests = "^2.32.5"
-boto3 = "^1.40.50"
+boto3 = "^1.40.59"
 argparse = "^1.4.0"
 pre-commit = "^4.3.0"
 pytest = "^8.4.2"
-cfn-lint = "^1.40.1"
+cfn-lint = "^1.40.2"
 pyjwt = {extras = ["crypto"], version = "^2.10.1"}
 
 [tool.poetry.scripts]
 
 [tool.poetry.group.dev.dependencies]
 pre-commit = "^4.3.0"
-cfn-lint = "^1.40.1"
+cfn-lint = "^1.40.2"
 black = "^25.9.0"
 flake8 = "^7.3.0"
 jinja2 = "^3.1.5"
-pip-licenses = "^5.0.0"
+pip-licenses = "^5.5.0"
 click = "^8.3.0"
 rich = "^14.2.0"
 

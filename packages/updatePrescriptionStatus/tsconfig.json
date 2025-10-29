@@ -1,7 +1,6 @@
 {
   "extends": "../../tsconfig.defaults.json",
   "compilerOptions": {
-    "baseUrl": "../..",
     "rootDir": ".",
     "outDir": "lib"
   },

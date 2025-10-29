@@ -153,6 +153,12 @@ Parameters:
     Type: String
     Default: " "
 
+  ForwardCsocLogs:
+    Type: String
+    Default: false
+    AllowedValues:
+      - true
+      - false
 Resources:
   Secrets:
     Type: AWS::Serverless::Application
@@ -218,6 +224,7 @@ Resources:
         LogRetentionInDays: !Ref LogRetentionInDays
         EnableSplunk: !Ref EnableSplunk
         DeployCheckPrescriptionStatusUpdate: !Ref DeployCheckPrescriptionStatusUpdate
+        ForwardCsocLogs: !Ref ForwardCsocLogs
 
   Functions:
     Type: AWS::Serverless::Application
