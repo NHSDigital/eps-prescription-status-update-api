@@ -94,7 +94,7 @@ Conditions:
     - !Ref DeployCheckPrescriptionStatusUpdate
 
   EnableBackupCondition: !Equals
-    - True
+    - "True"
     - !Ref EnableBackup
 
 Resources:
