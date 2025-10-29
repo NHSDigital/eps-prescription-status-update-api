@@ -7,7 +7,10 @@
     "noEmit": true,
     "strict": false
   },
-  "references": [{"path": "../common/testing"}],
+  "references": [
+    {"path": "../common/testing"},
+    {"path": "../common/middyErrorHandler"}
+  ],
   "include": ["src/**/*", "tests/**/*"],
   "exclude": ["node_modules"]
 }

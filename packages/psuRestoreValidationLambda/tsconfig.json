@@ -7,7 +7,5 @@
   "include": ["src/**/*", "src/**/*.json"],
   "exclude": ["node_modules"],
   "references": [
-    {
-      "path": "../common/middyErrorHandler"
-    }
-  ]}
+    { "path": "../common/middyErrorHandler" }
+  ]

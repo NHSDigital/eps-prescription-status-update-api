@@ -7,7 +7,9 @@
     "noEmit": true,
     "strict": false
   },
-  "references": [],
+  "references": [
+    {"path": "../common/middyErrorHandler"}
+  ],
   "include": ["src/**/*", "tests/**/*"],
   "exclude": ["node_modules"]
 }
