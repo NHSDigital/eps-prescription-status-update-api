@@ -9,3 +9,4 @@
   "references": [
     { "path": "../common/middyErrorHandler" }
   ]
+}
