@@ -25,7 +25,7 @@ RUN echo "vscode ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers.d/vscode \
     && chmod 4755 /usr/bin/sudo
 
 # Download correct AWS CLI for arch
-RUN if [ "$TARGETARCH" = "arm64" ] || [ "$TARGETARCH" == "aarch64" ]; then \
+RUN if [ "$TARGETARCH" = "arm64" ] || [ "$TARGETARCH" = "aarch64" ]; then \
       wget -O /tmp/awscliv2.zip "https://awscli.amazonaws.com/awscli-exe-linux-aarch64.zip"; \
     else \
       wget -O /tmp/awscliv2.zip "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip"; \
@@ -35,7 +35,7 @@ RUN if [ "$TARGETARCH" = "arm64" ] || [ "$TARGETARCH" == "aarch64" ]; then \
     rm /tmp/awscliv2.zip && rm -rf /tmp/aws-cli
 
 # Download correct SAM CLI for arch
-RUN if [ "$TARGETARCH" = "arm64" ] || [ "$TARGETARCH" == "aarch64" ]; then \
+RUN if [ "$TARGETARCH" = "arm64" ] || [ "$TARGETARCH" = "aarch64" ]; then \
       wget -O /tmp/aws-sam-cli.zip "https://github.com/aws/aws-sam-cli/releases/latest/download/aws-sam-cli-linux-arm64.zip"; \
     else \
       wget -O /tmp/aws-sam-cli.zip "https://github.com/aws/aws-sam-cli/releases/latest/download/aws-sam-cli-linux-x86_64.zip"; \
@@ -61,19 +61,18 @@ RUN \
     echo 'export PATH="$HOME/gems/bin:$PATH"' >> ~/.bashrc;
 
 # Install ASDF plugins
-RUN asdf plugin add python; \
-    asdf plugin add poetry https://github.com/asdf-community/asdf-poetry.git; \
-    asdf plugin add shellcheck https://github.com/luizm/asdf-shellcheck.git; \
-    asdf plugin add nodejs https://github.com/asdf-vm/asdf-nodejs.git; \
-    asdf plugin add direnv; \
-    asdf plugin add actionlint; \
+RUN asdf plugin add python && \
+    asdf plugin add poetry https://github.com/asdf-community/asdf-poetry.git && \
+    asdf plugin add shellcheck https://github.com/luizm/asdf-shellcheck.git && \
+    asdf plugin add nodejs https://github.com/asdf-vm/asdf-nodejs.git && \
+    asdf plugin add direnv && \
+    asdf plugin add actionlint && \
     asdf plugin add ruby https://github.com/asdf-vm/asdf-ruby.git
-
 
 WORKDIR /workspaces/eps-prescription-status-update-api
 ADD .tool-versions /workspaces/eps-prescription-status-update-api/.tool-versions
 ADD .tool-versions /home/vscode/.tool-versions
 
 # install python before poetry to ensure correct python version is used
-RUN asdf install python; \
+RUN asdf install python && \
     asdf install
