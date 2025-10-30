@@ -1,4 +1,4 @@
-import {PSUDataItemWithPrevious} from "@PrescriptionStatusUpdate_common/commonTypes"
+import {PSUDataItemWithPrevious} from "@psu-common/commonTypes"
 import {SSMProvider} from "@aws-lambda-powertools/parameters/ssm"
 import {Logger} from "@aws-lambda-powertools/logger"
 

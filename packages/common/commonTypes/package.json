@@ -1,5 +1,5 @@
 {
-  "name": "@PrescriptionStatusUpdate_common/commonTypes",
+  "name": "@psu-common/commonTypes",
   "version": "1.0.0",
   "description": "Common type resources",
   "author": "NHS Digital",

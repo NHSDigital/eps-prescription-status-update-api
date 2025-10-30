@@ -2,7 +2,7 @@ import {DynamoDBClient, QueryCommand} from "@aws-sdk/client-dynamodb"
 import {DynamoDBDocumentClient, PutCommand} from "@aws-sdk/lib-dynamodb"
 import {Logger} from "@aws-lambda-powertools/logger"
 
-import {LastNotificationStateType, NotifyDataItem} from "@PrescriptionStatusUpdate_common/commonTypes"
+import {LastNotificationStateType, NotifyDataItem} from "@psu-common/commonTypes"
 
 import {TTL_DELTA} from "./constants"
 import {NotifyDataItemMessage} from "./types"

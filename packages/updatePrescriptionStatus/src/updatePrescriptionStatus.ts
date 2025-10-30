@@ -12,7 +12,7 @@ import httpHeaderNormalizer from "@middy/http-header-normalizer"
 import errorHandler from "@nhs/fhir-middy-error-handler"
 import {Bundle, BundleEntry, Task} from "fhir/r4"
 
-import {PSUDataItem, PSUDataItemWithPrevious} from "@PrescriptionStatusUpdate_common/commonTypes"
+import {PSUDataItem, PSUDataItemWithPrevious} from "@psu-common/commonTypes"
 
 import {transactionBundle, validateEntry} from "./validation/content"
 import {getPreviousItem, persistDataItems, rollbackDataItems} from "./utils/databaseClient"
