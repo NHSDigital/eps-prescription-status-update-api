@@ -53,7 +53,7 @@ const mockInitiatedSSMProvider = {
   getParametersByName: mockGetParametersByName
 }
 
-jest.unstable_mockModule("@PrescriptionStatusUpdate_common/utilities", async () => ({
+jest.unstable_mockModule("@psu-common/utilities", async () => ({
   getTestPrescriptions: getTestPrescriptions,
   initiatedSSMProvider: mockInitiatedSSMProvider
 }))

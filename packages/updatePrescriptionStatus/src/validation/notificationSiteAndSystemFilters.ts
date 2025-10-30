@@ -1,5 +1,5 @@
-import {PSUDataItemWithPrevious} from "@PrescriptionStatusUpdate_common/commonTypes"
-import {initiatedSSMProvider} from "@PrescriptionStatusUpdate_common/utilities"
+import {PSUDataItemWithPrevious} from "@psu-common/commonTypes"
+import {initiatedSSMProvider} from "@psu-common/utilities"
 import {Logger} from "@aws-lambda-powertools/logger"
 
 function str2set(value: string | undefined): Set<string> {

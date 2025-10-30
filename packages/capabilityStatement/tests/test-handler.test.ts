@@ -8,7 +8,7 @@ import {
   jest
 } from "@jest/globals"
 import capabilityStatement from "../src/apim-medicines-prescriptionstatusupdate.json"
-import {mockAPIGatewayProxyEvent, mockContext} from "@PrescriptionStatusUpdate_common/testing"
+import {mockAPIGatewayProxyEvent, mockContext} from "@psu-common/testing"
 
 describe("Unit test for app handler", function () {
   it("verifies successful response with no params", async () => {

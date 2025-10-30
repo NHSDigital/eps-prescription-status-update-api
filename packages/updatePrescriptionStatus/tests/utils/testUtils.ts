@@ -15,7 +15,7 @@ import {
 import {Task} from "fhir/r4"
 
 import valid from "../tasks/valid.json"
-import {PSUDataItem} from "@PrescriptionStatusUpdate_common/commonTypes"
+import {PSUDataItem} from "@psu-common/commonTypes"
 
 export const TASK_ID_0 = "4d70678c-81e4-4ff4-8c67-17596fd0aa46"
 export const TASK_ID_1 = "0ae4daf3-f24b-479d-b8fa-b69e2d873b60"
@@ -222,6 +222,8 @@ const mockPrescriptions = new Map([
   ["TEST_PRESCRIPTIONS_PARAM_4", ["prescription-4a", "prescription-4b", "prescription-4c"]]
 ])
 
-export const getTestPrescriptions = jest.fn().mockImplementation((param: unknown) => {
-  return Promise.resolve(mockPrescriptions.get(param as string) || [])
-})
+export const getTestPrescriptions = jest.fn()
+  .mockName("getTestPrescriptions")
+  .mockImplementation((param: unknown) => {
+    return Promise.resolve(mockPrescriptions.get(param as string) || [])
+  })

@@ -16,14 +16,17 @@
     "allowJs": true,
     "baseUrl": ".",
     "paths": {
-      "@/cpt-ui-common/commonTypes": [
-        "./packages/common/commonTypes/src"
+      "@psu-common/commonTypes": [
+        "./packages/common/commonTypes/src/*"
       ],
-      "@/cpt-ui-common/middyErrorHandler": [
-        "./packages/common/middyErrorHandler/src"
+      "@psu-common/middyErrorHandler": [
+        "./packages/common/middyErrorHandler/src/*"
       ],
-      "@/cpt-ui-common/testing": [
-        "./packages/common/testing/src"
+      "@psu-common/testing": [
+        "./packages/common/testing/src/*"
+      ],
+      "@psu-common/utilities": [
+        "./packages/common/utilities/*"
       ]
     }
   }

@@ -7,7 +7,7 @@ import {getSecret} from "@aws-lambda-powertools/parameters/secrets"
 
 import {createHmac, timingSafeEqual} from "crypto"
 
-import {LastNotificationStateType, NotificationUpdate} from "@PrescriptionStatusUpdate_common/commonTypes"
+import {LastNotificationStateType, NotificationUpdate} from "@psu-common/commonTypes"
 
 import {CallbackResource, CallbackResponse, CallbackType} from "./types"
 

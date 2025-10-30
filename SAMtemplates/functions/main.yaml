@@ -106,7 +106,7 @@ Conditions:
     - !Ref DeployCheckPrescriptionStatusUpdate
 
   EnableBackupCondition: !Equals
-    - True
+    - "True"
     - !Ref EnableBackup
 
 Resources:
@@ -433,7 +433,7 @@ Resources:
           TABLE_NAME: !Ref PrescriptionNotificationStatesTableName
           API_KEY_SECRET: secrets-PSU-Notify-API-Key
           PRIVATE_KEY_SECRET: secrets-PSU-Notify-PrivateKey
-          KID_SECRET: secrets-PSU-Notify-Application-Name
+          KID_SECRET: secrets-PSU-Notify-Application-KID
           NHS_NOTIFY_ROUTING_ID_PARAM: !Ref NotifyRoutingPlanIDParam
           NOTIFY_API_BASE_URL_PARAM: !Ref NotifyAPIBaseURLParam
           MAKE_REAL_NOTIFY_REQUESTS_PARAM: !Ref EnableNotificationsExternalParam

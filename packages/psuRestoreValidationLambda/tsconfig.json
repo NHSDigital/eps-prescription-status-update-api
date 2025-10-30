@@ -2,12 +2,11 @@
   "extends": "../../tsconfig.defaults.json",
   "compilerOptions": {
     "rootDir": ".",
-    "outDir": "lib",
+    "outDir": "lib"
   },
   "include": ["src/**/*", "src/**/*.json"],
   "exclude": ["node_modules"],
   "references": [
-    {
-      "path": "../common/middyErrorHandler"
-    }
-  ]}
+    { "path": "../common/middyErrorHandler" }
+  ]
+}

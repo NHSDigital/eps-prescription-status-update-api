@@ -11,7 +11,7 @@ import httpHeaderNormalizer from "@middy/http-header-normalizer"
 import errorHandler from "@nhs/fhir-middy-error-handler"
 import {Bundle, BundleEntry, Task} from "fhir/r4"
 
-import {PSUDataItem, PSUDataItemWithPrevious} from "@PrescriptionStatusUpdate_common/commonTypes"
+import {PSUDataItem, PSUDataItemWithPrevious} from "@psu-common/commonTypes"
 
 import {transactionBundle, validateEntry} from "./validation/content"
 import {getPreviousItem, persistDataItems, rollbackDataItems} from "./utils/databaseClient"
@@ -24,14 +24,15 @@ import {
   conflictDuplicate,
   createSuccessResponseEntries,
   serverError,
-  timeoutResponse
+  timeoutResponse,
+  tooManyRequests
 } from "./utils/responses"
 import {
   InterceptionResult,
   testPrescription1Intercept,
   testPrescription2Intercept
 } from "./utils/testPrescriptionIntercept"
-import {getTestPrescriptions, initiatedSSMProvider} from "@PrescriptionStatusUpdate_common/utilities"
+import {getTestPrescriptions, initiatedSSMProvider} from "@psu-common/utilities"
 
 export const LAMBDA_TIMEOUT_MS = 9500
 // this is length of time from now when records in dynamodb will automatically be expired
@@ -129,6 +130,7 @@ const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPro
   let testPrescription1Forced201 = false
   let testPrescriptionForcedError = false
   if (INT_ENVIRONMENT) {
+    logger.info("INT environment detected, checking for test prescription interceptions.")
     let interceptionResponse: InterceptionResult = {}
     const prescriptionIDs = dataItems.map((item) => item.PrescriptionID)
     const taskIDs = dataItems.map((item) => item.TaskID)
@@ -153,7 +155,7 @@ const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPro
     const isTestPrescription3 = testPrescription3Index !== -1
     if (isTestPrescription3) {
       logger.info("Forcing error for INT test prescription. Simulating failure to write to database.")
-      responseEntries = [serverError()]
+      responseEntries = [badRequest(`Simulated failure to write to database for test prescription.`)]
       return response(400, responseEntries)
     }
 
@@ -161,7 +163,7 @@ const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPro
     const isTestPrescription4 = testPrescription4Index !== -1
     if (isTestPrescription4) {
       logger.info("Forcing error for INT test prescription. Simulating PSU capacity failure.")
-      responseEntries = [serverError()]
+      responseEntries = [tooManyRequests()]
       return response(429, responseEntries)
     }
 

@@ -12,7 +12,8 @@ import {
   generateExpectedItems,
   generateMockEvent,
   mockDynamoDBClient,
-  TASK_VALUES
+  TASK_VALUES,
+  getTestPrescriptions
 } from "./utils/testUtils"
 import responseSingleItem from "../../specification/examples/response-single-item.json"
 import {GetItemCommand, TransactionCanceledException, TransactWriteItemsCommand} from "@aws-sdk/client-dynamodb"
@@ -25,8 +26,9 @@ const mockInitiatedSSMProvider = {
   getParametersByName: mockGetParametersByName
 }
 
-jest.unstable_mockModule("@PrescriptionStatusUpdate_common/utilities", async () => ({
-  initiatedSSMProvider: mockInitiatedSSMProvider
+jest.unstable_mockModule("@psu-common/utilities", async () => ({
+  initiatedSSMProvider: mockInitiatedSSMProvider,
+  getTestPrescriptions: getTestPrescriptions
 }))
 
 const {mockSend} = mockDynamoDBClient()

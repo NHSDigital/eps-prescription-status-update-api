@@ -4,7 +4,7 @@ import {getSecret} from "@aws-lambda-powertools/parameters/secrets"
 
 import {createHmac} from "crypto"
 
-import {NotifyDataItem, PSUDataItemWithPrevious} from "@PrescriptionStatusUpdate_common/commonTypes"
+import {NotifyDataItem, PSUDataItemWithPrevious} from "@psu-common/commonTypes"
 
 import {checkSiteOrSystemIsNotifyEnabled} from "../validation/notificationSiteAndSystemFilters"
 
