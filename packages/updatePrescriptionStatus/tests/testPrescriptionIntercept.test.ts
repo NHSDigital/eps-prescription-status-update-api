@@ -3,7 +3,8 @@ import {
   expect,
   it,
   describe,
-  jest
+  jest,
+  beforeEach
 } from "@jest/globals"
 import {
   DEFAULT_DATE,
@@ -173,5 +174,69 @@ describe("testPrescription2Intercept", () => {
     )
 
     expectGetItemCommand(TASK_VALUES[3].prescriptionID, TASK_VALUES[3].id)
+  })
+})
+
+describe("testPrescription3Intercept", () => {
+  beforeEach(() => {
+    jest.useFakeTimers().setSystemTime(DEFAULT_DATE)
+    jest.resetAllMocks()
+    // Set TEST_PRESCRIPTIONS_3 only for these tests
+    process.env.TEST_PRESCRIPTIONS_3 = ["abc", TASK_VALUES[2].prescriptionID, "def"].join(",")
+    // Clear the module cache so it re-reads the env var
+    jest.resetModules()
+  })
+
+  afterEach(() => {
+    // Clean up after each test to avoid affecting other test suites
+    delete process.env.TEST_PRESCRIPTIONS_3
+    // Clear module cache again to ensure clean state for other tests
+    jest.resetModules()
+  })
+
+  it("Return 400 when test prescription 3 is submitted", async () => {
+    const body = generateBody(3)
+    // Only include entries 0, 1, and 2. Entry 2 contains TASK_VALUES[2] which matches TEST_PRESCRIPTIONS_3
+    const event: APIGatewayProxyEvent = generateMockEvent(body)
+
+    const {handler, logger} = await import("../src/updatePrescriptionStatus")
+    const loggerInfo = jest.spyOn(logger, "info")
+    const response: APIGatewayProxyResult = await handler(event, {})
+
+    expect(response.statusCode).toEqual(400)
+    expect(loggerInfo).toHaveBeenCalledWith(
+      "Forcing error for INT test prescription. Simulating failure to write to database.")
+  })
+})
+
+describe("testPrescription4Intercept", () => {
+  beforeEach(() => {
+    jest.useFakeTimers().setSystemTime(DEFAULT_DATE)
+    jest.resetAllMocks()
+    // Set TEST_PRESCRIPTIONS_4 only for these tests
+    process.env.TEST_PRESCRIPTIONS_4 = ["abc", TASK_VALUES[2].prescriptionID, "def"].join(",")
+    // Clear the module cache so it re-reads the env var
+    jest.resetModules()
+  })
+
+  afterEach(() => {
+    // Clean up after each test to avoid affecting other test suites
+    delete process.env.TEST_PRESCRIPTIONS_4
+    // Clear module cache again to ensure clean state for other tests
+    jest.resetModules()
+  })
+
+  it("Return 400 when test prescription 4 is submitted", async () => {
+    const body = generateBody(3)
+    // Only include entries 0, 1, and 2. Entry 2 contains TASK_VALUES[2] which matches TEST_PRESCRIPTIONS_4
+    const event: APIGatewayProxyEvent = generateMockEvent(body)
+
+    const {handler, logger} = await import("../src/updatePrescriptionStatus")
+    const loggerInfo = jest.spyOn(logger, "info")
+    const response: APIGatewayProxyResult = await handler(event, {})
+
+    expect(response.statusCode).toEqual(429)
+    expect(loggerInfo).toHaveBeenCalledWith(
+      "Forcing error for INT test prescription. Simulating PSU capacity failure.")
   })
 })
