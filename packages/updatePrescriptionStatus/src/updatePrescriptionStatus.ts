@@ -62,10 +62,31 @@ async function loadConfig() {
 
 // AEA-4317 AEA-4365 & AEA-5913 - Env vars for INT test prescriptions
 const INT_ENVIRONMENT = process.env.ENVIRONMENT === "int"
-export const TEST_PRESCRIPTIONS_1 = await getTestPrescriptions("TEST_PRESCRIPTIONS_PARAM_1")
-export const TEST_PRESCRIPTIONS_2 = await getTestPrescriptions("TEST_PRESCRIPTIONS_PARAM_2")
-export const TEST_PRESCRIPTIONS_3 = await getTestPrescriptions("TEST_PRESCRIPTIONS_PARAM_3")
-export const TEST_PRESCRIPTIONS_4 = await getTestPrescriptions("TEST_PRESCRIPTIONS_PARAM_4")
+// Using lazy initialization to avoid top-level await issues with Jest mocking
+export let TEST_PRESCRIPTIONS_1: Array<string> = []
+export let TEST_PRESCRIPTIONS_2: Array<string> = []
+export let TEST_PRESCRIPTIONS_3: Array<string> = []
+export let TEST_PRESCRIPTIONS_4: Array<string> = []
+
+let testPrescriptionsLoaded = false
+async function loadTestPrescriptions() {
+  if (!testPrescriptionsLoaded) {
+    TEST_PRESCRIPTIONS_1 = await getTestPrescriptions("TEST_PRESCRIPTIONS_PARAM_1")
+    TEST_PRESCRIPTIONS_2 = await getTestPrescriptions("TEST_PRESCRIPTIONS_PARAM_2")
+    TEST_PRESCRIPTIONS_3 = await getTestPrescriptions("TEST_PRESCRIPTIONS_PARAM_3")
+    TEST_PRESCRIPTIONS_4 = await getTestPrescriptions("TEST_PRESCRIPTIONS_PARAM_4")
+    testPrescriptionsLoaded = true
+  }
+}
+
+// Export for testing purposes - allows tests to reset the loaded state
+export function resetTestPrescriptions() {
+  testPrescriptionsLoaded = false
+  TEST_PRESCRIPTIONS_1 = []
+  TEST_PRESCRIPTIONS_2 = []
+  TEST_PRESCRIPTIONS_3 = []
+  TEST_PRESCRIPTIONS_4 = []
+}
 
 const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
   logger.appendKeys({
@@ -131,6 +152,7 @@ const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPro
   let testPrescriptionForcedError = false
   if (INT_ENVIRONMENT) {
     logger.info("INT environment detected, checking for test prescription interceptions.")
+    await loadTestPrescriptions()
     let interceptionResponse: InterceptionResult = {}
     const prescriptionIDs = dataItems.map((item) => item.PrescriptionID)
     const taskIDs = dataItems.map((item) => item.TaskID)

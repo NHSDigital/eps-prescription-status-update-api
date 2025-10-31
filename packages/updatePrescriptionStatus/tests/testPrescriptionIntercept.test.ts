@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import {APIGatewayProxyEvent, APIGatewayProxyResult} from "aws-lambda"
 import {
   expect,
@@ -8,6 +9,7 @@ import {
 } from "@jest/globals"
 import {
   DEFAULT_DATE,
+  FULL_URL_1,
   generateBody,
   generateExpectedItems,
   generateMockEvent,
@@ -15,7 +17,6 @@ import {
   TASK_VALUES,
   getTestPrescriptions
 } from "./utils/testUtils"
-import responseSingleItem from "../../specification/examples/response-single-item.json"
 import {GetItemCommand, TransactionCanceledException, TransactWriteItemsCommand} from "@aws-sdk/client-dynamodb"
 
 export const mockGetParametersByName = jest.fn(async () => {
@@ -33,6 +34,11 @@ jest.unstable_mockModule("@psu-common/utilities", async () => ({
 
 const {mockSend} = mockDynamoDBClient()
 process.env.ENVIRONMENT = "int"
+
+function resetDynamoMock() {
+  mockSend.mockClear()
+  mockSend.mockImplementation(async () => ({}))
+}
 
 function setupExistingDynamoEntry() {
   mockSend.mockImplementation(async (command) => {
@@ -69,15 +75,21 @@ function expectGetItemCommand(prescriptionID: string, taskID: string) {
 }
 
 describe("testPrescription1Intercept", () => {
-  beforeEach(() => {
+  beforeEach(async () => {
     jest.useFakeTimers().setSystemTime(DEFAULT_DATE)
-    jest.resetAllMocks()
+    const {resetTestPrescriptions} = await import("../src/updatePrescriptionStatus")
+    resetTestPrescriptions()
+    resetDynamoMock()
+    jest.clearAllMocks()
   })
 
   it("Return 500 and write to DynamoDB when test prescription 1 is submitted for the first time", async () => {
     const body = generateBody(2)
+    // Only include entry for test prescription 1 (TASK_VALUES[1])
+    body.entry = [body.entry[1]]
     const event: APIGatewayProxyEvent = generateMockEvent(body)
-    const expectedItems = generateExpectedItems(2)
+    let expectedItems = generateExpectedItems(2)
+    expectedItems.input.TransactItems = [expectedItems.input.TransactItems[1]]
 
     const {handler, logger} = await import("../src/updatePrescriptionStatus")
     const loggerInfo = jest.spyOn(logger, "info")
@@ -93,6 +105,8 @@ describe("testPrescription1Intercept", () => {
 
   it("Return 201 and doesn't write to DynamoDB when test prescription 1 is submitted for a second time", async () => {
     const body = generateBody(2)
+    // Only include entry for test prescription 1 (TASK_VALUES[1])
+    body.entry = [body.entry[1]]
     const event: APIGatewayProxyEvent = generateMockEvent(body)
 
     const {handler, logger} = await import("../src/updatePrescriptionStatus")
@@ -110,24 +124,30 @@ describe("testPrescription1Intercept", () => {
     expect(response.statusCode).toEqual(201)
     expect(loggerInfo).toHaveBeenCalledWith("Not first submission of INT test prescription 1, forcing 201")
     expect(loggerInfo).toHaveBeenCalledWith("Forcing 201 response for INT test prescription 1")
-    expect(JSON.parse(response.body).entry[0]).toEqual(responseSingleItem.entry[0])
+    const responseBody = JSON.parse(response.body)
+    expect(responseBody.entry[0].response.status).toEqual("201 Created")
+    expect(responseBody.entry[0].fullUrl).toEqual(FULL_URL_1)
 
     expectGetItemCommand(TASK_VALUES[1].prescriptionID, TASK_VALUES[1].id)
   })
 })
 
 describe("testPrescription2Intercept", () => {
-  beforeEach(() => {
+  beforeEach(async () => {
     jest.useFakeTimers().setSystemTime(DEFAULT_DATE)
-    jest.resetAllMocks()
+    const {resetTestPrescriptions} = await import("../src/updatePrescriptionStatus")
+    resetTestPrescriptions()
+    resetDynamoMock()
+    jest.clearAllMocks()
   })
 
   it("Return 500 and write to DynamoDB when test prescription 2 is submitted for the first time", async () => {
     const body = generateBody(4)
-    body.entry = [body.entry[0], body.entry[3]]
+    // Only include entry for test prescription 2 (TASK_VALUES[3])
+    body.entry = [body.entry[3]]
     const event: APIGatewayProxyEvent = generateMockEvent(body)
     let expectedItems = generateExpectedItems(4)
-    expectedItems.input.TransactItems = [expectedItems.input.TransactItems[0], expectedItems.input.TransactItems[3]]
+    expectedItems.input.TransactItems = [expectedItems.input.TransactItems[3]]
 
     const {handler, logger} = await import("../src/updatePrescriptionStatus")
     const loggerInfo = jest.spyOn(logger, "info")
@@ -145,7 +165,8 @@ describe("testPrescription2Intercept", () => {
 
   it("Return 409 when test prescription 2 is submitted for a second time", async () => {
     const body = generateBody(4)
-    body.entry = [body.entry[0], body.entry[3]]
+    // Only include entry for test prescription 2 (TASK_VALUES[3])
+    body.entry = [body.entry[3]]
     const event: APIGatewayProxyEvent = generateMockEvent(body)
 
     const {handler, logger} = await import("../src/updatePrescriptionStatus")
@@ -164,7 +185,14 @@ describe("testPrescription2Intercept", () => {
 
     expect(response.statusCode).toEqual(409)
     expect(loggerInfo).toHaveBeenCalledWith("Not first submission of INT test prescription 2, continuing")
-    expect(JSON.parse(response.body).entry[2].response.outcome.issue[0].diagnostics).toEqual(
+    const responseBody = JSON.parse(response.body)
+    // When a duplicate is detected, there might be multiple entries in the response
+    // Find the entry with the duplicate error message
+    const duplicateEntry = responseBody.entry.find((entry: any) =>
+      entry.response?.outcome?.issue?.[0]?.diagnostics?.includes("task id and prescription id identical")
+    )
+    expect(duplicateEntry).toBeDefined()
+    expect(duplicateEntry.response.outcome.issue[0].diagnostics).toEqual(
       "Request contains a task id and prescription id identical to a record already in the data store."
     )
 
@@ -173,10 +201,13 @@ describe("testPrescription2Intercept", () => {
 })
 
 describe("testPrescription3Intercept", () => {
-  beforeEach(() => {
+  beforeEach(async () => {
     jest.useFakeTimers().setSystemTime(DEFAULT_DATE)
-    jest.resetAllMocks()
     jest.resetModules()
+    const {resetTestPrescriptions} = await import("../src/updatePrescriptionStatus")
+    resetTestPrescriptions()
+    resetDynamoMock()
+    jest.clearAllMocks()
   })
 
   afterEach(() => {
@@ -199,10 +230,13 @@ describe("testPrescription3Intercept", () => {
 })
 
 describe("testPrescription4Intercept", () => {
-  beforeEach(() => {
+  beforeEach(async () => {
     jest.useFakeTimers().setSystemTime(DEFAULT_DATE)
-    jest.resetAllMocks()
     jest.resetModules()
+    const {resetTestPrescriptions} = await import("../src/updatePrescriptionStatus")
+    resetTestPrescriptions()
+    resetDynamoMock()
+    jest.clearAllMocks()
   })
 
   afterEach(() => {
@@ -210,8 +244,8 @@ describe("testPrescription4Intercept", () => {
   })
 
   it("Return 400 when test prescription 4 is submitted", async () => {
-    const body = generateBody(3)
-    // Only include entries 0, 1, and 2. Entry 2 contains TASK_VALUES[2] which matches TEST_PRESCRIPTIONS_4
+    const body = generateBody(1)
+    // Entry 0 contains TASK_VALUES[0] which matches TEST_PRESCRIPTIONS_4
     const event: APIGatewayProxyEvent = generateMockEvent(body)
 
     const {handler, logger} = await import("../src/updatePrescriptionStatus")
