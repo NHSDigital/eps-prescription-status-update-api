@@ -28,17 +28,11 @@ const mockInitiatedSSMProvider = {
 
 jest.unstable_mockModule("@psu-common/utilities", async () => ({
   initiatedSSMProvider: mockInitiatedSSMProvider,
-  getTestPrescriptions: getTestPrescriptions
+  getTestPrescriptions: getTestPrescriptions // Use the mocked version defined in testUtils.ts
 }))
 
 const {mockSend} = mockDynamoDBClient()
 process.env.ENVIRONMENT = "int"
-/*
-  Using task values 1 and 3 (Instead of 0 and 2) to test the interception when the test prescription
-  is not the first in the bundle.
-*/
-process.env.TEST_PRESCRIPTIONS_1 = ["abc", TASK_VALUES[1].prescriptionID, "def"].join(",")
-process.env.TEST_PRESCRIPTIONS_2 = ["abc", TASK_VALUES[3].prescriptionID, "def"].join(",")
 
 function setupExistingDynamoEntry() {
   mockSend.mockImplementation(async (command) => {
@@ -182,16 +176,10 @@ describe("testPrescription3Intercept", () => {
   beforeEach(() => {
     jest.useFakeTimers().setSystemTime(DEFAULT_DATE)
     jest.resetAllMocks()
-    // Set TEST_PRESCRIPTIONS_3 only for these tests
-    process.env.TEST_PRESCRIPTIONS_3 = ["abc", TASK_VALUES[2].prescriptionID, "def"].join(",")
-    // Clear the module cache so it re-reads the env var
     jest.resetModules()
   })
 
   afterEach(() => {
-    // Clean up after each test to avoid affecting other test suites
-    delete process.env.TEST_PRESCRIPTIONS_3
-    // Clear module cache again to ensure clean state for other tests
     jest.resetModules()
   })
 
@@ -214,16 +202,10 @@ describe("testPrescription4Intercept", () => {
   beforeEach(() => {
     jest.useFakeTimers().setSystemTime(DEFAULT_DATE)
     jest.resetAllMocks()
-    // Set TEST_PRESCRIPTIONS_4 only for these tests
-    process.env.TEST_PRESCRIPTIONS_4 = ["abc", TASK_VALUES[2].prescriptionID, "def"].join(",")
-    // Clear the module cache so it re-reads the env var
     jest.resetModules()
   })
 
   afterEach(() => {
-    // Clean up after each test to avoid affecting other test suites
-    delete process.env.TEST_PRESCRIPTIONS_4
-    // Clear module cache again to ensure clean state for other tests
     jest.resetModules()
   })
 
@@ -235,9 +217,9 @@ describe("testPrescription4Intercept", () => {
     const {handler, logger} = await import("../src/updatePrescriptionStatus")
     const loggerInfo = jest.spyOn(logger, "info")
     const response: APIGatewayProxyResult = await handler(event, {})
-
-    expect(response.statusCode).toEqual(429)
+    console.log(response)
     expect(loggerInfo).toHaveBeenCalledWith(
       "Forcing error for INT test prescription. Simulating PSU capacity failure.")
+    expect(response.statusCode).toEqual(429)
   })
 })
