@@ -58,15 +58,13 @@
   },
   "remoteEnv": { "LOCAL_WORKSPACE_FOLDER": "${localWorkspaceFolder}" },
   "updateRemoteUserUID": true,
-  "initializeCommand": "echo $(getent group docker | cut -d: -f3) > ${localWorkspaceFolder}/.devcontainer/docker-gid",
-  "onCreateCommand": "sudo groupadd -g $(cat /workspaces/eps-prescription-status-update-api/.devcontainer/docker-gid) docker || true && sudo usermod -aG docker vscode",
   "postAttachCommand": "docker build -f https://raw.githubusercontent.com/NHSDigital/eps-workflow-quality-checks/refs/tags/v4.0.4/dockerfiles/nhsd-git-secrets.dockerfile -t git-secrets . && poetry run pre-commit install --install-hooks -f",
-    "features": {
-      "ghcr.io/devcontainers/features/docker-outside-of-docker:1": {
-        "version": "latest",
-        "moby": "true",
-        "installDockerBuildx": "true"
-      },
-      "ghcr.io/devcontainers/features/github-cli:1": {}
-    }
+  "features": {
+    "ghcr.io/devcontainers/features/docker-outside-of-docker:1": {
+      "version": "latest",
+      "moby": "true",
+      "installDockerBuildx": "true"
+    },
+    "ghcr.io/devcontainers/features/github-cli:1": {}
+  }
 }
