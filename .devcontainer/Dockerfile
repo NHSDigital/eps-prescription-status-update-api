@@ -9,20 +9,13 @@ COPY .tool-versions.asdf /tmp/.tool-versions.asdf
 RUN apt-get update \
     && export DEBIAN_FRONTEND=noninteractive \
     && apt-get -y dist-upgrade \
-    && apt-get -y install --no-install-recommends sudo htop vim curl git build-essential \
+    && apt-get -y install --no-install-recommends htop vim curl git build-essential \
     libffi-dev libssl-dev libxml2-dev libxslt1-dev libjpeg8-dev libbz2-dev \
     zlib1g-dev unixodbc unixodbc-dev libsecret-1-0 libsecret-1-dev libsqlite3-dev \
     jq apt-transport-https ca-certificates gnupg-agent \
     software-properties-common bash-completion python3-pip make libbz2-dev \
     libreadline-dev libsqlite3-dev wget llvm libncurses5-dev libncursesw5-dev \
     xz-utils tk-dev liblzma-dev netcat-traditional libyaml-dev
-# need to sudo to add user to docker group as onCreateCommand
-RUN echo "vscode ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers.d/vscode \
-    && chmod 0440 /etc/sudoers.d/vscode \
-    && chown root:root /etc/sudo.conf \
-    && chmod 644 /etc/sudo.conf \
-    && chown root:root /usr/bin/sudo \
-    && chmod 4755 /usr/bin/sudo
 
 # Download correct AWS CLI for arch
 RUN if [ "$TARGETARCH" = "arm64" ] || [ "$TARGETARCH" = "aarch64" ]; then \
