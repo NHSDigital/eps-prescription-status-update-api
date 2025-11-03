@@ -144,6 +144,18 @@ Parameters:
       - true
       - false
 
+  TestPrescriptionsValue1:
+    Type: String
+
+  TestPrescriptionsValue2:
+    Type: String
+
+  TestPrescriptionsValue3:
+    Type: String
+
+  TestPrescriptionsValue4:
+    Type: String
+
 Resources:
   Secrets:
     Type: AWS::Serverless::Application
@@ -233,6 +245,10 @@ Resources:
         Environment: !Ref Environment
         EnableBackup: !Ref EnableBackup
         RequireApplicationName: !Ref RequireApplicationName
+        TestPrescriptions1: !Ref TestPrescriptionsValue1
+        TestPrescriptions2: !Ref TestPrescriptionsValue2
+        TestPrescriptions3: !Ref TestPrescriptionsValue3
+        TestPrescriptions4: !Ref TestPrescriptionsValue4
 
   StateMachines:
     Type: AWS::Serverless::Application

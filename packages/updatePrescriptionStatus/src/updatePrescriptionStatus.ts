@@ -12,7 +12,7 @@ import httpHeaderNormalizer from "@middy/http-header-normalizer"
 import errorHandler from "@nhs/fhir-middy-error-handler"
 import {Bundle, BundleEntry, Task} from "fhir/r4"
 
-import {PSUDataItem, PSUDataItemWithPrevious} from "@PrescriptionStatusUpdate_common/commonTypes"
+import {PSUDataItem, PSUDataItemWithPrevious} from "@psu-common/commonTypes"
 
 import {transactionBundle, validateEntry} from "./validation/content"
 import {getPreviousItem, persistDataItems, rollbackDataItems} from "./utils/databaseClient"
@@ -43,6 +43,12 @@ const INT_ENVIRONMENT = process.env.ENVIRONMENT === "int"
 export const TEST_PRESCRIPTIONS_1 = (process.env.TEST_PRESCRIPTIONS_1 ?? "")
   .split(",").map(item => item.trim()) || []
 export const TEST_PRESCRIPTIONS_2 = (process.env.TEST_PRESCRIPTIONS_2 ?? "")
+  .split(",").map(item => item.trim()) || []
+// AEA-5913 - Return 400
+export const TEST_PRESCRIPTIONS_3 = (process.env.TEST_PRESCRIPTIONS_3 ?? "")
+  .split(",").map(item => item.trim()) || []
+// AEA-5913 - Return 429
+export const TEST_PRESCRIPTIONS_4 = (process.env.TEST_PRESCRIPTIONS_4 ?? "")
   .split(",").map(item => item.trim()) || []
 
 // Fetching the parameters from SSM using a dedicated provider, so that the values can be cached
@@ -147,6 +153,22 @@ const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPro
       const taskID = taskIDs[testPrescription2Index]
       const matchingPrescription2ID = prescriptionIDs[testPrescription2Index]
       interceptionResponse = await testPrescription2Intercept(logger, matchingPrescription2ID, taskID)
+    }
+
+    const testPrescription3Index = prescriptionIDs.findIndex((id) => TEST_PRESCRIPTIONS_3.includes(id))
+    const isTestPrescription3 = testPrescription3Index !== -1
+    if (isTestPrescription3) {
+      logger.info("Forcing error for INT test prescription. Simulating failure to write to database.")
+      responseEntries = [serverError()]
+      return response(400, responseEntries)
+    }
+
+    const testPrescription4Index = prescriptionIDs.findIndex((id) => TEST_PRESCRIPTIONS_4.includes(id))
+    const isTestPrescription4 = testPrescription4Index !== -1
+    if (isTestPrescription4) {
+      logger.info("Forcing error for INT test prescription. Simulating PSU capacity failure.")
+      responseEntries = [serverError()]
+      return response(429, responseEntries)
     }
 
     testPrescription1Forced201 = !!interceptionResponse.testPrescription1Forced201

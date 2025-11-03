@@ -88,6 +88,22 @@ Parameters:
   EnableBackup:
     Type: String
 
+  TestPrescriptions1:
+    Type: String
+    Default: None
+  
+  TestPrescriptions2:
+    Type: String
+    Default: None
+
+  TestPrescriptions3:
+    Type: String
+    Default: None
+
+  TestPrescriptions4:
+    Type: String
+    Default: None
+
 Conditions:
   ShouldDeployCheckPrescriptionStatusUpdate: !Equals
     - true
@@ -116,8 +132,10 @@ Resources:
           ENABLE_NOTIFICATIONS_PARAM: !Ref EnableNotificationsInternalParam
           LOG_LEVEL: !Ref LogLevel
           ENVIRONMENT: !Ref Environment
-          TEST_PRESCRIPTIONS_1: "None"
-          TEST_PRESCRIPTIONS_2: "None"
+          TEST_PRESCRIPTIONS_1: !Ref TestPrescriptions1
+          TEST_PRESCRIPTIONS_2: !Ref TestPrescriptions2
+          TEST_PRESCRIPTIONS_3: !Ref TestPrescriptions3
+          TEST_PRESCRIPTIONS_4: !Ref TestPrescriptions4
           REQUIRE_APPLICATION_NAME: !Ref RequireApplicationName
     Metadata:
       BuildMethod: esbuild
@@ -419,7 +437,7 @@ Resources:
           TABLE_NAME: !Ref PrescriptionNotificationStatesTableName
           API_KEY_SECRET: secrets-PSU-Notify-API-Key
           PRIVATE_KEY_SECRET: secrets-PSU-Notify-PrivateKey
-          KID_SECRET: secrets-PSU-Notify-Application-Name
+          KID_SECRET: secrets-PSU-Notify-Application-KID
           NHS_NOTIFY_ROUTING_ID_PARAM: !Ref NotifyRoutingPlanIDParam
           NOTIFY_API_BASE_URL_PARAM: !Ref NotifyAPIBaseURLParam
           MAKE_REAL_NOTIFY_REQUESTS_PARAM: !Ref EnableNotificationsExternalParam

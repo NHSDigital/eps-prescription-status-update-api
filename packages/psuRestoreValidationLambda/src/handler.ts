@@ -6,7 +6,7 @@ import {DynamoDBClient} from "@aws-sdk/client-dynamodb"
 import {DynamoDBDocumentClient} from "@aws-sdk/lib-dynamodb"
 import middy from "@middy/core"
 import inputOutputLogger from "@middy/input-output-logger"
-import {MiddyErrorHandler} from "@PrescriptionStatusUpdate_common/middyErrorHandler"
+import {MiddyErrorHandler} from "@psu-common/middyErrorHandler"
 import {compareTables} from "./compareTable"
 import {backupEventCompletedDetail} from "./types"
 

@@ -8,7 +8,7 @@ import {
 import {backupEventCompletedDetail} from "../src/types"
 import {Backup} from "@aws-sdk/client-backup"
 
-import {mockContext} from "@PrescriptionStatusUpdate_common/testing"
+import {mockContext} from "@psu-common/testing"
 
 const mockCompareTables = jest.fn()
 jest.unstable_mockModule("../src/compareTable", () => {

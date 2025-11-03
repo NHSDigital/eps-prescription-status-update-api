@@ -2,7 +2,7 @@ import {jest} from "@jest/globals"
 
 import * as sqs from "@aws-sdk/client-sqs"
 
-import {PSUDataItem} from "@PrescriptionStatusUpdate_common/commonTypes"
+import {PSUDataItem} from "@psu-common/commonTypes"
 import {NotifyDataItemMessage} from "../src/utils"
 
 // Similarly mock the SQS client

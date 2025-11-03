@@ -1,5 +1,5 @@
 import {Message} from "@aws-sdk/client-sqs"
-import {NotifyDataItem} from "@PrescriptionStatusUpdate_common/commonTypes"
+import {NotifyDataItem} from "@psu-common/commonTypes"
 
 // This is an extension of the SQS message interface, which explicitly parses the PSUDataItem
 // and helps track the nhs notify results

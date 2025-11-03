@@ -5,7 +5,7 @@ import middy from "@middy/core"
 import inputOutputLogger from "@middy/input-output-logger"
 import httpHeaderNormalizer from "@middy/http-header-normalizer"
 import {getItemStatusUpdates} from "./dynamoDBclient"
-import {MiddyErrorHandler} from "@PrescriptionStatusUpdate_common/middyErrorHandler"
+import {MiddyErrorHandler} from "@psu-common/middyErrorHandler"
 import {InputData} from "./types"
 
 const MIN_RESULTS_RETURNED = parseInt(process.env.MIN_RESULTS_RETURNED) || 5
