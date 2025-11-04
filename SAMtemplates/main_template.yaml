@@ -139,19 +139,15 @@ Parameters:
 
   TestPresciptionsParamValue1:
     Type: String
-    Default: " "
 
   TestPresciptionsParamValue2:
     Type: String
-    Default: " "
 
   TestPresciptionsParamValue3:
     Type: String
-    Default: " "
 
   TestPresciptionsParamValue4:
     Type: String
-    Default: " "
 
   ForwardCsocLogs:
     Type: String
