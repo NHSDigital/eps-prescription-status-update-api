@@ -362,6 +362,7 @@ jobs:
             ${{ runner.os }}-asdf-${{ hashFiles('**/.tool-versions') }}-${{ inputs.asdfVersion }}
 
       - name: Install asdf dependencies
+        id: install_asdf
         if: steps.check_cdk.outputs.cdk_exists == 'true'
         uses: asdf-vm/actions/install@1902764435ca0dd2f3388eea723a4f92a4eb8302
         with:
@@ -475,6 +476,7 @@ jobs:
   # SBOM generation (runs in ~2-3 minutes)
   sbom-check:
     runs-on: ubuntu-22.04
+    needs: [lint-and-licenses]
     steps:
       - name: Checkout code
         uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8
