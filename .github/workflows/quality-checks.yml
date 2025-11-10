@@ -234,33 +234,38 @@ jobs:
         with:
           fetch-depth: 0
 
-      #- name: Check for templates
-      #  id: check_templates
-      #  run: |
-      #    SAM_EXISTS=false
-      #    CF_EXISTS=false
-      #    [ -d "SAMtemplates" ] && SAM_EXISTS=true
-      #    [ -d "cloudformation" ] && CF_EXISTS=true
-
-      #    echo "sam_exists=$SAM_EXISTS" >> "$GITHUB_OUTPUT"
-      #    echo "cf_exists=$CF_EXISTS" >> "$GITHUB_OUTPUT"
-      #              echo "has_templates=$([[ "$SAM_EXISTS" == "true" || "$CF_EXISTS" == "true" ]] && echo true || echo false)" >> "$GITHUB_OUTPUT"
-
-      - name: Get changed CloudFormation files
-        # if: steps.check_templates.outputs.has_templates == 'true'
-        id: changed-cf
+      - name: Check for templates
+        id: check_cf
         run: |
-          if [ "${{ github.event_name }}" = "pull_request" ]; then
-            CHANGED_CF=$(git diff --name-only ${{ github.event.pull_request.base.sha }}..${{ github.event.pull_request.head.sha }} | grep -E '^(SAMtemplates|cloudformation)/.*\.y.*ml$' || true)
-            if [ -n "$CHANGED_CF" ]; then
-              echo "has_changes=true" >> "$GITHUB_OUTPUT"
-              echo "$CHANGED_CF"
-            else
-              echo "has_changes=false" >> "$GITHUB_OUTPUT"
-            fi
+          if [ -d "cloudformation" ]; then
+            echo "cf_exists=true" >> "$GITHUB_OUTPUT"
           else
-            echo "has_changes=true" >> "$GITHUB_OUTPUT"
+            echo "cf_exists=false" >> "$GITHUB_OUTPUT"
           fi
+
+
+
+          # CF_EXISTS=false; [ -d "cloudformation" ] && CF_EXISTS=true; echo "cf_exists=$CF_EXISTS" >> "$GITHUB_OUTPUT";
+          #  SAM_EXISTS=false
+          #  [ -d "SAMtemplates" ] && SAM_EXISTS=true
+          #  echo "sam_exists=$SAM_EXISTS" >> "$GITHUB_OUTPUT"
+          #echo "has_templates=$([[ "$SAM_EXISTS" == "true" || "$CF_EXISTS" == "true" ]] && echo true || echo false)" >> "$GITHUB_OUTPUT"
+
+      # - name: Get changed CloudFormation files
+      #   # if: steps.check_templates.outputs.has_templates == 'true'
+      #   id: changed-cf
+      #   run: |
+      #     if [ "${{ github.event_name }}" = "pull_request" ]; then
+      #       CHANGED_CF=$(git diff --name-only ${{ github.event.pull_request.base.sha }}..${{ github.event.pull_request.head.sha }} | grep -E '^(SAMtemplates|cloudformation)/.*\.y.*ml$' || true)
+      #       if [ -n "$CHANGED_CF" ]; then
+      #         echo "has_changes=true" >> "$GITHUB_OUTPUT"
+      #         echo "$CHANGED_CF"
+      #       else
+      #         echo "has_changes=false" >> "$GITHUB_OUTPUT"
+      #       fi
+      #     else
+      #       echo "has_changes=true" >> "$GITHUB_OUTPUT"
+      #     fi
 
       - name: Install dependencies
         # if: steps.check_templates.outputs.has_templates == 'true'
@@ -269,12 +274,13 @@ jobs:
           pip install aws-sam-cli
 
       - name: Run cfn-lint on changed files
+        if: steps.check_cf.outputs.cf_exists == 'true' # && steps.changed-cf.outputs.has_changes == 'true'
         run: |
           cfn-lint -I "cloudformation/**/*.y*ml" 2>&1 | awk '/Run scan/ { print } /^[EW][0-9]/ { print; getline; print }'
-          cfn-lint -I "SAMtemplates/**/*.y*ml" 2>&1 | awk '/Run scan/ { print } /^[EW][0-9]/ { print; getline; print }'
+          # cfn-lint -I "SAMtemplates/**/*.y*ml" 2>&1 | awk '/Run scan/ { print } /^[EW][0-9]/ { print; getline; print }'
 
       - name: Init cfn-guard
-        # if: steps.check_templates.outputs.has_templates == 'true'
+        if: steps.check_cf.outputs.cf_exists == 'true'
         run: |
           rm -rf /tmp/ruleset cfn_guard_output
           wget -q -O /tmp/ruleset.zip https://github.com/aws-cloudformation/aws-guard-rules-registry/releases/download/1.0.2/ruleset-build-v1.0.2.zip
@@ -283,23 +289,23 @@ jobs:
           mkdir -p cfn_guard_output
 
       # Run cfn-guard checks in parallel using matrix strategy
-      - name: Run cfn-guard for SAM templates
-        # if: steps.check_templates.outputs.sam_exists == 'true' && steps.changed-cf.outputs.has_changes == 'true'
-        run: |
-          declare -a rulesets=("ncsc" "ncsc-cafv3" "wa-Reliability-Pillar" "wa-Security-Pillar")
-          for ruleset in "${rulesets[@]}"; do
-            while IFS= read -r -d '' file; do
-              mkdir -p "$(dirname cfn_guard_output/"$file")"
-              SAM_OUTPUT=$(sam validate -t "$file" --region eu-west-2 --debug 2>&1 | grep -Pazo '(?s)AWSTemplateFormatVersion.*\n\/' | tr -d '\0')
-              echo "${SAM_OUTPUT::-1}" | ~/.guard/bin/cfn-guard validate \
-                  --rules "/tmp/ruleset/output/$ruleset.guard" \
-                  --show-summary fail \
-                  > "cfn_guard_output/${file}_${ruleset}.txt"
-            done < <(find ./SAMtemplates -name '*.y*ml' -print0)
-          done
+      # - name: Run cfn-guard for SAM templates
+      #   # if: steps.check_templates.outputs.sam_exists == 'true' && steps.changed-cf.outputs.has_changes == 'true'
+      #   run: |
+      #     declare -a rulesets=("ncsc" "ncsc-cafv3" "wa-Reliability-Pillar" "wa-Security-Pillar")
+      #     for ruleset in "${rulesets[@]}"; do
+      #       while IFS= read -r -d '' file; do
+      #         mkdir -p "$(dirname cfn_guard_output/"$file")"
+      #         SAM_OUTPUT=$(sam validate -t "$file" --region eu-west-2 --debug 2>&1 | grep -Pazo '(?s)AWSTemplateFormatVersion.*\n\/' | tr -d '\0')
+      #         echo "${SAM_OUTPUT::-1}" | ~/.guard/bin/cfn-guard validate \
+      #             --rules "/tmp/ruleset/output/$ruleset.guard" \
+      #             --show-summary fail \
+      #             > "cfn_guard_output/${file}_${ruleset}.txt"
+      #       done < <(find ./SAMtemplates -name '*.y*ml' -print0)
+      #     done
 
       - name: Run cfn-guard for CloudFormation templates
-        # if: steps.check_templates.outputs.cf_exists == 'true' && steps.changed-cf.outputs.has_changes == 'true'
+        if: steps.check_cf.outputs.cf_exists == 'true' # && steps.changed-cf.outputs.has_changes == 'true'
         run: |
           declare -a rulesets=("ncsc" "ncsc-cafv3" "wa-Reliability-Pillar" "wa-Security-Pillar")
           for ruleset in "${rulesets[@]}"; do
