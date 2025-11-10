@@ -165,6 +165,7 @@ Resources:
             - Fn::ImportValue: !Sub ${StackName}:tables:UsePrescriptionStatusUpdatesKMSKeyPolicyArn
             - Fn::ImportValue: !Sub ${StackName}-UseNotificationSQSQueueKMSKeyPolicyArn
             - Fn::ImportValue: !Sub ${StackName}-WriteNHSNotifyPrescriptionsSQSQueuePolicyArn
+            - Fn::ImportValue: !Sub ${StackName}-GetPSUSaltSecretPolicy
             - Fn::ImportValue: !Sub ${StackName}-GetSQSSaltSecretPolicy
             - Fn::ImportValue: !Sub ${StackName}-GetNotificationsParameterPolicy
         LogRetentionInDays: !Ref LogRetentionInDays
@@ -433,7 +434,7 @@ Resources:
           TABLE_NAME: !Ref PrescriptionNotificationStatesTableName
           API_KEY_SECRET: secrets-PSU-Notify-API-Key
           PRIVATE_KEY_SECRET: secrets-PSU-Notify-PrivateKey
-          KID_SECRET: secrets-PSU-Notify-Application-KID
+          KID_SECRET: secrets-PSU-Notify-KID
           NHS_NOTIFY_ROUTING_ID_PARAM: !Ref NotifyRoutingPlanIDParam
           NOTIFY_API_BASE_URL_PARAM: !Ref NotifyAPIBaseURLParam
           MAKE_REAL_NOTIFY_REQUESTS_PARAM: !Ref EnableNotificationsExternalParam
