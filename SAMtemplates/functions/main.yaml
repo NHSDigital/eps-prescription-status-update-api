@@ -165,7 +165,7 @@ Resources:
             - Fn::ImportValue: !Sub ${StackName}:tables:UsePrescriptionStatusUpdatesKMSKeyPolicyArn
             - Fn::ImportValue: !Sub ${StackName}-UseNotificationSQSQueueKMSKeyPolicyArn
             - Fn::ImportValue: !Sub ${StackName}-WriteNHSNotifyPrescriptionsSQSQueuePolicyArn
-            - Fn::ImportValue: !Sub ${StackName}-GetPSUSaltSecretPolicy
+            - Fn::ImportValue: !Sub ${StackName}-GetPSUSecretPolicy
             - Fn::ImportValue: !Sub ${StackName}-GetSQSSaltSecretPolicy
             - Fn::ImportValue: !Sub ${StackName}-GetNotificationsParameterPolicy
         LogRetentionInDays: !Ref LogRetentionInDays
