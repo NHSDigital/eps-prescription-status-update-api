@@ -1,8 +1,8 @@
 import {Logger} from "@aws-lambda-powertools/logger"
-import {getSecret} from "@aws-lambda-powertools/parameters/secrets"
 import {AxiosInstance} from "axios"
 
 import {SignJWT, importPKCS8} from "jose"
+import {getNotifyConfig} from "../../../common/utilities/src/index.js"
 
 /**
  * Exchange API key + JWT for a bearer token from NHS Notify.
@@ -12,19 +12,13 @@ export async function tokenExchange(
   axiosInstance: AxiosInstance,
   host: string
 ): Promise<string> {
-  const [apiKeyRaw, privateKeyRaw, kidRaw] = await Promise.all([
-    getSecret(process.env.API_KEY_SECRET!),
-    getSecret(process.env.PRIVATE_KEY_SECRET!),
-    getSecret(process.env.KID_SECRET!)
+  const config = getNotifyConfig()
+
+  const [API_KEY, PRIVATE_KEY, KID] = await Promise.all([
+    config.getApiKey(),
+    config.getPrivateKey(),
+    config.getKid()
   ])
-
-  const API_KEY = apiKeyRaw?.toString().trim()
-  const PRIVATE_KEY = privateKeyRaw?.toString().trim()
-  const KID = kidRaw?.toString().trim()
-
-  if (!API_KEY || !PRIVATE_KEY || !KID) {
-    throw new Error("Missing one of API_KEY, PRIVATE_KEY or KID from Secrets Manager")
-  }
 
   // create and sign the JWT
   const alg = "RS512"

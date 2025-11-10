@@ -1,3 +1,4 @@
+import {getSecret} from "@aws-lambda-powertools/parameters/secrets"
 import {initiatedSSMProvider} from "./ssmUtil"
 
 export interface TestPrescriptionsConfig {
@@ -41,3 +42,52 @@ export class TestPrescriptions implements TestPrescriptionsConfig {
 
 export const testPrescriptionsConfig = new TestPrescriptions(initiatedSSMProvider)
 export const getTestPrescriptions = testPrescriptionsConfig.getTestPrescriptions.bind(testPrescriptionsConfig)
+
+export interface NotifyConfig {
+  getApiKey(): Promise<string>
+  getPrivateKey(): Promise<string>
+  getKid(): Promise<string>
+}
+
+export class NotifySecretsManagerConfig implements NotifyConfig {
+  // Secret names via environment variables for NHS Notify credentials
+  static readonly API_KEY_SECRET = process.env.API_KEY_SECRET!
+  static readonly PRIVATE_KEY_SECRET = process.env.PRIVATE_KEY_SECRET!
+  static readonly KID_SECRET = process.env.KID_SECRET!
+
+  async getApiKey(): Promise<string> {
+    const apiKeyRaw = await getSecret(NotifySecretsManagerConfig.API_KEY_SECRET)
+    const apiKey = apiKeyRaw?.toString().trim()
+    
+    if (!apiKey) {
+      throw new Error("Missing API_KEY from Secrets Manager")
+    }
+    
+    return apiKey
+  }
+
+  async getPrivateKey(): Promise<string> {
+    const privateKeyRaw = await getSecret(NotifySecretsManagerConfig.PRIVATE_KEY_SECRET)
+    const privateKey = privateKeyRaw?.toString().trim()
+    
+    if (!privateKey) {
+      throw new Error("Missing PRIVATE_KEY from Secrets Manager")
+    }
+    
+    return privateKey
+  }
+
+  async getKid(): Promise<string> {
+    const kidRaw = await getSecret(NotifySecretsManagerConfig.KID_SECRET)
+    const kid = kidRaw?.toString().trim()
+    
+    if (!kid) {
+      throw new Error("Missing KID from Secrets Manager")
+    }
+    
+    return kid
+  }
+}
+
+export const notifyConfig = new NotifySecretsManagerConfig()
+export const getNotifyConfig = (): NotifySecretsManagerConfig => notifyConfig

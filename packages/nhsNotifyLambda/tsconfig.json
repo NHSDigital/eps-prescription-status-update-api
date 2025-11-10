@@ -5,7 +5,8 @@
     "outDir": "lib"
   },
   "references": [
-    {"path": "../common/testing"}
+    {"path": "../common/testing"},
+    {"path": "../common/utilities"}
   ],
   "include": ["src/**/*", "tests/**/*"],
   "exclude": ["node_modules"]
