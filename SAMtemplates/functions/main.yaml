@@ -431,7 +431,8 @@ Resources:
           LOG_LEVEL: !Ref LogLevel
           NHS_NOTIFY_PRESCRIPTIONS_SQS_QUEUE_URL: !Ref NHSNotifyPrescriptionsSQSQueueUrl
           TABLE_NAME: !Ref PrescriptionNotificationStatesTableName
-          API_KEY_SECRET: secrets-PSU-Notify-API-Key
+          API_KEY_SECRET:
+            Fn::ImportValue: !Sub ${StackName}-PSU-Notify-API-Key
           PRIVATE_KEY_SECRET:
             Fn::ImportValue: !Sub ${StackName}-PSU-Notify-PrivateKey
           KID_SECRET:
@@ -500,7 +501,8 @@ Resources:
           TABLE_NAME: !Ref PrescriptionNotificationStatesTableName
           APP_ID_SECRET:
             Fn::ImportValue: !Sub ${StackName}-PSU-Notify-Application-ID
-          API_KEY_SECRET: secrets-PSU-Notify-API-Key
+          API_KEY_SECRET:
+            Fn::ImportValue: !Sub ${StackName}-PSU-Notify-API-Key
     Metadata:
       BuildMethod: esbuild
       guard:
