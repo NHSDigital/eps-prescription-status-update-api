@@ -46,7 +46,7 @@ def main():
             ods_upper = row[COL_ODS_CODE].upper()
             freq_dist[ods_upper] = row[TOTAL_NOTIFICATIONS]
             freq_dist_rows[ods_upper] = row
-
+        f.close()
     # Read status file, replace ready_to_collect_psu_count and
     # notifications_requested_count where ODS_CODE matches
     # Track which frequency distribution codes we've processed
