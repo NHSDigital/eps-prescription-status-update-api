@@ -36,7 +36,7 @@ def main():
         reader = csv.DictReader(f)
         for row in reader:
             sent_dist[row[COL_ODS_CODE].upper()] = row[READY_TO_COLLECT_PSU_COUNT]
-
+        f.close()
     # Read total notifications by ODS code
     freq_dist = {}
     freq_dist_rows = {}
