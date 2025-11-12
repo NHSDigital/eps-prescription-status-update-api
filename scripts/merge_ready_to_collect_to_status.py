@@ -2,6 +2,7 @@
 import csv
 from pathlib import Path
 import argparse
+from datetime import datetime
 
 COL_ODS_CODE = "pharmacyODSCode"
 READY_TO_COLLECT_PSU_COUNT = "ready_to_collect_psu_count"
@@ -19,6 +20,14 @@ def main():
     args = parser.parse_args()
 
     date = args.date_suffix
+
+    # Validate date format
+    try:
+        datetime.strptime(date, '%Y-%m-%d')
+    except ValueError:
+        print("Error: date_suffix must be in format YYYY-MM-DD (e.g., 2025-10-28)")
+        parser.print_help()
+        return
     sent_dist_path = Path(
         f"data/Prescription_Notifications_Sent_Distribution_Repor-{date}.csv"
     )
@@ -76,7 +85,7 @@ def main():
             else:
                 row[NOTIFICATIONS_REQUESTED_COUNT] = "0"
             writer.writerow(row)
-f_out.close()
+    f_out.close()
     print(f"Merged file written to {output_path}")
 
 
