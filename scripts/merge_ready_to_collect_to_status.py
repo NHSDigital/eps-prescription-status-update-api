@@ -76,7 +76,7 @@ def main():
             else:
                 row[NOTIFICATIONS_REQUESTED_COUNT] = "0"
             writer.writerow(row)
-
+f_out.close()
     print(f"Merged file written to {output_path}")
 
 
