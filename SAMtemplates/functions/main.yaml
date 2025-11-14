@@ -431,9 +431,12 @@ Resources:
           LOG_LEVEL: !Ref LogLevel
           NHS_NOTIFY_PRESCRIPTIONS_SQS_QUEUE_URL: !Ref NHSNotifyPrescriptionsSQSQueueUrl
           TABLE_NAME: !Ref PrescriptionNotificationStatesTableName
-          API_KEY_SECRET: secrets-PSU-Notify-API-Key
-          PRIVATE_KEY_SECRET: secrets-PSU-Notify-PrivateKey
-          KID_SECRET: secrets-PSU-Notify-Application-KID
+          API_KEY_SECRET:
+            Fn::ImportValue: !Sub ${StackName}-PSU-Notify-API-Key
+          PRIVATE_KEY_SECRET:
+            Fn::ImportValue: !Sub ${StackName}-PSU-Notify-PrivateKey
+          KID_SECRET:
+            Fn::ImportValue: !Sub ${StackName}-PSU-Notify-KID
           NHS_NOTIFY_ROUTING_ID_PARAM: !Ref NotifyRoutingPlanIDParam
           NOTIFY_API_BASE_URL_PARAM: !Ref NotifyAPIBaseURLParam
           MAKE_REAL_NOTIFY_REQUESTS_PARAM: !Ref EnableNotificationsExternalParam
@@ -483,6 +486,8 @@ Resources:
             - Fn::ImportValue: !Sub ${StackName}:tables:${PrescriptionNotificationStatesTableName}:TableWritePolicyArn
             - Fn::ImportValue: !Sub ${StackName}:tables:UsePrescriptionNotificationStatesKMSKeyPolicyArn
             - Fn::ImportValue: !Sub ${StackName}-GetNotificationsParameterPolicy
+            - Fn::ImportValue: !Sub ${StackName}-GetPSUSecretPolicy
+            - Fn::ImportValue: !Sub ${StackName}-UsePSUSecretsKMSKeyPolicyArn
 
   NHSNotifyUpdateCallback:
     Type: AWS::Serverless::Function
@@ -495,8 +500,10 @@ Resources:
         Variables:
           LOG_LEVEL: !Ref LogLevel
           TABLE_NAME: !Ref PrescriptionNotificationStatesTableName
-          APP_ID_SECRET: secrets-PSU-Notify-Application-ID
-          API_KEY_SECRET: secrets-PSU-Notify-API-Key
+          APP_ID_SECRET:
+            Fn::ImportValue: !Sub ${StackName}-PSU-Notify-Application-ID
+          API_KEY_SECRET:
+            Fn::ImportValue: !Sub ${StackName}-PSU-Notify-API-Key
     Metadata:
       BuildMethod: esbuild
       guard:
@@ -527,6 +534,8 @@ Resources:
           - - Fn::ImportValue: !Sub ${StackName}:tables:${PrescriptionNotificationStatesTableName}:TableReadPolicyArn
             - Fn::ImportValue: !Sub ${StackName}:tables:${PrescriptionNotificationStatesTableName}:TableWritePolicyArn
             - Fn::ImportValue: !Sub ${StackName}:tables:UsePrescriptionNotificationStatesKMSKeyPolicyArn
+            - Fn::ImportValue: !Sub ${StackName}-GetPSUSecretPolicy
+            - Fn::ImportValue: !Sub ${StackName}-UsePSUSecretsKMSKeyPolicyArn
         LogRetentionInDays: !Ref LogRetentionInDays
         CloudWatchKMSKeyId: !ImportValue account-resources:CloudwatchLogsKmsKeyArn
         EnableSplunk: !Ref EnableSplunk
