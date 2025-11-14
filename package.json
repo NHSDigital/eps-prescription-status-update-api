@@ -31,7 +31,7 @@
     "packages/common/utilities"
   ],
   "devDependencies": {
-    "@types/aws-lambda": "^8.10.157",
+    "@types/aws-lambda": "^8.10.158",
     "@types/jest": "^30.0.0",
     "@types/node": "^24.10.0",
     "@typescript-eslint/eslint-plugin": "^8.46.2",
