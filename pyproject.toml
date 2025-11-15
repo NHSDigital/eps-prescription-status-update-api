@@ -37,7 +37,7 @@ requests = "^2.32.5"
 boto3 = "^1.40.69"
 argparse = "^1.4.0"
 pre-commit = "^4.3.0"
-pytest = "^8.4.2"
+pytest = "^9.0.1"
 cfn-lint = "^1.40.4"
 pyjwt = {extras = ["crypto"], version = "^2.10.1"}
 
