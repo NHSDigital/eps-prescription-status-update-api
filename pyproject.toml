@@ -36,7 +36,7 @@ gitpython = "^3.1.45"
 requests = "^2.32.5"
 boto3 = "^1.40.74"
 argparse = "^1.4.0"
-pre-commit = "^4.3.0"
+pre-commit = "^4.4.0"
 pytest = "^9.0.1"
 cfn-lint = "^1.40.4"
 pyjwt = {extras = ["crypto"], version = "^2.10.1"}
@@ -44,7 +44,7 @@ pyjwt = {extras = ["crypto"], version = "^2.10.1"}
 [tool.poetry.scripts]
 
 [tool.poetry.group.dev.dependencies]
-pre-commit = "^4.3.0"
+pre-commit = "^4.4.0"
 cfn-lint = "^1.40.4"
 black = "^25.11.0"
 flake8 = "^7.3.0"
