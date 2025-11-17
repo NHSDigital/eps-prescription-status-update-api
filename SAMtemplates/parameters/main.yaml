@@ -160,10 +160,10 @@ Resources:
               - !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${StackName}-PSUNotifyApiBaseUrl
               - !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${StackName}-EnableNotificationsExternal
               - !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${StackName}-EnableNotificationsInternal
-              - !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${StackName}-TestPrescriptionsParameter_1
-              - !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${StackName}-TestPrescriptionsParameter_2
-              - !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${StackName}-TestPrescriptionsParameter_3
-              - !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${StackName}-TestPrescriptionsParameter_4
+              - !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${StackName}-TEST_PRESCRIPTIONS_1
+              - !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${StackName}-TEST_PRESCRIPTIONS_2
+              - !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${StackName}-TEST_PRESCRIPTIONS_3
+              - !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${StackName}-TEST_PRESCRIPTIONS_4
 
 
 Outputs:
