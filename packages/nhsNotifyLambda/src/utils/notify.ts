@@ -1,8 +1,9 @@
 import {Logger} from "@aws-lambda-powertools/logger"
 
 import axios from "axios"
-
 import {setupAxios} from "./axios"
+import {LOG_MESSAGES} from "@psu-common/utilities"
+
 import {
   NotifyDataItemMessage,
   CreateMessageBatchRequest,
@@ -125,7 +126,7 @@ function logNotificationRequest(logger: Logger,
   // Log each message individually for less memory intensive reporting
   messages.forEach((message, index) => {
     const correspondingData = data.find(item => item.messageReference === message.messageReference)
-    logger.info("PSU0002 Notify request", {
+    logger.info(LOG_MESSAGES.PSU0002, {
       messageBatchReference,
       messageIndex: index,
       nhsNumber: message.recipient.nhsNumber,
