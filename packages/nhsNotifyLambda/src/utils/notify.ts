@@ -125,7 +125,7 @@ function logNotificationRequest(logger: Logger,
   // Log each message individually for less memory intensive reporting
   messages.forEach((message, index) => {
     const correspondingData = data.find(item => item.messageReference === message.messageReference)
-    logger.info("PSU0001 Notify request", {
+    logger.info("PSU0002 Notify request", {
       messageBatchReference,
       messageIndex: index,
       nhsNumber: message.recipient.nhsNumber,

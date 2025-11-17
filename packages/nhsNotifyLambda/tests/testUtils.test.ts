@@ -564,6 +564,24 @@ describe("NHS notify lambda helper functions", () => {
         messageBatchReference: expect.any(String),
         messageReference: expect.any(String)
       })
+
+      // Check that both log messages are present
+      // TODO, first will be removed once reports updated
+      expect(infoSpy).toHaveBeenCalledWith(
+        "Requested notifications OK!",
+        expect.objectContaining({
+          messageBatchReference: expect.any(String),
+          messageReferences: expect.any(Array),
+          messageStatus: "requested"
+        })
+      )
+      expect(infoSpy).toHaveBeenCalledWith(
+        "PSU0002 Notify request",
+        expect.objectContaining({
+          messageBatchReference: expect.any(String),
+          messageIndex: expect.any(Number)
+        })
+      )
     })
 
     it("handles non-ok response by marking all as failed", async () => {
@@ -814,6 +832,24 @@ describe("NHS notify lambda helper functions", () => {
         messageBatchReference: expect.any(String),
         messageReference: expect.any(String)
       })
+
+      // Check that both log messages are present
+      // TODO, first will be removed once reports updated
+      expect(infoSpy).toHaveBeenCalledWith(
+        "Requested notifications OK!",
+        expect.objectContaining({
+          messageBatchReference: expect.any(String),
+          messageReferences: expect.any(Array),
+          messageStatus: "silent running"
+        })
+      )
+      expect(infoSpy).toHaveBeenCalledWith(
+        "PSU0002 Notify request",
+        expect.objectContaining({
+          messageBatchReference: expect.any(String),
+          messageIndex: expect.any(Number)
+        })
+      )
     })
   })
 
