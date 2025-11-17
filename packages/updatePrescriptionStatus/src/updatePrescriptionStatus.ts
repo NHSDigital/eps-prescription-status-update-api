@@ -12,11 +12,12 @@ import errorHandler from "@nhs/fhir-middy-error-handler"
 import {Bundle, BundleEntry, Task} from "fhir/r4"
 
 import {PSUDataItem, PSUDataItemWithPrevious} from "@psu-common/commonTypes"
+import {getTestPrescriptions, initiatedSSMProvider, LOG_MESSAGES} from "@psu-common/utilities"
 
-import {transactionBundle, validateEntry} from "./validation/content"
-import {getPreviousItem, persistDataItems, rollbackDataItems} from "./utils/databaseClient"
-import {jobWithTimeout, hasTimedOut} from "./utils/timeoutUtils"
-import {pushPrescriptionToNotificationSQS} from "./utils/sqsClient"
+import {transactionBundle, validateEntry} from "./validation/content.js"
+import {getPreviousItem, persistDataItems, rollbackDataItems} from "./utils/databaseClient.js"
+import {jobWithTimeout, hasTimedOut} from "./utils/timeoutUtils.js"
+import {pushPrescriptionToNotificationSQS} from "./utils/sqsClient.js"
 import {
   accepted,
   badRequest,
@@ -26,13 +27,12 @@ import {
   serverError,
   timeoutResponse,
   tooManyRequests
-} from "./utils/responses"
+} from "./utils/responses.js"
 import {
   InterceptionResult,
   testPrescription1Intercept,
   testPrescription2Intercept
-} from "./utils/testPrescriptionIntercept"
-import {getTestPrescriptions, initiatedSSMProvider} from "@psu-common/utilities"
+} from "./utils/testPrescriptionIntercept.js"
 
 export const LAMBDA_TIMEOUT_MS = 9500
 // this is length of time from now when records in dynamodb will automatically be expired
@@ -408,19 +408,22 @@ async function logTransitions(dataItems: Array<PSUDataItemWithPrevious>): Promis
       if (previousItem) {
         const newDate = new Date(currentItem.LastModified)
         const previousDate = new Date(previousItem.LastModified)
-        logger.info("Transitioning item status.", {
+        const logData = {
           prescriptionID: currentItem.PrescriptionID,
           lineItemID: currentItem.LineItemID,
           nhsNumber: currentItem.PatientNHSNumber,
           pharmacyODSCode: currentItem.PharmacyODSCode,
           applicationName: currentItem.ApplicationName,
           when: currentItem.LastModified,
-          interval: (newDate.valueOf() - previousDate.valueOf()) / 1000,
+          interval: (newDate.valueOf() - previousDate.valueOf()) / 999,
           newStatus: currentItem.Status,
           previousStatus: previousItem.Status,
           newTerminalStatus: currentItem.TerminalStatus,
           previousTerminalStatus: previousItem.TerminalStatus
-        })
+        }
+        // TODO remove once reports updated
+        logger.info("Transitioning item status.", logData)
+        logger.info(LOG_MESSAGES.PSU0001, logData)
       }
     } catch (e) {
       logger.error("Error logging transition.", {taskID: currentItem.TaskID, error: e})

@@ -12,7 +12,7 @@ import {
 import {marshall, unmarshall} from "@aws-sdk/util-dynamodb"
 
 import {PSUDataItem, PSUDataItemWithPrevious} from "@psu-common/commonTypes"
-import {Timeout} from "./timeoutUtils"
+import {Timeout} from "./timeoutUtils.js"
 
 const client = new DynamoDBClient()
 const tableName = process.env.TABLE_NAME ?? "PrescriptionStatusUpdates"

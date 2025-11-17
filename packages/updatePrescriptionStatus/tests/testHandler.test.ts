@@ -7,6 +7,8 @@ import {
   it,
   jest
 } from "@jest/globals"
+import {QueryCommand, TransactionCanceledException, TransactWriteItemsCommand} from "@aws-sdk/client-dynamodb"
+import {LOG_MESSAGES} from "@psu-common/utilities"
 
 import {
   APPLICATION_NAME,
@@ -35,7 +37,6 @@ import {
   serverError,
   timeoutResponse
 } from "../src/utils/responses"
-import {QueryCommand, TransactionCanceledException, TransactWriteItemsCommand} from "@aws-sdk/client-dynamodb"
 
 const {mockSend: dynamoDBMockSend} = mockDynamoDBClient()
 
@@ -446,6 +447,22 @@ describe("Integration tests for updatePrescriptionStatus handler", () => {
     expect(response.statusCode).toBe(201)
     expect(loggerSpy).toHaveBeenCalledWith(
       "Transitioning item status.",
+      {
+        prescriptionID: TASK_VALUES[0].prescriptionID,
+        lineItemID: TASK_VALUES[0].lineItemID,
+        nhsNumber: TASK_VALUES[0].nhsNumber,
+        pharmacyODSCode: TASK_VALUES[0].odsCode,
+        applicationName: APPLICATION_NAME,
+        when: "2023-09-11T10:11:12Z",
+        interval: 60,
+        newStatus: TASK_VALUES[0].businessStatus,
+        previousStatus: "Ready to Dispatch",
+        newTerminalStatus: TASK_VALUES[0].status,
+        previousTerminalStatus: "in-progress"
+      }
+    )
+    expect(loggerSpy).toHaveBeenCalledWith(
+      LOG_MESSAGES.PSU0001,
       {
         prescriptionID: TASK_VALUES[0].prescriptionID,
         lineItemID: TASK_VALUES[0].lineItemID,

@@ -1,7 +1,7 @@
 import {Logger} from "@aws-lambda-powertools/logger"
-import {LAMBDA_TIMEOUT_MS} from "../updatePrescriptionStatus"
-import {checkPrescriptionRecordExistence} from "./databaseClient"
-import {hasTimedOut, jobWithTimeout} from "./timeoutUtils"
+import {LAMBDA_TIMEOUT_MS} from "../updatePrescriptionStatus.js"
+import {checkPrescriptionRecordExistence} from "./databaseClient.js"
+import {hasTimedOut, jobWithTimeout} from "./timeoutUtils.js"
 export interface InterceptionResult {
   testPrescriptionForcedError?: boolean
   testPrescription1Forced201?: boolean
