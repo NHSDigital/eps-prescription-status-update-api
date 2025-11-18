@@ -1,4 +1,4 @@
-import {initiatedSSMProvider} from "./ssmUtil"
+import {initiatedSSMProvider} from "./ssmUtil.js"
 
 export interface TestPrescriptionsConfig {
   getTestPrescriptions(param: keyof typeof TestPrescriptions): Promise<Array<string>>

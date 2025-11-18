@@ -3,7 +3,7 @@ import {jest} from "@jest/globals"
 import * as sqs from "@aws-sdk/client-sqs"
 
 import {PSUDataItem} from "@psu-common/commonTypes"
-import {NotifyDataItemMessage} from "../src/utils"
+import {NotifyDataItemMessage} from "../src/utils/index.js"
 
 // Similarly mock the SQS client
 export function mockSQSClient() {

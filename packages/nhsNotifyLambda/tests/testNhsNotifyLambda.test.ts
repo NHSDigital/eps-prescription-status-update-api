@@ -6,7 +6,7 @@ import {
   afterEach
 } from "@jest/globals"
 
-import {constructPSUDataItem, constructPSUDataItemMessage} from "./testHelpers"
+import {constructPSUDataItem, constructPSUDataItemMessage} from "./testHelpers.js"
 
 const mockGetParameter = jest.fn().mockImplementation(() => "parameter_value")
 jest.unstable_mockModule(
@@ -52,9 +52,9 @@ jest.unstable_mockModule(
   })
 )
 
-let lambdaHandler: typeof import("../src/nhsNotifyLambda").lambdaHandler
+let lambdaHandler: typeof import("../src/nhsNotifyLambda.js").lambdaHandler
 beforeAll(async () => {
-  ({lambdaHandler} = await import("../src/nhsNotifyLambda"))
+  ({lambdaHandler} = await import("../src/nhsNotifyLambda.js"))
 })
 
 import {mockEventBridgeEvent} from "@psu-common/testing"

@@ -1,4 +1,4 @@
-import {calculateTotalForCheckDigit, CHECK_DIGIT_VALUES} from "../../src/utils/prescriptionID"
+import {calculateTotalForCheckDigit, CHECK_DIGIT_VALUES} from "../../src/utils/prescriptionID.js"
 
 export function generateShortFormID(prescriberOdsCode: string): string {
   const a = generateRandomHexString(6)

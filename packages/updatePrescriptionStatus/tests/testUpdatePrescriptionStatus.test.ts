@@ -8,17 +8,17 @@ import {
 
 import {BundleEntry} from "fhir/r4"
 
-import {badRequest, conflictDuplicate} from "../src/utils/responses"
+import {badRequest, conflictDuplicate} from "../src/utils/responses.js"
 import {
   DEFAULT_DATE,
   X_REQUEST_ID,
   mockInternalDependency,
   validTask,
   getTestPrescriptions
-} from "./utils/testUtils"
+} from "./utils/testUtils.js"
 import {APIGatewayProxyEvent} from "aws-lambda"
 
-import * as content from "../src/validation/content"
+import * as content from "../src/validation/content.js"
 import {TransactionCanceledException} from "@aws-sdk/client-dynamodb"
 const mockValidateEntry = mockInternalDependency("../../src/validation/content", content, "validateEntry")
 
@@ -36,7 +36,7 @@ jest.unstable_mockModule("@psu-common/utilities", async () => ({
 }))
 
 const {castEventBody, getXRequestID, validateEntries, handleTransactionCancelledException, buildDataItems, TTL_DELTA} =
-  await import("../src/updatePrescriptionStatus")
+  await import("../src/updatePrescriptionStatus.js")
 
 describe("Unit test getXRequestID", () => {
   beforeAll(() => {

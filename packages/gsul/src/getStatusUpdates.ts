@@ -6,9 +6,9 @@ import inputOutputLogger from "@middy/input-output-logger"
 import validator from "@middy/validator"
 import {transpileSchema} from "@middy/validator/transpile"
 import {MiddyErrorHandler} from "@psu-common/middyErrorHandler"
-import {getItemsUpdatesForPrescription} from "./dynamoDBclient.ts"
-import {requestSchema, requestType, inputPrescriptionType} from "./schema/request.ts"
-import {responseType, outputPrescriptionType, itemType} from "./schema/response.ts"
+import {getItemsUpdatesForPrescription} from "./dynamoDBclient.js"
+import {requestSchema, requestType, inputPrescriptionType} from "./schema/request.js"
+import {responseType, outputPrescriptionType, itemType} from "./schema/response.js"
 
 const logger = new Logger({serviceName: "GSUL"})
 

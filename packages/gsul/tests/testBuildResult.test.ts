@@ -1,6 +1,6 @@
-import {buildResult} from "../src/getStatusUpdates"
-import {inputPrescriptionType} from "../src/schema/request"
-import {outputPrescriptionType, itemType} from "../src/schema/response"
+import {buildResult} from "../src/getStatusUpdates.js"
+import {inputPrescriptionType} from "../src/schema/request.js"
+import {outputPrescriptionType, itemType} from "../src/schema/response.js"
 
 type scenariosType = {
   scenarioDescription: string

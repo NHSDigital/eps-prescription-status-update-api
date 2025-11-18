@@ -4,8 +4,8 @@ import {Logger} from "@aws-lambda-powertools/logger"
 
 import {LastNotificationStateType, NotifyDataItem} from "@psu-common/commonTypes"
 
-import {TTL_DELTA} from "./constants"
-import {NotifyDataItemMessage} from "./types"
+import {TTL_DELTA} from "./constants.js"
+import {NotifyDataItemMessage} from "./types.js"
 
 const marshallOptions = {
   // remove undefined when pushing to dynamo - references will be undefined when notify request fails

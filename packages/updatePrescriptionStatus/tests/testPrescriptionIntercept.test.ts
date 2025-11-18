@@ -16,7 +16,7 @@ import {
   mockDynamoDBClient,
   TASK_VALUES,
   getTestPrescriptions
-} from "./utils/testUtils"
+} from "./utils/testUtils.js"
 import {GetItemCommand, TransactionCanceledException, TransactWriteItemsCommand} from "@aws-sdk/client-dynamodb"
 
 export const mockGetParametersByName = jest.fn(async () => {
@@ -77,7 +77,7 @@ function expectGetItemCommand(prescriptionID: string, taskID: string) {
 describe("testPrescription1Intercept", () => {
   beforeEach(async () => {
     jest.useFakeTimers().setSystemTime(DEFAULT_DATE)
-    const {resetTestPrescriptions} = await import("../src/updatePrescriptionStatus")
+    const {resetTestPrescriptions} = await import("../src/updatePrescriptionStatus.js")
     resetTestPrescriptions()
     resetDynamoMock()
     jest.clearAllMocks()
@@ -91,7 +91,7 @@ describe("testPrescription1Intercept", () => {
     let expectedItems = generateExpectedItems(2)
     expectedItems.input.TransactItems = [expectedItems.input.TransactItems[1]]
 
-    const {handler, logger} = await import("../src/updatePrescriptionStatus")
+    const {handler, logger} = await import("../src/updatePrescriptionStatus.js")
     const loggerInfo = jest.spyOn(logger, "info")
     const response: APIGatewayProxyResult = await handler(event, {})
 
@@ -109,7 +109,7 @@ describe("testPrescription1Intercept", () => {
     body.entry = [body.entry[1]]
     const event: APIGatewayProxyEvent = generateMockEvent(body)
 
-    const {handler, logger} = await import("../src/updatePrescriptionStatus")
+    const {handler, logger} = await import("../src/updatePrescriptionStatus.js")
     const loggerInfo = jest.spyOn(logger, "info")
     const first_submission_response: APIGatewayProxyResult = await handler(event, {})
 
@@ -135,7 +135,7 @@ describe("testPrescription1Intercept", () => {
 describe("testPrescription2Intercept", () => {
   beforeEach(async () => {
     jest.useFakeTimers().setSystemTime(DEFAULT_DATE)
-    const {resetTestPrescriptions} = await import("../src/updatePrescriptionStatus")
+    const {resetTestPrescriptions} = await import("../src/updatePrescriptionStatus.js")
     resetTestPrescriptions()
     resetDynamoMock()
     jest.clearAllMocks()
@@ -149,7 +149,7 @@ describe("testPrescription2Intercept", () => {
     let expectedItems = generateExpectedItems(4)
     expectedItems.input.TransactItems = [expectedItems.input.TransactItems[3]]
 
-    const {handler, logger} = await import("../src/updatePrescriptionStatus")
+    const {handler, logger} = await import("../src/updatePrescriptionStatus.js")
     const loggerInfo = jest.spyOn(logger, "info")
     const response: APIGatewayProxyResult = await handler(event, {})
 
@@ -169,7 +169,7 @@ describe("testPrescription2Intercept", () => {
     body.entry = [body.entry[3]]
     const event: APIGatewayProxyEvent = generateMockEvent(body)
 
-    const {handler, logger} = await import("../src/updatePrescriptionStatus")
+    const {handler, logger} = await import("../src/updatePrescriptionStatus.js")
     const loggerInfo = jest.spyOn(logger, "info")
     const first_submission_response: APIGatewayProxyResult = await handler(event, {})
 
@@ -204,7 +204,7 @@ describe("testPrescription3Intercept", () => {
   beforeEach(async () => {
     jest.useFakeTimers().setSystemTime(DEFAULT_DATE)
     jest.resetModules()
-    const {resetTestPrescriptions} = await import("../src/updatePrescriptionStatus")
+    const {resetTestPrescriptions} = await import("../src/updatePrescriptionStatus.js")
     resetTestPrescriptions()
     resetDynamoMock()
     jest.clearAllMocks()
@@ -219,7 +219,7 @@ describe("testPrescription3Intercept", () => {
     // Only include entries 0, 1, and 2. Entry 2 contains TASK_VALUES[2] which matches TEST_PRESCRIPTIONS_3
     const event: APIGatewayProxyEvent = generateMockEvent(body)
 
-    const {handler, logger} = await import("../src/updatePrescriptionStatus")
+    const {handler, logger} = await import("../src/updatePrescriptionStatus.js")
     const loggerInfo = jest.spyOn(logger, "info")
     const response: APIGatewayProxyResult = await handler(event, {})
 
@@ -233,7 +233,7 @@ describe("testPrescription4Intercept", () => {
   beforeEach(async () => {
     jest.useFakeTimers().setSystemTime(DEFAULT_DATE)
     jest.resetModules()
-    const {resetTestPrescriptions} = await import("../src/updatePrescriptionStatus")
+    const {resetTestPrescriptions} = await import("../src/updatePrescriptionStatus.js")
     resetTestPrescriptions()
     resetDynamoMock()
     jest.clearAllMocks()
@@ -248,7 +248,7 @@ describe("testPrescription4Intercept", () => {
     // Entry 0 contains TASK_VALUES[0] which matches TEST_PRESCRIPTIONS_4
     const event: APIGatewayProxyEvent = generateMockEvent(body)
 
-    const {handler, logger} = await import("../src/updatePrescriptionStatus")
+    const {handler, logger} = await import("../src/updatePrescriptionStatus.js")
     const loggerInfo = jest.spyOn(logger, "info")
     const response: APIGatewayProxyResult = await handler(event, {})
     console.log(response)

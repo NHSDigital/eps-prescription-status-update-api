@@ -1,8 +1,8 @@
 import {Logger} from "@aws-lambda-powertools/logger"
-import {Validator} from "../../handler"
-import {eventType, requestType} from "./request"
+import {Validator} from "../../handler.js"
+import {eventType, requestType} from "./request.js"
 import {Err, Ok} from "pratica"
-import {wrap_with_status} from "../../utils"
+import {wrap_with_status} from "../../utils.js"
 
 /**
  *  Ignores messages that are not of type "PrescriptionStatusChanged"

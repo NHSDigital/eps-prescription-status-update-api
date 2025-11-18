@@ -15,12 +15,12 @@ import {
   deepCopy,
   generateMockEvent,
   getTestPrescriptions
-} from "../utils/testUtils"
-import {ONE_DAY_IN_MS} from "../../src/validation/content"
+} from "../utils/testUtils.js"
+import {ONE_DAY_IN_MS} from "../../src/validation/content.js"
 
 import requestSingleItem from "../../../specification/examples/request-dispatched.json"
 import requestMultipleItems from "../../../specification/examples/request-multiple-items.json"
-import {accepted, badRequest, bundleWrap} from "../../src/utils/responses"
+import {accepted, badRequest, bundleWrap} from "../../src/utils/responses.js"
 
 const mockGetParametersByName = jest.fn(async () => Promise.resolve(
   {[process.env.ENABLE_NOTIFICATIONS_PARAM!]: "false"}
@@ -35,7 +35,7 @@ jest.unstable_mockModule("@psu-common/utilities", async () => ({
   initiatedSSMProvider: mockInitiatedSSMProvider
 }))
 
-const {handler} = await import("../../src/updatePrescriptionStatus")
+const {handler} = await import("../../src/updatePrescriptionStatus.js")
 
 describe("Integration tests for validation via updatePrescriptionStatus handler", () => {
   beforeEach(() => {

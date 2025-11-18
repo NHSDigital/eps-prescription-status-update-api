@@ -7,8 +7,8 @@ import {DynamoDBDocumentClient} from "@aws-sdk/lib-dynamodb"
 import middy from "@middy/core"
 import inputOutputLogger from "@middy/input-output-logger"
 import {MiddyErrorHandler} from "@psu-common/middyErrorHandler"
-import {compareTables} from "./compareTable"
-import {backupEventCompletedDetail} from "./types"
+import {compareTables} from "./compareTable.js"
+import {backupEventCompletedDetail} from "./types.js"
 
 const logger = new Logger({serviceName: "psuRestoreValidationLambda"})
 const errorResponseBody = {

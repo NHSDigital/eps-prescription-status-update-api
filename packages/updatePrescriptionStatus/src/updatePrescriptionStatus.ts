@@ -13,10 +13,10 @@ import {Bundle, BundleEntry, Task} from "fhir/r4"
 
 import {PSUDataItem, PSUDataItemWithPrevious} from "@psu-common/commonTypes"
 
-import {transactionBundle, validateEntry} from "./validation/content"
-import {getPreviousItem, persistDataItems, rollbackDataItems} from "./utils/databaseClient"
-import {jobWithTimeout, hasTimedOut} from "./utils/timeoutUtils"
-import {pushPrescriptionToNotificationSQS} from "./utils/sqsClient"
+import {transactionBundle, validateEntry} from "./validation/content.js"
+import {getPreviousItem, persistDataItems, rollbackDataItems} from "./utils/databaseClient.js"
+import {jobWithTimeout, hasTimedOut} from "./utils/timeoutUtils.js"
+import {pushPrescriptionToNotificationSQS} from "./utils/sqsClient.js"
 import {
   accepted,
   badRequest,
@@ -26,12 +26,12 @@ import {
   serverError,
   timeoutResponse,
   tooManyRequests
-} from "./utils/responses"
+} from "./utils/responses.js"
 import {
   InterceptionResult,
   testPrescription1Intercept,
   testPrescription2Intercept
-} from "./utils/testPrescriptionIntercept"
+} from "./utils/testPrescriptionIntercept.js"
 import {getTestPrescriptions, initiatedSSMProvider} from "@psu-common/utilities"
 
 export const LAMBDA_TIMEOUT_MS = 9500

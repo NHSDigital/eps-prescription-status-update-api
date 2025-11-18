@@ -20,7 +20,7 @@ const SOURCE_ITEM = {
   TaskID: {S: "dummy_task"}
 }
 
-const {compareTables} = await import("../src/compareTable")
+const {compareTables} = await import("../src/compareTable.js")
 
 describe("Compare table function", () => {
   beforeEach(() => {

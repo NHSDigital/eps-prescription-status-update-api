@@ -1,7 +1,7 @@
 import {DynamoDBClient} from "@aws-sdk/client-dynamodb"
 import {DynamoDBDocumentClient, QueryCommand, QueryCommandInput} from "@aws-sdk/lib-dynamodb"
 import {Logger} from "@aws-lambda-powertools/logger"
-import {itemType} from "./schema/response.ts"
+import {itemType} from "./schema/response.js"
 import {NativeAttributeValue} from "@aws-sdk/util-dynamodb"
 
 const tableName = process.env.TABLE_NAME

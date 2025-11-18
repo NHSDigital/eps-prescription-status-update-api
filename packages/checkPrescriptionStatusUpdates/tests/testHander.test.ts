@@ -6,7 +6,7 @@ import {
 } from "@jest/globals"
 
 import {DynamoDBDocumentClient} from "@aws-sdk/lib-dynamodb"
-import {handler} from "../src/checkPrescriptionStatusUpdates"
+import {handler} from "../src/checkPrescriptionStatusUpdates.js"
 import {mockAPIGatewayProxyEvent, mockContext} from "@psu-common/testing"
 
 const defaultItem = {

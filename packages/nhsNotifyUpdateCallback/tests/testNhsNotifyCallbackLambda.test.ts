@@ -5,8 +5,8 @@ import {
   beforeAll
 } from "@jest/globals"
 
-import {generateMockEvent} from "./utilities"
-import {CallbackType, ChannelStatusResponse} from "../src/types"
+import {generateMockEvent} from "./utilities.js"
+import {CallbackType, ChannelStatusResponse} from "../src/types.js"
 
 const mockCheckSignature = jest.fn()
 const mockResponse = jest.fn()
@@ -23,10 +23,10 @@ jest.unstable_mockModule(
   })
 )
 
-let handler: typeof import("../src/lambdaHandler").handler
+let handler: typeof import("../src/lambdaHandler.js").handler
 
 beforeAll(async () => {
-  ({handler} = await import("../src/lambdaHandler"))
+  ({handler} = await import("../src/lambdaHandler.js"))
 })
 
 const ORIGINAL_ENV = {...process.env}

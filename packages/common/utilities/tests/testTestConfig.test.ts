@@ -20,7 +20,7 @@ jest.unstable_mockModule("../src/ssmUtil", () => ({
 // Define env var before import
 process.env.TEST_PRESCRIPTIONS_PARAM_NAME_4 = "psu-stack-test-prescriptions-4"
 
-const {TestPrescriptions, getTestPrescriptions} = await import("../src/testConfig")
+const {TestPrescriptions, getTestPrescriptions} = await import("../src/testConfig.js")
 
 describe("Unit tests for TestPrescriptions class", () => {
   beforeEach(() => {

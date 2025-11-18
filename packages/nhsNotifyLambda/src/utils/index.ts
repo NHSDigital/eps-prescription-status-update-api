@@ -1,7 +1,7 @@
-import {NotifyDataItemMessage} from "./types"
-import {checkCooldownForUpdate, addPrescriptionMessagesToNotificationStateStore} from "./dynamo"
-import {removeSQSMessages, drainQueue, reportQueueStatus} from "./sqs"
-import {handleNotifyRequests, makeRealNotifyRequest} from "./notify"
+import {NotifyDataItemMessage} from "./types.js"
+import {checkCooldownForUpdate, addPrescriptionMessagesToNotificationStateStore} from "./dynamo.js"
+import {removeSQSMessages, drainQueue, reportQueueStatus} from "./sqs.js"
+import {handleNotifyRequests, makeRealNotifyRequest} from "./notify.js"
 
 export {
   NotifyDataItemMessage,

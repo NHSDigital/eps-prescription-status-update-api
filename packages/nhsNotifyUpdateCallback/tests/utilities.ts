@@ -9,7 +9,7 @@ import {
   ChannelStatusResource,
   ChannelStatusResponse,
   RoutingPlan
-} from "../src/types"
+} from "../src/types.js"
 
 export const X_REQUEST_ID = "43313002-debb-49e3-85fa-34812c150242"
 export const APPLICATION_NAME = "test-app"

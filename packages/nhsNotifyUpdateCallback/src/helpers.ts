@@ -9,7 +9,7 @@ import {createHmac, timingSafeEqual} from "crypto"
 
 import {LastNotificationStateType, NotificationUpdate} from "@psu-common/commonTypes"
 
-import {CallbackResource, CallbackResponse, CallbackType} from "./types"
+import {CallbackResource, CallbackResponse, CallbackType} from "./types.js"
 
 const APP_ID_SECRET = process.env.APP_ID_SECRET
 const API_KEY_SECRET = process.env.API_KEY_SECRET

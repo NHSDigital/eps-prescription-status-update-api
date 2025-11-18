@@ -7,7 +7,7 @@ import {
   ScanCommandInput
 } from "@aws-sdk/lib-dynamodb"
 import {Logger} from "@aws-lambda-powertools/logger"
-import {InputData} from "./types"
+import {InputData} from "./types.js"
 
 const tableName = process.env.TABLE_NAME
 const client = new DynamoDBClient()

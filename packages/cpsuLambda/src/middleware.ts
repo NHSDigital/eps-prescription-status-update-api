@@ -5,7 +5,7 @@ import middy from "@middy/core"
 import {Logger} from "@aws-lambda-powertools/logger"
 import validator from "@middy/validator"
 import {transpileSchema} from "@middy/validator/transpile"
-import {validationErrorHandler} from "./errorHandler"
+import {validationErrorHandler} from "./errorHandler.js"
 
 export type MiddlewareGenerator = (logger: Logger, schema?: object) => middy.MiddlewareObj
 

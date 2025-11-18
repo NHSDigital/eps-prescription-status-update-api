@@ -16,7 +16,7 @@ import {
   drainQueue,
   handleNotifyRequests,
   NotifyDataItemMessage
-} from "./utils"
+} from "./utils/index.js"
 
 const logger = new Logger({serviceName: "nhsNotify"})
 

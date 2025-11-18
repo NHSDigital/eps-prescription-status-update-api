@@ -11,7 +11,7 @@ import {
   ODS_CODE_CODESYSTEM,
   PRESCRIPTION_ID_CODESYSTEM,
   STATUS_CODESYSTEM
-} from "../../src/validation/content"
+} from "../../src/validation/content.js"
 import {Task} from "fhir/r4"
 
 import valid from "../tasks/valid.json"

@@ -7,7 +7,7 @@ import {Logger} from "@aws-lambda-powertools/logger"
 import {DynamoDBDocumentClient, PutCommand} from "@aws-sdk/lib-dynamodb"
 import {GetQueueAttributesCommand, DeleteMessageBatchCommand, Message} from "@aws-sdk/client-sqs"
 
-import {constructMessage, constructPSUDataItemMessage, mockSQSClient} from "./testHelpers"
+import {constructMessage, constructPSUDataItemMessage, mockSQSClient} from "./testHelpers.js"
 
 const {mockSend: sqsMockSend} = mockSQSClient()
 
@@ -67,7 +67,7 @@ const {
   reportQueueStatus,
   drainQueue,
   handleNotifyRequests
-} = await import("../src/utils")
+} = await import("../src/utils/index.js")
 
 const ORIGINAL_ENV = {...process.env}
 
@@ -174,7 +174,7 @@ describe("NHS notify lambda helper functions", () => {
 
     it("Throws an error if the SQS URL is not configured", async () => {
       delete process.env.NHS_NOTIFY_PRESCRIPTIONS_SQS_QUEUE_URL
-      const {drainQueue: dq} = await import("../src/utils")
+      const {drainQueue: dq} = await import("../src/utils/index.js")
       await expect(dq(logger)).rejects.toThrow(
         "NHS_NOTIFY_PRESCRIPTIONS_SQS_QUEUE_URL not set"
       )
@@ -271,7 +271,7 @@ describe("NHS notify lambda helper functions", () => {
 
     it("Throws an error if the SQS URL is not configured", async () => {
       delete process.env.NHS_NOTIFY_PRESCRIPTIONS_SQS_QUEUE_URL
-      const {removeSQSMessages: clearFunc} = await import("../src/utils")
+      const {removeSQSMessages: clearFunc} = await import("../src/utils/index.js")
 
       await expect(clearFunc(logger, [])).rejects.toThrow("NHS_NOTIFY_PRESCRIPTIONS_SQS_QUEUE_URL not set")
       expect(errorSpy).toHaveBeenCalledWith("Notifications SQS URL not configured")
@@ -298,7 +298,7 @@ describe("NHS notify lambda helper functions", () => {
 
     it("throws and logs error if TABLE_NAME is not set", async () => {
       delete process.env.TABLE_NAME
-      const {addPrescriptionMessagesToNotificationStateStore: addFn} = await import("../src/utils")
+      const {addPrescriptionMessagesToNotificationStateStore: addFn} = await import("../src/utils/index.js")
 
       await expect(
         addFn(logger, [constructPSUDataItemMessage()])
@@ -383,7 +383,7 @@ describe("NHS notify lambda helper functions", () => {
 
     it("throws if TABLE_NAME is not set", async () => {
       delete process.env.TABLE_NAME
-      const {checkCooldownForUpdate: fn} = await import("../src/utils")
+      const {checkCooldownForUpdate: fn} = await import("../src/utils/index.js")
       const update = constructPSUDataItemMessage().PSUDataItem
 
       await expect(fn(logger, update)).rejects.toThrow("TABLE_NAME not set")
@@ -764,7 +764,7 @@ describe("NHS notify lambda helper functions", () => {
           [process.env.MAKE_REAL_NOTIFY_REQUESTS_PARAM!]: "false"
         }
       ))
-      const {handleNotifyRequests: fn} = await import("../src/utils")
+      const {handleNotifyRequests: fn} = await import("../src/utils/index.js")
 
       const data = [
         constructPSUDataItemMessage({
@@ -866,7 +866,7 @@ describe("NHS notify lambda helper functions", () => {
 
     it("throws if the SQS URL is not configured", async () => {
       delete process.env.NHS_NOTIFY_PRESCRIPTIONS_SQS_QUEUE_URL
-      const {reportQueueStatus: rqs} = await import("../src/utils")
+      const {reportQueueStatus: rqs} = await import("../src/utils/index.js")
 
       await expect(rqs(logger)).rejects.toThrow(
         "NHS_NOTIFY_PRESCRIPTIONS_SQS_QUEUE_URL not set"

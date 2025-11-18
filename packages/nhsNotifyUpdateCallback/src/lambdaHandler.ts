@@ -9,8 +9,8 @@ import httpHeaderNormalizer from "@middy/http-header-normalizer"
 
 import errorHandler from "@nhs/fhir-middy-error-handler"
 
-import {CallbackType, CallbackResponse} from "./types"
-import {checkSignature, response, updateNotificationsTable} from "./helpers"
+import {CallbackType, CallbackResponse} from "./types.js"
+import {checkSignature, response, updateNotificationsTable} from "./helpers.js"
 
 export const logger = new Logger({serviceName: "nhsNotifyUpdateCallback"})
 

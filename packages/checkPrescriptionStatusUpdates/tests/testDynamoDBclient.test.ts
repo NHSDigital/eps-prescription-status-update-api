@@ -1,8 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable max-len */
-import {buildQuery} from "../src/dynamoDBclient"
+import {buildQuery} from "../src/dynamoDBclient.js"
 import {expect, describe} from "@jest/globals"
-import {InputData} from "../src/types"
+import {InputData} from "../src/types.js"
 
 type buildQueryTestData = {
   inputData: InputData
