@@ -12,7 +12,6 @@ import errorHandler from "@nhs/fhir-middy-error-handler"
 import {Bundle, BundleEntry, Task} from "fhir/r4"
 
 import {PSUDataItem, PSUDataItemWithPrevious} from "@psu-common/commonTypes"
-import {LOG_MESSAGES} from "@psu-common/utilities"
 
 import {transactionBundle, validateEntry} from "./validation/content"
 import {getPreviousItem, persistDataItems, rollbackDataItems} from "./utils/databaseClient"
@@ -409,7 +408,7 @@ async function logTransitions(dataItems: Array<PSUDataItemWithPrevious>): Promis
       if (previousItem) {
         const newDate = new Date(currentItem.LastModified)
         const previousDate = new Date(previousItem.LastModified)
-        logger.info(LOG_MESSAGES.PSU0001, {
+        logger.info("Transitioning item status.", {
           prescriptionID: currentItem.PrescriptionID,
           lineItemID: currentItem.LineItemID,
           nhsNumber: currentItem.PatientNHSNumber,
