@@ -6,7 +6,7 @@ import {createHmac} from "crypto"
 
 import {NotifyDataItem, PSUDataItemWithPrevious} from "@psu-common/commonTypes"
 
-import {checkSiteOrSystemIsNotifyEnabled} from "../validation/notificationSiteAndSystemFilters.js"
+import {checkSiteOrSystemIsNotifyEnabled} from "../validation/notificationSiteAndSystemFilters"
 
 const sqsUrl: string | undefined = process.env.NHS_NOTIFY_PRESCRIPTIONS_SQS_QUEUE_URL
 const fallbackSalt = "DEV SALT"

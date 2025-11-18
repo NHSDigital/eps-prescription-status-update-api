@@ -1,7 +1,7 @@
 import {BundleEntry, Task} from "fhir/r4"
-import {validatePrescriptionID} from "../utils/prescriptionID.js"
-import {validateNhsNumber} from "../utils/nhsNumber.js"
-import {validateFields} from "./fields.js"
+import {validatePrescriptionID} from "../utils/prescriptionID"
+import {validateNhsNumber} from "../utils/nhsNumber"
+import {validateFields} from "./fields"
 
 export type TaskValidation = (task: Task) => string | undefined;
 export type BundleEntryValidation = (

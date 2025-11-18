@@ -1,5 +1,5 @@
 import {BundleEntry, Task} from "fhir/r4"
-import {TaskValidation, ValidationOutcome, BundleEntryValidation} from "./content.js"
+import {TaskValidation, ValidationOutcome, BundleEntryValidation} from "./content"
 
 export function entryFields(entry: BundleEntry): Array<string> {
   const requiredFields: Array<BundleEntryValidation> = [
