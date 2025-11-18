@@ -18,6 +18,31 @@ export async function tokenExchange(
     getSecret(process.env.KID_SECRET!)
   ])
 
+  if (!apiKeyRaw || !privateKeyRaw || !kidRaw) {
+    throw new Error("Missing one of API_KEY, PRIVATE_KEY or KID from Secrets Manager")
+  }
+
+  return await tokenExchange2(
+    logger,
+    axiosInstance,
+    host,
+    apiKeyRaw.toString(),
+    privateKeyRaw.toString(),
+    kidRaw.toString()
+  )
+}
+
+/**
+ * Exchange API key + JWT for a bearer token from NHS Notify.
+ */
+export async function tokenExchange2(
+  logger: Logger,
+  axiosInstance: AxiosInstance,
+  host: string,
+  apiKeyRaw: string,
+  privateKeyRaw: string,
+  kidRaw: string
+): Promise<string> {
   const API_KEY = apiKeyRaw?.toString().trim()
   const PRIVATE_KEY = privateKeyRaw?.toString().trim()
   const KID = kidRaw?.toString().trim()
@@ -44,7 +69,7 @@ export async function tokenExchange(
     .setExpirationTime(now + 60) // 1 minute
     .sign(key)
 
-  logger.info("Exchanging JWT for access token", {host, jti})
+  logger.info("Exchanging JWT for access token", {jwt, host, jti})
 
   // Request the token
   const params = new URLSearchParams({
