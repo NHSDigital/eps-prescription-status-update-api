@@ -16,28 +16,28 @@
 import {Logger} from "@aws-lambda-powertools/logger"
 import axios from "axios"
 import axiosRetry from "axios-retry"
-import {tokenExchange2} from "../src/utils/auth.js"
+import {tokenExchange} from "../src/utils/auth.js"
+import {NotifySecrets} from "../src/utils/secrets.js"
 
 async function main() {
   const logger = initLogger()
-  const {host, apiKey, kid, privateKey} = loadNotifyCreds(logger)
+  const {host} = loadNotifyConfig(logger)
+  const notifySecrets = loadNotifySecrets(logger)
   const axiosInstance = initAxiosInst(host)
 
   logger.info("Testing token exchange", {
     host,
-    apiKeyPrefix: apiKey.substring(0, 10) + "...",
-    kid
+    apiKeyPrefix: notifySecrets.apiKey.substring(0, 10) + "...",
+    kid: notifySecrets.kid
   })
 
   try {
     // Perform token exchange
-    const accessToken = await tokenExchange2(
+    const accessToken = await tokenExchange(
       logger,
       axiosInstance,
       host,
-      apiKey,
-      privateKey,
-      kid
+      notifySecrets
     )
 
     logger.info("Token exchange successful!", {
@@ -87,16 +87,19 @@ function initLogger() {
   })
 }
 
-function loadNotifyCreds(logger: Logger) {
+function loadNotifyConfig(logger: Logger): {host: string} {
   const host = process.env.NOTIFY_API_BASE_URL
-  const apiKey = process.env.NOTIFY_API_KEY
-  const privateKey = process.env.NOTIFY_PRIVATE_KEY
-  const kid = process.env.NOTIFY_KID
-
   if (!host) {
     logger.error("Missing required environment variable: NOTIFY_API_BASE_URL")
     process.exit(1)
   }
+  return {host}
+}
+
+function loadNotifySecrets(logger: Logger): NotifySecrets {
+  const apiKey = process.env.NOTIFY_API_KEY
+  const privateKey = process.env.NOTIFY_PRIVATE_KEY
+  const kid = process.env.NOTIFY_KID
 
   if (!apiKey) {
     logger.error("Missing required environment variable: NOTIFY_API_KEY")
@@ -112,5 +115,5 @@ function loadNotifyCreds(logger: Logger) {
     logger.error("Missing required environment variable: NOTIFY_KID")
     process.exit(1)
   }
-  return {host, apiKey, kid, privateKey}
+  return {apiKey, privateKey, kid}
 }

@@ -4,13 +4,10 @@ const ssm = new SSMProvider()
 
 export interface NotifyConfig {
   makeRealNotifyRequestsFlag: boolean
-  notifyApiBaseUrlRaw: string
+  notifyApiBaseUrl: string
 }
 
-export async function loadConfig(): Promise<{
-  makeRealNotifyRequestsFlag: boolean,
-  notifyApiBaseUrlRaw: string
-}> {
+export async function loadConfig(): Promise<NotifyConfig> {
   const paramNames = {
     [process.env.MAKE_REAL_NOTIFY_REQUESTS_PARAM!]: {maxAge: 1},
     [process.env.NOTIFY_API_BASE_URL_PARAM!]: {maxAge: 1}
@@ -25,6 +22,7 @@ export async function loadConfig(): Promise<{
 
   return {
     makeRealNotifyRequestsFlag: realNotifyParam === "true",
-    notifyApiBaseUrlRaw: all[process.env.NOTIFY_API_BASE_URL_PARAM!] as string
+    // secrets may be bytes, so make sure it's a string, then trim
+    notifyApiBaseUrl: (all[process.env.NOTIFY_API_BASE_URL_PARAM!] as string).toString().trim()
   }
 }
