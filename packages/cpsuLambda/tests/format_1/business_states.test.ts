@@ -1,12 +1,12 @@
 import {BundleEntry, Task} from "fhir/r4"
-import {generateTemplate, getBusinessStatus, populateTemplate} from "../../src/schema/format_1/transformer"
+import {generateTemplate, getBusinessStatus, populateTemplate} from "../../src/schema/format_1/transformer.js"
 import {
   itemType,
   requestType,
   deliveryType,
   itemStatusType,
   completedStatusType
-} from "../../src/schema/format_1"
+} from "../../src/schema/format_1/index.js"
 import {Logger} from "@aws-lambda-powertools/logger"
 
 interface BusinessStatusTestCase {

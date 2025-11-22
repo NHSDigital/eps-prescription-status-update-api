@@ -19,7 +19,7 @@ import {
   mockDynamoDBClient,
   TASK_VALUES,
   getTestPrescriptions
-} from "./utils/testUtils"
+} from "./utils/testUtils.js"
 
 import requestDispatched from "../../specification/examples/request-dispatched.json"
 import requestMultipleItems from "../../specification/examples/request-multiple-items.json"
@@ -34,7 +34,7 @@ import {
   bundleWrap,
   serverError,
   timeoutResponse
-} from "../src/utils/responses"
+} from "../src/utils/responses.js"
 import {QueryCommand, TransactionCanceledException, TransactWriteItemsCommand} from "@aws-sdk/client-dynamodb"
 
 const {mockSend: dynamoDBMockSend} = mockDynamoDBClient()
@@ -58,7 +58,7 @@ jest.unstable_mockModule("@psu-common/utilities", async () => ({
   initiatedSSMProvider: mockInitiatedSSMProvider
 }))
 
-const {handler, logger} = await import("../src/updatePrescriptionStatus")
+const {handler, logger} = await import("../src/updatePrescriptionStatus.js")
 
 const LAMBDA_TIMEOUT_MS = 9500 // 9.5 sec
 
@@ -473,7 +473,7 @@ describe("Integration tests for updatePrescriptionStatus handler", () => {
         throw new Error("Test error")
       }
     )
-    const {handler: tmpfn} = await import("../src/updatePrescriptionStatus")
+    const {handler: tmpfn} = await import("../src/updatePrescriptionStatus.js")
 
     const event: APIGatewayProxyEvent = generateMockEvent(requestDispatched)
     const response: APIGatewayProxyResult = await tmpfn(event, {})
@@ -492,7 +492,7 @@ describe("Integration tests for updatePrescriptionStatus handler", () => {
         throw new Error("Test error")
       }
     )
-    const {handler: tmpfn} = await import("../src/updatePrescriptionStatus")
+    const {handler: tmpfn} = await import("../src/updatePrescriptionStatus.js")
 
     const event: APIGatewayProxyEvent = generateMockEvent(requestDispatched)
     const response: APIGatewayProxyResult = await tmpfn(event, {})
@@ -502,7 +502,7 @@ describe("Integration tests for updatePrescriptionStatus handler", () => {
 
   it("When the get parameter call throws an error, the request succeeds and the sqs queue is untouched", async () => {
     mockGetParametersByName.mockImplementation(async () => Promise.reject(new Error("Failed")))
-    const {handler: tmpfn} = await import("../src/updatePrescriptionStatus")
+    const {handler: tmpfn} = await import("../src/updatePrescriptionStatus.js")
 
     const rejected_event: APIGatewayProxyEvent = generateMockEvent(requestDispatched)
     const rejected_response: APIGatewayProxyResult = await tmpfn(rejected_event, {})
@@ -516,7 +516,7 @@ describe("Integration tests for updatePrescriptionStatus handler", () => {
         [process.env.ENABLE_NOTIFICATIONS_PARAM!]: "false"
       }
     })
-    const {handler: tmpfn} = await import("../src/updatePrescriptionStatus")
+    const {handler: tmpfn} = await import("../src/updatePrescriptionStatus.js")
 
     const bypass_event: APIGatewayProxyEvent = generateMockEvent(requestDispatched)
     const bypass_response: APIGatewayProxyResult = await tmpfn(bypass_event, {})
@@ -530,7 +530,7 @@ describe("Integration tests for updatePrescriptionStatus handler", () => {
         [process.env.ENABLE_NOTIFICATIONS_PARAM!]: "true"
       }
     })
-    const {handler: tmpfn} = await import("../src/updatePrescriptionStatus")
+    const {handler: tmpfn} = await import("../src/updatePrescriptionStatus.js")
 
     const successful_event: APIGatewayProxyEvent = generateMockEvent(requestDispatched)
     const successful_response: APIGatewayProxyResult = await tmpfn(successful_event, {})
@@ -540,7 +540,7 @@ describe("Integration tests for updatePrescriptionStatus handler", () => {
 
   it("When the application-name header is missing but required, the lambda returns 400", async () => {
     process.env.REQUIRE_APPLICATION_NAME = "TRUE"
-    const {handler: tmpfn} = await import("../src/updatePrescriptionStatus")
+    const {handler: tmpfn} = await import("../src/updatePrescriptionStatus.js")
 
     let event: APIGatewayProxyEvent = generateMockEvent(requestDispatched)
     event.headers["attribute-name"] = undefined
@@ -550,7 +550,7 @@ describe("Integration tests for updatePrescriptionStatus handler", () => {
 
   it("When the application-name header is missing and NOT required, the lambda returns 201", async () => {
     process.env.REQUIRE_APPLICATION_NAME = "false"
-    const {handler: tmpfn} = await import("../src/updatePrescriptionStatus")
+    const {handler: tmpfn} = await import("../src/updatePrescriptionStatus.js")
 
     let event: APIGatewayProxyEvent = generateMockEvent(requestDispatched)
     event.headers["attribute-name"] = APPLICATION_NAME // explicitly check this is set

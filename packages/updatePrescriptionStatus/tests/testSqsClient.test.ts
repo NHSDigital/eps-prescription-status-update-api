@@ -10,7 +10,7 @@ import {Logger} from "@aws-lambda-powertools/logger"
 import {LogItemMessage, LogItemExtraInput} from "@aws-lambda-powertools/logger/lib/cjs/types/Logger"
 import {SendMessageBatchCommand} from "@aws-sdk/client-sqs"
 
-import {createMockDataItem, mockSQSClient} from "./utils/testUtils"
+import {createMockDataItem, mockSQSClient} from "./utils/testUtils.js"
 
 const {mockSend} = mockSQSClient()
 
@@ -46,8 +46,8 @@ jest.unstable_mockModule("@psu-common/utilities", async () => ({
 const {
   pushPrescriptionToNotificationSQS,
   saltedHash
-} = await import("../src/utils/sqsClient")
-const {checkSiteOrSystemIsNotifyEnabled} = await import("../src/validation/notificationSiteAndSystemFilters")
+} = await import("../src/utils/sqsClient.js")
+const {checkSiteOrSystemIsNotifyEnabled} = await import("../src/validation/notificationSiteAndSystemFilters.js")
 
 const ORIGINAL_ENV = {...process.env}
 
@@ -74,7 +74,7 @@ describe("Unit tests for pushPrescriptionToNotificationSQS", () => {
   it("throws if the SQS URL is not configured", async () => {
     process.env.NHS_NOTIFY_PRESCRIPTIONS_SQS_QUEUE_URL = undefined
     // Re-import the function so the environment change gets picked up
-    const {pushPrescriptionToNotificationSQS: tempFunc} = await import("../src/utils/sqsClient")
+    const {pushPrescriptionToNotificationSQS: tempFunc} = await import("../src/utils/sqsClient.js")
 
     await expect(
       tempFunc("req-123", [], logger)
@@ -235,7 +235,7 @@ describe("Unit tests for getSaltValue", () => {
     errorSpy = jest.spyOn(logger, "error")
     warnSpy = jest.spyOn(logger, "warn");
 
-    ({getSaltValue} = await import("../src/utils/sqsClient"))
+    ({getSaltValue} = await import("../src/utils/sqsClient.js"))
   })
 
   it("returns the fallback salt when SQS_SALT is not configured", async () => {

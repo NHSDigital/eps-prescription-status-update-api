@@ -1,7 +1,7 @@
 import {Logger} from "@aws-lambda-powertools/logger"
-import {DEFAULT_HANDLER_MIDDLEWARE} from "./middleware"
-import {HandlerParams, newHandler} from "./handler"
-import {format_1} from "./schema"
+import {DEFAULT_HANDLER_MIDDLEWARE} from "./middleware.js"
+import {HandlerParams, newHandler} from "./handler.js"
+import {format_1} from "./schema/index.js"
 import {LogLevel} from "@aws-lambda-powertools/logger/types"
 
 const LOG_LEVEL = process.env.LOG_LEVEL as LogLevel

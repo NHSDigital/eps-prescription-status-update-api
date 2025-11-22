@@ -23,7 +23,7 @@ jest.unstable_mockModule("jose", async () => ({
 
 let tokenExchange: (logger: Logger, axiosInstance: AxiosInstance, host: string) => Promise<string>
 beforeAll(async () => {
-  ({tokenExchange} = await import("../src/utils/auth"))
+  ({tokenExchange} = await import("../src/utils/auth.js"))
 })
 
 describe("tokenExchange", () => {

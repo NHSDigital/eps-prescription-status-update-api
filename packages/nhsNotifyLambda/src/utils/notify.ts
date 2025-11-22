@@ -2,16 +2,16 @@ import {Logger} from "@aws-lambda-powertools/logger"
 
 import axios from "axios"
 
-import {setupAxios} from "./axios"
+import {setupAxios} from "./axios.js"
 import {
   NotifyDataItemMessage,
   CreateMessageBatchRequest,
   CreateMessageBatchResponse,
   MessageBatchItem
-} from "./types"
-import {loadConfig} from "./ssm"
-import {tokenExchange} from "./auth"
-import {NOTIFY_REQUEST_MAX_BYTES, NOTIFY_REQUEST_MAX_ITEMS, DUMMY_NOTIFY_DELAY_MS} from "./constants"
+} from "./types.js"
+import {loadConfig} from "./ssm.js"
+import {tokenExchange} from "./auth.js"
+import {NOTIFY_REQUEST_MAX_BYTES, NOTIFY_REQUEST_MAX_ITEMS, DUMMY_NOTIFY_DELAY_MS} from "./constants.js"
 
 /**
  * Returns the original array, chunked in batches of up to <size>

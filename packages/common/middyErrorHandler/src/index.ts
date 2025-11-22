@@ -1,3 +1,3 @@
-import {MiddyErrorHandler} from "./errorHandler"
+import {MiddyErrorHandler} from "./errorHandler.js"
 
 export {MiddyErrorHandler}

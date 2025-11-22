@@ -1,10 +1,10 @@
 import {APIGatewayProxyResult} from "aws-lambda"
 import middy from "@middy/core"
-import {MiddlewareGenerator} from "./middleware"
+import {MiddlewareGenerator} from "./middleware.js"
 import {Logger} from "@aws-lambda-powertools/logger"
 import {Result} from "pratica"
 import {Bundle, Task} from "fhir/r4"
-import {wrap_with_status} from "./utils"
+import {wrap_with_status} from "./utils.js"
 
 export type Validator<Event, Message> = (event: Event, logger: Logger) => Result<Message, APIGatewayProxyResult>
 export type Transformer<Message> = (requestBody: Message, logger: Logger) => Result<Bundle<Task>, APIGatewayProxyResult>

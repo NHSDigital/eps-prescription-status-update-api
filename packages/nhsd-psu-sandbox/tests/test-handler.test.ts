@@ -1,5 +1,5 @@
 import {APIGatewayProxyEvent, APIGatewayProxyResult} from "aws-lambda"
-import {handler} from "../src/sandbox"
+import {handler} from "../src/sandbox.js"
 import {expect, describe, it} from "@jest/globals"
 import successData from "../../specification/examples/response-multiple-items.json"
 

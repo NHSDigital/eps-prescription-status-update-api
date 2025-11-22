@@ -23,15 +23,15 @@ import {
   validateContent,
   entryContent,
   status
-} from "../../src/validation/content"
+} from "../../src/validation/content.js"
 
-import {generateInvalidNhsNumbers, generateValidNhsNumbers} from "../utils/nhsNumber"
+import {generateInvalidNhsNumbers, generateValidNhsNumbers} from "../utils/nhsNumber.js"
 import {
   DEFAULT_DATE,
   FULL_URL_0,
   generateEntry,
   validTask
-} from "../utils/testUtils"
+} from "../utils/testUtils.js"
 
 describe("Unit test for overall task validation", () => {
   it("When task is valid, should return true with no issues.", async () => {

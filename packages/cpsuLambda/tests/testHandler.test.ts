@@ -1,14 +1,14 @@
-import {format_1} from "../src/schema"
-import mockContext from "./mockContext"
+import {format_1} from "../src/schema/index.js"
+import mockContext from "./mockContext.js"
 import format_1_request_json from "./format_1/example_request.json"
 import format_1_response_json from "./format_1/example_response.json"
-import {HandlerParams, newHandler} from "../src/handler"
-import {MIDDLEWARE} from "../src/middleware"
+import {HandlerParams, newHandler} from "../src/handler.js"
+import {MIDDLEWARE} from "../src/middleware.js"
 import {Logger} from "@aws-lambda-powertools/logger"
 import {jest} from "@jest/globals"
 import {Ok} from "pratica"
 
-const {FORMAT_1_PARAMS, format_1_handler} = await import("../src/cpsu")
+const {FORMAT_1_PARAMS, format_1_handler} = await import("../src/cpsu.js")
 
 const format_1_request = () => {
   return JSON.parse(JSON.stringify(format_1_request_json))

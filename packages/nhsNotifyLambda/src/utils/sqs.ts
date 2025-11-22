@@ -9,8 +9,8 @@ import {Logger} from "@aws-lambda-powertools/logger"
 
 import {NotifyDataItem} from "@psu-common/commonTypes"
 
-import {NotifyDataItemMessage} from "./types"
-import {chunkArray} from "./notify"
+import {NotifyDataItemMessage} from "./types.js"
+import {chunkArray} from "./notify.js"
 
 const sqs = new SQSClient({region: process.env.AWS_REGION})
 const sqsUrl = process.env.NHS_NOTIFY_PRESCRIPTIONS_SQS_QUEUE_URL

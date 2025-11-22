@@ -26,14 +26,14 @@ jest.unstable_mockModule("@aws-lambda-powertools/parameters/secrets", async () =
 import {DynamoDBDocumentClient, QueryCommand, UpdateCommand} from "@aws-sdk/lib-dynamodb"
 import type {UpdateCommandInput} from "@aws-sdk/lib-dynamodb"
 import {Logger} from "@aws-lambda-powertools/logger"
-import {MessageStatusResponse} from "../src/types"
-import {generateMockChannelStatusResponse, generateMockEvent, generateMockMessageStatusResponse} from "./utilities"
+import {MessageStatusResponse} from "../src/types.js"
+import {generateMockChannelStatusResponse, generateMockEvent, generateMockMessageStatusResponse} from "./utilities.js"
 
 const {
   response,
   checkSignature,
   updateNotificationsTable
-} = await import("../src/helpers")
+} = await import("../src/helpers.js")
 
 const ORIGINAL_ENV = {...process.env}
 
@@ -434,28 +434,28 @@ describe("helpers.ts", () => {
     it("throws if APP_ID_SECRET env var is not set", async () => {
       delete process.env.APP_ID_SECRET
 
-      const {fetchSecrets: fn} = await import("../src/helpers")
+      const {fetchSecrets: fn} = await import("../src/helpers.js")
       await expect(fn(logger)).rejects.toThrow("APP_ID_SECRET environment variable is not set.")
     })
 
     it("throws if API_KEY_SECRET env var is not set", async () => {
       delete process.env.API_KEY_SECRET
 
-      const {fetchSecrets: fn} = await import("../src/helpers")
+      const {fetchSecrets: fn} = await import("../src/helpers.js")
       await expect(fn(logger)).rejects.toThrow("API_KEY_SECRET environment variable is not set.")
     })
 
     it("throws if getting either secret returns a falsy value", async () => {
       process.env.APP_ID = ""
 
-      const {fetchSecrets: fn} = await import("../src/helpers")
+      const {fetchSecrets: fn} = await import("../src/helpers.js")
       await expect(fn(logger)).rejects.toThrow(
         "Failed to get secret values from the AWS secret manager"
       )
     })
 
     it("fetches both secrets successfully", async () => {
-      const {fetchSecrets: fn} = await import("../src/helpers")
+      const {fetchSecrets: fn} = await import("../src/helpers.js")
       await expect(fn(logger)).resolves.toBeUndefined()
 
       expect(mockGetSecret).toHaveBeenCalledWith(process.env.APP_ID_SECRET!)

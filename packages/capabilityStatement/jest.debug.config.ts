@@ -1,4 +1,4 @@
-import config from "./jest.config"
+import config from "./jest.config.js"
 import type {JestConfigWithTsJest} from "ts-jest"
 
 const debugConfig: JestConfigWithTsJest = {

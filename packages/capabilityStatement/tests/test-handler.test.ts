@@ -1,6 +1,6 @@
 import {APIGatewayProxyResult} from "aws-lambda"
 import {Logger} from "@aws-lambda-powertools/logger"
-import {handler} from "../src/capabilityStatement"
+import {handler} from "../src/capabilityStatement.js"
 import {
   expect,
   describe,

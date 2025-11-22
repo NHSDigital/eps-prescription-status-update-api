@@ -4,7 +4,7 @@ import {
   itemType,
   requestType,
   deliveryType
-} from "./request"
+} from "./request.js"
 import {
   collectMaybe,
   Just,
@@ -13,7 +13,7 @@ import {
   Ok
 } from "pratica"
 import {v4 as uuidv4} from "uuid"
-import {Transformer} from "../../handler"
+import {Transformer} from "../../handler.js"
 import "../../utils"
 import {Md5} from "ts-md5"
 import {Logger} from "@aws-lambda-powertools/logger"

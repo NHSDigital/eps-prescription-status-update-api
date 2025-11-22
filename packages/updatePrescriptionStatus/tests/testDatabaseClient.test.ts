@@ -6,12 +6,12 @@ import {
 } from "@jest/globals"
 
 import {TransactionCanceledException} from "@aws-sdk/client-dynamodb"
-import {mockDynamoDBClient} from "./utils/testUtils"
+import {mockDynamoDBClient} from "./utils/testUtils.js"
 import {Logger} from "@aws-lambda-powertools/logger"
 import {marshall} from "@aws-sdk/util-dynamodb"
 
 const {mockSend} = mockDynamoDBClient()
-const {persistDataItems, getPreviousItem, rollbackDataItems} = await import("../src/utils/databaseClient")
+const {persistDataItems, getPreviousItem, rollbackDataItems} = await import("../src/utils/databaseClient.js")
 
 const logger = new Logger({serviceName: "updatePrescriptionStatus_TEST"})
 

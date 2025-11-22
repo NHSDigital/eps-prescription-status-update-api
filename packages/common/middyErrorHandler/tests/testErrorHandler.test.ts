@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import {MiddyErrorHandler} from "../src/errorHandler"
+import {MiddyErrorHandler} from "../src/errorHandler.js"
 import middy from "@middy/core"
 import {expect, jest} from "@jest/globals"
 import {mockContext} from "@psu-common/testing"

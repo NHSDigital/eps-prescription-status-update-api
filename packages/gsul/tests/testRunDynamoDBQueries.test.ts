@@ -1,5 +1,5 @@
 import {DynamoDBDocumentClient} from "@aws-sdk/lib-dynamodb"
-import {createQueryCommandInput, getItemsUpdatesForPrescription} from "../src/dynamoDBclient"
+import {createQueryCommandInput, getItemsUpdatesForPrescription} from "../src/dynamoDBclient.js"
 import {Logger} from "@aws-lambda-powertools/logger"
 import {
   expect,

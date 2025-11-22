@@ -1,2 +1,2 @@
-export {testPrescriptionsConfig, TestPrescriptionsConfig, getTestPrescriptions} from "./testConfig"
-export {initiatedSSMProvider} from "./ssmUtil"
+export {testPrescriptionsConfig, TestPrescriptionsConfig, getTestPrescriptions} from "./testConfig.js"
+export {initiatedSSMProvider} from "./ssmUtil.js"

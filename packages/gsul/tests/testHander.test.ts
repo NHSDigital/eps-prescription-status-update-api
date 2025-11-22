@@ -6,7 +6,7 @@ import {
 } from "@jest/globals"
 
 import {DynamoDBDocumentClient} from "@aws-sdk/lib-dynamodb"
-import {handler} from "../src/getStatusUpdates"
+import {handler} from "../src/getStatusUpdates.js"
 
 const dummyContext = {
   callbackWaitsForEmptyEventLoop: true,

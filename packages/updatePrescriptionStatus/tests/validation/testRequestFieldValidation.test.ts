@@ -2,9 +2,9 @@
 import {expect, describe, it} from "@jest/globals"
 import {BundleEntry, Task} from "fhir/r4"
 
-import {taskFields, validateFields} from "../../src/validation/fields"
+import {taskFields, validateFields} from "../../src/validation/fields.js"
 
-import {FULL_URL_0, validTask} from "../utils/testUtils"
+import {FULL_URL_0, validTask} from "../utils/testUtils.js"
 
 describe("Unit tests for validateFields", () => {
   it("when all fields present, return valid", async () => {

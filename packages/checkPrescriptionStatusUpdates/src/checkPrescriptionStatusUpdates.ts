@@ -4,9 +4,9 @@ import {injectLambdaContext} from "@aws-lambda-powertools/logger/middleware"
 import middy from "@middy/core"
 import inputOutputLogger from "@middy/input-output-logger"
 import httpHeaderNormalizer from "@middy/http-header-normalizer"
-import {getItemStatusUpdates} from "./dynamoDBclient"
+import {getItemStatusUpdates} from "./dynamoDBclient.js"
 import {MiddyErrorHandler} from "@psu-common/middyErrorHandler"
-import {InputData} from "./types"
+import {InputData} from "./types.js"
 
 const MIN_RESULTS_RETURNED = parseInt(process.env.MIN_RESULTS_RETURNED) || 5
 const MAX_RESULTS_RETURNED = parseInt(process.env.MAX_RESULTS_RETURNED) || 15

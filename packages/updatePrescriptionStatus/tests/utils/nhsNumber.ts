@@ -1,7 +1,7 @@
 // https://github.com/tbrd/nhs-numbers
 
 import {faker} from "@faker-js/faker"
-import {calculateCheckDigit} from "../../src/utils/nhsNumber"
+import {calculateCheckDigit} from "../../src/utils/nhsNumber.js"
 
 export function generateValidNhsNumbers(num: number) {
   const numbers: Array<string> = []

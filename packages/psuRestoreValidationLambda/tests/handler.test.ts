@@ -5,7 +5,7 @@ import {
   describe,
   it
 } from "@jest/globals"
-import {backupEventCompletedDetail} from "../src/types"
+import {backupEventCompletedDetail} from "../src/types.js"
 import {Backup} from "@aws-sdk/client-backup"
 
 import {mockContext} from "@psu-common/testing"
@@ -17,7 +17,7 @@ jest.unstable_mockModule("../src/compareTable", () => {
   }
 })
 
-const {handler} = await import("../src/handler")
+const {handler} = await import("../src/handler.js")
 
 const dummyEvent: EventBridgeEvent<"Restore Job State Change", backupEventCompletedDetail> = {
   "version":"0",
