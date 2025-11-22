@@ -2,6 +2,7 @@ import {NotifyDataItemMessage} from "./types"
 import {checkCooldownForUpdate, addPrescriptionMessagesToNotificationStateStore} from "./dynamo"
 import {removeSQSMessages, drainQueue, reportQueueStatus} from "./sqs"
 import {handleNotifyRequests, makeRealNotifyRequest} from "./notify"
+import {tokenExchange} from "./auth"
 
 export {
   NotifyDataItemMessage,
@@ -11,5 +12,6 @@ export {
   drainQueue,
   reportQueueStatus,
   handleNotifyRequests,
-  makeRealNotifyRequest
+  makeRealNotifyRequest,
+  tokenExchange
 }

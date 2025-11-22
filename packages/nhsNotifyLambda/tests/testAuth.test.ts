@@ -4,15 +4,6 @@ import nock from "nock"
 import {Logger} from "@aws-lambda-powertools/logger"
 import axios, {AxiosInstance} from "axios"
 
-const mockGetSecret = jest.fn()
-jest.unstable_mockModule(
-  "@aws-lambda-powertools/parameters/secrets",
-  async () => ({
-    __esModule: true,
-    getSecret: mockGetSecret
-  })
-)
-
 const mockImportPKCS8 = jest.fn()
 const mockSignJWTConstructor = jest.fn()
 jest.unstable_mockModule("jose", async () => ({
@@ -21,9 +12,15 @@ jest.unstable_mockModule("jose", async () => ({
   SignJWT: mockSignJWTConstructor
 }))
 
-let tokenExchange: (logger: Logger, axiosInstance: AxiosInstance, host: string) => Promise<string>
+let tokenExchange: (
+  logger: Logger,
+  axiosInstance: AxiosInstance,
+  host: string,
+  notifySecrets: {apiKey: string; privateKey: string; kid: string}
+) => Promise<string>
+
 beforeAll(async () => {
-  ({tokenExchange} = await import("../src/utils/auth"))
+  ({tokenExchange} = await import("../src/utils/auth.js"))
 })
 
 describe("tokenExchange", () => {
@@ -41,11 +38,11 @@ describe("tokenExchange", () => {
   })
 
   it("should successfully exchange secrets for a bearer token", async () => {
-    // Mock getSecret for API_KEY, PRIVATE_KEY, KID (in that order)
-    mockGetSecret
-      .mockImplementationOnce(() => Promise.resolve("  myApiKey  "))
-      .mockImplementationOnce(() => Promise.resolve("my\nPrivate\nKey"))
-      .mockImplementationOnce(() => Promise.resolve(" myKid "))
+    const notifySecrets = {
+      apiKey: "myApiKey",
+      privateKey: "my\nPrivate\nKey",
+      kid: "myKid"
+    }
 
     // Mock jose
     mockImportPKCS8.mockImplementation(() => Promise.resolve("imported-key-object"))
@@ -81,26 +78,18 @@ describe("tokenExchange", () => {
       })
       .reply(200, {access_token: "access-token-xyz"})
 
-    const bearerToken = await tokenExchange(logger, axiosInstance, host)
+    const bearerToken = await tokenExchange(logger, axiosInstance, host, notifySecrets)
 
     expect(bearerToken).toBe("access-token-xyz")
   })
 
-  it("should throw if any secret is missing", async () => {
-    mockGetSecret
-      .mockImplementationOnce(() => Promise.resolve(null)) // API_KEY missing
-      .mockImplementationOnce(() => Promise.resolve("x"))
-      .mockImplementationOnce(() => Promise.resolve("y"))
-
-    await expect(tokenExchange(logger, axiosInstance, host)).rejects.toThrow(
-      "Missing one of API_KEY, PRIVATE_KEY or KID from Secrets Manager"
-    )
-  })
-
   it("should throw if HTTP response is non-200", async () => {
-    // all secrets present
-    mockGetSecret
-      .mockImplementation(() => Promise.resolve("v"))
+    const notifySecrets = {
+      apiKey: "v",
+      privateKey: "v",
+      kid: "v"
+    }
+
     mockImportPKCS8.mockImplementation(() => Promise.resolve("imported"))
     mockSignJWTConstructor.mockImplementation(() => ({
       setProtectedHeader() {
@@ -119,13 +108,18 @@ describe("tokenExchange", () => {
       .post("/oauth2/token")
       .reply(500, {error: "oops"})
 
-    await expect(tokenExchange(logger, axiosInstance, host)).rejects.toThrow(
+    await expect(tokenExchange(logger, axiosInstance, host, notifySecrets)).rejects.toThrow(
       "Request failed with status code 500"
     )
   })
 
   it("should throw if access_token is missing in 200 response", async () => {
-    mockGetSecret.mockImplementation(() => Promise.resolve("v"))
+    const notifySecrets = {
+      apiKey: "v",
+      privateKey: "v",
+      kid: "v"
+    }
+
     mockImportPKCS8.mockImplementation(() => Promise.resolve("imported"))
     mockSignJWTConstructor.mockImplementation(() => ({
       setProtectedHeader() {
@@ -144,7 +138,7 @@ describe("tokenExchange", () => {
       .post("/oauth2/token")
       .reply(200, {not_token: "nope"})
 
-    await expect(tokenExchange(logger, axiosInstance, host)).rejects.toThrow(
+    await expect(tokenExchange(logger, axiosInstance, host, notifySecrets)).rejects.toThrow(
       "No token in response"
     )
   })

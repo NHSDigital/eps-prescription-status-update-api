@@ -1,8 +1,8 @@
 import {Logger} from "@aws-lambda-powertools/logger"
-import {getSecret} from "@aws-lambda-powertools/parameters/secrets"
 import {AxiosInstance} from "axios"
-
 import {SignJWT, importPKCS8} from "jose"
+
+import {NotifySecrets} from "./secrets.js"
 
 /**
  * Exchange API key + JWT for a bearer token from NHS Notify.
@@ -10,41 +10,28 @@ import {SignJWT, importPKCS8} from "jose"
 export async function tokenExchange(
   logger: Logger,
   axiosInstance: AxiosInstance,
-  host: string
+  host: string,
+  notifySecrets: NotifySecrets
 ): Promise<string> {
-  const [apiKeyRaw, privateKeyRaw, kidRaw] = await Promise.all([
-    getSecret(process.env.API_KEY_SECRET!),
-    getSecret(process.env.PRIVATE_KEY_SECRET!),
-    getSecret(process.env.KID_SECRET!)
-  ])
-
-  const API_KEY = apiKeyRaw?.toString().trim()
-  const PRIVATE_KEY = privateKeyRaw?.toString().trim()
-  const KID = kidRaw?.toString().trim()
-
-  if (!API_KEY || !PRIVATE_KEY || !KID) {
-    throw new Error("Missing one of API_KEY, PRIVATE_KEY or KID from Secrets Manager")
-  }
-
   // create and sign the JWT
   const alg = "RS512"
   const now = Math.floor(Date.now() / 1000)
   const jti = crypto.randomUUID()
 
-  const key = await importPKCS8(PRIVATE_KEY, alg)
+  const key = await importPKCS8(notifySecrets.privateKey, alg)
 
   const jwt = await new SignJWT({
-    sub: API_KEY,
-    iss: API_KEY,
+    sub: notifySecrets.apiKey,
+    iss: notifySecrets.apiKey,
     jti,
     aud: `${host}/oauth2/token`
   })
-    .setProtectedHeader({alg, kid: KID, typ: "JWT"})
+    .setProtectedHeader({alg, kid: notifySecrets.kid, typ: "JWT"})
     .setIssuedAt(now)
     .setExpirationTime(now + 60) // 1 minute
     .sign(key)
 
-  logger.info("Exchanging JWT for access token", {host, jti})
+  logger.info("Exchanging JWT for access token", {jwt, host, jti})
 
   // Request the token
   const params = new URLSearchParams({
