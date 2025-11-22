@@ -8,6 +8,7 @@ import {getSecret} from "@aws-lambda-powertools/parameters/secrets"
 import {createHmac, timingSafeEqual} from "crypto"
 
 import {LastNotificationStateType, NotificationUpdate} from "@psu-common/commonTypes"
+import {LOG_MESSAGES} from "@psu-common/utilities"
 
 import {CallbackResource, CallbackResponse, CallbackType} from "./types"
 
@@ -230,7 +231,7 @@ export async function updateNotificationsTable(
         }))
 
         logger.info(
-          "Updated notification state",
+          LOG_MESSAGES.PSU0003,
           {
             NotifyMessageID: item.NotifyMessageID,
             nhsNumber: item.NHSNumber,
