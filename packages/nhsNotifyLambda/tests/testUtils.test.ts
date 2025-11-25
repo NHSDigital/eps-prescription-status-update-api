@@ -845,8 +845,9 @@ describe("NHS notify lambda helper functions", () => {
         })
       )
       expect(infoSpy).toHaveBeenCalledWith(
-        "PSU0002 Notify request",
+        LOG_MESSAGES.PSU0002,
         expect.objectContaining({
+          reportCode: "PSU0002",
           messageBatchReference: expect.any(String),
           messageIndex: expect.any(Number)
         })

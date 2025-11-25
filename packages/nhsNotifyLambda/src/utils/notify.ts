@@ -124,9 +124,12 @@ function logNotificationRequest(logger: Logger,
     messageStatus: messageStatus
   })
   // Log each message individually for less memory intensive reporting
+  const code = Object.keys(LOG_MESSAGES)
+    .find(key => LOG_MESSAGES[key as keyof typeof LOG_MESSAGES] === LOG_MESSAGES.PSU0002)
   messages.forEach((message, index) => {
     const correspondingData = data.find(item => item.messageReference === message.messageReference)
     logger.info(LOG_MESSAGES.PSU0002, {
+      reportCode: code,
       messageBatchReference,
       messageIndex: index,
       nhsNumber: message.recipient.nhsNumber,
