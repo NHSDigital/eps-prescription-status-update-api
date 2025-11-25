@@ -364,7 +364,8 @@ export function buildDataItems(
 
   for (const requestEntry of requestEntries) {
     const task = requestEntry.resource as Task
-    logger.debug("Building data item for task.", {task: task, id: task.id})
+    // The following log line is utilised for PSU "with Pharmacy" reporting, required at info level for Prod running
+    logger.info("Building data item for task.", {task: task, id: task.id})
 
     const repeatNo = task.input?.[0]?.valueInteger
 
