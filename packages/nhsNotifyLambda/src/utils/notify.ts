@@ -132,6 +132,7 @@ function logNotificationRequest(logger: Logger,
       nhsNumber: message.recipient.nhsNumber,
       messageReference: message.messageReference,
       psuRequestId: correspondingData?.PSUDataItem.RequestID,
+      notifyMessageId: messageStatus === "silent running" ? crypto.randomUUID() : correspondingData?.notifyMessageId,
       messageStatus: messageStatus
     })
   })
