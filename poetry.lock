@@ -117,34 +117,34 @@ uvloop = ["uvloop (>=0.15.2)"]
 
 [[package]]
 name = "boto3"
-version = "1.40.74"
+version = "1.41.1"
 description = "The AWS SDK for Python"
 optional = false
 python-versions = ">=3.9"
 groups = ["main", "dev"]
 files = [
-    {file = "boto3-1.40.74-py3-none-any.whl", hash = "sha256:41fc8844b37ae27b24bcabf8369769df246cc12c09453988d0696ad06d6aa9ef"},
-    {file = "boto3-1.40.74.tar.gz", hash = "sha256:484e46bf394b03a7c31b34f90945ebe1390cb1e2ac61980d128a9079beac87d4"},
+    {file = "boto3-1.41.1-py3-none-any.whl", hash = "sha256:05009dadcb0c63a2a4a11780f615362a811aa85e7a6950f2793ecf8055fcd1f2"},
+    {file = "boto3-1.41.1.tar.gz", hash = "sha256:fdee48cff828cfe0fb66295ae4d5f47736ee35f11e1de6be6c6dcd910f0810a4"},
 ]
 
 [package.dependencies]
-botocore = ">=1.40.74,<1.41.0"
+botocore = ">=1.41.1,<1.42.0"
 jmespath = ">=0.7.1,<2.0.0"
-s3transfer = ">=0.14.0,<0.15.0"
+s3transfer = ">=0.15.0,<0.16.0"
 
 [package.extras]
 crt = ["botocore[crt] (>=1.21.0,<2.0a0)"]
 
 [[package]]
 name = "botocore"
-version = "1.40.74"
+version = "1.41.1"
 description = "Low-level, data-driven core of boto 3."
 optional = false
 python-versions = ">=3.9"
 groups = ["main", "dev"]
 files = [
-    {file = "botocore-1.40.74-py3-none-any.whl", hash = "sha256:f39f5763e35e75f0bd91212b7b36120b1536203e8003cd952ef527db79702b15"},
-    {file = "botocore-1.40.74.tar.gz", hash = "sha256:57de0b9ffeada06015b3c7e5186c77d0692b210d9e5efa294f3214df97e2f8ee"},
+    {file = "botocore-1.41.1-py3-none-any.whl", hash = "sha256:0db40b7dbddef56fe8cfa06b5eda73b327786db9d64c09c3a616fc9b5548120d"},
+    {file = "botocore-1.41.1.tar.gz", hash = "sha256:e98095492ef8f18d0d6a02ba87d9135c663d4627322e049228143b3a4ef4c2a3"},
 ]
 
 [package.dependencies]
@@ -262,14 +262,14 @@ files = [
 
 [[package]]
 name = "cfn-lint"
-version = "1.40.4"
+version = "1.41.0"
 description = "Checks CloudFormation templates for practices and behaviour that could potentially be improved"
 optional = false
 python-versions = ">=3.9"
 groups = ["main", "dev"]
 files = [
-    {file = "cfn_lint-1.40.4-py3-none-any.whl", hash = "sha256:7b8bf9dac877842633d8403a8b2c31874b21c9922d74813da34e552b4cf03915"},
-    {file = "cfn_lint-1.40.4.tar.gz", hash = "sha256:7c8bcf3cf5f2cf8d96fd30fdee1115bfc2480a4c619afc8bce36d551fbb228e1"},
+    {file = "cfn_lint-1.41.0-py3-none-any.whl", hash = "sha256:cd43f76f59a664b2bad580840827849fac0d56a3b80e9a41315d8ab5ff6b563a"},
+    {file = "cfn_lint-1.41.0.tar.gz", hash = "sha256:6feca1cf57f9ed2833bab68d9b1d38c8033611e571fa792e45ab4a39e2b8ab57"},
 ]
 
 [package.dependencies]
@@ -391,14 +391,14 @@ files = [
 
 [[package]]
 name = "click"
-version = "8.3.0"
+version = "8.3.1"
 description = "Composable command line interface toolkit"
 optional = false
 python-versions = ">=3.10"
 groups = ["dev"]
 files = [
-    {file = "click-8.3.0-py3-none-any.whl", hash = "sha256:9b9f285302c6e3064f4330c05f05b81945b2a39544279343e6e7c5f27a9baddc"},
-    {file = "click-8.3.0.tar.gz", hash = "sha256:e7b8232224eba16f4ebe410c25ced9f7875cb5f3263ffc93cc3e8da705e229c4"},
+    {file = "click-8.3.1-py3-none-any.whl", hash = "sha256:981153a64e25f12d547d3426c367a4857371575ee7ad18df2a6183ab0545b2a6"},
+    {file = "click-8.3.1.tar.gz", hash = "sha256:12ff4785d337a1bb490bb7e9c2b1ee5da3112e94a8622f26a6c77f5d2fc6842a"},
 ]
 
 [package.dependencies]
@@ -1655,14 +1655,14 @@ files = [
 
 [[package]]
 name = "s3transfer"
-version = "0.14.0"
+version = "0.15.0"
 description = "An Amazon S3 Transfer Manager"
 optional = false
 python-versions = ">=3.9"
 groups = ["main", "dev"]
 files = [
-    {file = "s3transfer-0.14.0-py3-none-any.whl", hash = "sha256:ea3b790c7077558ed1f02a3072fb3cb992bbbd253392f4b6e9e8976941c7d456"},
-    {file = "s3transfer-0.14.0.tar.gz", hash = "sha256:eff12264e7c8b4985074ccce27a3b38a485bb7f7422cc8046fee9be4983e4125"},
+    {file = "s3transfer-0.15.0-py3-none-any.whl", hash = "sha256:6f8bf5caa31a0865c4081186689db1b2534cef721d104eb26101de4b9d6a5852"},
+    {file = "s3transfer-0.15.0.tar.gz", hash = "sha256:d36fac8d0e3603eff9b5bfa4282c7ce6feb0301a633566153cbd0b93d11d8379"},
 ]
 
 [package.dependencies]
@@ -1791,4 +1791,4 @@ files = [
 [metadata]
 lock-version = "2.1"
 python-versions = "^3.12"
-content-hash = "ebeadc6e1d766ff9858a3199c96ffc82d4a3940038e4b1d7ef1b787ebb909cf6"
+content-hash = "e602594e89c187b795ea142e20d252e817b5e6418e765d90832ce327f8377bc7"
