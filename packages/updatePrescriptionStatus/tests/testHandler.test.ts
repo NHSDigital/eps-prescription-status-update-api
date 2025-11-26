@@ -36,6 +36,7 @@ import {
   timeoutResponse
 } from "../src/utils/responses"
 import {QueryCommand, TransactionCanceledException, TransactWriteItemsCommand} from "@aws-sdk/client-dynamodb"
+import {LOG_MESSAGES} from "@psu-common/utilities"
 
 const {mockSend: dynamoDBMockSend} = mockDynamoDBClient()
 
@@ -55,7 +56,8 @@ const mockInitiatedSSMProvider = {
 
 jest.unstable_mockModule("@psu-common/utilities", async () => ({
   getTestPrescriptions: getTestPrescriptions,
-  initiatedSSMProvider: mockInitiatedSSMProvider
+  initiatedSSMProvider: mockInitiatedSSMProvider,
+  LOG_MESSAGES: LOG_MESSAGES
 }))
 
 const {handler, logger} = await import("../src/updatePrescriptionStatus")

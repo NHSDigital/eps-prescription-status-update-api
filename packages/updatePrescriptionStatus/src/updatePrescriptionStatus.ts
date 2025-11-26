@@ -32,7 +32,7 @@ import {
   testPrescription1Intercept,
   testPrescription2Intercept
 } from "./utils/testPrescriptionIntercept"
-import {getTestPrescriptions, initiatedSSMProvider} from "@psu-common/utilities"
+import {getTestPrescriptions, initiatedSSMProvider, LOG_MESSAGES} from "@psu-common/utilities"
 
 export const LAMBDA_TIMEOUT_MS = 9500
 // this is length of time from now when records in dynamodb will automatically be expired
@@ -364,7 +364,8 @@ export function buildDataItems(
 
   for (const requestEntry of requestEntries) {
     const task = requestEntry.resource as Task
-    logger.debug("Building data item for task.", {task: task, id: task.id})
+    // The following log line is utilised for PSU "with Pharmacy" reporting, required at info level for Prod running
+    logger.info(LOG_MESSAGES.PSU0004, {task: task, id: task.id})
 
     const repeatNo = task.input?.[0]?.valueInteger
 
