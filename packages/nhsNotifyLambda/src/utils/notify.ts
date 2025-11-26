@@ -1,8 +1,9 @@
 import {Logger} from "@aws-lambda-powertools/logger"
 
 import axios from "axios"
-
 import {setupAxios} from "./axios"
+import {LOG_MESSAGES} from "@psu-common/utilities"
+
 import {
   NotifyDataItemMessage,
   CreateMessageBatchRequest,
@@ -96,15 +97,7 @@ async function makeFakeNotifyRequest(
   const messageStatus = "silent running"
   const messageBatchReference = crypto.randomUUID()
 
-  logger.info("Requested notifications OK!", {
-    messageBatchReference,
-    messageReferences: messages.map(e => ({
-      nhsNumber: e.recipient.nhsNumber,
-      messageReference: e.messageReference,
-      psuRequestId: data.find((el) => el.messageReference === e.messageReference)?.PSUDataItem.RequestID
-    })),
-    messageStatus: messageStatus
-  })
+  logNotificationRequest(logger, messageBatchReference, messages, data, messageStatus)
 
   // Map each input item to a "successful" NotifyDataItemMessage
   return data.map(item => {
@@ -114,6 +107,37 @@ async function makeFakeNotifyRequest(
       messageStatus,
       notifyMessageId: crypto.randomUUID() // Create a dummy UUID
     }
+  })
+}
+
+function logNotificationRequest(logger: Logger,
+  messageBatchReference: string, messages: Array<MessageBatchItem>,
+  data: Array<NotifyDataItemMessage>, messageStatus: string) {
+  // TODO: preserve legacy logging until reports updated
+  logger.info("Requested notifications OK!", {
+    messageBatchReference,
+    messageReferences: messages.map(e => ({
+      nhsNumber: e.recipient.nhsNumber,
+      messageReference: e.messageReference,
+      psuRequestId: data.find((el) => el.messageReference === e.messageReference)?.PSUDataItem.RequestID
+    })),
+    messageStatus: messageStatus
+  })
+  // Log each message individually for less memory intensive reporting
+  const code = Object.keys(LOG_MESSAGES)
+    .find(key => LOG_MESSAGES[key as keyof typeof LOG_MESSAGES] === LOG_MESSAGES.PSU0002)
+  messages.forEach((message, index) => {
+    const correspondingData = data.find(item => item.messageReference === message.messageReference)
+    logger.info(LOG_MESSAGES.PSU0002, {
+      reportCode: code,
+      messageBatchReference,
+      messageIndex: index,
+      nhsNumber: message.recipient.nhsNumber,
+      messageReference: message.messageReference,
+      psuRequestId: correspondingData?.PSUDataItem.RequestID,
+      notifyMessageId: messageStatus === "silent running" ? crypto.randomUUID() : correspondingData?.notifyMessageId,
+      messageStatus: messageStatus
+    })
   })
 }
 
@@ -186,16 +210,7 @@ export async function makeRealNotifyRequest(
     // From here is just logging stuff for reporting, and mapping the response back to the input data
 
     if (resp.status === 201) {
-      logger.info("Requested notifications OK!", {
-        messageBatchReference,
-        messageReferences: messages.map(e => ({
-          nhsNumber: e.recipient.nhsNumber,
-          messageReference: e.messageReference,
-          psuRequestId: data.find((el) => el.messageReference === e.messageReference)?.PSUDataItem.RequestID,
-          pharmacyODSCode: e.originator.odsCode
-        })),
-        messageStatus: "requested"
-      })
+      logNotificationRequest(logger, messageBatchReference, messages, data, "requested")
 
       // Map each input item to a NotifyDataItemMessage, marking success and attaching the notify ID.
       // Only return items that belong to *this* batch (so we handle recursive splits correctly).
