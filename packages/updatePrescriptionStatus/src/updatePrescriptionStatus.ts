@@ -32,8 +32,7 @@ import {
   testPrescription1Intercept,
   testPrescription2Intercept
 } from "./utils/testPrescriptionIntercept"
-import {getTestPrescriptions, initiatedSSMProvider} from "@psu-common/utilities"
-import {LOG_MESSAGES} from "@psu-common/utilities"
+import {getTestPrescriptions, initiatedSSMProvider, LOG_MESSAGES} from "@psu-common/utilities"
 
 export const LAMBDA_TIMEOUT_MS = 9500
 // this is length of time from now when records in dynamodb will automatically be expired
