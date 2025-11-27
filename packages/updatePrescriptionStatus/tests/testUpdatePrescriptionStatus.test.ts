@@ -20,6 +20,8 @@ import {APIGatewayProxyEvent} from "aws-lambda"
 
 import * as content from "../src/validation/content"
 import {TransactionCanceledException} from "@aws-sdk/client-dynamodb"
+import {LOG_MESSAGES} from "@psu-common/utilities"
+
 const mockValidateEntry = mockInternalDependency("../../src/validation/content", content, "validateEntry")
 
 const mockGetParametersByName = jest.fn(async () => Promise.resolve(
@@ -32,7 +34,8 @@ const mockInitiatedSSMProvider = {
 
 jest.unstable_mockModule("@psu-common/utilities", async () => ({
   getTestPrescriptions: getTestPrescriptions,
-  initiatedSSMProvider: mockInitiatedSSMProvider
+  initiatedSSMProvider: mockInitiatedSSMProvider,
+  LOG_MESSAGES: LOG_MESSAGES
 }))
 
 const {castEventBody, getXRequestID, validateEntries, handleTransactionCancelledException, buildDataItems, TTL_DELTA} =

@@ -21,6 +21,7 @@ import {ONE_DAY_IN_MS} from "../../src/validation/content"
 import requestSingleItem from "../../../specification/examples/request-dispatched.json"
 import requestMultipleItems from "../../../specification/examples/request-multiple-items.json"
 import {accepted, badRequest, bundleWrap} from "../../src/utils/responses"
+import {LOG_MESSAGES} from "@psu-common/utilities"
 
 const mockGetParametersByName = jest.fn(async () => Promise.resolve(
   {[process.env.ENABLE_NOTIFICATIONS_PARAM!]: "false"}
@@ -32,7 +33,8 @@ const mockInitiatedSSMProvider = {
 
 jest.unstable_mockModule("@psu-common/utilities", async () => ({
   getTestPrescriptions: getTestPrescriptions,
-  initiatedSSMProvider: mockInitiatedSSMProvider
+  initiatedSSMProvider: mockInitiatedSSMProvider,
+  LOG_MESSAGES: LOG_MESSAGES
 }))
 
 const {handler} = await import("../../src/updatePrescriptionStatus")

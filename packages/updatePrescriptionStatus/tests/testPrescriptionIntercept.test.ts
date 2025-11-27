@@ -18,6 +18,7 @@ import {
   getTestPrescriptions
 } from "./utils/testUtils"
 import {GetItemCommand, TransactionCanceledException, TransactWriteItemsCommand} from "@aws-sdk/client-dynamodb"
+import {LOG_MESSAGES} from "@psu-common/utilities"
 
 export const mockGetParametersByName = jest.fn(async () => {
   return {}
@@ -29,7 +30,8 @@ const mockInitiatedSSMProvider = {
 
 jest.unstable_mockModule("@psu-common/utilities", async () => ({
   initiatedSSMProvider: mockInitiatedSSMProvider,
-  getTestPrescriptions: getTestPrescriptions // Use the mocked version defined in testUtils.ts
+  getTestPrescriptions: getTestPrescriptions, // Use the mocked version defined in testUtils.ts
+  LOG_MESSAGES: LOG_MESSAGES
 }))
 
 const {mockSend} = mockDynamoDBClient()
