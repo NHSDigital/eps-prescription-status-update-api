@@ -181,6 +181,105 @@ describe("NHS notify lambda helper functions", () => {
       )
       expect(errorSpy).toHaveBeenCalledWith("Notifications SQS URL not configured")
     })
+
+    it("logs error and skips messages with invalid JSON body", async () => {
+      const invalidMessage = constructMessage({
+        MessageId: "msg1",
+        Body: "not-valid-json{"
+      })
+
+      const invalidMessageResponse = {
+        Messages: [invalidMessage]
+      }
+      sqsMockSend.mockResolvedValueOnce(invalidMessageResponse as never)
+
+      const result = await drainQueue(logger)
+
+      expect(result.messages).toEqual([])
+      expect(errorSpy).toHaveBeenCalledWith(
+        "Failed to parse SQS message body as JSON - omitting from processing.",
+        expect.objectContaining({
+          offendingMessage: expect.any(Object),
+          parseError: expect.any(Error)
+        })
+      )
+    })
+
+    it("logs error and skips messages without MessageDeduplicationId", async () => {
+      const messageWithoutDedup = {
+        MessageId: "msg1",
+        Body: JSON.stringify({
+          RequestID: "r1",
+          PatientNHSNumber: "n1",
+          PharmacyODSCode: "o1",
+          TaskID: "t1",
+          Status: "s1"
+        }),
+        Attributes: {}
+      }
+
+      const messageWithoutDedupResponse = {
+        Messages: [messageWithoutDedup]
+      }
+      sqsMockSend.mockResolvedValueOnce(messageWithoutDedupResponse as never)
+
+      const result = await drainQueue(logger)
+
+      expect(result.messages).toEqual([])
+      expect(errorSpy).toHaveBeenCalledWith(
+        "SQS message missing MessageDeduplicationId. Skipping this message",
+        expect.objectContaining({
+          messageId: "msg1",
+          badMessage: expect.any(Object)
+        })
+      )
+    })
+
+    it("logs warning and skips duplicate MessageDeduplicationId", async () => {
+      const dedupId = "dedup-123"
+      const message1 = constructMessage({
+        MessageId: "msg1",
+        Body: JSON.stringify({
+          RequestID: "r1",
+          PatientNHSNumber: "n1",
+          PharmacyODSCode: "o1",
+          TaskID: "t1",
+          Status: "s1"
+        }),
+        Attributes: {MessageDeduplicationId: dedupId}
+      })
+
+      const message2 = constructMessage({
+        MessageId: "msg2",
+        Body: JSON.stringify({
+          RequestID: "r2",
+          PatientNHSNumber: "n2",
+          PharmacyODSCode: "o2",
+          TaskID: "t2",
+          Status: "s2"
+        }),
+        Attributes: {MessageDeduplicationId: dedupId}
+      })
+
+      const duplicateMessagesResponse = {
+        Messages: [message1, message2]
+      }
+      sqsMockSend.mockResolvedValueOnce(duplicateMessagesResponse as never)
+
+      const warnSpy = jest.spyOn(logger, "warn")
+      const result = await drainQueue(logger)
+
+      expect(result.messages).toHaveLength(1)
+      expect(result.messages[0].MessageId).toBe("msg1")
+
+      expect(warnSpy).toHaveBeenCalledWith(
+        "Duplicate MessageDeduplicationId encountered; skipping duplicate",
+        expect.objectContaining({
+          messageId: "msg2",
+          deduplicationId: dedupId
+        })
+      )
+    })
   })
 
   describe("removeSQSMessages", () => {
@@ -715,11 +814,11 @@ describe("NHS notify lambda helper functions", () => {
 
       // Two calls
       expect(infoSpy).toHaveBeenCalledWith(
-        "Making a request for notifications to NHS notify",
+        expect.anything(), // not a reporting msg
         {count: 3, routingPlanId: "plan-large"}
       )
       expect(infoSpy).toHaveBeenCalledWith(
-        "Making a request for notifications to NHS notify",
+        expect.anything(), // not a reporting msg
         {count: 4, routingPlanId: "plan-large"}
       )
     })
@@ -850,6 +949,113 @@ describe("NHS notify lambda helper functions", () => {
           reportCode: "PSU0002",
           messageBatchReference: expect.any(String),
           messageIndex: expect.any(Number)
+        })
+      )
+    })
+
+    it("returns empty array when data is empty", async () => {
+      const result = await handleNotifyRequests(logger, "plan-123", [])
+
+      expect(result).toEqual([])
+      expect(infoSpy).not.toHaveBeenCalled()
+    })
+
+    it("logs error and filters out messages without MessageDeduplicationId", async () => {
+      const dataWithMixed = [
+        constructPSUDataItemMessage({
+          PSUDataItem: {
+            RequestID: "r1",
+            PatientNHSNumber: "n1",
+            PharmacyODSCode: "o1",
+            TaskID: "t1",
+            Status: "s1"
+          }
+        }),
+        constructPSUDataItemMessage({
+          PSUDataItem: {
+            RequestID: "r2",
+            PatientNHSNumber: "n2",
+            PharmacyODSCode: "o2",
+            TaskID: "t2",
+            Status: "s2"
+          },
+          Attributes: undefined // Missing MessageDeduplicationId
+        })
+      ]
+
+      const result = await handleNotifyRequests(logger, "plan-123", dataWithMixed)
+
+      // Fake mode returns results for all data, but the error is still logged
+      expect(result).toHaveLength(2)
+
+      expect(errorSpy).toHaveBeenCalledWith(
+        "NOT SENDING NOTIFY REQUEST FOR A MESSAGE; missing deduplication ID",
+        expect.objectContaining({item: expect.any(Object)})
+      )
+    })
+
+    it("throws when makeRealNotifyRequestsFlag is true but notifyApiBaseUrl is missing", async () => {
+      mockGetParametersByName.mockResolvedValue({
+        [process.env.NOTIFY_API_BASE_URL_PARAM!]: "",
+        [process.env.MAKE_REAL_NOTIFY_REQUESTS_PARAM!]: "true"
+      })
+
+      const {handleNotifyRequests: fn} = await import("../src/utils/index.js")
+
+      const data = [constructPSUDataItemMessage({
+        PSUDataItem: {
+          RequestID: "r1",
+          PatientNHSNumber: "n1",
+          PharmacyODSCode: "o1",
+          TaskID: "t1",
+          Status: "s1"
+        }
+      })]
+
+      await expect(fn(logger, "plan-123", data)).rejects.toThrow(
+        "NOTIFY_API_BASE_URL is not defined in the environment variables!"
+      )
+    })
+
+    it("logs error details when Notify returns non-200 status", async () => {
+      // Reset the mock to return valid URL (previous test sets it to empty string)
+      mockGetParametersByName.mockResolvedValue({
+        [process.env.NOTIFY_API_BASE_URL_PARAM!]: TEST_URL,
+        [process.env.MAKE_REAL_NOTIFY_REQUESTS_PARAM!]: "true"
+      })
+
+      const data = [constructPSUDataItemMessage({
+        PSUDataItem: {
+          RequestID: "r1",
+          PatientNHSNumber: "n1",
+          PharmacyODSCode: "o1",
+          TaskID: "t1",
+          Status: "s1"
+        }
+      })]
+
+      nock(TEST_URL)
+        .post("/oauth2/token")
+        .reply(200, {access_token: "mock-token", expires_in: 60})
+
+      nock(TEST_URL)
+        .post("/comms/v1/message-batches")
+        .reply(400, {error: "Bad Request"})
+
+      const result = await handleNotifyRequests(logger, "plan-123", data)
+
+      // Should return failure status for all messages
+      expect(result).toHaveLength(1)
+      expect(result[0]).toMatchObject({
+        PSUDataItem: data[0].PSUDataItem,
+        messageStatus: "notify request failed",
+        notifyMessageId: undefined
+      })
+
+      expect(errorSpy).toHaveBeenCalledWith(
+        "Notify batch request failed",
+        expect.objectContaining({
+          error: expect.any(Object)
         })
       )
     })

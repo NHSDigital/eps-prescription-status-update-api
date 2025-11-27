@@ -11,8 +11,15 @@ import {
   MessageBatchItem
 } from "./types"
 import {loadConfig} from "./ssm"
+import {loadSecrets, NotifySecrets} from "./secrets"
 import {tokenExchange} from "./auth"
 import {NOTIFY_REQUEST_MAX_BYTES, NOTIFY_REQUEST_MAX_ITEMS, DUMMY_NOTIFY_DELAY_MS} from "./constants"
+
+export interface NotifyConfig {
+  routingPlanId: string
+  notifyApiBaseUrl: string
+  notifySecrets: NotifySecrets
+}
 
 /**
  * Returns the original array, chunked in batches of up to <size>
@@ -52,8 +59,6 @@ export async function handleNotifyRequests(
     return []
   }
 
-  const configPromise = loadConfig()
-
   // Map the NotifyDataItems into the structure needed for notify
   const messages: Array<MessageBatchItem> = data.flatMap(item => {
     // Ignore messages with missing deduplication IDs (the field is possibly undefined)
@@ -70,15 +75,20 @@ export async function handleNotifyRequests(
     }]
   })
 
-  // Check if we should make real requests
-  const {makeRealNotifyRequestsFlag, notifyApiBaseUrlRaw} = await configPromise
-  if (!makeRealNotifyRequestsFlag || !notifyApiBaseUrlRaw) return await makeFakeNotifyRequest(logger, data, messages)
-
-  if (!notifyApiBaseUrlRaw) throw new Error("NOTIFY_API_BASE_URL is not defined in the environment variables!")
-  // Just to be safe, trim any whitespace. Also, secrets may be bytes, so make sure it's a string
-  const notifyBaseUrl = notifyApiBaseUrlRaw.trim()
-
-  return await makeRealNotifyRequest(logger, routingPlanId, notifyBaseUrl, data, messages)
+  const {makeRealNotifyRequestsFlag, notifyApiBaseUrl} = await loadConfig()
+  if (!makeRealNotifyRequestsFlag) {
+    return await makeFakeNotifyRequest(logger, data, messages)
+  } else if (!notifyApiBaseUrl) {
+    throw new Error("NOTIFY_API_BASE_URL is not defined in the environment variables!")
+  } else {
+    const notifySecrets = await loadSecrets()
+    const config: NotifyConfig = {
+      routingPlanId,
+      notifyApiBaseUrl,
+      notifySecrets
+    }
+    return await makeRealNotifyRequest(logger, config, data, messages)
+  }
 }
 
 /**
@@ -90,7 +100,6 @@ async function makeFakeNotifyRequest(
   data: Array<NotifyDataItemMessage>,
   messages: Array<MessageBatchItem>
 ): Promise<Array<NotifyDataItemMessage>> {
-
   logger.info("Not doing real Notify requests. Simply waiting for some time and returning success on all messages")
   await new Promise(f => setTimeout(f, DUMMY_NOTIFY_DELAY_MS))
 
@@ -146,13 +155,15 @@ function logNotificationRequest(logger: Logger,
  * Handles splitting large batches into smaller ones as needed.
  *
  * @param logger - AWS logging object
- * @param routingPlanId - The Notify routing plan ID with which to process the data
- * @param data - The details for the notification
+ * @param config - configuration for talking to NHS Notify
+ * @param data - PSU SQS messages to process
+ * @param messages - The data being sent to NHS Notify
+ * @param bearerToken - lazy initialised Bearer token to communicate with Notify
+ * @param axiosInstance - lazy initialised HTTP client
  */
 export async function makeRealNotifyRequest(
   logger: Logger,
-  routingPlanId: string,
-  notifyBaseUrl: string,
+  config: NotifyConfig,
   data: Array<NotifyDataItemMessage>,
   messages: Array<MessageBatchItem>,
   bearerToken?: string,
@@ -166,7 +177,7 @@ export async function makeRealNotifyRequest(
     data: {
       type: "MessageBatch" as const,
       attributes: {
-        routingPlanId,
+        routingPlanId: config.routingPlanId,
         messageBatchReference,
         messages
       }
@@ -174,8 +185,8 @@ export async function makeRealNotifyRequest(
   }
 
   // Lazily get the bearer token and axios instance, so we only do it once even if we recurse
-  axiosInstance ??= setupAxios(logger, notifyBaseUrl)
-  bearerToken ??= await tokenExchange(logger, axiosInstance, notifyBaseUrl)
+  axiosInstance ??= setupAxios(logger, config.notifyApiBaseUrl)
+  bearerToken ??= await tokenExchange(logger, axiosInstance, config.notifyApiBaseUrl, config.notifySecrets)
 
   // Recursive split if too large
   if (messages.length >= NOTIFY_REQUEST_MAX_ITEMS || estimateSize(body) > NOTIFY_REQUEST_MAX_BYTES) {
@@ -188,13 +199,17 @@ export async function makeRealNotifyRequest(
 
     // send both halves in parallel
     const [res1, res2] = await Promise.all([
-      makeRealNotifyRequest(logger, routingPlanId, notifyBaseUrl, data, firstHalf, bearerToken, axiosInstance),
-      makeRealNotifyRequest(logger, routingPlanId, notifyBaseUrl, data, secondHalf, bearerToken, axiosInstance)
+      makeRealNotifyRequest(
+        logger, config, data, firstHalf, bearerToken, axiosInstance
+      ),
+      makeRealNotifyRequest(
+        logger, config, data, secondHalf, bearerToken, axiosInstance
+      )
     ])
     return [...res1, ...res2]
   }
 
-  logger.info("Making a request for notifications to NHS notify", {count: messages.length, routingPlanId})
+  logger.info("Request notifications of NHS notify", {count: messages.length, routingPlanId: config.routingPlanId})
 
   try {
     const headers = {
