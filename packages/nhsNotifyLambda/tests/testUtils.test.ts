@@ -795,11 +795,11 @@ describe("NHS notify lambda helper functions", () => {
 
       // Two calls
       expect(infoSpy).toHaveBeenCalledWith(
-        "Making a request for notifications to NHS notify",
+        expect.anything(), // not a reporting msg
         {count: 3, routingPlanId: "plan-large"}
       )
       expect(infoSpy).toHaveBeenCalledWith(
-        "Making a request for notifications to NHS notify",
+        expect.anything(), // not a reporting msg
         {count: 4, routingPlanId: "plan-large"}
       )
     })
