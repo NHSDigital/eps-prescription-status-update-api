@@ -12,6 +12,8 @@ export NOTIFY_PRIVATE_KEY
 if [ "$STACK" = "psu" ]; then
   NOTIFY_KID="$(aws secretsmanager get-secret-value --secret-id "psu-PSU-Notify-KID" --query SecretString --output text)"
 else
+  # Note secrets-...-Name was the secret used in production but actually contains the KID value
+  # Note too that another secret called secrets-...-KID also exists existed temporarily but was never used in production
   NOTIFY_KID="$(aws secretsmanager get-secret-value --secret-id "secrets-PSU-Notify-Application-Name" --query SecretString --output text)"
 fi
 export NOTIFY_KID

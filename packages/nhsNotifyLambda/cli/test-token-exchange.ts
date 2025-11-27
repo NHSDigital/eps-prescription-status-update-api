@@ -44,10 +44,7 @@ async function main() {
       tokenPrefix: accessToken.substring(0, 20) + "...",
       tokenLength: accessToken.length
     })
-
     console.log("\n✅ SUCCESS!")
-    console.log(`\nAccess Token (first 50 chars):\n${accessToken.substring(0, 50)}...`)
-    console.log(`\nFull token length: ${accessToken.length} characters\n`)
 
     process.exit(0)
 
