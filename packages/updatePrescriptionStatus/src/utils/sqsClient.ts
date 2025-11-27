@@ -4,7 +4,7 @@ import {getSecret} from "@aws-lambda-powertools/parameters/secrets"
 
 import {createHmac} from "crypto"
 
-import {NotifyDataItem, PSUDataItemWithPrevious} from "@PrescriptionStatusUpdate_common/commonTypes"
+import {NotifyDataItem, PSUDataItemWithPrevious} from "@psu-common/commonTypes"
 
 import {checkSiteOrSystemIsNotifyEnabled} from "../validation/notificationSiteAndSystemFilters"
 
@@ -114,10 +114,6 @@ export async function pushPrescriptionToNotificationSQS(
 
   // Only allow through sites and systems that are allowedSitesAndSystems
   const allowedSitesAndSystemsData = await checkSiteOrSystemIsNotifyEnabled(data)
-  logger.info(
-    "Filtered out sites and suppliers that are not enabled, or are explicitly disabled",
-    {numItemsAllowed: allowedSitesAndSystemsData.length}
-  )
 
   function norm(str: string) {
     return str.toLowerCase().trim()

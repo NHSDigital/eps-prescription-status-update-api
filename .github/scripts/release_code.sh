@@ -71,4 +71,9 @@ sam deploy \
             NotifyRoutingPlanIDValue="$NOTIFY_ROUTING_PLAN_ID" \
             NotifyAPIBaseURLValue="$NOTIFY_API_BASE_URL" \
             RequireApplicationName="$REQUIRE_APPLICATION_NAME" \
-            EnableBackup="$ENABLE_BACKUP"
+            EnableBackup="$ENABLE_BACKUP" \
+            TestPresciptionsParamValue1="$TEST_PRESCRIPTIONS_1" \
+            TestPresciptionsParamValue2="$TEST_PRESCRIPTIONS_2" \
+            TestPresciptionsParamValue3="$TEST_PRESCRIPTIONS_3" \
+            TestPresciptionsParamValue4="$TEST_PRESCRIPTIONS_4" \
+            ForwardCsocLogs="$FORWARD_CSOC_LOGS"

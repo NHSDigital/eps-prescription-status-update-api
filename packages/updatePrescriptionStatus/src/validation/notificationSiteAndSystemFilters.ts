@@ -1,7 +1,6 @@
-import {PSUDataItemWithPrevious} from "@PrescriptionStatusUpdate_common/commonTypes"
-import {SSMProvider} from "@aws-lambda-powertools/parameters/ssm"
-
-const ssm = new SSMProvider()
+import {PSUDataItemWithPrevious} from "@psu-common/commonTypes"
+import {initiatedSSMProvider} from "@psu-common/utilities"
+import {Logger} from "@aws-lambda-powertools/logger"
 
 function str2set(value: string | undefined): Set<string> {
   const raw = value ?? ""
@@ -22,7 +21,7 @@ async function loadConfig(): Promise<{
     [process.env.ENABLED_SYSTEMS_PARAM!]: {maxAge: 5},
     [process.env.BLOCKED_SITE_ODS_CODES_PARAM!]: {maxAge: 5}
   }
-  const all = await ssm.getParametersByName(paramNames)
+  const all = await initiatedSSMProvider.getParametersByName(paramNames)
 
   const enabledSiteODSCodes = str2set(all[process.env.ENABLED_SITE_ODS_CODES_PARAM!] as string)
   const enabledSystems = str2set(all[process.env.ENABLED_SYSTEMS_PARAM!] as string)
@@ -41,15 +40,18 @@ async function loadConfig(): Promise<{
  * - AND are NOT blocked at the site level.
  *
  * @param data - Array of PSUDataItem to be processed
+ * @param logger - Optional logger instance
  * @returns - the filtered array
  */
 export async function checkSiteOrSystemIsNotifyEnabled(
-  data: Array<PSUDataItemWithPrevious>
+  data: Array<PSUDataItemWithPrevious>,
+  logger?: Logger
 ): Promise<Array<PSUDataItemWithPrevious>> {
   // Get the configuration from either the cache or SSM
   const {enabledSiteODSCodes, enabledSystems, blockedSiteODSCodes} = await loadConfig()
+  const unfilteredItemCount = data.length
 
-  return data.filter((item) => {
+  const filteredItems = data.filter((item) => {
     const appName = item.current.ApplicationName.trim().toLowerCase()
     const odsCode = item.current.PharmacyODSCode.trim().toLowerCase()
 
@@ -66,4 +68,13 @@ export async function checkSiteOrSystemIsNotifyEnabled(
 
     return true
   })
+
+  if (logger) {
+    logger.info(
+      "Filtered out sites and suppliers that are not enabled, or are explicitly disabled",
+      {numItemsReceived: unfilteredItemCount, numItemsAllowed: filteredItems.length}
+    )
+  }
+
+  return filteredItems
 }

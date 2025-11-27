@@ -91,10 +91,10 @@ Parameters:
 
   EnableBackup:
     Type: String
-    Default: false
+    Default: "False"
     AllowedValues:
-      - True
-      - False
+      - "True"
+      - "False"
 
   EnableNotificationsInternal:
     Type: String
@@ -137,6 +137,24 @@ Parameters:
       - true
       - false
 
+  TestPresciptionsParamValue1:
+    Type: String
+
+  TestPresciptionsParamValue2:
+    Type: String
+
+  TestPresciptionsParamValue3:
+    Type: String
+
+  TestPresciptionsParamValue4:
+    Type: String
+
+  ForwardCsocLogs:
+    Type: String
+    Default: false
+    AllowedValues:
+      - true
+      - false
 Resources:
   Secrets:
     Type: AWS::Serverless::Application
@@ -158,6 +176,10 @@ Resources:
         BlockedSiteODSCodesValue: !Ref BlockedSiteODSCodesValue
         NotifyRoutingPlanIDValue: !Ref NotifyRoutingPlanIDValue
         NotifyAPIBaseURLValue: !Ref NotifyAPIBaseURLValue
+        TestPresciptionsParamValue1: !Ref TestPresciptionsParamValue1
+        TestPresciptionsParamValue2: !Ref TestPresciptionsParamValue2
+        TestPresciptionsParamValue3: !Ref TestPresciptionsParamValue3
+        TestPresciptionsParamValue4: !Ref TestPresciptionsParamValue4
 
   Tables:
     Type: AWS::Serverless::Application
@@ -198,6 +220,7 @@ Resources:
         LogRetentionInDays: !Ref LogRetentionInDays
         EnableSplunk: !Ref EnableSplunk
         DeployCheckPrescriptionStatusUpdate: !Ref DeployCheckPrescriptionStatusUpdate
+        ForwardCsocLogs: !Ref ForwardCsocLogs
 
   Functions:
     Type: AWS::Serverless::Application
@@ -225,6 +248,10 @@ Resources:
         Environment: !Ref Environment
         EnableBackup: !Ref EnableBackup
         RequireApplicationName: !Ref RequireApplicationName
+        TestPrescriptionsParamName1: !GetAtt Parameters.Outputs.TestPrescriptionsParameterName1
+        TestPrescriptionsParamName2: !GetAtt Parameters.Outputs.TestPrescriptionsParameterName2
+        TestPrescriptionsParamName3: !GetAtt Parameters.Outputs.TestPrescriptionsParameterName3
+        TestPrescriptionsParamName4: !GetAtt Parameters.Outputs.TestPrescriptionsParameterName4
 
   StateMachines:
     Type: AWS::Serverless::Application

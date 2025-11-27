@@ -216,7 +216,8 @@ describe("helpers.ts", () => {
         NHSNumber: "NHS123",
         RequestId: "psu-request-id",
         NotifyMessageID: "msg-123",
-        LastNotificationRequestTimestamp: "2024-01-01T00:00:00.000Z" // old timestamp
+        LastNotificationRequestTimestamp: "2024-01-01T00:00:00.000Z", // old timestamp
+        ODSCode: "ODS123"
       }
 
       // First call: QueryCommand
@@ -264,12 +265,10 @@ describe("helpers.ts", () => {
           NotifyMessageID: mockItem.NotifyMessageID,
           nhsNumber: mockItem.NHSNumber,
           psuRequestId: mockItem.RequestId,
-          messageStatus: "delivered",
-          channelStatus: "undefined", // still needs to be logged - just undefined.
-          supplierStatus: "undefined",
+          pharmacyODSCode: mockItem.ODSCode,
+          MessageStatus: "delivered",
           newTimestamp: overrideTimestamp,
-          // new expiry time is any number
-          newExpiryTime: expect.any(Number)
+          ExpiryTime: expect.any(Number)
         })
       )
     })
@@ -289,7 +288,8 @@ describe("helpers.ts", () => {
       const mockItem = {
         NHSNumber: "NHS456",
         RequestId: "req-456",
-        NotifyMessageID: "msg-chan-1"
+        NotifyMessageID: "msg-chan-1",
+        ODSCode: "ODS456"
       }
 
       // First call: QueryCommand
@@ -323,17 +323,17 @@ describe("helpers.ts", () => {
       expect(input.ExpressionAttributeNames).toMatchObject({
         "#n0": "ExpiryTime",
         "#n1": "LastNotificationRequestTimestamp",
-        "#n2": "ChannelStatus",
-        "#n3": "SupplierStatus",
-        "#n4": "RetryCount"
+        "#n2": "RetryCount",
+        "#n3": "ChannelStatus",
+        "#n4": "SupplierStatus"
       })
 
       expect(input.ExpressionAttributeValues).toMatchObject({
         ":v0": Math.floor(100_000_000 / 1000) + 60 * 60 * 24 * 7,
         ":v1": ts,
-        ":v2": "sending",
-        ":v3": "accepted",
-        ":v4": 0 // retryCount
+        ":v2": 0, // retryCount
+        ":v3": "sending",
+        ":v4": "accepted"
       })
 
       // For splunk reporting
@@ -343,12 +343,11 @@ describe("helpers.ts", () => {
           NotifyMessageID: mockItem.NotifyMessageID,
           nhsNumber: mockItem.NHSNumber,
           psuRequestId: mockItem.RequestId,
-          messageStatus: "undefined",
-          channelStatus: "sending",
-          supplierStatus: "accepted",
+          pharmacyODSCode: mockItem.ODSCode,
+          ChannelStatus: "sending",
+          SupplierStatus: "accepted",
           newTimestamp: ts,
-          // new expiry time is any number
-          newExpiryTime: expect.any(Number)
+          ExpiryTime: expect.any(Number)
         })
       )
     })

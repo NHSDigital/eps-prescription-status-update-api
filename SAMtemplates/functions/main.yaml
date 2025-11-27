@@ -88,13 +88,25 @@ Parameters:
   EnableBackup:
     Type: String
 
+  TestPrescriptionsParamName1:
+    Type: AWS::SSM::Parameter::Name<String>
+
+  TestPrescriptionsParamName2:
+    Type: AWS::SSM::Parameter::Name<String>
+
+  TestPrescriptionsParamName3:
+    Type: AWS::SSM::Parameter::Name<String>
+
+  TestPrescriptionsParamName4:
+    Type: AWS::SSM::Parameter::Name<String>
+
 Conditions:
   ShouldDeployCheckPrescriptionStatusUpdate: !Equals
     - true
     - !Ref DeployCheckPrescriptionStatusUpdate
 
   EnableBackupCondition: !Equals
-    - True
+    - "True"
     - !Ref EnableBackup
 
 Resources:
@@ -116,9 +128,11 @@ Resources:
           ENABLE_NOTIFICATIONS_PARAM: !Ref EnableNotificationsInternalParam
           LOG_LEVEL: !Ref LogLevel
           ENVIRONMENT: !Ref Environment
-          TEST_PRESCRIPTIONS_1: "None"
-          TEST_PRESCRIPTIONS_2: "None"
           REQUIRE_APPLICATION_NAME: !Ref RequireApplicationName
+          TEST_PRESCRIPTIONS_PARAM_NAME_1: !Ref TestPrescriptionsParamName1
+          TEST_PRESCRIPTIONS_PARAM_NAME_2: !Ref TestPrescriptionsParamName2
+          TEST_PRESCRIPTIONS_PARAM_NAME_3: !Ref TestPrescriptionsParamName3
+          TEST_PRESCRIPTIONS_PARAM_NAME_4: !Ref TestPrescriptionsParamName4
     Metadata:
       BuildMethod: esbuild
       guard:
@@ -417,9 +431,9 @@ Resources:
           LOG_LEVEL: !Ref LogLevel
           NHS_NOTIFY_PRESCRIPTIONS_SQS_QUEUE_URL: !Ref NHSNotifyPrescriptionsSQSQueueUrl
           TABLE_NAME: !Ref PrescriptionNotificationStatesTableName
-          API_KEY_SECRET:  secrets-PSU-Notify-API-Key
+          API_KEY_SECRET: secrets-PSU-Notify-API-Key
           PRIVATE_KEY_SECRET: secrets-PSU-Notify-PrivateKey
-          KID_SECRET: secrets-PSU-Notify-Application-Name
+          KID_SECRET: secrets-PSU-Notify-Application-KID
           NHS_NOTIFY_ROUTING_ID_PARAM: !Ref NotifyRoutingPlanIDParam
           NOTIFY_API_BASE_URL_PARAM: !Ref NotifyAPIBaseURLParam
           MAKE_REAL_NOTIFY_REQUESTS_PARAM: !Ref EnableNotificationsExternalParam
@@ -469,6 +483,8 @@ Resources:
             - Fn::ImportValue: !Sub ${StackName}:tables:${PrescriptionNotificationStatesTableName}:TableWritePolicyArn
             - Fn::ImportValue: !Sub ${StackName}:tables:UsePrescriptionNotificationStatesKMSKeyPolicyArn
             - Fn::ImportValue: !Sub ${StackName}-GetNotificationsParameterPolicy
+            - Fn::ImportValue: !Sub ${StackName}-GetPSUSecretPolicy
+            - Fn::ImportValue: !Sub ${StackName}-UsePSUSecretsKMSKeyPolicyArn
 
   NHSNotifyUpdateCallback:
     Type: AWS::Serverless::Function
@@ -482,7 +498,7 @@ Resources:
           LOG_LEVEL: !Ref LogLevel
           TABLE_NAME: !Ref PrescriptionNotificationStatesTableName
           APP_ID_SECRET: secrets-PSU-Notify-Application-ID
-          API_KEY_SECRET:  secrets-PSU-Notify-API-Key
+          API_KEY_SECRET: secrets-PSU-Notify-API-Key
     Metadata:
       BuildMethod: esbuild
       guard:
@@ -513,6 +529,8 @@ Resources:
           - - Fn::ImportValue: !Sub ${StackName}:tables:${PrescriptionNotificationStatesTableName}:TableReadPolicyArn
             - Fn::ImportValue: !Sub ${StackName}:tables:${PrescriptionNotificationStatesTableName}:TableWritePolicyArn
             - Fn::ImportValue: !Sub ${StackName}:tables:UsePrescriptionNotificationStatesKMSKeyPolicyArn
+            - Fn::ImportValue: !Sub ${StackName}-GetPSUSecretPolicy
+            - Fn::ImportValue: !Sub ${StackName}-UsePSUSecretsKMSKeyPolicyArn
         LogRetentionInDays: !Ref LogRetentionInDays
         CloudWatchKMSKeyId: !ImportValue account-resources:CloudwatchLogsKmsKeyArn
         EnableSplunk: !Ref EnableSplunk

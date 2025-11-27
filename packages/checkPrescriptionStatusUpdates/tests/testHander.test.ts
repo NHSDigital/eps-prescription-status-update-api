@@ -7,7 +7,7 @@ import {
 
 import {DynamoDBDocumentClient} from "@aws-sdk/lib-dynamodb"
 import {handler} from "../src/checkPrescriptionStatusUpdates"
-import {mockAPIGatewayProxyEvent, mockContext} from "@PrescriptionStatusUpdate_common/testing"
+import {mockAPIGatewayProxyEvent, mockContext} from "@psu-common/testing"
 
 const defaultItem = {
   ApplicationName: "unknown",

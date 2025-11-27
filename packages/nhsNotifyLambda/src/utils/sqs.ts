@@ -7,7 +7,7 @@ import {
 } from "@aws-sdk/client-sqs"
 import {Logger} from "@aws-lambda-powertools/logger"
 
-import {NotifyDataItem} from "@PrescriptionStatusUpdate_common/commonTypes"
+import {NotifyDataItem} from "@psu-common/commonTypes"
 
 import {NotifyDataItemMessage} from "./types"
 import {chunkArray} from "./notify"

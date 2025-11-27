@@ -9,7 +9,7 @@ import {
   it
 } from "@jest/globals"
 import {handler} from "../src/statusLambda"
-import {mockAPIGatewayProxyEvent, mockContext} from "@PrescriptionStatusUpdate_common/testing"
+import {mockAPIGatewayProxyEvent, mockContext} from "@psu-common/testing"
 
 const mock = new MockAdapter(axios)
 

@@ -17,7 +17,8 @@ import {
   generateExpectedItems,
   generateMockEvent,
   mockDynamoDBClient,
-  TASK_VALUES
+  TASK_VALUES,
+  getTestPrescriptions
 } from "./utils/testUtils"
 
 import requestDispatched from "../../specification/examples/request-dispatched.json"
@@ -35,6 +36,7 @@ import {
   timeoutResponse
 } from "../src/utils/responses"
 import {QueryCommand, TransactionCanceledException, TransactWriteItemsCommand} from "@aws-sdk/client-dynamodb"
+import {LOG_MESSAGES} from "@psu-common/utilities"
 
 const {mockSend: dynamoDBMockSend} = mockDynamoDBClient()
 
@@ -48,15 +50,15 @@ const mockGetParametersByName = jest.fn(async () => Promise.resolve(
   {[process.env.ENABLE_NOTIFICATIONS_PARAM!]: "false"}
 ))
 
-jest.unstable_mockModule(
-  "@aws-lambda-powertools/parameters/ssm",
-  async () => ({
-    __esModule: true,
-    SSMProvider: jest.fn().mockImplementation(() => ({
-      getParametersByName: mockGetParametersByName
-    }))
-  })
-)
+const mockInitiatedSSMProvider = {
+  getParametersByName: mockGetParametersByName
+}
+
+jest.unstable_mockModule("@psu-common/utilities", async () => ({
+  getTestPrescriptions: getTestPrescriptions,
+  initiatedSSMProvider: mockInitiatedSSMProvider,
+  LOG_MESSAGES: LOG_MESSAGES
+}))
 
 const {handler, logger} = await import("../src/updatePrescriptionStatus")
 

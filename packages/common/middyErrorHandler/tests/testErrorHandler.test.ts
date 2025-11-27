@@ -2,7 +2,7 @@
 import {MiddyErrorHandler} from "../src/errorHandler"
 import middy from "@middy/core"
 import {expect, jest} from "@jest/globals"
-import {mockContext} from "@PrescriptionStatusUpdate_common/testing"
+import {mockContext} from "@psu-common/testing"
 
 const mockEvent = {
   foo: "bar"

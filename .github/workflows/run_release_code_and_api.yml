@@ -102,6 +102,24 @@ on:
       MTLS_KEY:
         type: string
         required: true
+      TEST_PRESCRIPTIONS_1:
+        required: false
+        type: string
+      TEST_PRESCRIPTIONS_2:
+        required: false
+        type: string
+
+      TEST_PRESCRIPTIONS_3:
+        required: false
+        type: string
+
+      TEST_PRESCRIPTIONS_4:
+        required: false
+        type: string
+
+      FORWARD_CSOC_LOGS:
+        required: true
+        type: boolean
     secrets:
       CLOUD_FORMATION_DEPLOY_ROLE:
         required: true
@@ -128,7 +146,7 @@ jobs:
 
     steps:
       - name: Checkout local github actions
-        uses: actions/checkout@v5
+        uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3
         with:
           ref: ${{ env.BRANCH_NAME }}
           fetch-depth: 0
@@ -148,14 +166,14 @@ jobs:
           DEV_CLOUD_FORMATION_EXECUTE_LAMBDA_ROLE: ${{ secrets.DEV_CLOUD_FORMATION_EXECUTE_LAMBDA_ROLE }}
 
       - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v5
+        uses: aws-actions/configure-aws-credentials@00943011d9042930efac3dcd3a170e4273319bc8
         with:
           aws-region: eu-west-2
           role-to-assume: ${{ secrets.CLOUD_FORMATION_DEPLOY_ROLE }}
           role-session-name: psu-release-code
 
       - name: Download build artifact
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@018cc2cf5baa6db3ef3c5f8a56943fffe632ef53
         with:
           name: ${{ inputs.BUILD_ARTIFACT }}
           path: .
@@ -203,6 +221,11 @@ jobs:
           BLOCKED_SITE_ODS_CODES: ${{ inputs.BLOCKED_SITE_ODS_CODES }}
           NOTIFY_ROUTING_PLAN_ID: ${{ inputs.NOTIFY_ROUTING_PLAN_ID }}
           NOTIFY_API_BASE_URL: ${{ inputs.NOTIFY_API_BASE_URL }}
+          TEST_PRESCRIPTIONS_1: ${{ inputs.TEST_PRESCRIPTIONS_1 || 'noval' }}
+          TEST_PRESCRIPTIONS_2: ${{ inputs.TEST_PRESCRIPTIONS_2 || 'noval' }}
+          TEST_PRESCRIPTIONS_3: ${{ inputs.TEST_PRESCRIPTIONS_3 || 'noval' }}
+          TEST_PRESCRIPTIONS_4: ${{ inputs.TEST_PRESCRIPTIONS_4 || 'noval' }}
+          FORWARD_CSOC_LOGS: ${{ inputs.FORWARD_CSOC_LOGS }}
         run: ./release_code.sh
 
       - name: get mtls secrets
@@ -217,7 +240,7 @@ jobs:
           AWS_MAX_ATTEMPTS: 20
 
       - name: Configure AWS Credentials for api release
-        uses: aws-actions/configure-aws-credentials@v5
+        uses: aws-actions/configure-aws-credentials@00943011d9042930efac3dcd3a170e4273319bc8
         with:
           aws-region: eu-west-2
           role-to-assume: ${{ secrets.PROXYGEN_ROLE }}
@@ -295,7 +318,7 @@ jobs:
           DEV_CLOUD_FORMATION_EXECUTE_LAMBDA_ROLE: ${{ secrets.DEV_CLOUD_FORMATION_EXECUTE_LAMBDA_ROLE }}
 
       - name: Checkout gh-pages
-        uses: actions/checkout@v5
+        uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3
         with:
           ref: gh-pages
           path: gh-pages

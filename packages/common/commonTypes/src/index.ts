@@ -21,21 +21,34 @@ export interface NotifyDataItem {
   Status: string
 }
 
-export interface LastNotificationStateType {
+/**
+ * The fields stored in the Notifications table potentially updated by the Notify callback.
+ */
+export interface NotificationUpdate {
+  // normal convention is camelCase, however preserving as we already have records in DynamoDB
+  MessageStatus?: string
+  MessageStatusDescription?: string
+  ChannelStatus?: string
+  ChannelStatusDescription?: string
+  SupplierStatus?: string
+  RetryCount?: number
+  LastNotificationRequestTimestamp: string // ISO-8601 string
+  ExpiryTime: number // DynamoDB expiration time (UNIX timestamp)
+}
+
+/**
+ * The full record stored in the Notifications table.
+ */
+export interface LastNotificationStateType extends NotificationUpdate {
+  // normal convention is camelCase, however preserving as we already have records in DynamoDB
   NHSNumber: string
   ODSCode: string
   RequestId: string // x-request-id header
   SQSMessageID?: string // The SQS message ID
-  MessageStatus: string
-  // These are undefined until we get callbacks from Notify
-  ChannelStatus?: string
-  SupplierStatus?: string
   NotifyMessageID?: string // The UUID we got back from Notify for the submitted message
   NotifyMessageReference: string // The references we generated for the message
   NotifyMessageBatchReference?: string // As above
   LastNotifiedPrescriptionStatus: string
-  LastNotificationRequestTimestamp: string // ISO-8601 string
-  ExpiryTime: number // DynamoDB expiration time (UNIX timestamp)
 }
 
 export interface PSUDataItemWithPrevious {
