@@ -19,44 +19,40 @@ import axiosRetry from "axios-retry"
 import {tokenExchange} from "../src/utils/auth.js"
 import {NotifySecrets} from "../src/utils/secrets.js"
 
-async function main() {
-  const logger = initLogger()
-  const {host} = loadNotifyConfig(logger)
-  const notifySecrets = loadNotifySecrets(logger)
-  const axiosInstance = initAxiosInst(host)
+const logger = initLogger()
+const {host} = loadNotifyConfig(logger)
+const notifySecrets = loadNotifySecrets(logger)
+const axiosInstance = initAxiosInst(host)
 
-  logger.info("Testing token exchange", {
+logger.info("Testing token exchange", {
+  host,
+  apiKeyPrefix: notifySecrets.apiKey.substring(0, 10) + "...",
+  kid: notifySecrets.kid
+})
+
+try {
+  // Perform token exchange
+  const accessToken = await tokenExchange(
+    logger,
+    axiosInstance,
     host,
-    apiKeyPrefix: notifySecrets.apiKey.substring(0, 10) + "...",
-    kid: notifySecrets.kid
+    notifySecrets
+  )
+
+  logger.info("Token exchange successful!", {
+    tokenPrefix: accessToken.substring(0, 20) + "...",
+    tokenLength: accessToken.length
   })
+  console.log("\n✅ SUCCESS!")
 
-  try {
-    // Perform token exchange
-    const accessToken = await tokenExchange(
-      logger,
-      axiosInstance,
-      host,
-      notifySecrets
-    )
+  process.exit(0)
 
-    logger.info("Token exchange successful!", {
-      tokenPrefix: accessToken.substring(0, 20) + "...",
-      tokenLength: accessToken.length
-    })
-    console.log("\n✅ SUCCESS!")
-
-    process.exit(0)
-
-  } catch (error) {
-    logger.error("Token exchange failed", {error})
-    console.error("\n❌ FAILED!")
-    console.error(`\nError: ${error instanceof Error ? error.message : String(error)}\n`)
-    process.exit(1)
-  }
+} catch (error) {
+  logger.error("Token exchange failed", {error})
+  console.error("\n❌ FAILED!")
+  console.error(`\nError: ${error instanceof Error ? error.message : String(error)}\n`)
+  process.exit(1)
 }
-
-main()
 
 function initAxiosInst(host: string) {
   const axiosInstance = axios.create({
