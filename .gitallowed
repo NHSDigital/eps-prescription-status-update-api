@@ -17,3 +17,4 @@ console\.log\(`access token : \${access_token}`\)
 .*\.venv.*
 .*node_modules.*
 self.token = token
+.*poetry\.lock.*brotli.*platform_python_implementation.*
