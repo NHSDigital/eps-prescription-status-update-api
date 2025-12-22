@@ -381,7 +381,8 @@ export function buildDataItems(
       TaskID: task.id!,
       TerminalStatus: task.status,
       ApplicationName: applicationName,
-      ExpiryTime: (Math.floor(+new Date() / 1000) + TTL_DELTA)
+      ExpiryTime: (Math.floor(+new Date() / 1000) + TTL_DELTA),
+      OptumPostDatedLastModifiedSetAt: task.meta?.lastUpdated
     }
 
     dataItems.push(dataItem)

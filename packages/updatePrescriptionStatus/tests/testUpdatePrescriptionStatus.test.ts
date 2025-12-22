@@ -287,4 +287,22 @@ describe("buildDataItems", () => {
 
     expect(dataItems[0].ExpiryTime).toBeGreaterThan(expectedExpiryTime)
   })
+
+  it("should include OptumPostDatedLastModifiedSetAt in data item when meta.lastUpdated is defined", () => {
+    const task = validTask()
+    const lastUpdated = "2024-01-15T10:30:00.000Z"
+    task.meta = {
+      lastUpdated: lastUpdated
+    }
+
+    const requestEntry: BundleEntry = {
+      resource: task,
+      fullUrl: ""
+    }
+
+    const dataItems = buildDataItems([requestEntry], "", "")
+    console.log(dataItems[0])
+
+    expect(dataItems[0].OptumPostDatedLastModifiedSetAt).toEqual(lastUpdated)
+  })
 })
