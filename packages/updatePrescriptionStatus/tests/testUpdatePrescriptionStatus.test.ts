@@ -290,7 +290,7 @@ describe("buildDataItems", () => {
 
   it("should include OptumPostDatedLastModifiedSetAt in data item when meta.lastUpdated is defined", () => {
     const task = validTask()
-    const lastUpdated = "2024-01-15T10:30:00.000Z"
+    const lastUpdated = new Date(DEFAULT_DATE.valueOf() - (24 * 60 * 60 * 1000)).toISOString()
     task.meta = {
       lastUpdated: lastUpdated
     }
@@ -301,8 +301,7 @@ describe("buildDataItems", () => {
     }
 
     const dataItems = buildDataItems([requestEntry], "", "")
-    console.log(dataItems[0])
-
-    expect(dataItems[0].OptumPostDatedLastModifiedSetAt).toEqual(lastUpdated)
+    const first: any = dataItems[0]
+    expect(first.OptumPostDatedLastModifiedSetAt).toEqual(lastUpdated)
   })
 })
