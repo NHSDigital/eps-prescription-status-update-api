@@ -17,7 +17,7 @@
     "@aws-lambda-powertools/logger": "^2.30.0",
     "@aws-sdk/client-backup": "^3.958.0",
     "@aws-sdk/client-dynamodb": "^3.958.0",
-    "@aws-sdk/lib-dynamodb": "^3.956.0",
+    "@aws-sdk/lib-dynamodb": "^3.958.0",
     "@middy/input-output-logger": "^6.3.0",
     "@psu-common/middyErrorHandler": "^1.0.0",
     "aws-lambda": "^1.0.7"
