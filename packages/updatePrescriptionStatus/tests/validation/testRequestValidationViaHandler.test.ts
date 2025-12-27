@@ -55,7 +55,7 @@ describe("Integration tests for validation via updatePrescriptionStatus handler"
     const event: APIGatewayProxyEvent = generateMockEvent(body)
 
     const expected = bundleWrap([
-      badRequest("Invalid last modified value provided.", FULL_URL_0),
+      badRequest("Invalid lastModified value provided.", FULL_URL_0),
       accepted(FULL_URL_1)
     ])
 
@@ -77,7 +77,7 @@ describe("Integration tests for validation via updatePrescriptionStatus handler"
     const event: APIGatewayProxyEvent = generateMockEvent(body)
 
     const expected = bundleWrap([
-      badRequest("Invalid last modified value provided.", FULL_URL_0),
+      badRequest("Invalid lastModified value provided.", FULL_URL_0),
       badRequest("Missing required field(s) - FullUrl, PrescriptionID.")
     ])
 
