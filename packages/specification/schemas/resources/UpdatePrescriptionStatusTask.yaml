@@ -8,6 +8,17 @@ properties:
     type: string
     description: The unique identifier for the Task resource.
     example: 4d70678c-81e4-4ff4-8c67-17596fd0aa46
+  meta:
+    type: object
+    description: Metadata about the Task resource.
+    properties:
+      lastUpdated:
+        type: string
+        description: When the resource version last changed.
+                     This denotes that lastModified is a predicted value in the future.
+                     Updated predictions to lastModified must have a later value in this property. 
+        format: date-time
+        example: 2024-01-30T12:01:24Z
   basedOn:
     type: array
     description: Short-form Prescription ID for the parent prescription. Should only contain one item.
