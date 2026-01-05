@@ -11,9 +11,9 @@ export interface PSUDataItem {
   TerminalStatus: string
   ApplicationName: string
   ExpiryTime: number
-  // (Optional, Optum only) Indicates that {@link LastModified} is postdated;
+  // (Optional, legacy batch-processors only) Indicates that {@link LastModified} is postdated;
   // contains the ISO 8601 timestamp when the postdated update was set.
-  OptumPostDatedLastModifiedSetAt?: string
+  PostDatedLastModifiedSetAt?: string
 }
 
 export interface NotifyDataItem {
