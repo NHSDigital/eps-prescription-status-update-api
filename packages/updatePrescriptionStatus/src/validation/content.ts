@@ -63,16 +63,28 @@ export function entryContent(entry: BundleEntry): Array<string> {
 }
 
 export function lastModified(task: Task): string | undefined {
-  const today = new Date()
   const lastModified = new Date(task.lastModified!)
+  return isPastDate(lastModified, "lastModified")
+}
 
-  if (isNaN(lastModified.getTime())) {
-    return "Date format provided for lastModified is invalid."
+function isPastDate(date: Date, fieldName: string): string | undefined {
+  if (isNaN(date.getTime())) {
+    return `Date format provided for ${fieldName} is invalid.`
   }
 
-  if (lastModified.valueOf() - today.valueOf() > ONE_DAY_IN_MS) {
-    return "Invalid last modified value provided."
+  const today = new Date()
+  if (date.valueOf() - today.valueOf() > ONE_DAY_IN_MS) {
+    return `Invalid ${fieldName} value provided.`
   }
+}
+
+export function metaLastUpdated(task: Task): string | undefined {
+  if (!task.meta?.lastUpdated) {
+    return undefined
+  }
+
+  const parsed = new Date(task.meta.lastUpdated)
+  return isPastDate(parsed, "meta.lastUpdated")
 }
 
 export function prescriptionID(task: Task): string | undefined {
@@ -183,6 +195,7 @@ export function taskContent(task: Task): Array<string> {
     status,
     businessStatus,
     lastModified,
+    metaLastUpdated,
     nhsNumber,
     prescriptionID,
     resourceType,
