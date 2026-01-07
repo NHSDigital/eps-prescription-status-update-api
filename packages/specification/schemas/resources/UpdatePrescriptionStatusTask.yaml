@@ -14,7 +14,7 @@ properties:
     properties:
       lastUpdated:
         type: string
-        description: When the resource version last changed.
+        description: When the resource last changed.
                      This denotes that lastModified is a predicted value in the future.
                      Updated predictions to lastModified must have a later value in this property. 
         format: date-time
