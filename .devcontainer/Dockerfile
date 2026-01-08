@@ -24,7 +24,6 @@ USER vscode
 
 WORKDIR /workspaces/eps-prescription-status-update-api
 ADD .tool-versions /workspaces/eps-prescription-status-update-api/.tool-versions
-ADD .tool-versions /home/vscode/.tool-versions
 
 # install python before poetry to ensure correct python version is used
 RUN asdf install python && \
