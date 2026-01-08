@@ -4,18 +4,47 @@
   "files": [],
   // Building this project will build all of the following:
   "references": [
-    {"path": "packages/common/utilities"},
-    {"path": "packages/common/testing"},
-    {"path": "packages/common/middyErrorHandler"},
-    {"path": "packages/common/commonTypes"},
-    {"path": "packages/gsul"},
-    {"path": "packages/updatePrescriptionStatus"},
-    {"path": "packages/nhsd-psu-sandbox"},
-    {"path": "packages/statusLambda"},
-    {"path": "packages/capabilityStatement"},
-    {"path": "packages/cpsuLambda"},
-    {"path": "packages/checkPrescriptionStatusUpdates"},
-    {"path": "packages/nhsNotifyLambda"},
-    {"path": "packages/nhsNotifyUpdateCallback"}
+    {
+      "path": "packages/common/utilities"
+    },
+    {
+      "path": "packages/common/testing"
+    },
+    {
+      "path": "packages/common/middyErrorHandler"
+    },
+    {
+      "path": "packages/common/commonTypes"
+    },
+    {
+      "path": "packages/gsul"
+    },
+    {
+      "path": "packages/updatePrescriptionStatus"
+    },
+    {
+      "path": "packages/nhsd-psu-sandbox"
+    },
+    {
+      "path": "packages/statusLambda"
+    },
+    {
+      "path": "packages/capabilityStatement"
+    },
+    {
+      "path": "packages/cpsuLambda"
+    },
+    {
+      "path": "packages/checkPrescriptionStatusUpdates"
+    },
+    {
+      "path": "packages/nhsNotifyLambda"
+    },
+    {
+      "path": "packages/postDatedLambda"
+    },
+    {
+      "path": "packages/nhsNotifyUpdateCallback"
+    }
   ]
 }

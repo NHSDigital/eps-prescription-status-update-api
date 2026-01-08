@@ -385,7 +385,7 @@ export function buildDataItems(
     }
 
     if (task.meta?.lastUpdated) {
-      (dataItem as any).PostDatedLastModifiedSetAt = task.meta.lastUpdated
+      dataItem.PostDatedLastModifiedSetAt = task.meta.lastUpdated
     }
 
     dataItems.push(dataItem)

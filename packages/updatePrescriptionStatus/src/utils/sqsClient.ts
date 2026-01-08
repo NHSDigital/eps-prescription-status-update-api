@@ -170,6 +170,8 @@ export async function pushPrescriptionToNotificationSQS(
     {nhsNumbers: allowedSitesAndSystemsData.map(e => e.current.PatientNHSNumber)}
   )
 
+  // TODO: break out items that have a populated PostDatedLastModified field, and push to the alternative SQS queue
+
   // SQS batch calls are limited to 10 messages per request, so chunk the data
   const batches = chunkArray(allEntries, 10)
 
