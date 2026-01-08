@@ -8,7 +8,17 @@ import {NotifyDataItem, PSUDataItemWithPrevious} from "@psu-common/commonTypes"
 
 import {checkSiteOrSystemIsNotifyEnabled} from "../validation/notificationSiteAndSystemFilters"
 
+type SQSBatchMessage = {
+  Id: string
+  MessageBody: string
+  MessageDeduplicationId: string
+  MessageGroupId: string
+  MessageAttributes: {[key: string]: {DataType: string; StringValue: string}}
+}
+
 const sqsUrl: string | undefined = process.env.NHS_NOTIFY_PRESCRIPTIONS_SQS_QUEUE_URL
+const postDatedSqsUrl: string | undefined = process.env.POST_DATED_PRESCRIPTIONS_SQS_QUEUE_URL
+
 const fallbackSalt = "DEV SALT"
 
 // The AWS_REGION is always defined in lambda environments
@@ -90,90 +100,12 @@ export async function getSaltValue(logger: Logger): Promise<string> {
   return sqsSalt
 }
 
-/**
- * Pushes an array of PSUDataItem to the notifications SQS queue
- * Uses SendMessageBatch to send up to 10 at a time
- *
- * @param requestId - The x-request-id header from the incoming event
- * @param data - Array of PSUDataItem to send to SQS
- * @param logger - Logger instance
- *
- * @returns An array of the created MessageIds
- */
-export async function pushPrescriptionToNotificationSQS(
+async function placeBatchInSQS(
+  batches: Array<Array<SQSBatchMessage>>,
+  sqsUrl: string,
   requestId: string,
-  data: Array<PSUDataItemWithPrevious>,
   logger: Logger
-): Promise<Array<string>> {
-  logger.info("Checking if any items require notifications", {numItemsToBeChecked: data.length, sqsUrl})
-
-  if (!sqsUrl) {
-    logger.error("Notifications SQS URL not found in environment variables")
-    throw new Error("Notifications SQS URL not configured")
-  }
-
-  // Only allow through sites and systems that are allowedSitesAndSystems
-  const allowedSitesAndSystemsData = await checkSiteOrSystemIsNotifyEnabled(data)
-
-  function norm(str: string) {
-    return str.toLowerCase().trim()
-  }
-
-  // Only these statuses will be pushed to the SQS
-  const updateStatuses: Array<string> = [
-    norm("ready to collect"),
-    norm("ready to collect - partial")
-  ]
-  // Salt for the deduplication hash
-  const sqsSalt = await getSaltValue(logger)
-
-  // Get only items which have the correct current statuses
-  const candidates = allowedSitesAndSystemsData.filter(
-    (item) => updateStatuses.includes(norm(item.current.Status))
-  )
-
-  // we don't want items that have gone from "ready to collect" to "ready to collect"
-  // So chuck those out.
-  const changedStatus = candidates
-    .filter(({current, previous}) => {
-      if (!previous) return true // no previous item (or hit an error getting one) -> treat as changed
-      return norm(current.Status) !== norm(previous.Status)
-    })
-    .map(({current}) => current)
-
-  // Build SQS batch entries with FIFO parameters
-  const allEntries = changedStatus
-    .map((item, idx) => ({
-      Id: idx.toString(),
-      // Only post the required information to SQS
-      MessageBody: JSON.stringify(item as NotifyDataItem),
-      // FIFO
-      // We dedupe on both nhs number and ods code
-      MessageDeduplicationId: saltedHash(`${item.PatientNHSNumber}:${item.PharmacyODSCode}`, sqsSalt),
-      MessageGroupId: requestId,
-      MessageAttributes: {
-        RequestId: {
-          DataType: "String",
-          StringValue: requestId
-        }
-      }
-    }))
-
-  if (!allEntries.length) {
-    // Carry on if we have no updates to make.
-    logger.info("No entries to post to the notifications SQS")
-    return []
-  }
-
-  logger.info(
-    "The following patients will have prescription update app notifications requested",
-    {nhsNumbers: allowedSitesAndSystemsData.map(e => e.current.PatientNHSNumber)}
-  )
-
-  // TODO: break out items that have a populated PostDatedLastModified field, and push to the alternative SQS queue
-
-  // SQS batch calls are limited to 10 messages per request, so chunk the data
-  const batches = chunkArray(allEntries, 10)
+) {
 
   // Used for the return value
   let out: Array<string> = []
@@ -209,6 +141,120 @@ export async function pushPrescriptionToNotificationSQS(
       logger.error("Failed to send a batch of prescriptions to the notifications SQS", {error})
       throw error
     }
+  }
+
+  return out
+}
+
+/**
+ * Pushes an array of PSUDataItem to the notifications SQS queue
+ * Uses SendMessageBatch to send up to 10 at a time
+ *
+ * @param requestId - The x-request-id header from the incoming event
+ * @param data - Array of PSUDataItem to send to SQS
+ * @param logger - Logger instance
+ *
+ * @returns An array of the created MessageIds
+ */
+export async function pushPrescriptionToNotificationSQS(
+  requestId: string,
+  data: Array<PSUDataItemWithPrevious>,
+  logger: Logger
+): Promise<Array<string>> {
+  logger.info("Checking if any items require notifications", {numItemsToBeChecked: data.length, sqsUrl})
+
+  if (!sqsUrl) {
+    logger.error("Notifications SQS URL not found in environment variables")
+    throw new Error("Notifications SQS URL not configured")
+  }
+
+  if (!postDatedSqsUrl) {
+    logger.warn("Post-dated Notifications SQS URL not found in environment variables")
+    throw new Error("Post-dated Notifications SQS URL not configured")
+  }
+
+  // Only allow through sites and systems that are allowedSitesAndSystems
+  const allowedSitesAndSystemsData = await checkSiteOrSystemIsNotifyEnabled(data)
+
+  function norm(str: string) {
+    return str.toLowerCase().trim()
+  }
+
+  // Only these statuses will be pushed to the SQS
+  const updateStatuses: Array<string> = [
+    norm("ready to collect"),
+    norm("ready to collect - partial")
+  ]
+  // Salt for the deduplication hash
+  const sqsSalt = await getSaltValue(logger)
+
+  // Get only items which have the correct current statuses
+  const candidates = allowedSitesAndSystemsData.filter(
+    (item) => updateStatuses.includes(norm(item.current.Status))
+  )
+
+  // we don't want items that have gone from "ready to collect" to "ready to collect"
+  // So chuck those out.
+  const changedStatus = candidates
+    .filter(({current, previous}) => {
+      if (!previous) return true // no previous item (or hit an error getting one) -> treat as changed
+      return norm(current.Status) !== norm(previous.Status)
+    })
+    .map(({current}) => current)
+
+  // Build SQS batch entries with FIFO parameters
+  const allEntries: Array<SQSBatchMessage> = changedStatus
+    .map((item, idx) => ({
+      Id: idx.toString(),
+      // Only post the required information to SQS
+      MessageBody: JSON.stringify(item as NotifyDataItem),
+      // FIFO
+      // We dedupe on both nhs number and ods code
+      MessageDeduplicationId: saltedHash(`${item.PatientNHSNumber}:${item.PharmacyODSCode}`, sqsSalt),
+      MessageGroupId: requestId,
+      MessageAttributes: {
+        RequestId: {
+          DataType: "String",
+          StringValue: requestId
+        }
+      }
+    }))
+
+  if (!allEntries.length) {
+    // Carry on if we have no updates to make.
+    logger.info("No entries to post to the notifications SQS")
+    return []
+  }
+
+  logger.info(
+    "The following patients will have prescription update app notifications requested",
+    {nhsNumbers: allowedSitesAndSystemsData.map(e => e.current.PatientNHSNumber)}
+  )
+
+  // Check for post-dated items AFTER building the entries (even though we have to do a json parse)
+  //  so that all entries are definitely built the same way.
+  //  Don't do any checking on the VALUE of the field here.
+  const allPostDated = allEntries.filter((entry) => {
+    const body: NotifyDataItem = JSON.parse(entry.MessageBody)
+    return "PostDatedLastModifiedSetAt" in body
+  })
+
+  // Remove post-dated entries from the normal flow
+  const currentlyValidEntries = allEntries.filter(entry => {
+    const body: NotifyDataItem = JSON.parse(entry.MessageBody)
+    return !("PostDatedLastModifiedSetAt" in body)
+  })
+
+  // SQS batch calls are limited to 10 messages per request, so chunk the data
+  const batches = chunkArray(currentlyValidEntries, 10)
+  const out = await placeBatchInSQS(batches, sqsUrl, requestId, logger)
+
+  // Then, also do the post-dated entries if any
+  if (allPostDated.length) {
+    logger.info(`Also placing ${allPostDated.length} post-dated entries into the post-dated SQS queue`)
+    const postDatedBatches = chunkArray(allPostDated, 10)
+    const postDatedOut = await placeBatchInSQS(postDatedBatches, postDatedSqsUrl, requestId, logger)
+    out.push(...postDatedOut) // Their results are returned as usual
   }
 
   return out
