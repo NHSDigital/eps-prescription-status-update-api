@@ -25,7 +25,7 @@
     "@nhs/fhir-middy-error-handler": "^2.1.66"
   },
   "devDependencies": {
-    "@faker-js/faker": "^10.1.0",
+    "@faker-js/faker": "^10.2.0",
     "@types/fhir": "^0.0.41",
     "aws-sdk-client-mock": "^4.1.0"
   }
