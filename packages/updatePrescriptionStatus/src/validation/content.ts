@@ -13,7 +13,8 @@ export type ValidationOutcome = {
   issues: string | undefined;
 };
 
-export const ONE_DAY_IN_MS = 86400000
+export const ONE_HOUR_IN_MS = 60 * 60 * 1000
+export const ONE_DAY_IN_MS = 24 * ONE_HOUR_IN_MS
 export const LINE_ITEM_ID_CODESYSTEM =
   "https://fhir.nhs.uk/Id/prescription-order-item-number"
 export const NHS_NUMBER_CODESYSTEM = "https://fhir.nhs.uk/Id/nhs-number"
@@ -64,16 +65,24 @@ export function entryContent(entry: BundleEntry): Array<string> {
 
 export function lastModified(task: Task): string | undefined {
   const lastModified = new Date(task.lastModified!)
-  return isPastDate(lastModified, "lastModified")
+  const hasMetaLastUpdated = Boolean(task.meta?.lastUpdated)
+  // 24 hours if meta.lastUpdated is not provided, otherwise 999 hours
+  const allowedHours = hasMetaLastUpdated ? 999 : 24
+  return isWithinHours(lastModified, allowedHours, "lastModified")
 }
 
-function isPastDate(date: Date, fieldName: string): string | undefined {
+function isWithinHours(
+  date: Date,
+  hours: number,
+  fieldName: string
+): string | undefined {
   if (isNaN(date.getTime())) {
     return `Date format provided for ${fieldName} is invalid.`
   }
 
-  const today = new Date()
-  if (date.valueOf() - today.valueOf() > ONE_DAY_IN_MS) {
+  const now = new Date()
+  const limitMs = hours * ONE_HOUR_IN_MS
+  if (date.valueOf() - now.valueOf()> limitMs) {
     return `Invalid ${fieldName} value provided.`
   }
 }
@@ -84,7 +93,7 @@ export function metaLastUpdated(task: Task): string | undefined {
   }
 
   const parsed = new Date(task.meta.lastUpdated)
-  return isPastDate(parsed, "meta.lastUpdated")
+  return isWithinHours(parsed, 24, "meta.lastUpdated")
 }
 
 export function prescriptionID(task: Task): string | undefined {
