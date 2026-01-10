@@ -13,6 +13,7 @@ export interface PSUDataItem {
   ExpiryTime: number
   // (Optional, legacy batch-processors only) Indicates that {@link LastModified} is postdated;
   // contains the ISO 8601 timestamp when the postdated update was set.
+  // todo: This field needs to be passed to the sqs message for post-dated updates
   PostDatedLastModifiedSetAt?: string
 }
 
@@ -22,6 +23,12 @@ export interface NotifyDataItem {
   RequestID: string
   TaskID: string
   Status: string
+}
+
+// FIXME: This should be removed when we stop supporting post-dated updates
+export interface PostDatedNotifyDataItem extends NotifyDataItem {
+  LastModified: string
+  LastUpdated: string // This is the meta.lastUpdated field from the FHIR resource
 }
 
 /**

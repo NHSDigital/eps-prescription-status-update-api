@@ -33,6 +33,10 @@
       "path": "../packages/nhsNotifyLambda"
     },
     {
+      "name": "packages/postDatedLambda",
+      "path": "../packages/postDatedLambda"
+    },
+    {
       "name": "packages/nhsNotifyUpdateCallback",
       "path": "../packages/nhsNotifyUpdateCallback"
     },
