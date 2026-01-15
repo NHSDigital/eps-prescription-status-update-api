@@ -27,7 +27,7 @@ const lambdaHandler = async (event: requestType): Promise<responseType> => {
   // this is an async map so it returns an array of promises
   const itemResults = event.prescriptions.map(async (prescription) => {
     const queryResult = await getItemsUpdatesForPrescription(prescription.prescriptionID, prescription.odsCode, logger)
-    return filterOutPostDatedUpdates(prescription, queryResult)
+    return filterOutFutureReduceToLatestUpdates(prescription, queryResult)
   })
 
   // wait for all the promises to complete
@@ -40,7 +40,7 @@ const lambdaHandler = async (event: requestType): Promise<responseType> => {
   return response
 }
 
-export const filterOutPostDatedUpdates = (
+export const filterOutFutureReduceToLatestUpdates = (
   inputPrescription: inputPrescriptionType,
   items: Array<itemType>,
   currentTime: number = Date.now() // injectable for testing
