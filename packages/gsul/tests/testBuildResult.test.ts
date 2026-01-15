@@ -1,4 +1,4 @@
-import {filterOutPostDatedUpdates} from "../src/getStatusUpdates"
+import {filterOutFutureReduceToLatestUpdates} from "../src/getStatusUpdates"
 import {inputPrescriptionType} from "../src/schema/request"
 import {outputPrescriptionType, itemType} from "../src/schema/response"
 
@@ -207,7 +207,7 @@ describe("Unit tests for buildResults", () => {
   it.each<scenariosType>(scenarios)("$scenarioDescription", ({inputPrescriptions, queryResults, expectedResult}) => {
     // Use a fixed time of 2000-01-01 for tests (946684800000 ms since epoch)
     const fixedCurrentTime = new Date("2000-01-01T00:00:00Z").getTime()
-    const result = filterOutPostDatedUpdates(inputPrescriptions, queryResults, fixedCurrentTime)
+    const result = filterOutFutureReduceToLatestUpdates(inputPrescriptions, queryResults, fixedCurrentTime)
     expect(result).toMatchObject(expectedResult)
   })
 })
