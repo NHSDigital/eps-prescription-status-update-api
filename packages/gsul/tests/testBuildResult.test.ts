@@ -8,6 +8,8 @@ type scenariosType = {
   queryResults: Array<itemType>
   expectedResult: outputPrescriptionType
 }
+const now = new Date()
+const futureDateTime = new Date(now.valueOf() + (24 * 60 * 60 * 1000)).toISOString()
 const scenarios: Array<scenariosType> = [
   {
     scenarioDescription: "should return correct data when a matched prescription found",
@@ -97,9 +99,9 @@ const scenarios: Array<scenariosType> = [
       },
       {
         itemId: "item_1",
-        latestStatus: "latest_item_1_status",
+        latestStatus: "item_1_status",
         isTerminalState: true,
-        lastUpdateDateTime: "1972-01-01T00:00:00Z"
+        lastUpdateDateTime: "1972-01-01T00:00:00Z" // newer update for item_1
       },
       {
         itemId: "item_2",
@@ -109,9 +111,9 @@ const scenarios: Array<scenariosType> = [
       },
       {
         itemId: "item_2",
-        latestStatus: "early_item_2_status",
+        latestStatus: "item_2_status",
         isTerminalState: true,
-        lastUpdateDateTime: "1970-01-01T00:00:00Z"
+        lastUpdateDateTime: "1970-01-01T00:00:00Z" // older update for item_2
       }
     ],
     expectedResult: {
@@ -120,7 +122,7 @@ const scenarios: Array<scenariosType> = [
       items: [
         {
           itemId: "item_1",
-          latestStatus: "latest_item_1_status",
+          latestStatus: "item_1_status",
           isTerminalState: true,
           lastUpdateDateTime: "1972-01-01T00:00:00Z"
         },
@@ -171,15 +173,28 @@ const scenarios: Array<scenariosType> = [
         itemId: "item_1",
         latestStatus: "Ready to collect",
         isTerminalState: false,
-        lastUpdateDateTime: "1971-01-01T00:00:00Z",
-        postDatedLastModifiedSetAt: "1970-01-02T00:00:00Z"
+        lastUpdateDateTime: "1970-01-02T00:00:00Z",
+        postDatedLastModifiedSetAt: "1970-01-01T00:00:00Z" // first RTC: post-dated and matured
       },
       {
         itemId: "item_1",
         latestStatus: "Ready to collect",
         isTerminalState: false,
-        lastUpdateDateTime: "1972-01-01T00:00:00Z",
-        postDatedLastModifiedSetAt: "1971-01-02T00:00:00Z"
+        lastUpdateDateTime: futureDateTime,
+        postDatedLastModifiedSetAt: "1970-01-02T00:00:00Z" // second RTC: post-dated and yet to mature
+      },
+      {
+        itemId: "item_1",
+        latestStatus: "With pharmacy",
+        isTerminalState: false,
+        lastUpdateDateTime: "1970-01-03T00:00:00Z" // Back to 'With pharmacy'
+      },
+      {
+        itemId: "item_1",
+        latestStatus: "Ready to collect",
+        isTerminalState: false,
+        lastUpdateDateTime: "1970-01-04T00:00:00Z",
+        postDatedLastModifiedSetAt: "1970-01-03T00:00:00Z" // third RTC: post-dated and matured
       }
     ],
     expectedResult: {
@@ -190,16 +205,58 @@ const scenarios: Array<scenariosType> = [
           itemId: "item_1",
           latestStatus: "With pharmacy",
           isTerminalState: false,
-          lastUpdateDateTime: "1970-01-01T00:00:00Z"
+          lastUpdateDateTime: "1970-01-03T00:00:00Z"
         },
         {
           itemId: "item_1",
           latestStatus: "Ready to collect",
           isTerminalState: false,
-          lastUpdateDateTime: "1972-01-01T00:00:00Z",
-          postDatedLastModifiedSetAt: "1971-01-02T00:00:00Z"
+          lastUpdateDateTime: "1970-01-04T00:00:00Z",
+          postDatedLastModifiedSetAt: "1970-01-03T00:00:00Z"
         }
       ]
+    }
+  },
+  {
+    scenarioDescription: "should return an item when it _has_ matured even though the post-dated time is in the future",
+    inputPrescriptions: {
+      prescriptionID: "abc",
+      odsCode: "123"
+    },
+    queryResults: [
+      {
+        itemId: "item_1",
+        latestStatus: "Ready to collect",
+        isTerminalState: false,
+        lastUpdateDateTime: "1970-01-01T00:00:00Z",
+        postDatedLastModifiedSetAt: futureDateTime
+      }
+    ],
+    expectedResult: {
+      prescriptionID: "abc",
+      onboarded: true,
+      items: [
+        {
+          itemId: "item_1",
+          latestStatus: "Ready to collect",
+          isTerminalState: false,
+          lastUpdateDateTime: "1970-01-01T00:00:00Z",
+          postDatedLastModifiedSetAt: futureDateTime
+        }
+      ]
+    }
+  },
+  {
+    scenarioDescription: "should return no items when empty item status are found",
+    inputPrescriptions: {
+      prescriptionID: "abc",
+      odsCode: "123"
+    },
+    queryResults: [],
+    expectedResult: {
+      prescriptionID: "abc",
+      onboarded: false,
+      items: []
     }
   }
 ]
