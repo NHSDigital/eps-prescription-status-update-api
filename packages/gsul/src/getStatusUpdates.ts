@@ -62,25 +62,15 @@ export const filterOutFutureReduceToLatestUpdates = (
     const group = itemGroups[item.itemId]
 
     if (item.postDatedLastModifiedSetAt) { // this is a post-dated update
-      if (!group.postDated) {
-        group.postDated = item
-      } else {
-        const existingTime = Date.parse(group.postDated.postDatedLastModifiedSetAt!)
-        const newTime = Date.parse(item.postDatedLastModifiedSetAt)
-        if (newTime > existingTime) {
-          group.postDated = item
-        }
-      }
+      const existingTime = Date.parse(group.postDated.postDatedLastModifiedSetAt)
+      const newTime = Date.parse(item.postDatedLastModifiedSetAt)
+      group.postDated = !group.postDated || newTime > existingTime
+        ? item
+        : group.postDated
     } else { // this is a regular update
-      if (!group.regular) {
-        group.regular = item
-      } else {
-        const existingTime = Date.parse(group.regular.lastUpdateDateTime)
-        const newTime = Date.parse(item.lastUpdateDateTime)
-        if (newTime > existingTime) {
-          group.regular = item
-        }
-      }
+      const existingTime = Date.parse(group.regular.lastUpdateDateTime)
+      const newTime = Date.parse(item.lastUpdateDateTime)
+      group.regular = !group.regular || newTime > existingTime ? item : group.regular
     }
   })
 
