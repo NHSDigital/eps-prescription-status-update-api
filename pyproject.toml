@@ -34,18 +34,18 @@ jsonpath-rw = "^1.4.0"
 semver = "^3.0.4"
 gitpython = "^3.1.46"
 requests = "^2.32.5"
-boto3 = "^1.42.25"
+boto3 = "^1.42.30"
 argparse = "^1.4.0"
 pre-commit = "^4.5.1"
 pytest = "^9.0.2"
-cfn-lint = "^1.43.2"
+cfn-lint = "^1.43.3"
 pyjwt = {extras = ["crypto"], version = "^2.10.1"}
 
 [tool.poetry.scripts]
 
 [tool.poetry.group.dev.dependencies]
 pre-commit = "^4.5.1"
-cfn-lint = "^1.43.2"
+cfn-lint = "^1.43.3"
 black = "^25.12.0"
 flake8 = "^7.3.0"
 jinja2 = "^3.1.5"
