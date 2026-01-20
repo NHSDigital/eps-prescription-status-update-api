@@ -25,14 +25,14 @@ jobs:
 
     steps:
       - name: Checkout local github actions
-        uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8
         with:
           ref: ${{ env.BRANCH_NAME }}
           fetch-depth: 0
 
       - name: Generate a token to authenticate regression testing
         id: generate-token
-        uses: actions/create-github-app-token@7e473efe3cb98aa54f8d4bac15400b15fad77d94
+        uses: actions/create-github-app-token@29824e69f54612133e76f7eaac726eef6c875baf
         with:
           app-id: ${{ vars.REGRESSION_TESTS_APP_ID }}
           private-key: ${{ secrets.REGRESSION_TESTS_PEM }}
@@ -51,7 +51,7 @@ jobs:
           asdf_version: ${{ steps.asdf-version.outputs.version }}
 
       - name: Cache asdf
-        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830
+        uses: actions/cache@8b402f58fbc84540c8b491a91e594a4576fec3d7
         with:
           path: |
             ~/.asdf
@@ -75,11 +75,11 @@ jobs:
         run: |
           if [[ "$TARGET_ENVIRONMENT" != "prod" && "$TARGET_ENVIRONMENT" != "ref" ]]; then
             # this should be the tag of the tests you want to run
-            REGRESSION_TEST_REPO_TAG=v3.3.1
+            REGRESSION_TEST_REPO_TAG=v3.6.2
 
             # this should be the tag of the regression test workflow you want to run
             # This will normally be the same as REGRESSION_TEST_REPO_TAG
-            REGRESSION_TEST_WORKFLOW_TAG=v3.3.1
+            REGRESSION_TEST_WORKFLOW_TAG=v3.6.2
 
             curl https://raw.githubusercontent.com/NHSDigital/electronic-prescription-service-api-regression-tests/refs/tags/${REGRESSION_TEST_WORKFLOW_TAG}/scripts/run_regression_tests.py -o run_regression_tests.py
             poetry install

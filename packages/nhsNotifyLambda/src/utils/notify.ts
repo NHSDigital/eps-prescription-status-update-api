@@ -119,7 +119,7 @@ async function makeFakeNotifyRequest(
   })
 }
 
-function logNotificationRequest(logger: Logger,
+export function logNotificationRequest(logger: Logger,
   messageBatchReference: string, messages: Array<MessageBatchItem>,
   data: Array<NotifyDataItemMessage>, messageStatus: string) {
   // TODO: preserve legacy logging until reports updated
@@ -142,6 +142,7 @@ function logNotificationRequest(logger: Logger,
       messageBatchReference,
       messageIndex: index,
       nhsNumber: message.recipient.nhsNumber,
+      pharmacyOdsCode: correspondingData?.PSUDataItem.PharmacyODSCode,
       messageReference: message.messageReference,
       psuRequestId: correspondingData?.PSUDataItem.RequestID,
       notifyMessageId: messageStatus === "silent running" ? crypto.randomUUID() : correspondingData?.notifyMessageId,
