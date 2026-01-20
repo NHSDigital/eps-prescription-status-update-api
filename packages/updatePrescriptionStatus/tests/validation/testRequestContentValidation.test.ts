@@ -11,6 +11,7 @@ import {
   businessStatus,
   codeSystems,
   lastModified,
+  metaLastUpdated,
   nhsNumber,
   ONE_DAY_IN_MS,
   prescriptionID,
@@ -34,6 +35,9 @@ import {
 } from "../utils/testUtils"
 
 describe("Unit test for overall task validation", () => {
+  beforeEach(() => {
+    jest.useFakeTimers().setSystemTime(DEFAULT_DATE)
+  })
   it("When task is valid, should return true with no issues.", async () => {
     const expectedOutcome = {valid: true, issues: undefined}
     const entry: BundleEntry = {fullUrl: FULL_URL_0, resource: validTask()}
@@ -140,9 +144,6 @@ describe("Unit tests for pre-cast validation of bundle", () => {
 })
 
 describe("Unit tests for validation of lastModified", () => {
-  beforeEach(() => {
-    jest.useFakeTimers().setSystemTime(DEFAULT_DATE)
-  })
 
   it("When lastModified is over a day in the future, should return expected issue.", async () => {
     const futureDate = new Date(
@@ -150,7 +151,7 @@ describe("Unit tests for validation of lastModified", () => {
     )
     const task = {lastModified: futureDate.toISOString()}
 
-    const expected = "Invalid last modified value provided."
+    const expected = "Invalid lastModified value provided."
 
     const actual = lastModified(task as Task)
 
@@ -171,6 +172,72 @@ describe("Unit tests for validation of lastModified", () => {
     const task = {lastModified: DEFAULT_DATE.toISOString()}
 
     const actual = lastModified(task as Task)
+
+    expect(actual).toEqual(undefined)
+  })
+
+  it("When meta.lastUpdated present, lastModified <= 999 hours into future should be valid.", async () => {
+    const withinWindow = new Date(
+      DEFAULT_DATE.valueOf() - (998 * 60 * 60 * 1000)
+    )
+    const task = {lastModified: withinWindow.toISOString(), meta: {lastUpdated: DEFAULT_DATE.toISOString()}}
+
+    const actual = lastModified(task as Task)
+
+    expect(actual).toEqual(undefined)
+  })
+
+  it("When meta.lastUpdated present, lastModified > 999 hours into future should return expected issue.", async () => {
+    const futureDate = new Date(
+      DEFAULT_DATE.valueOf() + (999 * 60 * 60 * 1000 + 1000)
+    )
+    const task = {lastModified: futureDate.toISOString(), meta: {lastUpdated: DEFAULT_DATE.toISOString()}}
+
+    const expected = "Invalid lastModified value provided."
+
+    const actual = lastModified(task as Task)
+
+    expect(actual).toEqual(expected)
+  })
+})
+
+describe("Unit tests for validation of metaLastUpdated", () => {
+
+  it("When meta.lastUpdated is over a day in the future, should return expected issue.", async () => {
+    const futureDate = new Date(
+      DEFAULT_DATE.valueOf() + (ONE_DAY_IN_MS + 1000)
+    )
+    const task = {meta: {lastUpdated: futureDate.toISOString()}}
+
+    const expected = "Invalid meta.lastUpdated value provided."
+
+    const actual = metaLastUpdated(task as Task)
+
+    expect(actual).toEqual(expected)
+  })
+
+  it("When meta.lastUpdated date format is invalid, should return expected issue.", async () => {
+    const task = {meta: {lastUpdated: "invalid date"}}
+
+    const expected = "Date format provided for meta.lastUpdated is invalid."
+
+    const actual = metaLastUpdated(task as Task)
+
+    expect(actual).toEqual(expected)
+  })
+
+  it("When meta.lastUpdated is valid and not in the future, should return undefined.", async () => {
+    const task = {meta: {lastUpdated: DEFAULT_DATE.toISOString()}}
+
+    const actual = metaLastUpdated(task as Task)
+
+    expect(actual).toEqual(undefined)
+  })
+
+  it("When meta.lastUpdated is not present, should return undefined.", async () => {
+    const task = {}
+
+    const actual = metaLastUpdated(task as Task)
 
     expect(actual).toEqual(undefined)
   })

@@ -384,6 +384,10 @@ export function buildDataItems(
       ExpiryTime: (Math.floor(+new Date() / 1000) + TTL_DELTA)
     }
 
+    if (task.meta?.lastUpdated) {
+      (dataItem as any).PostDatedLastModifiedSetAt = task.meta.lastUpdated
+    }
+
     dataItems.push(dataItem)
   }
   return dataItems

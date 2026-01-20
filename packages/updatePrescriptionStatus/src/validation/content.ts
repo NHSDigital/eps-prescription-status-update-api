@@ -13,7 +13,8 @@ export type ValidationOutcome = {
   issues: string | undefined;
 };
 
-export const ONE_DAY_IN_MS = 86400000
+export const ONE_HOUR_IN_MS = 60 * 60 * 1000
+export const ONE_DAY_IN_MS = 24 * ONE_HOUR_IN_MS
 export const LINE_ITEM_ID_CODESYSTEM =
   "https://fhir.nhs.uk/Id/prescription-order-item-number"
 export const NHS_NUMBER_CODESYSTEM = "https://fhir.nhs.uk/Id/nhs-number"
@@ -63,16 +64,36 @@ export function entryContent(entry: BundleEntry): Array<string> {
 }
 
 export function lastModified(task: Task): string | undefined {
-  const today = new Date()
   const lastModified = new Date(task.lastModified!)
+  const hasMetaLastUpdated = Boolean(task.meta?.lastUpdated)
+  // 24 hours if meta.lastUpdated is not provided, otherwise 999 hours
+  const allowedHours = hasMetaLastUpdated ? 999 : 24
+  return isWithinHours(lastModified, allowedHours, "lastModified")
+}
 
-  if (isNaN(lastModified.getTime())) {
-    return "Date format provided for lastModified is invalid."
+function isWithinHours(
+  date: Date,
+  hours: number,
+  fieldName: string
+): string | undefined {
+  if (isNaN(date.getTime())) {
+    return `Date format provided for ${fieldName} is invalid.`
   }
 
-  if (lastModified.valueOf() - today.valueOf() > ONE_DAY_IN_MS) {
-    return "Invalid last modified value provided."
+  const now = new Date()
+  const limitMs = hours * ONE_HOUR_IN_MS
+  if (date.valueOf() - now.valueOf()> limitMs) {
+    return `Invalid ${fieldName} value provided.`
   }
+}
+
+export function metaLastUpdated(task: Task): string | undefined {
+  if (!task.meta?.lastUpdated) {
+    return undefined
+  }
+
+  const parsed = new Date(task.meta.lastUpdated)
+  return isWithinHours(parsed, 24, "meta.lastUpdated")
 }
 
 export function prescriptionID(task: Task): string | undefined {
@@ -183,6 +204,7 @@ export function taskContent(task: Task): Array<string> {
     status,
     businessStatus,
     lastModified,
+    metaLastUpdated,
     nhsNumber,
     prescriptionID,
     resourceType,

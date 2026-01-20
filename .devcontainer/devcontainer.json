@@ -36,7 +36,8 @@
         "streetsidesoftware.code-spell-checker",
         "timonwong.shellcheck",
         "mkhl.direnv",
-        "github.vscode-github-actions"
+        "github.vscode-github-actions",
+        "sonarsource.sonarlint-vscode"
       ],
       "settings": {
         "python.defaultInterpreterPath": "/workspaces/eps-prescription-status-update-api/.venv/bin/python",
