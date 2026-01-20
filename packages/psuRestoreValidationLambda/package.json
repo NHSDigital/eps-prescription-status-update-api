@@ -19,8 +19,7 @@
     "@aws-sdk/client-dynamodb": "^3.958.0",
     "@aws-sdk/lib-dynamodb": "^3.971.0",
     "@middy/input-output-logger": "^7.0.2",
-    "@psu-common/middyErrorHandler": "^1.0.0",
-    "aws-lambda": "^1.0.7"
+    "@psu-common/middyErrorHandler": "^1.0.0"
   },
   "devDependencies": {
     "@middy/core": "^7.0.2",
