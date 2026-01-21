@@ -15,12 +15,12 @@ jest.unstable_mockModule(
   })
 )
 
-const mockDrainAndProcess = jest.fn()
+const mockProcessPostDatedQueue = jest.fn()
 jest.unstable_mockModule(
   "../src/queueProcessing",
   async () => ({
     __esModule: true,
-    drainAndProcess: mockDrainAndProcess
+    processPostDatedQueue: mockProcessPostDatedQueue
   })
 )
 
@@ -43,12 +43,12 @@ describe("Unit test for post-dated lambda handler", () => {
 
   it("should run the lambda handler successfully", async () => {
     mockReportQueueStatus.mockImplementation(() => Promise.resolve())
-    mockDrainAndProcess.mockImplementation(() => Promise.resolve())
+    mockProcessPostDatedQueue.mockImplementation(() => Promise.resolve())
 
     await expect(lambdaHandler(mockEventBridgeEvent)).resolves.toBeUndefined()
 
     expect(mockReportQueueStatus).toHaveBeenCalledTimes(1)
-    expect(mockDrainAndProcess).toHaveBeenCalledTimes(1)
+    expect(mockProcessPostDatedQueue).toHaveBeenCalledTimes(1)
   })
 
 })
