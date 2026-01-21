@@ -251,7 +251,7 @@ export async function pushPrescriptionToNotificationSQS(
 
   // Then, also do the post-dated entries if any
   if (allPostDated.length) {
-    logger.info(`Also placing ${allPostDated.length} post-dated entries into the post-dated SQS queue`)
+    logger.info(`Placing ${allPostDated.length} post-dated entries into the post-dated SQS queue`)
     const postDatedBatches = chunkArray(allPostDated, 10)
     const postDatedOut = await placeBatchInSQS(postDatedBatches, postDatedSqsUrl, requestId, logger)
     out.push(...postDatedOut) // Their results are returned as usual

@@ -6,6 +6,9 @@ import middy from "@middy/core"
 import inputOutputLogger from "@middy/input-output-logger"
 import errorHandler from "@nhs/fhir-middy-error-handler"
 
+import {reportQueueStatus} from "./sqs"
+import {processPostDatedQueue} from "./queueProcessing"
+
 const logger = new Logger({serviceName: "postDatedLambda"})
 
 /**
@@ -15,6 +18,12 @@ export const lambdaHandler = async (
   event: EventBridgeEvent<string, string>
 ): Promise<void> => {
   logger.info("Post-dated handling lambda triggered by scheduler", {event})
+
+  // Report queue status *before* processing
+  await reportQueueStatus(logger)
+
+  // work through the queue
+  await processPostDatedQueue(logger)
 }
 
 export const handler = middy(lambdaHandler)
