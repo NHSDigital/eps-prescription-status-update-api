@@ -122,7 +122,8 @@ async function placeBatchInSQS(
         {
           batchLength: batch.length,
           deduplicationIds: batch.map(e => e.MessageDeduplicationId),
-          requestId
+          requestId,
+          sqsUrl
         }
       )
 

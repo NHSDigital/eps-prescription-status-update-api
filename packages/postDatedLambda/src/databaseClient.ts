@@ -118,6 +118,7 @@ export async function fetchExistingRecordsForPrescriptions(
     if (!recordsPromises.has(lookupKey)) {
       const fetchPromise = (async () => {
         try {
+          // Each element of recordsPromises is a wrapper around the actual fetch promise for that ID/ODS pair
           return await getExistingRecordsByPrescriptionID(prescriptionID, pharmacyODSCode, logger)
         } catch (error) {
           logger.error("Failed to fetch existing records for prescription", {
@@ -134,8 +135,6 @@ export async function fetchExistingRecordsForPrescriptions(
 
     return recordsPromises.get(lookupKey)!
   }
-
-  // Each element of recordsPromises is a wrapper around the actual fetch promise for that ID/ODS pair
 
   // Now, we map over the fetch promise wrappers, and await them all in parallel
   const results: Array<PostDatedPrescriptionWithExistingRecords> = await Promise.all(
