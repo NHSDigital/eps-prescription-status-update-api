@@ -146,6 +146,10 @@ async function placeBatchInSQS(
   return out
 }
 
+function norm(str: string) {
+  return str.toLowerCase().trim()
+}
+
 /**
  * Pushes an array of PSUDataItem to the notifications SQS queue
  * Uses SendMessageBatch to send up to 10 at a time
@@ -176,21 +180,17 @@ export async function pushPrescriptionToNotificationSQS(
   // Only allow through sites and systems that are allowedSitesAndSystems
   const allowedSitesAndSystemsData = await checkSiteOrSystemIsNotifyEnabled(data)
 
-  function norm(str: string) {
-    return str.toLowerCase().trim()
-  }
-
   // Only these statuses will be pushed to the SQS
-  const updateStatuses: Array<string> = [
+  const updateStatuses: Set<string> = new Set([
     norm("ready to collect"),
     norm("ready to collect - partial")
-  ]
+  ])
   // Salt for the deduplication hash
   const sqsSalt = await getSaltValue(logger)
 
   // Get only items which have the correct current statuses
   const candidates = allowedSitesAndSystemsData.filter(
-    (item) => updateStatuses.includes(norm(item.current.Status))
+    (item) => updateStatuses.has(norm(item.current.Status))
   )
 
   // we don't want items that have gone from "ready to collect" to "ready to collect"

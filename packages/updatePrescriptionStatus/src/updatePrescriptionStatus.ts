@@ -385,6 +385,7 @@ export function buildDataItems(
     }
 
     if (task.meta?.lastUpdated) {
+      logger.info("PostDated found") // FIXME: Delete this
       dataItem.PostDatedLastModifiedSetAt = task.meta.lastUpdated
     }
 
@@ -413,7 +414,7 @@ async function logTransitions(dataItems: Array<PSUDataItemWithPrevious>): Promis
       if (previousItem) {
         const newDate = new Date(currentItem.LastModified)
         const previousDate = new Date(previousItem.LastModified)
-        logger.info("Transitioning item status.", {
+        logger.info(LOG_MESSAGES.PSU0001, {
           prescriptionID: currentItem.PrescriptionID,
           lineItemID: currentItem.LineItemID,
           nhsNumber: currentItem.PatientNHSNumber,
@@ -424,7 +425,8 @@ async function logTransitions(dataItems: Array<PSUDataItemWithPrevious>): Promis
           newStatus: currentItem.Status,
           previousStatus: previousItem.Status,
           newTerminalStatus: currentItem.TerminalStatus,
-          previousTerminalStatus: previousItem.TerminalStatus
+          previousTerminalStatus: previousItem.TerminalStatus,
+          isPostDated: currentItem.PostDatedLastModifiedSetAt
         })
       }
     } catch (e) {
