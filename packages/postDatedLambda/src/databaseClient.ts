@@ -106,50 +106,53 @@ export async function fetchExistingRecordsForPrescriptions(
     prescriptionCount: postDatedItems.length
   })
 
-  // Cache fetch promises per unique prescription/ODS pair to avoid duplicate lookups
-  const recordsPromises = new Map<string, Promise<Array<PSUDataItem>>>()
-
-  const getOrCreateRecordsPromise = (
-    prescriptionID: string,
-    pharmacyODSCode: string
-  ): Promise<Array<PSUDataItem>> => {
-    const lookupKey = createPrescriptionLookupKey(prescriptionID, pharmacyODSCode)
-
-    if (!recordsPromises.has(lookupKey)) {
-      const fetchPromise = (async () => {
-        try {
-          // Each element of recordsPromises is a wrapper around the actual fetch promise for that ID/ODS pair
-          return await getExistingRecordsByPrescriptionID(prescriptionID, pharmacyODSCode, logger)
-        } catch (error) {
-          logger.error("Failed to fetch existing records for prescription", {
-            prescriptionID,
-            pharmacyODSCode,
-            error
-          })
-          return []
-        }
-      })()
-
-      recordsPromises.set(lookupKey, fetchPromise)
+  const uniquePrescriptionLookups = new Map<string, {prescriptionID: string; pharmacyODSCode: string}>()
+  for (const item of postDatedItems) {
+    const lookupKey = createPrescriptionLookupKey(item.PrescriptionID, item.PharmacyODSCode)
+    if (!uniquePrescriptionLookups.has(lookupKey)) {
+      uniquePrescriptionLookups.set(lookupKey, {
+        prescriptionID: item.PrescriptionID,
+        pharmacyODSCode: item.PharmacyODSCode
+      })
     }
-
-    return recordsPromises.get(lookupKey)!
   }
 
-  // Now, we map over the fetch promise wrappers, and await them all in parallel
-  const results: Array<PostDatedPrescriptionWithExistingRecords> = await Promise.all(
-    postDatedItems.map(async (postDatedData) => ({
-      postDatedData,
-      existingRecords: await getOrCreateRecordsPromise(
-        postDatedData.PrescriptionID,
-        postDatedData.PharmacyODSCode
-      )
-    }))
+  // Create a map of prescription ID to existing records
+  const existingRecordsMap = new Map<string, Array<PSUDataItem>>()
+
+  // Fetch existing records for each unique prescription ID
+  await Promise.all(
+    Array.from(uniquePrescriptionLookups.entries()).map(async ([lookupKey, {prescriptionID, pharmacyODSCode}]) => {
+      try {
+        const records = await getExistingRecordsByPrescriptionID(prescriptionID, pharmacyODSCode, logger)
+        existingRecordsMap.set(lookupKey, records)
+      } catch (error) {
+        logger.error("Failed to fetch existing records for prescription", {
+          prescriptionID,
+          pharmacyODSCode,
+          error
+        })
+        // Store empty array on error to allow processing to continue
+        existingRecordsMap.set(lookupKey, [])
+      }
+    })
   )
+
+  // Map each post-dated item to its corresponding existing records
+  const results: Array<PostDatedPrescriptionWithExistingRecords> = postDatedItems.map(
+    (postDatedData) => {
+      const lookupKey = createPrescriptionLookupKey(postDatedData.PrescriptionID, postDatedData.PharmacyODSCode)
+      const existingRecords = existingRecordsMap.get(lookupKey) ?? []
+
+      return {
+        postDatedData,
+        existingRecords
+      }
+    })
 
   logger.info("fetched existing prescription update records for all post-dated prescription IDs", {
     totalPrescriptions: postDatedItems.length,
-    uniquePrescriptionLookups: recordsPromises.size
+    uniquePrescriptionLookups: existingRecordsMap.size
   })
 
   return results
