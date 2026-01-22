@@ -17,7 +17,7 @@ jest.unstable_mockModule(
 
 const mockProcessPostDatedQueue = jest.fn()
 jest.unstable_mockModule(
-  "../src/queueProcessing",
+  "../src/orchestration",
   async () => ({
     __esModule: true,
     processPostDatedQueue: mockProcessPostDatedQueue
