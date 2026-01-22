@@ -7,7 +7,7 @@ import inputOutputLogger from "@middy/input-output-logger"
 import errorHandler from "@nhs/fhir-middy-error-handler"
 
 import {reportQueueStatus} from "./sqs"
-import {processPostDatedQueue} from "./queueProcessing"
+import {processPostDatedQueue} from "./orchestration"
 
 const logger = new Logger({serviceName: "postDatedLambda"})
 
