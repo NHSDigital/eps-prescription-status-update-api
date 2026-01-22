@@ -1,6 +1,6 @@
 import {Logger} from "@aws-lambda-powertools/logger"
 import {DynamoDBClient, QueryCommand, QueryCommandInput} from "@aws-sdk/client-dynamodb"
-import {marshall, unmarshall} from "@aws-sdk/util-dynamodb"
+import {unmarshall} from "@aws-sdk/util-dynamodb"
 
 import {PSUDataItem, PostDatedNotifyDataItem} from "@psu-common/commonTypes"
 import {
@@ -11,23 +11,36 @@ import {
 
 const client = new DynamoDBClient()
 const tableName = process.env.TABLE_NAME ?? "PrescriptionStatusUpdates"
+const pharmacyPrescriptionIndexName = "PharmacyODSCodePrescriptionIDIndex"
+
+function createPrescriptionLookupKey(prescriptionID: string, pharmacyODSCode: string): string {
+  return `${prescriptionID.toUpperCase()}#${pharmacyODSCode.toUpperCase()}`
+}
 
 /**
- * Query the PrescriptionStatusUpdates table for all records matching a given prescription ID.
+ * Query the PrescriptionStatusUpdates table for all records matching a given prescription ID and ODS code.
  *
  * @param prescriptionID - The prescription ID to query for
+ * @param pharmacyODSCode - The pharmacy ODS code to query for
  * @param logger - The AWS Lambda Powertools logger instance
  * @returns Array of PSUDataItem records matching the prescription ID
  */
 export async function getExistingRecordsByPrescriptionID(
   prescriptionID: string,
+  pharmacyODSCode: string,
   logger: Logger
 ): Promise<Array<PSUDataItem>> {
+  const normalizedPrescriptionID = prescriptionID.toUpperCase()
+  const normalizedPharmacyODSCode = pharmacyODSCode.toUpperCase()
+
+  // Use the GSI to query by PharmacyODSCode and PrescriptionID
   const query: QueryCommandInput = {
     TableName: tableName,
-    KeyConditionExpression: "PrescriptionID = :pid",
+    IndexName: pharmacyPrescriptionIndexName,
+    KeyConditionExpression: "PharmacyODSCode = :ods AND PrescriptionID = :pid",
     ExpressionAttributeValues: {
-      ":pid": marshall(prescriptionID)
+      ":ods": {S: normalizedPharmacyODSCode},
+      ":pid": {S: normalizedPrescriptionID}
     }
   }
 
@@ -41,8 +54,10 @@ export async function getExistingRecordsByPrescriptionID(
       }
 
       logger.info("Querying DynamoDB for existing prescription records", {
-        prescriptionID,
-        tableName
+        prescriptionID: normalizedPrescriptionID,
+        pharmacyODSCode: normalizedPharmacyODSCode,
+        tableName,
+        indexName: pharmacyPrescriptionIndexName
       })
 
       const result = await client.send(new QueryCommand(query))
@@ -56,7 +71,8 @@ export async function getExistingRecordsByPrescriptionID(
     } while (lastEvaluatedKey)
 
     logger.info("Retrieved existing prescription records from DynamoDB", {
-      prescriptionID,
+      prescriptionID: normalizedPrescriptionID,
+      pharmacyODSCode: normalizedPharmacyODSCode,
       recordCount: items.length
     })
 
@@ -66,7 +82,8 @@ export async function getExistingRecordsByPrescriptionID(
     return items
   } catch (err) {
     logger.error("Error querying DynamoDB for existing prescription records", {
-      prescriptionID,
+      prescriptionID: normalizedPrescriptionID,
+      pharmacyODSCode: normalizedPharmacyODSCode,
       error: err
     })
     throw err
@@ -89,45 +106,51 @@ export async function fetchExistingRecordsForPrescriptions(
     prescriptionCount: postDatedItems.length
   })
 
-  // Extract unique prescription IDs to avoid duplicate queries
-  const uniquePrescriptionIDs = [...new Set(
-    postDatedItems.map((item) => item.PrescriptionID)
-  )]
+  // Cache fetch promises per unique prescription/ODS pair to avoid duplicate lookups
+  const recordsPromises = new Map<string, Promise<Array<PSUDataItem>>>()
 
-  // Create a map of prescription ID to existing records
-  const existingRecordsMap = new Map<string, Array<PSUDataItem>>()
+  const getOrCreateRecordsPromise = (
+    prescriptionID: string,
+    pharmacyODSCode: string
+  ): Promise<Array<PSUDataItem>> => {
+    const lookupKey = createPrescriptionLookupKey(prescriptionID, pharmacyODSCode)
 
-  // Fetch existing records for each unique prescription ID
-  await Promise.all(
-    uniquePrescriptionIDs.map(async (prescriptionID) => {
-      try {
-        const records = await getExistingRecordsByPrescriptionID(prescriptionID, logger)
-        existingRecordsMap.set(prescriptionID, records)
-      } catch (error) {
-        logger.error("Failed to fetch existing records for prescription", {
-          prescriptionID,
-          error
-        })
-        // Store empty array on error to allow processing to continue
-        existingRecordsMap.set(prescriptionID, [])
-      }
-    })
+    if (!recordsPromises.has(lookupKey)) {
+      const fetchPromise = (async () => {
+        try {
+          return await getExistingRecordsByPrescriptionID(prescriptionID, pharmacyODSCode, logger)
+        } catch (error) {
+          logger.error("Failed to fetch existing records for prescription", {
+            prescriptionID,
+            pharmacyODSCode,
+            error
+          })
+          return []
+        }
+      })()
+
+      recordsPromises.set(lookupKey, fetchPromise)
+    }
+
+    return recordsPromises.get(lookupKey)!
+  }
+
+  // Each element of recordsPromises is a wrapper around the actual fetch promise for that ID/ODS pair
+
+  // Now, we map over the fetch promise wrappers, and await them all in parallel
+  const results: Array<PostDatedPrescriptionWithExistingRecords> = await Promise.all(
+    postDatedItems.map(async (postDatedData) => ({
+      postDatedData,
+      existingRecords: await getOrCreateRecordsPromise(
+        postDatedData.PrescriptionID,
+        postDatedData.PharmacyODSCode
+      )
+    }))
   )
-
-  // Map each post-dated item to its corresponding existing records
-  const results: Array<PostDatedPrescriptionWithExistingRecords> = postDatedItems.map(
-    (postDatedData) => {
-      const existingRecords = existingRecordsMap.get(postDatedData.PrescriptionID) ?? []
-
-      return {
-        postDatedData,
-        existingRecords
-      }
-    })
 
   logger.info("fetched existing prescription update records for all post-dated prescription IDs", {
     totalPrescriptions: postDatedItems.length,
-    uniquePrescriptionIDs: uniquePrescriptionIDs.length
+    uniquePrescriptionLookups: recordsPromises.size
   })
 
   return results
