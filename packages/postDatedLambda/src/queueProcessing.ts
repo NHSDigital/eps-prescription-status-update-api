@@ -1,23 +1,20 @@
 import {Logger} from "@aws-lambda-powertools/logger"
 
 import {processMessage} from "./businessLogic"
-import {
-  removeSQSMessages,
-  returnMessagesToQueue,
-  receivePostDatedSQSMessages,
-  reportQueueStatus
-} from "./sqs"
+import {enrichMessagesWithExistingRecords} from "./databaseClient"
+import {receivePostDatedSQSMessages, reportQueueStatus, handleProcessedMessages} from "./sqs"
 import {BatchProcessingResult, PostDatedSQSMessage} from "./types"
 
 const MAX_QUEUE_RUNTIME = 14 * 60 * 1000 // 14 minutes, to avoid Lambda timeout issues (timeout is 15 minutes)
 const BATCH_SIZE = 10
-const FAILED_MESSAGE_VISIBILITY_TIMEOUT = 300 // 5 minutes in seconds
 
 /**
  * Process a batch of SQS messages.
- * Messages are processed individually, and results are tracked for success/failure handling.
+ * Messages are enriched with existing records from DynamoDB and processed individually.
+ * Results are tracked for success/failure handling.
  *
  * @param messages - Array of messages to process
+ * @param logger - Logger instance
  * @returns Object containing arrays of successful and failed messages
  */
 export async function processMessages(
@@ -29,10 +26,13 @@ export async function processMessages(
     return {successful: [], failed: []}
   }
 
+  // Enrich messages with existing records from DynamoDB
+  const enrichedMessages = await enrichMessagesWithExistingRecords(messages, logger)
+
   const successful: Array<PostDatedSQSMessage> = []
   const failed: Array<PostDatedSQSMessage> = []
 
-  for (const message of messages) {
+  for (const message of enrichedMessages) {
     try {
       const success = await processMessage(logger, message)
       if (success) {
@@ -59,33 +59,10 @@ export async function processMessages(
 }
 
 /**
- * Handle the results of message processing:
- * - Delete successful messages from the queue
- * - Return failed messages to the queue with a visibility timeout
- * Does not alter the input result object, only performs side effects.
- *
- * @param result - The batch processing result
- */
-export async function handleProcessedMessages(
-  result: BatchProcessingResult,
-  logger: Logger
-): Promise<void> {
-  const {successful, failed} = result
-
-  // Delete successful messages
-  if (successful.length > 0) {
-    await removeSQSMessages(logger, successful)
-  }
-
-  // Return failed messages to the queue with a 5 minute timeout
-  if (failed.length > 0) {
-    await returnMessagesToQueue(logger, failed, FAILED_MESSAGE_VISIBILITY_TIMEOUT)
-  }
-}
-
-/**
  * Drain the queue until empty or the MAX_QUEUE_RUNTIME has passed.
  * Messages are processed in batches of 10.
+ *
+ * @param logger - Logger instance
  */
 export async function processPostDatedQueue(logger: Logger): Promise<void> {
   const start = Date.now()

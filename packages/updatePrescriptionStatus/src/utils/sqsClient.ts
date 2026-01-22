@@ -2,9 +2,14 @@ import {Logger} from "@aws-lambda-powertools/logger"
 import {SQSClient, SendMessageBatchCommand} from "@aws-sdk/client-sqs"
 import {getSecret} from "@aws-lambda-powertools/parameters/secrets"
 
-import {createHmac} from "crypto"
+import {createHmac} from "node:crypto"
 
-import {NotifyDataItem, PSUDataItemWithPrevious} from "@psu-common/commonTypes"
+import {
+  NotifyDataItem,
+  PostDatedNotifyDataItem,
+  PSUDataItem,
+  PSUDataItemWithPrevious
+} from "@psu-common/commonTypes"
 
 import {checkSiteOrSystemIsNotifyEnabled} from "../validation/notificationSiteAndSystemFilters"
 
@@ -202,8 +207,14 @@ export async function pushPrescriptionToNotificationSQS(
     })
     .map(({current}) => current)
 
+  // Build two arrays, one of all post dated, and one of all non-post-dated
+  const postDatedItems = changedStatus.filter(item => item.PostDatedLastModifiedSetAt)
+  const nonPostDatedItems = changedStatus.filter(item => !item.PostDatedLastModifiedSetAt)
+
+  sendPostDatedItemsToSQS(postDatedItems, requestId, logger)
+
   // Build SQS batch entries with FIFO parameters
-  const allEntries: Array<SQSBatchMessage> = changedStatus
+  const allEntries: Array<SQSBatchMessage> = nonPostDatedItems
     .map((item, idx) => ({
       Id: idx.toString(),
       // Only post the required information to SQS
@@ -231,14 +242,6 @@ export async function pushPrescriptionToNotificationSQS(
     {nhsNumbers: allowedSitesAndSystemsData.map(e => e.current.PatientNHSNumber)}
   )
 
-  // Check for post-dated items AFTER building the entries (even though we have to do a json parse)
-  //  so that all entries are definitely built the same way.
-  //  Don't do any checking on the VALUE of the field here.
-  const allPostDated = allEntries.filter((entry) => {
-    const body: NotifyDataItem = JSON.parse(entry.MessageBody)
-    return "PostDatedLastModifiedSetAt" in body
-  })
-
   // Remove post-dated entries from the normal flow
   const currentlyValidEntries = allEntries.filter(entry => {
     const body: NotifyDataItem = JSON.parse(entry.MessageBody)
@@ -249,13 +252,48 @@ export async function pushPrescriptionToNotificationSQS(
   const batches = chunkArray(currentlyValidEntries, 10)
   const out = await placeBatchInSQS(batches, sqsUrl, requestId, logger)
 
-  // Then, also do the post-dated entries if any
-  if (allPostDated.length) {
-    logger.info(`Placing ${allPostDated.length} post-dated entries into the post-dated SQS queue`)
-    const postDatedBatches = chunkArray(allPostDated, 10)
-    const postDatedOut = await placeBatchInSQS(postDatedBatches, postDatedSqsUrl, requestId, logger)
-    out.push(...postDatedOut) // Their results are returned as usual
+  return out
+}
+
+// FIXME: Remove this function once post-dated updates are deprecated
+async function sendPostDatedItemsToSQS(
+  postDatedItems: Array<PSUDataItem>,
+  requestId: string,
+  logger: Logger
+): Promise<void> {
+  if (postDatedItems.length === 0) {
+    logger.info("No post-dated items to send to SQS")
+    return
   }
 
-  return out
+  if (!postDatedSqsUrl) {
+    logger.error("Post-dated Notifications SQS URL not found in environment variables")
+    throw new Error("Post-dated Notifications SQS URL not configured")
+  }
+
+  logger.info(`Placing ${postDatedItems.length} post-dated entries into the post-dated SQS queue`)
+
+  const sqsSalt = await getSaltValue(logger)
+
+  // This time, instead of posting NotifyDataItem, we use PostDatedNotifyDataItem
+  const allEntries: Array<SQSBatchMessage> = postDatedItems
+    .map((item, idx) => ({
+      Id: idx.toString(),
+      // Only post the required information to SQS
+      MessageBody: JSON.stringify(item as PostDatedNotifyDataItem),
+      // FIFO
+      // We dedupe on both nhs number and ods code
+      MessageDeduplicationId: saltedHash(`${item.PatientNHSNumber}:${item.PharmacyODSCode}`, sqsSalt),
+      MessageGroupId: requestId,
+      MessageAttributes: {
+        RequestId: {
+          DataType: "String",
+          StringValue: requestId
+        }
+      }
+    }))
+
+  // SQS batch calls are limited to 10 messages per request, so chunk the data
+  const batches = chunkArray(allEntries, 10)
+  await placeBatchInSQS(batches, postDatedSqsUrl, requestId, logger)
 }

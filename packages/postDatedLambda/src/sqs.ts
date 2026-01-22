@@ -10,9 +10,10 @@ import {Logger} from "@aws-lambda-powertools/logger"
 
 import {PostDatedNotifyDataItem} from "@psu-common/commonTypes"
 
-import {PostDatedSQSMessage, ReceivedPostDatedSQSResult} from "./types"
+import {BatchProcessingResult, PostDatedSQSMessage, ReceivedPostDatedSQSResult} from "./types"
 
 const sqs = new SQSClient({region: process.env.AWS_REGION})
+const FAILED_MESSAGE_VISIBILITY_TIMEOUT = 300 // 5 minutes in seconds
 
 /**
  * Get the SQS queue URL from environment variables.
@@ -252,5 +253,31 @@ export async function returnMessagesToQueue(
       result: result,
       messageIds: entries.map((e) => e.Id)
     })
+  }
+}
+
+/**
+ * Handle the results of message processing:
+ * - Delete successful messages from the queue
+ * - Return failed messages to the queue with a visibility timeout
+ * Does not alter the input result object, only performs side effects.
+ *
+ * @param result - The batch processing result
+ * @param logger - The logging object
+ */
+export async function handleProcessedMessages(
+  result: BatchProcessingResult,
+  logger: Logger
+): Promise<void> {
+  const {successful, failed} = result
+
+  // Delete successful messages
+  if (successful.length > 0) {
+    await removeSQSMessages(logger, successful)
+  }
+
+  // Return failed messages to the queue with a 5 minute timeout
+  if (failed.length > 0) {
+    await returnMessagesToQueue(logger, failed, FAILED_MESSAGE_VISIBILITY_TIMEOUT)
   }
 }
