@@ -13,7 +13,6 @@ import {PostDatedNotifyDataItem} from "@psu-common/commonTypes"
 import {BatchProcessingResult, PostDatedSQSMessage, ReceivedPostDatedSQSResult} from "./types"
 
 const sqs = new SQSClient({region: process.env.AWS_REGION})
-const FAILED_MESSAGE_VISIBILITY_TIMEOUT = 300 // 5 minutes in seconds
 
 /**
  * Get the SQS queue URL from environment variables.
@@ -210,25 +209,27 @@ export async function removeSQSMessages(
 }
 
 /**
- * Return failed messages to the queue with a visibility timeout.
+ * Edit failed that are on the queue to update their visibility timeout.
  * This makes the messages invisible for the specified duration before they can be processed again.
+ * This does not delete the messages, or post new ones; it only alters their visibility.
  *
  * @param logger - The logging object
  * @param messages - The messages that failed processing and should be returned to the queue
- * @param visibilityTimeoutSeconds - The time in seconds before messages become visible again (default: 300 = 5 minutes)
  */
 export async function returnMessagesToQueue(
   logger: Logger,
-  messages: Array<Message>,
-  visibilityTimeoutSeconds = 300
+  messages: Array<Message>
 ): Promise<void> {
   if (messages.length === 0) {
-    logger.info("No failed messages to return to queue")
+    logger.info("No messages to return to queue")
     return
   }
 
   const sqsUrl = getQueueUrl(logger)
 
+  // TODO: Each message needs to have an appropriate visibility timeout based on when it is due to be retried.
+  // For now, use a fixed 5 minute timeout for all messages.
+  const visibilityTimeoutSeconds = 300
   const entries = messages.map((m) => ({
     Id: m.MessageId!,
     ReceiptHandle: m.ReceiptHandle!,
@@ -236,8 +237,11 @@ export async function returnMessagesToQueue(
   }))
 
   logger.info(
-    `Returning messages to queue with ${visibilityTimeoutSeconds}s timeout`,
-    {numberOfMessages: entries.length, messageIds: entries.map((e) => e.Id)}
+    `Returning messages to queue with timeouts`,
+    {
+      numberOfMessages: entries.length,
+      idAndTimeouts: entries.map((e) => ({id: e.Id, visibilityTimeout: e.VisibilityTimeout}))
+    }
   )
 
   const changeVisibilityCmd = new ChangeMessageVisibilityBatchCommand({
@@ -258,8 +262,8 @@ export async function returnMessagesToQueue(
 
 /**
  * Handle the results of message processing:
- * - Delete successful messages from the queue
- * - Return failed messages to the queue with a visibility timeout
+ * - Delete matured messages from the queue
+ * - Return immature messages to the queue with a visibility timeout
  * Does not alter the input result object, only performs side effects.
  *
  * @param result - The batch processing result
@@ -269,15 +273,16 @@ export async function handleProcessedMessages(
   result: BatchProcessingResult,
   logger: Logger
 ): Promise<void> {
-  const {successful, failed} = result
+  const {maturedPrescriptionUpdates, immaturePrescriptionUpdates} = result
 
-  // Delete successful messages
-  if (successful.length > 0) {
-    await removeSQSMessages(logger, successful)
+  // Delete matured messages
+  if (maturedPrescriptionUpdates.length > 0) {
+    // TODO: Also need to send messages to the notification queue here (do that first, then delete)
+    await removeSQSMessages(logger, maturedPrescriptionUpdates)
   }
 
-  // Return failed messages to the queue with a 5 minute timeout
-  if (failed.length > 0) {
-    await returnMessagesToQueue(logger, failed, FAILED_MESSAGE_VISIBILITY_TIMEOUT)
+  // Return failed messages to the queue
+  if (immaturePrescriptionUpdates.length > 0) {
+    await returnMessagesToQueue(logger, immaturePrescriptionUpdates)
   }
 }

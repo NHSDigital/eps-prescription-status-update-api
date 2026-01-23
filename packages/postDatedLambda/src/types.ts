@@ -33,8 +33,8 @@ export interface PostDatedSQSMessageWithExistingRecords extends PostDatedSQSMess
  * Result of processing a batch of messages.
  */
 export interface BatchProcessingResult {
-  successful: Array<PostDatedSQSMessage>
-  failed: Array<PostDatedSQSMessage>
+  maturedPrescriptionUpdates: Array<PostDatedSQSMessage>
+  immaturePrescriptionUpdates: Array<PostDatedSQSMessage>
 }
 
 /**

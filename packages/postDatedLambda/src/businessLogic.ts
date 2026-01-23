@@ -8,7 +8,7 @@ import {PostDatedSQSMessageWithExistingRecords} from "./types"
  *
  * @param logger - The AWS Lambda Powertools logger instance
  * @param message - The SQS message containing post-dated prescription data and existing records
- * @returns Promise<boolean> - true if processing succeeded, false if it failed
+ * @returns Promise<boolean> - true if the post-dated prescription has matured, and false otherwise
  */
 export async function processMessage(
   logger: Logger,

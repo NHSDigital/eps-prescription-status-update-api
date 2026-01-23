@@ -23,39 +23,39 @@ export async function processMessages(
 ): Promise<BatchProcessingResult> {
   if (messages.length === 0) {
     logger.info("No messages to process in batch")
-    return {successful: [], failed: []}
+    return {maturedPrescriptionUpdates: [], immaturePrescriptionUpdates: []}
   }
 
   // Enrich messages with existing records from DynamoDB
   const enrichedMessages = await enrichMessagesWithExistingRecords(messages, logger)
 
-  const successful: Array<PostDatedSQSMessage> = []
-  const failed: Array<PostDatedSQSMessage> = []
+  const maturedPrescriptionUpdates: Array<PostDatedSQSMessage> = []
+  const immaturePrescriptionUpdates: Array<PostDatedSQSMessage> = []
 
   for (const message of enrichedMessages) {
     try {
       const success = await processMessage(logger, message)
       if (success) {
-        successful.push(message)
+        maturedPrescriptionUpdates.push(message)
       } else {
-        failed.push(message)
+        immaturePrescriptionUpdates.push(message)
       }
     } catch (error) {
       logger.error("Error processing message", {
         messageId: message.MessageId,
         error
       })
-      failed.push(message)
+      immaturePrescriptionUpdates.push(message)
     }
   }
 
   logger.info("Batch processing complete", {
     totalMessages: messages.length,
-    successfulCount: successful.length,
-    failedCount: failed.length
+    maturedPrescriptionUpdatesCount: maturedPrescriptionUpdates.length,
+    immaturePrescriptionUpdatesCount: immaturePrescriptionUpdates.length
   })
 
-  return {successful, failed}
+  return {maturedPrescriptionUpdates, immaturePrescriptionUpdates}
 }
 
 /**

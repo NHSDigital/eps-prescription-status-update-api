@@ -19,11 +19,13 @@ function createPrescriptionLookupKey(prescriptionID: string, pharmacyODSCode: st
 
 /**
  * Query the PrescriptionStatusUpdates table for all records matching a given prescription ID and ODS code.
+ * There should always be at least one result, but there may be multiple if the prescription has been
+ * updated multiple times.
  *
  * @param prescriptionID - The prescription ID to query for
  * @param pharmacyODSCode - The pharmacy ODS code to query for
  * @param logger - The AWS Lambda Powertools logger instance
- * @returns Array of PSUDataItem records matching the prescription ID
+ * @returns Array of PSUDataItem records matching the prescription ID. Sorted by LastModified descending.
  */
 export async function getExistingRecordsByPrescriptionID(
   prescriptionID: string,
@@ -76,8 +78,8 @@ export async function getExistingRecordsByPrescriptionID(
       recordCount: items.length
     })
 
-    // Sort by LastModified ascending so most recent is last
-    items.sort((a, b) => new Date(a.LastModified).valueOf() - new Date(b.LastModified).valueOf())
+    // Sort by LastModified ascending so most recent is first
+    items.sort((a, b) => new Date(b.LastModified).valueOf() - new Date(a.LastModified).valueOf())
 
     return items
   } catch (err) {
@@ -96,7 +98,8 @@ export async function getExistingRecordsByPrescriptionID(
  *
  * @param postDatedItems - Array of post-dated prescription data items
  * @param logger - The AWS Lambda Powertools logger instance
- * @returns Array of objects containing both the post-dated data and existing records
+ * @returns Array of objects containing both the post-dated data and existing records.
+ *   Existing records are sorted by LastModified descending.
  */
 export async function fetchExistingRecordsForPrescriptions(
   postDatedItems: Array<PostDatedNotifyDataItem>,
@@ -106,6 +109,8 @@ export async function fetchExistingRecordsForPrescriptions(
     prescriptionCount: postDatedItems.length
   })
 
+  // The data table is indexed by both PrescriptionID and PharmacyODSCode, so build a map keyed by these
+  // in combination. Should avoid duplicate queries this way.
   const uniquePrescriptionLookups = new Map<string, {prescriptionID: string; pharmacyODSCode: string}>()
   for (const item of postDatedItems) {
     const lookupKey = createPrescriptionLookupKey(item.PrescriptionID, item.PharmacyODSCode)
@@ -117,10 +122,7 @@ export async function fetchExistingRecordsForPrescriptions(
     }
   }
 
-  // Create a map of prescription ID to existing records
   const existingRecordsMap = new Map<string, Array<PSUDataItem>>()
-
-  // Fetch existing records for each unique prescription ID
   await Promise.all(
     Array.from(uniquePrescriptionLookups.entries()).map(async ([lookupKey, {prescriptionID, pharmacyODSCode}]) => {
       try {
@@ -133,6 +135,7 @@ export async function fetchExistingRecordsForPrescriptions(
           error
         })
         // Store empty array on error to allow processing to continue
+        // TODO: Make sure later, that if existingRecords is empty, we handle that
         existingRecordsMap.set(lookupKey, [])
       }
     })
@@ -183,10 +186,15 @@ export async function enrichMessagesWithExistingRecords(
     existingRecords: recordsMap.get(message.prescriptionData.PrescriptionID) ?? []
   }))
 
-  logger.info("Enriched messages with existing records from DynamoDB", {
-    messageCount: messages.length,
-    messagesWithRecords: enrichedMessages.filter((m) => m.existingRecords.length > 0).length
-  })
+  for (const msg of enrichedMessages) {
+    logger.info("Prescription and most recent existing record", {
+      prescriptionID: msg.prescriptionData.PrescriptionID,
+      existingRecordCount: msg.existingRecords.length,
+      mostRecentExistingRecord: msg.existingRecords.length > 0
+        ? msg.existingRecords[0]
+        : null
+    })
+  }
 
   return enrichedMessages
 }
