@@ -231,6 +231,7 @@ Resources:
         PrescriptionStatusUpdatesTableName: !GetAtt Tables.Outputs.PrescriptionStatusUpdatesTableName
         PrescriptionNotificationStatesTableName: !GetAtt Tables.Outputs.PrescriptionNotificationStatesTableName
         NHSNotifyPrescriptionsSQSQueueUrl: !GetAtt Messaging.Outputs.NHSNotifyPrescriptionsSQSQueueUrl
+        PostDatedNotificationsSQSQueueUrl: !GetAtt Messaging.Outputs.PostDatedNotificationsSQSQueueUrl
         SQSSaltSecret: !GetAtt Secrets.Outputs.SQSSaltSecret
         EnabledSiteODSCodesParam: !GetAtt Parameters.Outputs.EnabledSiteODSCodesParameterName
         EnabledSystemsParam: !GetAtt Parameters.Outputs.EnabledSystemsParameterName
