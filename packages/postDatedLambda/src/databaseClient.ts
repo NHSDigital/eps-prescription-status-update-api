@@ -13,7 +13,7 @@ const client = new DynamoDBClient()
 const tableName = process.env.TABLE_NAME ?? "PrescriptionStatusUpdates"
 const pharmacyPrescriptionIndexName = "PharmacyODSCodePrescriptionIDIndex"
 
-function createPrescriptionLookupKey(prescriptionID: string, pharmacyODSCode: string): string {
+export function createPrescriptionLookupKey(prescriptionID: string, pharmacyODSCode: string): string {
   return `${prescriptionID.toUpperCase()}#${pharmacyODSCode.toUpperCase()}`
 }
 
