@@ -33,7 +33,7 @@ jest.unstable_mockModule("../src/sqs", () => {
 
 import {Logger} from "@aws-lambda-powertools/logger"
 
-import {createMockPostModifiedDataItem} from "./testUtils"
+import {createMockPostModifiedDataItem} from "./testUtils.test"
 import {BatchProcessingResult, PostDatedSQSMessage} from "../src/types"
 
 // Import the orchestration module after mocking dependencies
@@ -43,6 +43,10 @@ const logger = new Logger({serviceName: "postDatedLambdaTEST"})
 
 describe("orchestration", () => {
   describe("processMessages", () => {
+    beforeEach(() => {
+      jest.clearAllMocks()
+    })
+
     it("should process messages and categorize them correctly", async () => {
       const mockMessages: Array<PostDatedSQSMessage> = [
         {MessageId: "1", Body: "Message 1", prescriptionData: createMockPostModifiedDataItem({})},
@@ -69,6 +73,51 @@ describe("orchestration", () => {
 
       expect(result.maturedPrescriptionUpdates).toHaveLength(0)
       expect(result.immaturePrescriptionUpdates).toHaveLength(0)
+      expect(mockEnrichMessagesWithExistingRecords).not.toHaveBeenCalled()
+    })
+
+    it("should log errors and mark messages immature when processing throws", async () => {
+      const mockMessages: Array<PostDatedSQSMessage> = [
+        {MessageId: "1", Body: "Message 1", prescriptionData: createMockPostModifiedDataItem({})},
+        {MessageId: "2", Body: "Message 2", prescriptionData: createMockPostModifiedDataItem({})}
+      ]
+
+      mockEnrichMessagesWithExistingRecords.mockReturnValueOnce(mockMessages)
+      mockProcessMessage
+        .mockReturnValueOnce(true)
+        .mockImplementationOnce(async () => {
+          throw new Error("processing failed")
+        })
+
+      const errorSpy = jest.spyOn(logger, "error")
+      const result = await processMessages(mockMessages, logger)
+
+      expect(result.maturedPrescriptionUpdates).toHaveLength(1)
+      expect(result.immaturePrescriptionUpdates).toHaveLength(1)
+      expect(result.immaturePrescriptionUpdates[0].MessageId).toBe("2")
+      expect(errorSpy).toHaveBeenCalledWith(
+        "Error processing message",
+        expect.objectContaining({messageId: "2"})
+      )
+      errorSpy.mockRestore()
+    })
+
+    it("should pass enriched records into processMessage", async () => {
+      const mockMessages: Array<PostDatedSQSMessage> = [
+        {MessageId: "1", Body: "Message 1", prescriptionData: createMockPostModifiedDataItem({})}
+      ]
+
+      const enrichedMessage = {
+        ...mockMessages[0],
+        existingRecords: [{prescriptionId: "abc"}]
+      }
+
+      mockEnrichMessagesWithExistingRecords.mockReturnValueOnce([enrichedMessage])
+      mockProcessMessage.mockReturnValue(true)
+
+      await processMessages(mockMessages, logger)
+
+      expect(mockProcessMessage).toHaveBeenCalledWith(logger, enrichedMessage)
     })
   })
 
@@ -137,6 +186,57 @@ describe("orchestration", () => {
 
       expect(mockReportQueueStatus).toHaveBeenCalled()
       jest.useRealTimers()
+    })
+
+    it("should continue processing batches until message count drops below threshold", async () => {
+      const createBatch = (ids: Array<string>) =>
+        ids.map((id) => ({
+          MessageId: id,
+          Body: `Message ${id}`,
+          prescriptionData: createMockPostModifiedDataItem({})
+        }))
+
+      const batch1 = createBatch(["1", "2", "3"])
+      const batch2 = createBatch(["4", "5", "6"])
+      const batch3 = createBatch(["7"])
+
+      const enrich = (messages: Array<PostDatedSQSMessage>) =>
+        messages.map((message) => ({
+          ...message,
+          existingRecords: []
+        }))
+
+      mockReceivePostDatedSQSMessages
+        .mockReturnValueOnce(batch1)
+        .mockReturnValueOnce(batch2)
+        .mockReturnValueOnce(batch3)
+      mockEnrichMessagesWithExistingRecords
+        .mockReturnValueOnce(enrich(batch1))
+        .mockReturnValueOnce(enrich(batch2))
+        .mockReturnValueOnce(enrich(batch3))
+      mockProcessMessage.mockReturnValue(true)
+
+      await processPostDatedQueue(logger)
+
+      expect(mockReceivePostDatedSQSMessages).toHaveBeenCalledTimes(3)
+      expect(mockHandleProcessedMessages).toHaveBeenCalledTimes(3)
+      expect(mockReportQueueStatus).not.toHaveBeenCalled()
+      const totalMessages = batch1.length + batch2.length + batch3.length
+      expect(mockProcessMessage).toHaveBeenCalledTimes(totalMessages)
+    })
+
+    it("should treat empty receives as drained batches", async () => {
+      mockReceivePostDatedSQSMessages.mockReturnValueOnce([])
+
+      await processPostDatedQueue(logger)
+
+      expect(mockEnrichMessagesWithExistingRecords).not.toHaveBeenCalled()
+      expect(mockProcessMessage).not.toHaveBeenCalled()
+      expect(mockHandleProcessedMessages).toHaveBeenCalledTimes(1)
+      const [result] = mockHandleProcessedMessages.mock.calls[0] as [BatchProcessingResult]
+      expect(result.maturedPrescriptionUpdates).toHaveLength(0)
+      expect(result.immaturePrescriptionUpdates).toHaveLength(0)
+      expect(mockReportQueueStatus).not.toHaveBeenCalled()
     })
   })
 })
