@@ -33,7 +33,7 @@ jest.unstable_mockModule("../src/sqs", () => {
 
 import {Logger} from "@aws-lambda-powertools/logger"
 
-import {createMockPostModifiedDataItem} from "./testUtils.test"
+import {createMockPostModifiedDataItem} from "./testUtils"
 import {BatchProcessingResult, PostDatedSQSMessage} from "../src/types"
 
 // Import the orchestration module after mocking dependencies

@@ -9,7 +9,7 @@ import * as dynamo from "@aws-sdk/client-dynamodb"
 
 import {Logger} from "@aws-lambda-powertools/logger"
 
-import {createMockPostModifiedDataItem} from "./testUtils.test"
+import {createMockPostModifiedDataItem} from "./testUtils"
 
 // Uses unstable jest method to enable mocking while using ESM. To be replaced in future.
 export function mockDynamoDBClient() {
