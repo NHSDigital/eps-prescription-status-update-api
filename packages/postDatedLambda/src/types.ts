@@ -36,11 +36,3 @@ export interface BatchProcessingResult {
   maturedPrescriptionUpdates: Array<PostDatedSQSMessage>
   immaturePrescriptionUpdates: Array<PostDatedSQSMessage>
 }
-
-/**
- * Result of draining the queue.
- */
-export interface ReceivedPostDatedSQSResult {
-  messages: Array<PostDatedSQSMessage>
-  isEmpty: boolean
-}

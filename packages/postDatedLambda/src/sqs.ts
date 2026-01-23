@@ -10,7 +10,7 @@ import {Logger} from "@aws-lambda-powertools/logger"
 
 import {PostDatedNotifyDataItem} from "@psu-common/commonTypes"
 
-import {BatchProcessingResult, PostDatedSQSMessage, ReceivedPostDatedSQSResult} from "./types"
+import {BatchProcessingResult, PostDatedSQSMessage} from "./types"
 
 const sqs = new SQSClient({region: process.env.AWS_REGION})
 
@@ -63,106 +63,64 @@ export async function reportQueueStatus(logger: Logger): Promise<void> {
 }
 
 /**
- * Pulls up to `maxTotal` messages off the queue (in batches of up to 10) and bundles them together.
+ * Pulls up to 10 messages from SQS.
  *
  * @param logger - The AWS logging object
- * @param maxTotal - The maximum number of messages to fetch. Guaranteed to be less than this.
- * @param small_batch_threshold - If a batch returns fewer than this number of messages, stop polling further.
- * @returns
- *  - messages: the array of parsed PostDatedSQSMessage
- *  - isEmpty: true if the last receive returned fewer than 5 messages (or none),
- *             indicating the queue is effectively drained.
+ * @returns - The array of parsed PostDatedSQSMessage
  */
-export async function receivePostDatedSQSMessages(
-  logger: Logger,
-  maxTotal = 10,
-  small_batch_threshold = 5
-): Promise<ReceivedPostDatedSQSResult> {
-  // eslint-disable-next-line max-len
-  // TODO: This is borrowed from the notify lambda, but here it is not necessary to process 100 messages at a time - 10 is enough. Consider refactoring this function away.
+export async function receivePostDatedSQSMessages(logger: Logger): Promise<Array<PostDatedSQSMessage>> {
   const sqsUrl = getQueueUrl(logger)
+  const toFetch = 10
 
-  const allMessages: Array<PostDatedSQSMessage> = []
-  let receivedSoFar = 0
-  let isEmpty = false
-  let pollingIteration = 0
+  const receiveCmd = new ReceiveMessageCommand({
+    QueueUrl: sqsUrl,
+    MaxNumberOfMessages: toFetch,
+    // Use long polling to avoid getting empty responses when the queue is small
+    WaitTimeSeconds: 20,
+    MessageAttributeNames: ["All"]
+  })
 
-  while (receivedSoFar < maxTotal) {
-    pollingIteration = pollingIteration + 1
+  const {Messages} = await sqs.send(receiveCmd)
 
-    const toFetch = Math.min(10, maxTotal - receivedSoFar)
-    const receiveCmd = new ReceiveMessageCommand({
-      QueueUrl: sqsUrl,
-      MaxNumberOfMessages: toFetch,
-      // Use long polling to avoid getting empty responses when the queue is small
-      WaitTimeSeconds: 20,
-      MessageAttributeNames: ["All"]
-    })
-
-    const {Messages} = await sqs.send(receiveCmd)
-
-    // if the queue is now empty, then break the loop
-    if (!Messages || Messages.length === 0) {
-      isEmpty = true
-      logger.info("No messages received; marking queue as empty", {pollingIteration})
-      break
-    }
-
-    logger.info(
-      "Received some messages from the post-dated queue. Parsing them...",
-      {
-        pollingIteration,
-        MessageIDs: Messages.map((m) => m.MessageId)
-      }
-    )
-
-    // Parse and validate messages
-    const parsedMessages: Array<PostDatedSQSMessage> = Messages.flatMap((m) => {
-      if (!m.Body) {
-        logger.error(
-          "Received an invalid SQS message (missing Body) - omitting from processing.",
-          {offendingMessage: m}
-        )
-        return []
-      }
-      try {
-        const parsedBody: PostDatedNotifyDataItem = JSON.parse(m.Body)
-        return [
-          {
-            ...m,
-            prescriptionData: parsedBody
-          }
-        ]
-      } catch (error) {
-        logger.error(
-          "Failed to parse SQS message body as JSON - omitting from processing.",
-          {offendingMessage: m, parseError: error}
-        )
-        return []
-      }
-    })
-
-    allMessages.push(...parsedMessages)
-    receivedSoFar += parsedMessages.length
-
-    // if the last batch of messages was small, then break the loop
-    // This is to prevent a slow-loris style breakdown if the queue has
-    // barely enough messages to keep the processors alive
-    if (Messages.length < small_batch_threshold) {
-      isEmpty = true
-      logger.info(
-        "Received a small number of messages. Considering the queue drained.",
-        {batchLength: Messages.length, small_batch_threshold, pollingIteration}
-      )
-      break
-    }
+  if (!Messages || Messages.length === 0) {
+    logger.info("No messages received; marking queue as empty")
+    return []
   }
 
-  logger.info(`In sum, retrieved ${allMessages.length} messages from post-dated SQS`,
-    {MessageIDs: allMessages.map(el => el.MessageId)}
-  )
+  logger.info("Received some messages from the post-dated queue. Parsing them...", {
+    MessageIDs: Messages.map((m) => m.MessageId)
+  })
 
-  return {messages: allMessages, isEmpty}
+  const parsedMessages: Array<PostDatedSQSMessage> = Messages.flatMap((m) => {
+    if (!m.Body) {
+      logger.error(
+        "Received an invalid SQS message (missing Body) - omitting from processing.",
+        {offendingMessage: m}
+      )
+      return []
+    }
+    try {
+      const parsedBody: PostDatedNotifyDataItem = JSON.parse(m.Body)
+      return [
+        {
+          ...m,
+          prescriptionData: parsedBody
+        }
+      ]
+    } catch (error) {
+      logger.error(
+        "Failed to parse SQS message body as JSON - omitting from processing.",
+        {offendingMessage: m, parseError: error}
+      )
+      return []
+    }
+  })
+
+  logger.info(`In sum, retrieved ${parsedMessages.length} messages from post-dated SQS`, {
+    MessageIDs: parsedMessages.map((el) => el.MessageId)
+  })
+
+  return parsedMessages
 }
 
 /**
@@ -278,6 +236,7 @@ export async function handleProcessedMessages(
   // Delete matured messages
   if (maturedPrescriptionUpdates.length > 0) {
     // TODO: Also need to send messages to the notification queue here (do that first, then delete)
+    // await sendSQSMessagesToNotificationQueue(logger, maturedPrescriptionUpdates)
     await removeSQSMessages(logger, maturedPrescriptionUpdates)
   }
 

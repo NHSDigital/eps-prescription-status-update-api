@@ -25,5 +25,8 @@ export async function processMessage(
   // The existingRecords array contains all records from the DynamoDB table
   // that match this prescription's PrescriptionID
 
+  // NOTE: It is technically possible for the array to be empty if no existing records are found
+  // This SHOULD never happen in practice, but the code should handle it gracefully just in case
+
   return true
 }

@@ -26,7 +26,7 @@ export interface NotifyDataItem {
   Status: string
 }
 
-// FIXME: This should be removed when we stop supporting post-dated updates
+// TODO: This should be removed when we stop supporting post-dated updates
 export interface PostDatedNotifyDataItem extends NotifyDataItem {
   LastModified: string
   PostDatedLastModifiedSetAt: string // This is the meta.lastUpdated field from the FHIR resource

@@ -6,7 +6,7 @@ import {receivePostDatedSQSMessages, reportQueueStatus, handleProcessedMessages}
 import {BatchProcessingResult, PostDatedSQSMessage} from "./types"
 
 const MAX_QUEUE_RUNTIME = 14 * 60 * 1000 // 14 minutes, to avoid Lambda timeout issues (timeout is 15 minutes)
-const BATCH_SIZE = 10
+const MIN_RECEIVED_THRESHOLD = 3 // If fewer than this number of messages are received, consider the queue empty
 
 /**
  * Process a batch of SQS messages.
@@ -78,16 +78,19 @@ export async function processPostDatedQueue(logger: Logger): Promise<void> {
       break
     }
 
-    const {messages, isEmpty} = await receivePostDatedSQSMessages(logger, BATCH_SIZE)
-    empty = isEmpty
+    const messages = await receivePostDatedSQSMessages(logger)
 
-    if (messages.length === 0) {
-      logger.info("No messages retrieved from queue")
-      continue
+    // break condition
+    if (messages.length < MIN_RECEIVED_THRESHOLD) {
+      empty = true
+      logger.info("Received fewer messages than minimum threshold; considering queue drained", {
+        receivedMessageCount: messages.length,
+        minimumThreshold: MIN_RECEIVED_THRESHOLD
+      })
     }
 
     // Process messages for this batch
     const result = await processMessages(messages, logger)
-    return await handleProcessedMessages(result, logger)
+    await handleProcessedMessages(result, logger)
   }
 }

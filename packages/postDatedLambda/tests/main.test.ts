@@ -51,4 +51,28 @@ describe("Unit test for post-dated lambda handler", () => {
     expect(mockProcessPostDatedQueue).toHaveBeenCalledTimes(1)
   })
 
+  it("Should handle errors from reportQueueStatus", async () => {
+    mockReportQueueStatus.mockImplementation(() => {
+      throw new Error("Dynamo error")
+    })
+    mockProcessPostDatedQueue.mockImplementation(() => Promise.resolve())
+
+    await expect(lambdaHandler(mockEventBridgeEvent)).rejects.toThrow("Dynamo error")
+
+    expect(mockReportQueueStatus).toHaveBeenCalledTimes(1)
+    expect(mockProcessPostDatedQueue).not.toHaveBeenCalled()
+  })
+
+  it("Should handle errors from processPostDatedQueue", async () => {
+    mockReportQueueStatus.mockImplementation(() => Promise.resolve())
+    mockProcessPostDatedQueue.mockImplementation(() => {
+      throw new Error("Processing error")
+    })
+
+    await expect(lambdaHandler(mockEventBridgeEvent)).rejects.toThrow("Processing error")
+
+    expect(mockReportQueueStatus).toHaveBeenCalledTimes(1)
+    expect(mockProcessPostDatedQueue).toHaveBeenCalledTimes(1)
+  })
+
 })

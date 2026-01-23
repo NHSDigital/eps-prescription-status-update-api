@@ -135,7 +135,6 @@ export async function fetchExistingRecordsForPrescriptions(
           error
         })
         // Store empty array on error to allow processing to continue
-        // TODO: Make sure later, that if existingRecords is empty, we handle that
         existingRecordsMap.set(lookupKey, [])
       }
     })
