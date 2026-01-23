@@ -86,6 +86,20 @@ describe("Unit tests for pushPrescriptionToNotificationSQS", () => {
     expect(mockSend).not.toHaveBeenCalled()
   })
 
+  it("throws if the post-dated SQS URL is not configured", async () => {
+    process.env.POST_DATED_PRESCRIPTIONS_SQS_QUEUE_URL = undefined
+    const {pushPrescriptionToNotificationSQS: tempFunc} = await import("../src/utils/sqsClient")
+
+    await expect(
+      tempFunc("req-123", [], logger)
+    ).rejects.toThrow("Post-dated Notifications SQS URL not configured")
+
+    expect(warnSpy).toHaveBeenCalledWith(
+      "Post-dated Notifications SQS URL not found in environment variables"
+    )
+    expect(mockSend).not.toHaveBeenCalled()
+  })
+
   it("does nothing when there are no eligible statuses", async () => {
     const data = [
       {
@@ -111,6 +125,25 @@ describe("Unit tests for pushPrescriptionToNotificationSQS", () => {
       "Checking if any items require notifications",
       {numItemsToBeChecked: data.length, sqsUrl: process.env.NHS_NOTIFY_PRESCRIPTIONS_SQS_QUEUE_URL}
     )
+    expect(mockSend).not.toHaveBeenCalled()
+  })
+
+  it("filters out ready to collect items whose status has not changed", async () => {
+    const data = [
+      {
+        current: createMockDataItem({Status: "ready to collect"}),
+        previous: createMockDataItem({Status: "ready to collect"})
+      },
+      {
+        current: createMockDataItem({Status: "READY TO COLLECT - PARTIAL"}),
+        previous: createMockDataItem({Status: "ready to collect - partial"})
+      }
+    ]
+
+    await expect(
+      pushPrescriptionToNotificationSQS("req-no-change", data, logger)
+    ).resolves.toEqual([])
+
     expect(mockSend).not.toHaveBeenCalled()
   })
 
@@ -143,7 +176,7 @@ describe("Unit tests for pushPrescriptionToNotificationSQS", () => {
     const sent = mockSend.mock.calls[0][0]
     expect(sent).toBeInstanceOf(SendMessageBatchCommand)
     if (!(sent instanceof SendMessageBatchCommand)) {
-      throw new Error("Expected a SendMessageBatchCommand")
+      throw new TypeError("Expected a SendMessageBatchCommand")
     }
     const entries = sent.input.Entries!
 
@@ -168,6 +201,53 @@ describe("Unit tests for pushPrescriptionToNotificationSQS", () => {
     )
   })
 
+  it("routes post-dated and standard notifications to their respective queues", async () => {
+    const postDatedCurrent = createMockDataItem({
+      Status: "ready to collect",
+      PatientNHSNumber: "9999999999",
+      PharmacyODSCode: "JIM123",
+      PostDatedLastModifiedSetAt: "2100-01-01T00:00:00Z"
+    })
+    const standardCurrent = createMockDataItem({
+      Status: "ready to collect - partial",
+      PatientNHSNumber: "8888888888",
+      PharmacyODSCode: "JIM123"
+    })
+    const payload = [
+      {previous: createMockDataItem({Status: "previous status"}), current: postDatedCurrent},
+      {previous: createMockDataItem({Status: "previous status"}), current: standardCurrent}
+    ]
+
+    mockSend
+      .mockImplementationOnce(() => Promise.resolve({Successful: [{MessageId: "pd-id"}]}))
+      .mockImplementationOnce(() => Promise.resolve({Successful: [{MessageId: "std-id"}]}))
+
+    const result = await pushPrescriptionToNotificationSQS("req-mixed", payload, logger)
+
+    expect(result).toEqual(["pd-id", "std-id"]) // Both have been pushed to SQS, so we get their IDs
+    expect(mockSend).toHaveBeenCalledTimes(2)
+
+    // Check that the send command was called twice, once with each SQS URL
+    const queueUrls = mockSend.mock.calls.map(call => {
+      const command = call[0]
+      expect(command).toBeInstanceOf(SendMessageBatchCommand)
+      if (!(command instanceof SendMessageBatchCommand)) {
+        throw new TypeError("Expected a SendMessageBatchCommand")
+      }
+      command.input.Entries!.forEach(entry => {
+        expect(entry.MessageGroupId).toBe("req-mixed")
+      })
+      return command.input.QueueUrl
+    })
+
+    expect(queueUrls).toEqual(
+      expect.arrayContaining([
+        process.env.POST_DATED_PRESCRIPTIONS_SQS_QUEUE_URL,
+        process.env.NHS_NOTIFY_PRESCRIPTIONS_SQS_QUEUE_URL
+      ])
+    )
+  })
+
   it("rethrows and logs if SendMessageBatchCommand rejects", async () => {
     const payload = [
       {
@@ -186,6 +266,69 @@ describe("Unit tests for pushPrescriptionToNotificationSQS", () => {
     expect(errorSpy).toHaveBeenCalledWith(
       "Failed to send a batch of prescriptions to the SQS",
       {error: testError, sqsUrl: process.env.NHS_NOTIFY_PRESCRIPTIONS_SQS_QUEUE_URL}
+    )
+  })
+
+  it("rejects when the standard queue fails but the post-dated queue succeeds", async () => {
+    const payload = [
+      {
+        previous: createMockDataItem({Status: "previous status"}),
+        current: createMockDataItem({
+          Status: "ready to collect",
+          PatientNHSNumber: "444",
+          PharmacyODSCode: "DDD",
+          PostDatedLastModifiedSetAt: "2025-05-01T00:00:00Z"
+        })
+      },
+      {
+        previous: createMockDataItem({Status: "previous status"}),
+        current: createMockDataItem({Status: "ready to collect", PatientNHSNumber: "555", PharmacyODSCode: "EEE"})
+      }
+    ]
+    const standardQueueError = new Error("Standard queue failure")
+
+    mockSend
+      .mockImplementationOnce(() => Promise.resolve({Successful: [{MessageId: "pd-ok"}]}))
+      .mockImplementationOnce(() => Promise.reject(standardQueueError))
+
+    await expect(
+      pushPrescriptionToNotificationSQS("req-failure", payload, logger)
+    ).rejects.toThrow(standardQueueError)
+
+    expect(errorSpy).toHaveBeenCalledWith(
+      "Failed to send a batch of prescriptions to the SQS",
+      {error: standardQueueError, sqsUrl: process.env.NHS_NOTIFY_PRESCRIPTIONS_SQS_QUEUE_URL}
+    )
+  })
+
+  it("Rejects when the post-dated queue fails but the standard queue succeeds", async () => {
+    const payload = [
+      {
+        previous: createMockDataItem({Status: "previous status"}),
+        current: createMockDataItem({
+          Status: "ready to collect",
+          PatientNHSNumber: "777",
+          PharmacyODSCode: "GGG",
+          PostDatedLastModifiedSetAt: "2100-12-12T00:00:00Z"
+        })
+      },
+      {
+        previous: createMockDataItem({Status: "previous status"}),
+        current: createMockDataItem({Status: "ready to collect", PatientNHSNumber: "888", PharmacyODSCode: "HHH"})
+      }
+    ]
+    const postDatedQueueError = new Error("Post-dated queue failure")
+
+    mockSend
+      .mockImplementationOnce(() => Promise.reject(postDatedQueueError))
+      .mockImplementationOnce(() => Promise.resolve({Successful: [{MessageId: "std-ok"}]}))
+
+    await expect(
+      pushPrescriptionToNotificationSQS("req-failure-2", payload, logger)
+    ).rejects.toThrow(postDatedQueueError)
+    expect(errorSpy).toHaveBeenCalledWith(
+      "Failed to send a batch of prescriptions to the SQS",
+      {error: postDatedQueueError, sqsUrl: process.env.POST_DATED_PRESCRIPTIONS_SQS_QUEUE_URL}
     )
   })
 
