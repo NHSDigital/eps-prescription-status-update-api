@@ -81,10 +81,20 @@ export const filterOutFutureReduceToLatestUpdates = (
   })
 
   // flatten both regular and post-dated updates into single array
+  // but exclude post-dated updates if they have been revoked by a subsequent regular update
   const uniqueItems: Array<itemType> = []
   Object.values(itemGroups).forEach(group => {
     if (group.regular) uniqueItems.push(group.regular)
-    if (group.postDated) uniqueItems.push(group.postDated)
+    if (group.postDated) {
+      // Only include post-dated update if there's no regular update that came after it was set
+      const postDatedSetTime = Date.parse(group.postDated.postDatedLastModifiedSetAt)
+      const regularUpdateTime = group.regular ? Date.parse(group.regular.lastUpdateDateTime) : 0
+
+      // If the regular update came after the post-dated was set, it revokes the post-dated update
+      if (!group.regular || regularUpdateTime <= postDatedSetTime) {
+        uniqueItems.push(group.postDated)
+      }
+    }
   })
 
   const result: outputPrescriptionType = {

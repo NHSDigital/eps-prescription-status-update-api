@@ -267,6 +267,41 @@ const scenarios: Array<scenariosType> = [
       onboarded: false,
       items: []
     }
+  },
+  {
+    scenarioDescription: "should return With pharmacy when RTC has been revoked",
+    currentTime: new Date("2025-12-11T12:00:00Z").getTime(),
+    inputPrescriptions: {
+      prescriptionID: "abc",
+      odsCode: "123"
+    },
+    queryResults: [
+      {
+        itemId: "item_1",
+        latestStatus: "Ready to collect",
+        isTerminalState: false,
+        lastUpdateDateTime: "2025-12-11T10:00:00Z",
+        postDatedLastModifiedSetAt: "2025-12-10T10:00:00Z"
+      },
+      {
+        itemId: "item_1",
+        latestStatus: "With pharmacy",
+        isTerminalState: false,
+        lastUpdateDateTime: "2025-12-10T11:00:00Z"
+      }
+    ],
+    expectedResult: {
+      prescriptionID: "abc",
+      onboarded: true,
+      items: [
+        {
+          itemId: "item_1",
+          latestStatus: "With pharmacy",
+          isTerminalState: false,
+          lastUpdateDateTime: "2025-12-10T11:00:00Z"
+        }
+      ]
+    }
   }
 ]
 describe("Unit tests for buildResults", () => {
