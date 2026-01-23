@@ -14,6 +14,9 @@ import {
 
 import {checkSiteOrSystemIsNotifyEnabled} from "../validation/notificationSiteAndSystemFilters"
 
+// eslint-disable-next-line max-len
+const ENABLE_POST_DATED_NOTIFICATIONS = (process.env.ENABLE_POST_DATED_NOTIFICATIONS || "false").toLowerCase() === "true"
+
 const sqsUrl: string | undefined = process.env.NHS_NOTIFY_PRESCRIPTIONS_SQS_QUEUE_URL
 const postDatedSqsUrl: string | undefined = process.env.POST_DATED_PRESCRIPTIONS_SQS_QUEUE_URL
 
@@ -255,20 +258,27 @@ export async function pushPrescriptionToNotificationSQS(
     })
     .map(({current}) => current)
 
-  // Build two arrays, one of all post dated, and one of all non-post-dated
-  const postDatedItems = changedStatus.filter(item => item.PostDatedLastModifiedSetAt)
-  const nonPostDatedItems = changedStatus.filter(item => !item.PostDatedLastModifiedSetAt)
+  let sqsPromises: Promise<Array<string>>
+  if (ENABLE_POST_DATED_NOTIFICATIONS) {
+    logger.info("Post-dated notifications are enabled, separating post-dated and non-post-dated items")
+    // Build two arrays, one of all post dated, and one of all non-post-dated
+    const postDatedItems = changedStatus.filter(item => item.PostDatedLastModifiedSetAt)
+    const nonPostDatedItems = changedStatus.filter(item => !item.PostDatedLastModifiedSetAt)
 
-  const postDatedMessageIds = sendItemsToSQS(postDatedItems, postDatedSqsUrl, requestId, logger)
-  const nonPostDatedMessageIds = sendItemsToSQS(nonPostDatedItems, sqsUrl, requestId, logger)
+    const postDatedMessageIds = sendItemsToSQS(postDatedItems, postDatedSqsUrl, requestId, logger)
+    const nonPostDatedMessageIds = sendItemsToSQS(nonPostDatedItems, sqsUrl, requestId, logger)
+    sqsPromises = Promise.all([postDatedMessageIds, nonPostDatedMessageIds]).then(results => results.flat())
+  } else {
+    logger.info("Post-dated notifications are disabled, sending all items to the standard notifications queue")
+    sqsPromises = sendItemsToSQS(changedStatus, sqsUrl, requestId, logger)
+  }
 
   logger.info(
     "The following patients will have prescription update app notifications requested",
     {nhsNumbers: changedStatus.map(e => e.PatientNHSNumber)}
   )
 
-  return Promise.all([postDatedMessageIds, nonPostDatedMessageIds])
-    .then(results => results.flat())
+  return sqsPromises
 }
 
 /**

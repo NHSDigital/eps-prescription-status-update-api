@@ -61,6 +61,10 @@ Parameters:
   EnableNotificationsInternalParam:
     Type: AWS::SSM::Parameter::Name<String>
 
+  EnablePostDatedNotifications:
+    Type: AWS::SSM::Parameter::Name<String>
+    Default: "false"
+
   RequireApplicationName:
     Type: String
     Default: false
@@ -126,6 +130,7 @@ Resources:
           TABLE_NAME: !Ref PrescriptionStatusUpdatesTableName
           NHS_NOTIFY_PRESCRIPTIONS_SQS_QUEUE_URL: !Ref NHSNotifyPrescriptionsSQSQueueUrl
           POST_DATED_PRESCRIPTIONS_SQS_QUEUE_URL: !Ref PostDatedNotificationsSQSQueueUrl
+          ENABLE_POST_DATED_NOTIFICATIONS: !Ref EnablePostDatedNotifications
           SQS_SALT: !Ref SQSSaltSecret
           ENABLED_SITE_ODS_CODES_PARAM: !Ref EnabledSiteODSCodesParam
           ENABLED_SYSTEMS_PARAM: !Ref EnabledSystemsParam

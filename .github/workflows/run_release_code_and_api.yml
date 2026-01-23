@@ -84,6 +84,10 @@ on:
         required: false
         type: boolean
         default: false
+      ENABLE_POST_DATED_NOTIFICATIONS:
+        required: false
+        type: boolean
+        default: false
       ENABLED_SYSTEMS:
         required: true
         type: string
