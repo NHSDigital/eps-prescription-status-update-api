@@ -37,6 +37,51 @@ function chunkArray<T>(arr: Array<T>, size: number): Array<Array<T>> {
   return chunks
 }
 
+type DeduplicationSource = Pick<PSUDataItem, "PatientNHSNumber" | "PharmacyODSCode">
+type NotificationMessage = NotifyDataItem | PostDatedNotifyDataItem
+
+function buildSqsBatchEntries<T extends DeduplicationSource>(
+  items: Array<T>,
+  requestId: string,
+  sqsSalt: string,
+  toMessageBody: (item: T) => NotificationMessage
+): Array<SQSBatchMessage> {
+  return items.map((item, idx) => ({
+    Id: idx.toString(),
+    MessageBody: JSON.stringify(toMessageBody(item)),
+    MessageDeduplicationId: saltedHash(`${item.PatientNHSNumber}:${item.PharmacyODSCode}`, sqsSalt),
+    MessageGroupId: requestId,
+    MessageAttributes: {
+      RequestId: {
+        DataType: "String",
+        StringValue: requestId
+      }
+    }
+  }))
+}
+
+/**
+ * Sends entries to the SQS queue in batches of 10
+ * @param entries
+ * @param queueUrl
+ * @param requestId
+ * @param logger
+ * @returns An array of the created MessageIds
+ */
+async function sendEntriesToQueue(
+  entries: Array<SQSBatchMessage>,
+  queueUrl: string,
+  requestId: string,
+  logger: Logger
+): Promise<Array<string>> {
+  if (!entries.length) {
+    return []
+  }
+
+  const batches = chunkArray(entries, 10)
+  return placeBatchInSQS(batches, queueUrl, requestId, logger)
+}
+
 /**
  * Salts and hashes a string.
  *
@@ -60,10 +105,14 @@ export function saltedHash(
 export async function getSaltValue(logger: Logger): Promise<string> {
   let sqsSalt: string
 
-  if (process.env.SQS_SALT) {
+  if (!process.env.SQS_SALT) {
+    // No secret name configured at all, so fall back
+    sqsSalt = fallbackSalt
+  } else {
     try {
       // grab the secret, expecting JSON like { "salt": "string" }
       const secretJson = await getSecret(process.env.SQS_SALT, {transform: "json"})
+      logger.info("Fetched SQS_SALT from Secrets Manager", {secretJson})
 
       // must be a non‐null object with a string .salt
       if (
@@ -84,9 +133,6 @@ export async function getSaltValue(logger: Logger): Promise<string> {
       logger.error("Failed to fetch SQS_SALT from Secrets Manager, using DEV SALT", {error})
       sqsSalt = fallbackSalt
     }
-  } else {
-    // No secret name configured at all, so fall back
-    sqsSalt = fallbackSalt
   }
 
   if (sqsSalt === fallbackSalt) {
@@ -98,12 +144,20 @@ export async function getSaltValue(logger: Logger): Promise<string> {
   return sqsSalt
 }
 
+/**
+  * Places batches of messages into SQS
+ * @param batches
+ * @param sqsUrl
+ * @param requestId
+ * @param logger
+ * @returns An array of the send MessageIds
+ */
 async function placeBatchInSQS(
   batches: Array<Array<SQSBatchMessage>>,
   sqsUrl: string,
   requestId: string,
   logger: Logger
-) {
+): Promise<Array<string>> {
 
   // Used for the return value
   let out: Array<string> = []
@@ -126,7 +180,7 @@ async function placeBatchInSQS(
       })
       const result = await sqs.send(command)
       if (result.Successful?.length) {
-        logger.info("Successfully sent a batch of prescriptions to the notifications SQS", {result})
+        logger.info("Successfully sent a batch of prescriptions to the SQS", {result, sqsUrl})
 
         // For each successful message, get its message ID. I don't think there will ever be undefined
         // actually in here, but the typing suggests that there could be so filter those out
@@ -134,10 +188,10 @@ async function placeBatchInSQS(
       }
       // Some may succeed, and some may fail. So check for both
       if (result.Failed?.length) {
-        throw new Error("Failed to send a batch of prescriptions to the notifications SQS")
+        throw new Error(`Failed to send a batch of prescriptions to the SQS {sqsUrl}`)
       }
     } catch (error) {
-      logger.error("Failed to send a batch of prescriptions to the notifications SQS", {error})
+      logger.error("Failed to send a batch of prescriptions to the SQS", {error, sqsUrl})
       throw error
     }
   }
@@ -152,6 +206,8 @@ function norm(str: string) {
 /**
  * Pushes an array of PSUDataItem to the notifications SQS queue
  * Uses SendMessageBatch to send up to 10 at a time
+ * Contains the logic for filtering which items should be sent, based on
+ * which sites/systems are enabled, and which statuses are to be sent
  *
  * @param requestId - The x-request-id header from the incoming event
  * @param data - Array of PSUDataItem to send to SQS
@@ -184,8 +240,6 @@ export async function pushPrescriptionToNotificationSQS(
     norm("ready to collect"),
     norm("ready to collect - partial")
   ])
-  // Salt for the deduplication hash
-  const sqsSalt = await getSaltValue(logger)
 
   // Get only items which have the correct current statuses
   const candidates = allowedSitesAndSystemsData.filter(
@@ -205,89 +259,47 @@ export async function pushPrescriptionToNotificationSQS(
   const postDatedItems = changedStatus.filter(item => item.PostDatedLastModifiedSetAt)
   const nonPostDatedItems = changedStatus.filter(item => !item.PostDatedLastModifiedSetAt)
 
-  sendPostDatedItemsToSQS(postDatedItems, requestId, logger)
-
-  // Build SQS batch entries with FIFO parameters
-  const allEntries: Array<SQSBatchMessage> = nonPostDatedItems
-    .map((item, idx) => ({
-      Id: idx.toString(),
-      // Only post the required information to SQS
-      MessageBody: JSON.stringify(item as NotifyDataItem),
-      // FIFO
-      // We dedupe on both nhs number and ods code
-      MessageDeduplicationId: saltedHash(`${item.PatientNHSNumber}:${item.PharmacyODSCode}`, sqsSalt),
-      MessageGroupId: requestId,
-      MessageAttributes: {
-        RequestId: {
-          DataType: "String",
-          StringValue: requestId
-        }
-      }
-    }))
-
-  if (!allEntries.length) {
-    // Carry on if we have no updates to make.
-    logger.info("No entries to post to the notifications SQS")
-    return []
-  }
+  const postDatedMessageIds = sendItemsToSQS(postDatedItems, postDatedSqsUrl, requestId, logger)
+  const nonPostDatedMessageIds = sendItemsToSQS(nonPostDatedItems, sqsUrl, requestId, logger)
 
   logger.info(
     "The following patients will have prescription update app notifications requested",
-    {nhsNumbers: allowedSitesAndSystemsData.map(e => e.current.PatientNHSNumber)}
+    {nhsNumbers: changedStatus.map(e => e.PatientNHSNumber)}
   )
 
-  // Remove post-dated entries from the normal flow
-  const currentlyValidEntries = allEntries.filter(entry => {
-    const body: NotifyDataItem = JSON.parse(entry.MessageBody)
-    return !("PostDatedLastModifiedSetAt" in body)
-  })
-
-  // SQS batch calls are limited to 10 messages per request, so chunk the data
-  const batches = chunkArray(currentlyValidEntries, 10)
-  const out = await placeBatchInSQS(batches, sqsUrl, requestId, logger)
-
-  return out
+  return Promise.all([postDatedMessageIds, nonPostDatedMessageIds])
+    .then(results => results.flat())
 }
 
-// FIXME: Remove this function once post-dated updates are deprecated
-async function sendPostDatedItemsToSQS(
-  postDatedItems: Array<PSUDataItem>,
+/**
+ *
+ * @param items
+ * @param sqsUrl
+ * @param requestId
+ * @param logger
+ * @returns an array of the sent MessageIDs
+ */
+async function sendItemsToSQS(
+  items: Array<PSUDataItem>,
+  sqsUrl: string,
   requestId: string,
   logger: Logger
-): Promise<void> {
-  if (postDatedItems.length === 0) {
-    logger.info("No post-dated items to send to SQS")
-    return
+): Promise<Array<string>> {
+  if (items.length === 0) {
+    logger.info("No items to send to SQS", {sqsUrl})
+    return []
   }
 
-  if (!postDatedSqsUrl) {
-    logger.error("Post-dated Notifications SQS URL not found in environment variables")
-    throw new Error("Post-dated Notifications SQS URL not configured")
-  }
-
-  logger.info(`Placing ${postDatedItems.length} post-dated entries into the post-dated SQS queue`)
+  logger.info(`Placing ${items.length} entries into the SQS queue`, {sqsUrl})
 
   const sqsSalt = await getSaltValue(logger)
 
-  // This time, instead of posting NotifyDataItem, we use PostDatedNotifyDataItem
-  const allEntries: Array<SQSBatchMessage> = postDatedItems
-    .map((item, idx) => ({
-      Id: idx.toString(),
-      // Only post the required information to SQS
-      MessageBody: JSON.stringify(item as PostDatedNotifyDataItem),
-      // FIFO
-      // We dedupe on both nhs number and ods code
-      MessageDeduplicationId: saltedHash(`${item.PatientNHSNumber}:${item.PharmacyODSCode}`, sqsSalt),
-      MessageGroupId: requestId,
-      MessageAttributes: {
-        RequestId: {
-          DataType: "String",
-          StringValue: requestId
-        }
-      }
-    }))
+  const entries = buildSqsBatchEntries(
+    items,
+    requestId,
+    sqsSalt,
+    item => item as PostDatedNotifyDataItem
+  )
 
-  // SQS batch calls are limited to 10 messages per request, so chunk the data
-  const batches = chunkArray(allEntries, 10)
-  await placeBatchInSQS(batches, postDatedSqsUrl, requestId, logger)
+  return await sendEntriesToQueue(entries, sqsUrl, requestId, logger)
 }

@@ -163,8 +163,8 @@ describe("Unit tests for pushPrescriptionToNotificationSQS", () => {
     })
 
     expect(infoSpy).toHaveBeenCalledWith(
-      "Successfully sent a batch of prescriptions to the notifications SQS",
-      {result: {Successful: [{}]}}
+      "Successfully sent a batch of prescriptions to the SQS",
+      {result: {Successful: [{}]}, sqsUrl: process.env.NHS_NOTIFY_PRESCRIPTIONS_SQS_QUEUE_URL}
     )
   })
 
@@ -184,8 +184,8 @@ describe("Unit tests for pushPrescriptionToNotificationSQS", () => {
     ).rejects.toThrow(testError)
 
     expect(errorSpy).toHaveBeenCalledWith(
-      "Failed to send a batch of prescriptions to the notifications SQS",
-      {error: testError}
+      "Failed to send a batch of prescriptions to the SQS",
+      {error: testError, sqsUrl: process.env.NHS_NOTIFY_PRESCRIPTIONS_SQS_QUEUE_URL}
     )
   })
 
@@ -195,12 +195,11 @@ describe("Unit tests for pushPrescriptionToNotificationSQS", () => {
         previous: createMockDataItem({Status: "previous status"}),
         current: createMockDataItem({Status: "ready to collect"})
       }
-    }
-    )
+    })
 
     mockSend
-      .mockImplementationOnce(() => Promise.resolve({Successful: Array(10).fill({})}))
-      .mockImplementationOnce(() => Promise.resolve({Successful: Array(2).fill({})}))
+      .mockImplementationOnce(() => Promise.resolve({Successful: new Array(10).fill({})}))
+      .mockImplementationOnce(() => Promise.resolve({Successful: new Array(2).fill({})}))
 
     await pushPrescriptionToNotificationSQS("req-111", payload, logger)
     expect(mockSend).toHaveBeenCalledTimes(2)
@@ -208,10 +207,18 @@ describe("Unit tests for pushPrescriptionToNotificationSQS", () => {
 
   it("Uses the fallback salt value but logs a warning about it", async () => {
     mockGetSecret.mockImplementationOnce(async () => {
-      return "DEV SALT"
+      return {"salt": "DEV SALT"}
     })
 
-    await pushPrescriptionToNotificationSQS("req-123", [], logger)
+    const payload = Array.from({length: 1}, () => {
+      return {
+        previous: createMockDataItem({Status: "previous status"}),
+        current: createMockDataItem({Status: "ready to collect"})
+      }
+    })
+    mockSend.mockImplementationOnce(() => Promise.resolve({Successful: new Array(2).fill({})}))
+
+    await pushPrescriptionToNotificationSQS("req-123", payload, logger)
 
     expect(warnSpy)
       .toHaveBeenCalledWith(
