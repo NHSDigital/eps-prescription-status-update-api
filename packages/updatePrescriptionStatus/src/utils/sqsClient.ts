@@ -230,11 +230,6 @@ export async function pushPrescriptionToNotificationSQS(
     throw new Error("Notifications SQS URL not configured")
   }
 
-  if (!postDatedSqsUrl) {
-    logger.warn("Post-dated Notifications SQS URL not found in environment variables")
-    throw new Error("Post-dated Notifications SQS URL not configured")
-  }
-
   // Only allow through sites and systems that are allowedSitesAndSystems
   const allowedSitesAndSystemsData = await checkSiteOrSystemIsNotifyEnabled(data)
 
@@ -261,6 +256,12 @@ export async function pushPrescriptionToNotificationSQS(
   let sqsPromises: Promise<Array<string>>
   if (ENABLE_POST_DATED_NOTIFICATIONS) {
     logger.info("Post-dated notifications are enabled, separating post-dated and non-post-dated items")
+
+    if (!postDatedSqsUrl) {
+      logger.warn("Post-dated Notifications SQS URL not found in environment variables")
+      throw new Error("Post-dated Notifications SQS URL not configured")
+    }
+
     // Build two arrays, one of all post dated, and one of all non-post-dated
     const postDatedItems = changedStatus.filter(item => item.PostDatedLastModifiedSetAt)
     const nonPostDatedItems = changedStatus.filter(item => !item.PostDatedLastModifiedSetAt)

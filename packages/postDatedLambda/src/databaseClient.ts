@@ -179,6 +179,7 @@ export async function enrichMessagesWithExistingRecords(
   const postDatedItems = messages.map((m) => m.prescriptionData)
 
   const prescriptionsWithRecords = await fetchExistingRecordsForPrescriptions(postDatedItems, logger)
+  // prescription IDs are unique, even across pharmacies. so we can build a map keyed by prescription ID just fine.
   const recordsMap = new Map(prescriptionsWithRecords.map((p) => [p.postDatedData.PrescriptionID, p.existingRecords]))
   const enrichedMessages: Array<PostDatedSQSMessageWithExistingRecords> = messages.map((message) => ({
     ...message,
