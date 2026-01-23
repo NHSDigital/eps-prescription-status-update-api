@@ -18,7 +18,7 @@ const sqs = new SQSClient({region: process.env.AWS_REGION})
  * Get the SQS queue URL from environment variables.
  * Throws an error if not configured.
  */
-function getQueueUrl(logger: Logger): string {
+export function getQueueUrl(logger: Logger): string {
   const sqsUrl = process.env.POST_DATED_PRESCRIPTIONS_SQS_QUEUE_URL
   if (!sqsUrl) {
     logger.error("Post-dated prescriptions SQS URL not configured")
