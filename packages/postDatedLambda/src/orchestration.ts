@@ -74,7 +74,7 @@ export async function processPostDatedQueue(logger: Logger): Promise<void> {
       logger.warn("processPostDatedQueue timed out; exiting before queue is empty. Will report queue status", {
         maxRuntimeMilliseconds: MAX_QUEUE_RUNTIME
       })
-      reportQueueStatus(logger)
+      await reportQueueStatus(logger)
       break
     }
 
