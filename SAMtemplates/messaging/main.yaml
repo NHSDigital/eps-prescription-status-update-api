@@ -113,7 +113,7 @@ Resources:
       MessageRetentionPeriod: 86400    # 1 day in seconds
       RedrivePolicy:
         deadLetterTargetArn: !GetAtt PostDatedNotificationsDeadLetterQueue.Arn
-        maxReceiveCount: 13 # processed every 6 hours for 3 days, plus one for the first time it's placed on queue.
+        maxReceiveCount: 166 # 999 hours / 6 hours
       VisibilityTimeout: 300
 
   PostDatedNotificationsDeadLetterQueue:

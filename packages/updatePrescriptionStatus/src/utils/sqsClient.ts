@@ -8,18 +8,11 @@ import {
   NotifyDataItem,
   PostDatedNotifyDataItem,
   PSUDataItem,
-  PSUDataItemWithPrevious
+  PSUDataItemWithPrevious,
+  SQSBatchMessage
 } from "@psu-common/commonTypes"
 
 import {checkSiteOrSystemIsNotifyEnabled} from "../validation/notificationSiteAndSystemFilters"
-
-type SQSBatchMessage = {
-  Id: string
-  MessageBody: string
-  MessageDeduplicationId: string
-  MessageGroupId: string
-  MessageAttributes: {[key: string]: {DataType: string; StringValue: string}}
-}
 
 const sqsUrl: string | undefined = process.env.NHS_NOTIFY_PRESCRIPTIONS_SQS_QUEUE_URL
 const postDatedSqsUrl: string | undefined = process.env.POST_DATED_PRESCRIPTIONS_SQS_QUEUE_URL
