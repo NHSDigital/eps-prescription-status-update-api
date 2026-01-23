@@ -5,7 +5,7 @@ import {enrichMessagesWithExistingRecords} from "./databaseClient"
 import {receivePostDatedSQSMessages, reportQueueStatus, handleProcessedMessages} from "./sqs"
 import {BatchProcessingResult, PostDatedSQSMessage} from "./types"
 
-const MAX_QUEUE_RUNTIME = 14 * 60 * 1000 // 14 minutes, to avoid Lambda timeout issues (timeout is 15 minutes)
+export const MAX_QUEUE_RUNTIME = 14 * 60 * 1000 // 14 minutes, to avoid Lambda timeout issues (timeout is 15 minutes)
 const MIN_RECEIVED_THRESHOLD = 3 // If fewer than this number of messages are received, consider the queue empty
 
 /**
