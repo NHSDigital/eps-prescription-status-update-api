@@ -164,6 +164,8 @@ export async function removeSQSMessages(
       messageIds: entries.map((e) => e.Id)
     })
   }
+
+  logger.info(`Successfully removed ${delResult.Successful?.length ?? 0} messages from SQS`)
 }
 
 /**
@@ -206,15 +208,21 @@ export async function returnMessagesToQueue(
     QueueUrl: sqsUrl,
     Entries: entries
   })
-  const result = await sqs.send(changeVisibilityCmd)
 
-  if (result.Failed && result.Failed.length > 0) {
-    logger.error("Some messages failed to have visibility changed in this batch", {failed: result.Failed})
-  } else {
-    logger.info("Successfully returned SQS messages to queue", {
-      result: result,
-      messageIds: entries.map((e) => e.Id)
-    })
+  try {
+    const result = await sqs.send(changeVisibilityCmd)
+
+    if (result.Failed && result.Failed.length > 0) {
+      logger.error("Some messages failed to have visibility changed in this batch", {failed: result.Failed})
+    } else {
+      logger.info("Successfully returned SQS messages to queue", {
+        result: result,
+        messageIds: entries.map((e) => e.Id)
+      })
+    }
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Failed to change SQS message visibility"
+    logger.error(message, {error})
   }
 }
 
