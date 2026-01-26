@@ -9,7 +9,7 @@ import * as dynamo from "@aws-sdk/client-dynamodb"
 
 import {Logger} from "@aws-lambda-powertools/logger"
 
-import {createMockPostModifiedDataItem} from "./testUtils"
+import {createMockPostUpdatedDataItem} from "./testUtils"
 
 // Uses unstable jest method to enable mocking while using ESM. To be replaced in future.
 export function mockDynamoDBClient() {
@@ -107,8 +107,8 @@ describe("databaseClient", () => {
   describe("fetchExistingRecordsForPrescriptions", () => {
     it("should fetch existing records for multiple prescriptions", async () => {
       const prescriptions = [
-        createMockPostModifiedDataItem({PrescriptionID: "presc1", PharmacyODSCode: "pharmA"}),
-        createMockPostModifiedDataItem({PrescriptionID: "presc2", PharmacyODSCode: "pharmB"})
+        createMockPostUpdatedDataItem({PrescriptionID: "presc1", PharmacyODSCode: "pharmA"}),
+        createMockPostUpdatedDataItem({PrescriptionID: "presc2", PharmacyODSCode: "pharmB"})
       ]
 
       // Mock DynamoDB responses
@@ -156,8 +156,8 @@ describe("databaseClient", () => {
       "Should log an error if the fetch fails for one prescription, and set the existingRecords to empty array",
       async () => {
         const prescriptions = [
-          createMockPostModifiedDataItem({PrescriptionID: "presc1", PharmacyODSCode: "pharmA"}),
-          createMockPostModifiedDataItem({PrescriptionID: "errorPresc", PharmacyODSCode: "errorPharm"})
+          createMockPostUpdatedDataItem({PrescriptionID: "presc1", PharmacyODSCode: "pharmA"}),
+          createMockPostUpdatedDataItem({PrescriptionID: "errorPresc", PharmacyODSCode: "errorPharm"})
         ]
 
         // Mock DynamoDB responses
@@ -194,8 +194,8 @@ describe("databaseClient", () => {
   describe("enrichMessagesWithExistingRecords", () => {
     it("should enrich messages with existing records", async () => {
       const prescriptions = [
-        createMockPostModifiedDataItem({PrescriptionID: "presc1", PharmacyODSCode: "pharmA"}),
-        createMockPostModifiedDataItem({PrescriptionID: "presc2", PharmacyODSCode: "pharmB"})
+        createMockPostUpdatedDataItem({PrescriptionID: "presc1", PharmacyODSCode: "pharmA"}),
+        createMockPostUpdatedDataItem({PrescriptionID: "presc2", PharmacyODSCode: "pharmB"})
       ]
 
       // Mock DynamoDB responses

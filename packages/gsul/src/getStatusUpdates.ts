@@ -61,11 +61,11 @@ export const filterOutFutureReduceToLatestUpdates = (
     }
     const group = itemGroups[item.itemId]
 
-    if (item.postDatedLastModifiedSetAt && !group.postDated) { // this is a post-dated update
+    if (item.postDatedLastUpdatedSetAt && !group.postDated) { // this is a post-dated update
       group.postDated = item
-    } else if (item.postDatedLastModifiedSetAt && group.postDated) { // also a post-dated update
-      const existingTime = Date.parse(group.postDated.postDatedLastModifiedSetAt)
-      const newTime = Date.parse(item.postDatedLastModifiedSetAt)
+    } else if (item.postDatedLastUpdatedSetAt && group.postDated) { // also a post-dated update
+      const existingTime = Date.parse(group.postDated.postDatedLastUpdatedSetAt)
+      const newTime = Date.parse(item.postDatedLastUpdatedSetAt)
       if (newTime > existingTime) {
         group.postDated = item
       }

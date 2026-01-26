@@ -206,7 +206,7 @@ describe("Unit tests for pushPrescriptionToNotificationSQS", () => {
       Status: "ready to collect",
       PatientNHSNumber: "9999999999",
       PharmacyODSCode: "JIM123",
-      PostDatedLastModifiedSetAt: "2100-01-01T00:00:00Z"
+      PostDatedLastUpdatedSetAt: "2100-01-01T00:00:00Z"
     })
     const standardCurrent = createMockDataItem({
       Status: "ready to collect - partial",
@@ -277,7 +277,7 @@ describe("Unit tests for pushPrescriptionToNotificationSQS", () => {
           Status: "ready to collect",
           PatientNHSNumber: "444",
           PharmacyODSCode: "DDD",
-          PostDatedLastModifiedSetAt: "2025-05-01T00:00:00Z"
+          PostDatedLastUpdatedSetAt: "2025-05-01T00:00:00Z"
         })
       },
       {
@@ -309,7 +309,7 @@ describe("Unit tests for pushPrescriptionToNotificationSQS", () => {
           Status: "ready to collect",
           PatientNHSNumber: "777",
           PharmacyODSCode: "GGG",
-          PostDatedLastModifiedSetAt: "2100-12-12T00:00:00Z"
+          PostDatedLastUpdatedSetAt: "2100-12-12T00:00:00Z"
         })
       },
       {

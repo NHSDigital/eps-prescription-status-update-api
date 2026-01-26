@@ -10,7 +10,7 @@ import {Logger} from "@aws-lambda-powertools/logger"
 import {LogItemMessage, LogItemExtraInput} from "@aws-lambda-powertools/logger/lib/cjs/types/Logger"
 import * as sqs from "@aws-sdk/client-sqs"
 import {BatchProcessingResult, PostDatedSQSMessage} from "../src/types"
-import {createMockPostModifiedDataItem} from "./testUtils"
+import {createMockPostUpdatedDataItem} from "./testUtils"
 
 export function mockSQSClient() {
   const mockSend = jest.fn()
@@ -290,10 +290,10 @@ describe("sqs", () => {
       process.env.POST_DATED_PRESCRIPTIONS_SQS_QUEUE_URL = testUrl
 
       const maturedMessages: Array<PostDatedSQSMessage> = [
-        {MessageId: "1", ReceiptHandle: "handle1", prescriptionData: createMockPostModifiedDataItem({})}
+        {MessageId: "1", ReceiptHandle: "handle1", prescriptionData: createMockPostUpdatedDataItem({})}
       ]
       const immatureMessages: Array<PostDatedSQSMessage> = [
-        {MessageId: "2", ReceiptHandle: "handle2", prescriptionData: createMockPostModifiedDataItem({})}
+        {MessageId: "2", ReceiptHandle: "handle2", prescriptionData: createMockPostUpdatedDataItem({})}
       ]
 
       const batchResult: BatchProcessingResult = {

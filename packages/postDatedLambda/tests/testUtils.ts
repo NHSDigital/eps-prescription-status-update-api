@@ -1,6 +1,6 @@
 import {PostDatedNotifyDataItem} from "packages/common/commonTypes/lib/src"
 
-export function createMockPostModifiedDataItem(overrides: Partial<PostDatedNotifyDataItem>): PostDatedNotifyDataItem {
+export function createMockPostUpdatedDataItem(overrides: Partial<PostDatedNotifyDataItem>): PostDatedNotifyDataItem {
   return {
     LastModified: "2023-01-02T00:00:00Z",
     LineItemID: "spamandeggs",
@@ -10,7 +10,7 @@ export function createMockPostModifiedDataItem(overrides: Partial<PostDatedNotif
     RequestID: "x-request-id",
     Status: "ready to collect",
     TaskID: "mnopqr-ghijkl-abcdef",
-    PostDatedLastModifiedSetAt: "Changed dosage instructions",
+    PostDatedLastUpdatedSetAt: "2100-01-01T00:00:00Z",
     ...overrides
   }
 }

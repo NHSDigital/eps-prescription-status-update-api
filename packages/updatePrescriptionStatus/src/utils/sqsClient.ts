@@ -263,8 +263,8 @@ export async function pushPrescriptionToNotificationSQS(
     }
 
     // Build two arrays, one of all post dated, and one of all non-post-dated
-    const postDatedItems = changedStatus.filter(item => item.PostDatedLastModifiedSetAt)
-    const nonPostDatedItems = changedStatus.filter(item => !item.PostDatedLastModifiedSetAt)
+    const postDatedItems = changedStatus.filter(item => item.PostDatedLastUpdatedSetAt)
+    const nonPostDatedItems = changedStatus.filter(item => !item.PostDatedLastUpdatedSetAt)
 
     const postDatedMessageIds = sendItemsToSQS(postDatedItems, postDatedSqsUrl, requestId, logger)
     const nonPostDatedMessageIds = sendItemsToSQS(nonPostDatedItems, sqsUrl, requestId, logger)

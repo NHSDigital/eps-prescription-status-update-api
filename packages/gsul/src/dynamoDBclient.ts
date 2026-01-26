@@ -41,8 +41,8 @@ export async function getItemsUpdatesForPrescription(
     latestStatus: String(singleUpdate.Status),
     isTerminalState: String(singleUpdate.TerminalStatus).toLowerCase() === "completed",
     lastUpdateDateTime: String(singleUpdate.LastModified),
-    ...(singleUpdate.PostDatedLastModifiedSetAt && {
-      postDatedLastModifiedSetAt: String(singleUpdate.PostDatedLastModifiedSetAt)
+    ...(singleUpdate.PostDatedLastUpdatedSetAt && {
+      postDatedLastUpdatedSetAt: String(singleUpdate.PostDatedLastUpdatedSetAt)
     })
   }))
 }

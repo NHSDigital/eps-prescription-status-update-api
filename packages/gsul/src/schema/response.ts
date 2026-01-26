@@ -16,7 +16,7 @@ const itemSchema = {
     lastUpdateDateTime: {
       type: "string"
     },
-    postDatedLastModifiedSetAt: {
+    postDatedLastUpdatedSetAt: {
       type: "string"
     }
   }

@@ -385,7 +385,7 @@ export function buildDataItems(
     }
 
     if (task.meta?.lastUpdated) {
-      dataItem.PostDatedLastModifiedSetAt = task.meta.lastUpdated
+      dataItem.PostDatedLastUpdatedSetAt = task.meta.lastUpdated
     }
 
     dataItems.push(dataItem)
@@ -425,7 +425,7 @@ async function logTransitions(dataItems: Array<PSUDataItemWithPrevious>): Promis
           previousStatus: previousItem.Status,
           newTerminalStatus: currentItem.TerminalStatus,
           previousTerminalStatus: previousItem.TerminalStatus,
-          isPostDated: currentItem.PostDatedLastModifiedSetAt
+          isPostDated: currentItem.PostDatedLastUpdatedSetAt
         })
       }
     } catch (e) {

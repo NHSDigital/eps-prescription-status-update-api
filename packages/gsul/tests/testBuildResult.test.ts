@@ -147,7 +147,7 @@ const scenarios: Array<scenariosType> = [
         latestStatus: "Ready to collect",
         isTerminalState: false,
         lastUpdateDateTime: "2030-01-01T00:00:00Z", // Future, no fallback
-        postDatedLastModifiedSetAt:"1972-01-01T00:00:00Z"
+        postDatedLastUpdatedSetAt: "1972-01-01T00:00:00Z"
       }
     ],
     expectedResult: {
@@ -174,14 +174,14 @@ const scenarios: Array<scenariosType> = [
         latestStatus: "Ready to collect",
         isTerminalState: false,
         lastUpdateDateTime: "1970-01-02T00:00:00Z",
-        postDatedLastModifiedSetAt: "1970-01-01T00:00:00Z" // first RTC: post-dated and matured
+        postDatedLastUpdatedSetAt: "1970-01-01T00:00:00Z" // first RTC: post-dated and matured
       },
       {
         itemId: "item_1",
         latestStatus: "Ready to collect",
         isTerminalState: false,
         lastUpdateDateTime: futureDateTime,
-        postDatedLastModifiedSetAt: "1970-01-02T00:00:00Z" // second RTC: post-dated and yet to mature
+        postDatedLastUpdatedSetAt: "1970-01-02T00:00:00Z" // second RTC: post-dated and yet to mature
       },
       {
         itemId: "item_1",
@@ -194,7 +194,7 @@ const scenarios: Array<scenariosType> = [
         latestStatus: "Ready to collect",
         isTerminalState: false,
         lastUpdateDateTime: "1970-01-04T00:00:00Z",
-        postDatedLastModifiedSetAt: "1970-01-03T00:00:00Z" // third RTC: post-dated and matured
+        postDatedLastUpdatedSetAt: "1970-01-03T00:00:00Z" // third RTC: post-dated and matured
       }
     ],
     expectedResult: {
@@ -212,7 +212,7 @@ const scenarios: Array<scenariosType> = [
           latestStatus: "Ready to collect",
           isTerminalState: false,
           lastUpdateDateTime: "1970-01-04T00:00:00Z",
-          postDatedLastModifiedSetAt: "1970-01-03T00:00:00Z"
+          postDatedLastUpdatedSetAt: "1970-01-03T00:00:00Z"
         }
       ]
     }
@@ -229,7 +229,7 @@ const scenarios: Array<scenariosType> = [
         latestStatus: "Ready to collect",
         isTerminalState: false,
         lastUpdateDateTime: "1970-01-01T00:00:00Z",
-        postDatedLastModifiedSetAt: futureDateTime
+        postDatedLastUpdatedSetAt: futureDateTime
       }
     ],
     expectedResult: {
@@ -241,7 +241,7 @@ const scenarios: Array<scenariosType> = [
           latestStatus: "Ready to collect",
           isTerminalState: false,
           lastUpdateDateTime: "1970-01-01T00:00:00Z",
-          postDatedLastModifiedSetAt: futureDateTime
+          postDatedLastUpdatedSetAt: futureDateTime
         }
       ]
     }
