@@ -197,7 +197,7 @@ describe("Unit tests for pushPrescriptionToNotificationSQS", () => {
 
     expect(infoSpy).toHaveBeenCalledWith(
       "Successfully sent a batch of prescriptions to the SQS",
-      {result: {Successful: [{}]}, sqsUrl: process.env.NHS_NOTIFY_PRESCRIPTIONS_SQS_QUEUE_URL}
+      {result: {Successful: [{}]}, queueUrl: process.env.NHS_NOTIFY_PRESCRIPTIONS_SQS_QUEUE_URL}
     )
   })
 
@@ -265,7 +265,7 @@ describe("Unit tests for pushPrescriptionToNotificationSQS", () => {
 
     expect(errorSpy).toHaveBeenCalledWith(
       "Failed to send a batch of prescriptions to the SQS",
-      {error: testError, sqsUrl: process.env.NHS_NOTIFY_PRESCRIPTIONS_SQS_QUEUE_URL}
+      {error: testError, queueUrl: process.env.NHS_NOTIFY_PRESCRIPTIONS_SQS_QUEUE_URL}
     )
   })
 
@@ -297,7 +297,7 @@ describe("Unit tests for pushPrescriptionToNotificationSQS", () => {
 
     expect(errorSpy).toHaveBeenCalledWith(
       "Failed to send a batch of prescriptions to the SQS",
-      {error: standardQueueError, sqsUrl: process.env.NHS_NOTIFY_PRESCRIPTIONS_SQS_QUEUE_URL}
+      {error: standardQueueError, queueUrl: process.env.NHS_NOTIFY_PRESCRIPTIONS_SQS_QUEUE_URL}
     )
   })
 
@@ -328,7 +328,7 @@ describe("Unit tests for pushPrescriptionToNotificationSQS", () => {
     ).rejects.toThrow(postDatedQueueError)
     expect(errorSpy).toHaveBeenCalledWith(
       "Failed to send a batch of prescriptions to the SQS",
-      {error: postDatedQueueError, sqsUrl: process.env.POST_DATED_PRESCRIPTIONS_SQS_QUEUE_URL}
+      {error: postDatedQueueError, queueUrl: process.env.POST_DATED_PRESCRIPTIONS_SQS_QUEUE_URL}
     )
   })
 

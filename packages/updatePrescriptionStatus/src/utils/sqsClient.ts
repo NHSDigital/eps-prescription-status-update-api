@@ -82,7 +82,53 @@ async function sendEntriesToQueue(
   }
 
   const batches = chunkArray(entries, 10)
-  return placeBatchInSQS(batches, queueUrl, requestId, logger)
+
+  // Each batch is converted to an array of strings, so we end up with an array of arrays of strings
+  // (or rather, their promises)
+  const batchPromises = batches.map(async batch => {
+    try {
+      logger.info(
+        "Pushing a batch of notification requests to SQS",
+        {
+          batchLength: batch.length,
+          deduplicationIds: batch.map(e => e.MessageDeduplicationId),
+          requestId,
+          queueUrl
+        }
+      )
+
+      const command = new SendMessageBatchCommand({
+        QueueUrl: queueUrl,
+        Entries: batch
+      })
+      const result = await sqs.send(command)
+
+      let successfulIds: Array<string> = []
+      if (result.Successful?.length) {
+        logger.info("Successfully sent a batch of prescriptions to the SQS", {result, queueUrl})
+
+        // For each successful message, get its message ID. I don't think there will ever be undefined
+        // actually in here, but the typing suggests that there could be so filter those out
+        successfulIds = result.Successful
+          .map(e => e.MessageId)
+          .filter((msgId): msgId is string => msgId !== undefined)
+      }
+
+      // Some may succeed, and some may fail. So check for both
+      if (result.Failed?.length) {
+        throw new Error(`Failed to send a batch of prescriptions to the SQS ${queueUrl}`)
+      }
+
+      return successfulIds
+    } catch (error) {
+      logger.error("Failed to send a batch of prescriptions to the SQS", {error, queueUrl})
+      throw error
+    }
+  })
+
+  // Flatten the array of arrays of strings into a single array of strings
+  const batchResults = Promise.all(batchPromises).then(results => results.flat())
+  return batchResults
 }
 
 /**
@@ -145,61 +191,6 @@ export async function getSaltValue(logger: Logger): Promise<string> {
   }
 
   return sqsSalt
-}
-
-/**
-  * Places batches of messages into SQS
- * @param batches
- * @param sqsUrl
- * @param requestId
- * @param logger
- * @returns An array of the send MessageIds
- */
-async function placeBatchInSQS(
-  batches: Array<Array<SQSBatchMessage>>,
-  sqsUrl: string,
-  requestId: string,
-  logger: Logger
-): Promise<Array<string>> {
-
-  // Used for the return value
-  let out: Array<string> = []
-
-  for (const batch of batches) {
-    try {
-      logger.info(
-        "Pushing a batch of notification requests to SQS",
-        {
-          batchLength: batch.length,
-          deduplicationIds: batch.map(e => e.MessageDeduplicationId),
-          requestId,
-          sqsUrl
-        }
-      )
-
-      const command = new SendMessageBatchCommand({
-        QueueUrl: sqsUrl,
-        Entries: batch
-      })
-      const result = await sqs.send(command)
-      if (result.Successful?.length) {
-        logger.info("Successfully sent a batch of prescriptions to the SQS", {result, sqsUrl})
-
-        // For each successful message, get its message ID. I don't think there will ever be undefined
-        // actually in here, but the typing suggests that there could be so filter those out
-        out.push(...result.Successful.map(e => e.MessageId).filter(msg_id => msg_id !== undefined))
-      }
-      // Some may succeed, and some may fail. So check for both
-      if (result.Failed?.length) {
-        throw new Error(`Failed to send a batch of prescriptions to the SQS {sqsUrl}`)
-      }
-    } catch (error) {
-      logger.error("Failed to send a batch of prescriptions to the SQS", {error, sqsUrl})
-      throw error
-    }
-  }
-
-  return out
 }
 
 function norm(str: string) {
@@ -312,5 +303,5 @@ async function sendItemsToSQS(
     item => item as PostDatedNotifyDataItem
   )
 
-  return await sendEntriesToQueue(entries, sqsUrl, requestId, logger)
+  return sendEntriesToQueue(entries, sqsUrl, requestId, logger)
 }
