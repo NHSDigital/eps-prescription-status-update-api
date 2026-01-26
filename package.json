@@ -51,6 +51,7 @@
     "typescript-eslint": "^8.53.1"
   },
   "dependencies": {
+    "@aws-sdk/lib-dynamodb": "^3.975.0",
     "@psu-common/commonTypes": "^1.0.0",
     "@psu-common/middyErrorHandler": "^1.0.0",
     "@psu-common/utilities": "^1.0.0",
