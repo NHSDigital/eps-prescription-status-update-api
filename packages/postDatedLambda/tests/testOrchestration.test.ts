@@ -33,7 +33,7 @@ jest.unstable_mockModule("../src/sqs", () => {
 
 import {Logger} from "@aws-lambda-powertools/logger"
 
-import {createMockPostUpdatedDataItem} from "./testUtils"
+import {createMockPostModifiedDataItem} from "./testUtils"
 import {BatchProcessingResult, PostDatedSQSMessage} from "../src/types"
 
 // Import the orchestration module after mocking dependencies
@@ -49,8 +49,8 @@ describe("orchestration", () => {
 
     it("should process messages and categorize them correctly", async () => {
       const mockMessages: Array<PostDatedSQSMessage> = [
-        {MessageId: "1", Body: "Message 1", prescriptionData: createMockPostUpdatedDataItem({})},
-        {MessageId: "2", Body: "Message 2", prescriptionData: createMockPostUpdatedDataItem({})}
+        {MessageId: "1", Body: "Message 1", prescriptionData: createMockPostModifiedDataItem({})},
+        {MessageId: "2", Body: "Message 2", prescriptionData: createMockPostModifiedDataItem({})}
       ]
 
       // Mock the enrichment function to return the same messages
@@ -78,8 +78,8 @@ describe("orchestration", () => {
 
     it("should log errors and mark messages immature when processing throws", async () => {
       const mockMessages: Array<PostDatedSQSMessage> = [
-        {MessageId: "1", Body: "Message 1", prescriptionData: createMockPostUpdatedDataItem({})},
-        {MessageId: "2", Body: "Message 2", prescriptionData: createMockPostUpdatedDataItem({})}
+        {MessageId: "1", Body: "Message 1", prescriptionData: createMockPostModifiedDataItem({})},
+        {MessageId: "2", Body: "Message 2", prescriptionData: createMockPostModifiedDataItem({})}
       ]
 
       mockEnrichMessagesWithExistingRecords.mockReturnValueOnce(mockMessages)
@@ -104,7 +104,7 @@ describe("orchestration", () => {
 
     it("should pass enriched records into processMessage", async () => {
       const mockMessages: Array<PostDatedSQSMessage> = [
-        {MessageId: "1", Body: "Message 1", prescriptionData: createMockPostUpdatedDataItem({})}
+        {MessageId: "1", Body: "Message 1", prescriptionData: createMockPostModifiedDataItem({})}
       ]
 
       const enrichedMessage = {
@@ -128,8 +128,8 @@ describe("orchestration", () => {
 
     it("should process the SQS queue correctly", async () => {
       const mockMessages: Array<PostDatedSQSMessage> = [
-        {MessageId: "1", Body: "Message 1", prescriptionData: createMockPostUpdatedDataItem({})},
-        {MessageId: "2", Body: "Message 2", prescriptionData: createMockPostUpdatedDataItem({})}
+        {MessageId: "1", Body: "Message 1", prescriptionData: createMockPostModifiedDataItem({})},
+        {MessageId: "2", Body: "Message 2", prescriptionData: createMockPostModifiedDataItem({})}
       ]
 
       const mockEnrichedMessages = mockMessages.map((message) => ({
@@ -160,12 +160,12 @@ describe("orchestration", () => {
     it("Should stop processing if the max runtime is exceeded", async () => {
       jest.useFakeTimers()
       const mockMessages: Array<PostDatedSQSMessage> = [
-        {MessageId: "1", Body: "Message 1", prescriptionData: createMockPostUpdatedDataItem({})},
-        {MessageId: "2", Body: "Message 2", prescriptionData: createMockPostUpdatedDataItem({})},
-        {MessageId: "3", Body: "Message 3", prescriptionData: createMockPostUpdatedDataItem({})},
-        {MessageId: "4", Body: "Message 4", prescriptionData: createMockPostUpdatedDataItem({})},
-        {MessageId: "5", Body: "Message 5", prescriptionData: createMockPostUpdatedDataItem({})},
-        {MessageId: "6", Body: "Message 6", prescriptionData: createMockPostUpdatedDataItem({})}
+        {MessageId: "1", Body: "Message 1", prescriptionData: createMockPostModifiedDataItem({})},
+        {MessageId: "2", Body: "Message 2", prescriptionData: createMockPostModifiedDataItem({})},
+        {MessageId: "3", Body: "Message 3", prescriptionData: createMockPostModifiedDataItem({})},
+        {MessageId: "4", Body: "Message 4", prescriptionData: createMockPostModifiedDataItem({})},
+        {MessageId: "5", Body: "Message 5", prescriptionData: createMockPostModifiedDataItem({})},
+        {MessageId: "6", Body: "Message 6", prescriptionData: createMockPostModifiedDataItem({})}
       ]
 
       mockReceivePostDatedSQSMessages.mockReturnValue(mockMessages)
@@ -193,7 +193,7 @@ describe("orchestration", () => {
         ids.map((id) => ({
           MessageId: id,
           Body: `Message ${id}`,
-          prescriptionData: createMockPostUpdatedDataItem({})
+          prescriptionData: createMockPostModifiedDataItem({})
         }))
 
       const batch1 = createBatch(["1", "2", "3"])

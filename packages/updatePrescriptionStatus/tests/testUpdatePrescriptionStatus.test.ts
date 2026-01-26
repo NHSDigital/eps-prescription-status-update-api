@@ -288,7 +288,7 @@ describe("buildDataItems", () => {
     expect(dataItems[0].ExpiryTime).toBeGreaterThan(expectedExpiryTime)
   })
 
-  it("should include PostDatedLastUpdatedSetAt in data item when meta.lastUpdated is defined", () => {
+  it("should include PostDatedLastModifiedSetAt in data item when meta.lastUpdated is defined", () => {
     const task = validTask()
     const lastUpdated = new Date(DEFAULT_DATE.valueOf() - (24 * 60 * 60 * 1000)).toISOString()
     task.meta = {
@@ -302,6 +302,6 @@ describe("buildDataItems", () => {
 
     const dataItems = buildDataItems([requestEntry], "", "")
     const first: any = dataItems[0]
-    expect(first.PostDatedLastUpdatedSetAt).toEqual(lastUpdated)
+    expect(first.PostDatedLastModifiedSetAt).toEqual(lastUpdated)
   })
 })
