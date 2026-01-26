@@ -194,7 +194,7 @@ const scenarios: Array<scenariosType> = [
         itemId: "item_1",
         latestStatus: "With pharmacy",
         isTerminalState: false,
-        lastUpdateDateTime: "1970-01-03T00:00:00Z" // Back to 'With pharmacy'
+        lastUpdateDateTime: "1970-01-03T00:00:00Z" // revoke RTC, back to 'With pharmacy'
       },
       {
         itemId: "item_1",
@@ -299,6 +299,48 @@ const scenarios: Array<scenariosType> = [
           latestStatus: "With pharmacy",
           isTerminalState: false,
           lastUpdateDateTime: "2025-12-10T11:00:00Z"
+        }
+      ]
+    }
+  },
+  {
+    scenarioDescription: "should return With pharmacy when RTC has been revoked but later RTC has matured",
+    currentTime: new Date("2025-12-11T19:00:00Z").getTime(),
+    inputPrescriptions: {
+      prescriptionID: "abc",
+      odsCode: "123"
+    },
+    queryResults: [
+      {
+        itemId: "item_1",
+        latestStatus: "Ready to collect",
+        isTerminalState: false,
+        lastUpdateDateTime: "2025-12-11T19:00:00Z",
+        postDatedLastModifiedSetAt: "2025-12-10T13:00:00Z"
+      },
+      {
+        itemId: "item_1",
+        latestStatus: "With pharmacy",
+        isTerminalState: false,
+        lastUpdateDateTime: "2025-12-10T11:00:00Z"
+      }
+    ],
+    expectedResult: {
+      prescriptionID: "abc",
+      onboarded: true,
+      items: [
+        {
+          itemId: "item_1",
+          latestStatus: "With pharmacy",
+          isTerminalState: false,
+          lastUpdateDateTime: "2025-12-10T11:00:00Z"
+        },
+        {
+          itemId: "item_1",
+          latestStatus: "Ready to collect",
+          isTerminalState: false,
+          lastUpdateDateTime: "2025-12-11T19:00:00Z",
+          postDatedLastModifiedSetAt: "2025-12-10T13:00:00Z"
         }
       ]
     }
