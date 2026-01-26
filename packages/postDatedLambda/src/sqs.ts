@@ -4,15 +4,111 @@ import {
   DeleteMessageBatchCommand,
   ChangeMessageVisibilityBatchCommand,
   GetQueueAttributesCommand,
+  SendMessageBatchCommand,
   Message
 } from "@aws-sdk/client-sqs"
 import {Logger} from "@aws-lambda-powertools/logger"
 
-import {PostDatedNotifyDataItem} from "@psu-common/commonTypes"
+import {PostDatedNotifyDataItem, SQSBatchMessage} from "@psu-common/commonTypes"
 
 import {BatchProcessingResult, PostDatedSQSMessage} from "./types"
 
 const sqs = new SQSClient({region: process.env.AWS_REGION})
+
+// Note that a lot of the code to send an SQS message is copied from the updatePrescriptionStatus lambda,
+// and I've NOT moved the code into a shared location for the two.
+// This is because I don't want to alter the updatePrescriptionStatus lambda in that way
+// for the sake of temporarily supporting post-dated messages.
+//   - Jim Wild, Jan. 2026
+
+function chunkArray<T>(arr: Array<T>, size: number): Array<Array<T>> {
+  const chunks: Array<Array<T>> = []
+  for (let i = 0; i < arr.length; i += size) {
+    chunks.push(arr.slice(i, i + size))
+  }
+  return chunks
+}
+
+function buildNotificationBatchEntries(
+  messages: Array<PostDatedSQSMessage>,
+  logger: Logger
+): Array<SQSBatchMessage> {
+  return messages.map((message, idx) => {
+    const {prescriptionData} = message
+    const requestId = prescriptionData.RequestID
+
+    // If we get something with no deduplication ID, then something upstream is wrong and we should fail out
+    if (!message.Attributes?.MessageDeduplicationId) {
+      logger.error("Post-dated SQS message is missing MessageDeduplicationId attribute", {
+        messageId: message.MessageId, message
+      })
+      throw new Error("Missing MessageDeduplicationId in SQS message attributes")
+    }
+
+    return {
+      Id: idx.toString(),
+      MessageBody: JSON.stringify(prescriptionData),
+      MessageDeduplicationId: message.Attributes?.MessageDeduplicationId,
+      MessageGroupId: requestId,
+      MessageAttributes: {
+        RequestId: {
+          DataType: "String",
+          StringValue: requestId
+        }
+      }
+    }
+  })
+}
+
+async function sendEntriesToQueue(
+  entries: Array<SQSBatchMessage>,
+  queueUrl: string,
+  logger: Logger
+): Promise<Array<string>> {
+  if (entries.length === 0) {
+    return []
+  }
+
+  const batches = chunkArray(entries, 10)
+
+  const batchPromises = batches.map(async (batch) => {
+    try {
+      logger.info(
+        "Pushing a batch of notification requests to SQS",
+        {
+          batchLength: batch.length,
+          deduplicationIds: batch.map((entry) => entry.MessageDeduplicationId),
+          queueUrl
+        }
+      )
+
+      const command = new SendMessageBatchCommand({
+        QueueUrl: queueUrl,
+        Entries: batch
+      })
+      const result = await sqs.send(command)
+
+      let successfulIds: Array<string> = []
+      if (result.Successful?.length) {
+        logger.info("Successfully sent a batch of prescriptions to the SQS", {result, queueUrl})
+        successfulIds = result.Successful
+          .map((entry) => entry.MessageId)
+          .filter((msgId): msgId is string => msgId !== undefined)
+      }
+
+      if (result.Failed?.length) {
+        throw new Error(`Failed to send a batch of prescriptions to the SQS ${queueUrl}`)
+      }
+
+      return successfulIds
+    } catch (error) {
+      logger.error("Failed to send a batch of prescriptions to the SQS", {error, queueUrl})
+      throw error
+    }
+  })
+
+  return Promise.all(batchPromises).then((results) => results.flat())
+}
 
 /**
  * Get the SQS queue URL from environment variables.
@@ -133,6 +229,32 @@ export async function receivePostDatedSQSMessages(logger: Logger): Promise<Array
 }
 
 /**
+ * Forward matured post-dated messages to the Notify queue using the same payload as the update lambda.
+ */
+export async function sendSQSMessagesToNotificationQueue(
+  logger: Logger,
+  messages: Array<PostDatedSQSMessage>
+): Promise<Array<string>> {
+  if (messages.length === 0) {
+    logger.info("No matured post-dated messages to forward to notifications queue")
+    return []
+  }
+
+  const queueUrl = getNotificationQueueUrl(logger)
+  const entries = buildNotificationBatchEntries(messages, logger)
+
+  const sentMessageIds = await sendEntriesToQueue(entries, queueUrl, logger)
+
+  logger.info("Forwarded matured post-dated messages to notifications queue", {
+    queueUrl,
+    forwardedCount: sentMessageIds.length,
+    sqsMessageIds: sentMessageIds
+  })
+
+  return sentMessageIds
+}
+
+/**
  * Delete successfully processed messages from the SQS queue.
  *
  * @param logger - The logging object
@@ -250,10 +372,9 @@ export async function handleProcessedMessages(
 ): Promise<void> {
   const {maturedPrescriptionUpdates, immaturePrescriptionUpdates} = result
 
-  // Delete matured messages
+  // Move matured messages to the notification queue and remove them from the post-dated queue
   if (maturedPrescriptionUpdates.length > 0) {
-    // TODO: Also need to send messages to the notification queue here (do that first, then delete)
-    // await sendSQSMessagesToNotificationQueue(logger, maturedPrescriptionUpdates)
+    await sendSQSMessagesToNotificationQueue(logger, maturedPrescriptionUpdates)
     await removeSQSMessages(logger, maturedPrescriptionUpdates)
   }
 

@@ -33,7 +33,8 @@ const {
   receivePostDatedSQSMessages,
   removeSQSMessages,
   returnMessagesToQueue,
-  handleProcessedMessages
+  handleProcessedMessages,
+  sendSQSMessagesToNotificationQueue
 } = await import("../src/sqs")
 
 const ORIGINAL_ENV = {...process.env}
@@ -50,6 +51,7 @@ describe("sqs", () => {
 
     // Reset environment
     process.env = {...ORIGINAL_ENV}
+    delete process.env.SQS_SALT
 
     // Fresh logger and spies
     logger = new Logger({serviceName: "test-service"})
@@ -171,6 +173,63 @@ describe("sqs", () => {
     })
   })
 
+  describe("sendSQSMessagesToNotificationQueue", () => {
+    it("should send matured post-dated messages to the notifications queue", async () => {
+      const notifyUrl = "https://sqs.eu-west-2.amazonaws.com/123456789012/notify"
+      process.env.NHS_NOTIFY_PRESCRIPTIONS_SQS_QUEUE_URL = notifyUrl
+
+      const messages: Array<PostDatedSQSMessage> = [
+        {
+          MessageId: "1",
+          ReceiptHandle: "handle-1",
+          prescriptionData: createMockPostModifiedDataItem({RequestID: "req-1"}),
+          Attributes: {MessageDeduplicationId: "dedup-1"}
+        }
+      ]
+
+      mockSend.mockReturnValueOnce({
+        Successful: [{Id: "0", MessageId: "notify-msg-1"}],
+        Failed: []
+      })
+
+      const result = await sendSQSMessagesToNotificationQueue(logger, messages)
+
+      expect(mockSend).toHaveBeenCalledTimes(1)
+      const command = mockSend.mock.calls[0][0] as {input: {QueueUrl: string; Entries: Array<{MessageBody: string}>}}
+      expect(command.input.QueueUrl).toBe(notifyUrl)
+      expect(command.input.Entries[0].MessageBody).toBe(JSON.stringify(messages[0].prescriptionData))
+      expect(result).toEqual(["notify-msg-1"])
+    })
+
+    it("should short circuit when there are no matured messages", async () => {
+      process.env.NHS_NOTIFY_PRESCRIPTIONS_SQS_QUEUE_URL = "https://sqs.eu-west-2.amazonaws.com/123456789012/notify"
+
+      const result = await sendSQSMessagesToNotificationQueue(logger, [])
+
+      expect(result).toEqual([])
+      expect(mockSend).not.toHaveBeenCalled()
+    })
+
+    it("should throw an error if the deduplication ID is missing", async () => {
+      process.env.NHS_NOTIFY_PRESCRIPTIONS_SQS_QUEUE_URL = "https://sqs.eu-west-2.amazonaws.com/123456789012/notify"
+
+      const messages: Array<PostDatedSQSMessage> = [
+        {
+          MessageId: "1",
+          ReceiptHandle: "handle-1",
+          prescriptionData: createMockPostModifiedDataItem({RequestID: "req-1"}),
+          Attributes: {} // Missing MessageDeduplicationId
+        }
+      ]
+
+      await expect(
+        sendSQSMessagesToNotificationQueue(logger, messages)
+      ).rejects.toThrow("Missing MessageDeduplicationId in SQS message attributes")
+
+      expect(mockSend).not.toHaveBeenCalled()
+    })
+  })
+
   describe("removeSQSMessages", () => {
     it("Should remove messages from the SQS queue", async () => {
       const testUrl = "https://sqs.us-east-1.amazonaws.com/123456789012/test-queue"
@@ -288,12 +347,21 @@ describe("sqs", () => {
     it("should remove matured messages and return immature messages to the queue", async () => {
       const testUrl = "https://sqs.us-east-1.amazonaws.com/123456789012/test-queue"
       process.env.POST_DATED_PRESCRIPTIONS_SQS_QUEUE_URL = testUrl
+      process.env.NHS_NOTIFY_PRESCRIPTIONS_SQS_QUEUE_URL = "https://sqs.us-east-1.amazonaws.com/123456789012/notify"
 
       const maturedMessages: Array<PostDatedSQSMessage> = [
-        {MessageId: "1", ReceiptHandle: "handle1", prescriptionData: createMockPostModifiedDataItem({})}
+        {
+          MessageId: "1", ReceiptHandle: "handle1",
+          prescriptionData: createMockPostModifiedDataItem({}),
+          Attributes: {MessageDeduplicationId: "dedup-1"}
+        }
       ]
       const immatureMessages: Array<PostDatedSQSMessage> = [
-        {MessageId: "2", ReceiptHandle: "handle2", prescriptionData: createMockPostModifiedDataItem({})}
+        {
+          MessageId: "2", ReceiptHandle: "handle2",
+          prescriptionData: createMockPostModifiedDataItem({}),
+          Attributes: {MessageDeduplicationId: "dedup-1"}
+        }
       ]
 
       const batchResult: BatchProcessingResult = {
@@ -304,6 +372,10 @@ describe("sqs", () => {
       // Mock SQS responses
       mockSend
         .mockReturnValueOnce({
+          Successful: [{Id: "0", MessageId: "notify-msg"}],
+          Failed: []
+        }) // sendSQSMessagesToNotificationQueue
+        .mockReturnValueOnce({
           Successful: [{Id: "1"}],
           Failed: []
         }) // For removeSQSMessages
@@ -311,7 +383,7 @@ describe("sqs", () => {
 
       await handleProcessedMessages(batchResult, logger)
 
-      expect(mockSend).toHaveBeenCalledTimes(2)
+      expect(mockSend).toHaveBeenCalledTimes(3)
       expect(infoSpy).toHaveBeenCalledWith("Successfully removed 1 messages from SQS")
       expect(infoSpy).toHaveBeenCalledWith("Returning messages to queue with timeouts", {
         numberOfMessages: 1,
