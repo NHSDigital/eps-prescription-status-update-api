@@ -18,11 +18,20 @@ const sqs = new SQSClient({region: process.env.AWS_REGION})
  * Get the SQS queue URL from environment variables.
  * Throws an error if not configured.
  */
-export function getQueueUrl(logger: Logger): string {
+export function getPostDatedQueueUrl(logger: Logger): string {
   const sqsUrl = process.env.POST_DATED_PRESCRIPTIONS_SQS_QUEUE_URL
   if (!sqsUrl) {
     logger.error("Post-dated prescriptions SQS URL not configured")
     throw new Error("POST_DATED_PRESCRIPTIONS_SQS_QUEUE_URL not set")
+  }
+  return sqsUrl
+}
+
+export function getNotificationQueueUrl(logger: Logger): string {
+  const sqsUrl = process.env.NHS_NOTIFY_PRESCRIPTIONS_SQS_QUEUE_URL
+  if (!sqsUrl) {
+    logger.error("NHS Notify prescriptions SQS URL not configured")
+    throw new Error("NHS_NOTIFY_PRESCRIPTIONS_SQS_QUEUE_URL not set")
   }
   return sqsUrl
 }
@@ -33,7 +42,7 @@ export function getQueueUrl(logger: Logger): string {
  * @param logger - The AWS logging object
  */
 export async function reportQueueStatus(logger: Logger): Promise<void> {
-  const sqsUrl = getQueueUrl(logger)
+  const sqsUrl = getPostDatedQueueUrl(logger)
 
   const attrsCmd = new GetQueueAttributesCommand({
     QueueUrl: sqsUrl,
@@ -69,7 +78,7 @@ export async function reportQueueStatus(logger: Logger): Promise<void> {
  * @returns - The array of parsed PostDatedSQSMessage
  */
 export async function receivePostDatedSQSMessages(logger: Logger): Promise<Array<PostDatedSQSMessage>> {
-  const sqsUrl = getQueueUrl(logger)
+  const sqsUrl = getPostDatedQueueUrl(logger)
   const toFetch = 10
 
   const receiveCmd = new ReceiveMessageCommand({
@@ -138,7 +147,7 @@ export async function removeSQSMessages(
     return
   }
 
-  const sqsUrl = getQueueUrl(logger)
+  const sqsUrl = getPostDatedQueueUrl(logger)
 
   const entries = messages.map((m) => ({
     Id: m.MessageId!,
@@ -185,7 +194,7 @@ export async function returnMessagesToQueue(
     return
   }
 
-  const sqsUrl = getQueueUrl(logger)
+  const sqsUrl = getPostDatedQueueUrl(logger)
 
   // TODO: Each message needs to have an appropriate visibility timeout based on when it is due to be retried.
   // For now, use a fixed 5 minute timeout for all messages.

@@ -28,7 +28,7 @@ export function mockSQSClient() {
 const {mockSend} = mockSQSClient()
 
 const {
-  getQueueUrl,
+  getPostDatedQueueUrl,
   reportQueueStatus,
   receivePostDatedSQSMessages,
   removeSQSMessages,
@@ -58,19 +58,19 @@ describe("sqs", () => {
     // warnSpy = jest.spyOn(logger, "warn")
   })
 
-  describe("getQueueUrl", () => {
+  describe("getPostDatedQueueUrl", () => {
     it("Should return the SQS queue URL from environment variables", () => {
       const testUrl = "https://sqs.us-east-1.amazonaws.com/123456789012/test-queue"
       process.env.POST_DATED_PRESCRIPTIONS_SQS_QUEUE_URL = testUrl
 
-      const result = getQueueUrl(logger)
+      const result = getPostDatedQueueUrl(logger)
       expect(result).toBe(testUrl)
     })
 
     it("Should throw an error if the SQS queue URL is not configured", () => {
       delete process.env.POST_DATED_PRESCRIPTIONS_SQS_QUEUE_URL
 
-      expect(() => getQueueUrl(logger)).toThrow("POST_DATED_PRESCRIPTIONS_SQS_QUEUE_URL not set")
+      expect(() => getPostDatedQueueUrl(logger)).toThrow("POST_DATED_PRESCRIPTIONS_SQS_QUEUE_URL not set")
       expect(errorSpy).toHaveBeenCalledWith("Post-dated prescriptions SQS URL not configured")
     })
   })

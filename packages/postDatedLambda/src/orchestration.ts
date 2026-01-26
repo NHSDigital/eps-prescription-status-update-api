@@ -9,7 +9,7 @@ export const MAX_QUEUE_RUNTIME = 14 * 60 * 1000 // 14 minutes, to avoid Lambda t
 const MIN_RECEIVED_THRESHOLD = 3 // If fewer than this number of messages are received, consider the queue empty
 
 /**
- * Process a batch of SQS messages.
+ * Process a batch of SQS messages. Returns arrays of matured and immature prescription updates.
  * Messages are enriched with existing records from DynamoDB and processed individually.
  * Results are tracked for success/failure handling.
  *
