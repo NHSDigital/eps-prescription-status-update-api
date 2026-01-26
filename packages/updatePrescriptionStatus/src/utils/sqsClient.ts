@@ -300,7 +300,7 @@ async function sendItemsToSQS(
     items,
     requestId,
     sqsSalt,
-    item => item as PostDatedNotifyDataItem
+    item => item as PostDatedNotifyDataItem // TODO: When we sunset PostDated, change this to NotifyDataItem
   )
 
   return sendEntriesToQueue(entries, sqsUrl, requestId, logger)

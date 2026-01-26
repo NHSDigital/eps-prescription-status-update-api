@@ -136,11 +136,13 @@ describe("sqs", () => {
       const mockMessages = [
         {
           MessageId: "1",
-          Body: JSON.stringify({PrescriptionID: "presc1"})
+          Body: JSON.stringify({PrescriptionID: "presc1"}),
+          Attributes: {MessageDeduplicationId: "dedup1", MessageGroupId: "group1"}
         },
         {
           MessageId: "2",
-          Body: JSON.stringify({PrescriptionID: "presc2"})
+          Body: JSON.stringify({PrescriptionID: "presc2"}),
+          Attributes: {MessageDeduplicationId: "dedup2", MessageGroupId: "group2"}
         }
       ]
       mockSend.mockReturnValueOnce({
@@ -150,6 +152,11 @@ describe("sqs", () => {
       const result = await receivePostDatedSQSMessages(logger)
 
       expect(mockSend).toHaveBeenCalledTimes(1)
+      const receiveCommand = mockSend.mock.calls[0][0] as {
+        input: {MessageAttributeNames?: Array<string>; MessageSystemAttributeNames?: Array<string>}
+      }
+      expect(receiveCommand.input.MessageSystemAttributeNames).toEqual(["MessageDeduplicationId", "MessageGroupId"])
+      expect(receiveCommand.input.MessageAttributeNames).toEqual(["All"])
       expect(result).toHaveLength(2)
       expect(result[0].MessageId).toBe("1")
       expect(result[0].prescriptionData.PrescriptionID).toBe("presc1")
@@ -183,7 +190,7 @@ describe("sqs", () => {
           MessageId: "1",
           ReceiptHandle: "handle-1",
           prescriptionData: createMockPostModifiedDataItem({RequestID: "req-1"}),
-          Attributes: {MessageDeduplicationId: "dedup-1"}
+          Attributes: {MessageDeduplicationId: "dedup1", MessageGroupId: "group1"}
         }
       ]
 
@@ -353,14 +360,14 @@ describe("sqs", () => {
         {
           MessageId: "1", ReceiptHandle: "handle1",
           prescriptionData: createMockPostModifiedDataItem({}),
-          Attributes: {MessageDeduplicationId: "dedup-1"}
+          Attributes: {MessageDeduplicationId: "dedup1", MessageGroupId: "group1"}
         }
       ]
       const immatureMessages: Array<PostDatedSQSMessage> = [
         {
           MessageId: "2", ReceiptHandle: "handle2",
           prescriptionData: createMockPostModifiedDataItem({}),
-          Attributes: {MessageDeduplicationId: "dedup-1"}
+          Attributes: {MessageDeduplicationId: "dedup2", MessageGroupId: "group2"}
         }
       ]
 

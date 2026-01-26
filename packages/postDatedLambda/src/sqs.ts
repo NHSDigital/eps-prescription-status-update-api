@@ -35,25 +35,31 @@ function buildNotificationBatchEntries(
 ): Array<SQSBatchMessage> {
   return messages.map((message, idx) => {
     const {prescriptionData} = message
-    const requestId = prescriptionData.RequestID
 
     // If we get something with no deduplication ID, then something upstream is wrong and we should fail out
     if (!message.Attributes?.MessageDeduplicationId) {
       logger.error("Post-dated SQS message is missing MessageDeduplicationId attribute", {
-        messageId: message.MessageId, message
+        messageId: message.MessageId, messageContents: message
       })
       throw new Error("Missing MessageDeduplicationId in SQS message attributes")
+    }
+    // Same for group ID
+    if (!message.Attributes?.MessageGroupId) {
+      logger.error("Post-dated SQS message is missing MessageGroupId attribute", {
+        messageId: message.MessageId, messageContents: message
+      })
+      throw new Error("Missing MessageGroupId in SQS message attributes")
     }
 
     return {
       Id: idx.toString(),
       MessageBody: JSON.stringify(prescriptionData),
       MessageDeduplicationId: message.Attributes?.MessageDeduplicationId,
-      MessageGroupId: requestId,
+      MessageGroupId: message.Attributes?.MessageGroupId,
       MessageAttributes: {
         RequestId: {
           DataType: "String",
-          StringValue: requestId
+          StringValue: message.Attributes?.MessageGroupId
         }
       }
     }
@@ -182,7 +188,8 @@ export async function receivePostDatedSQSMessages(logger: Logger): Promise<Array
     MaxNumberOfMessages: toFetch,
     // Use long polling to avoid getting empty responses when the queue is small
     WaitTimeSeconds: 20,
-    MessageAttributeNames: ["All"]
+    MessageAttributeNames: ["All"],
+    MessageSystemAttributeNames: ["MessageDeduplicationId", "MessageGroupId"]
   })
 
   const {Messages} = await sqs.send(receiveCmd)
