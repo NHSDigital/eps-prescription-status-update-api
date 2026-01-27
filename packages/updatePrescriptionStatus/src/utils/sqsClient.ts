@@ -6,7 +6,6 @@ import {createHmac} from "node:crypto"
 
 import {
   NotifyDataItem,
-  PostDatedNotifyDataItem,
   PSUDataItem,
   PSUDataItemWithPrevious,
   SQSBatchMessage
@@ -40,18 +39,14 @@ function chunkArray<T>(arr: Array<T>, size: number): Array<Array<T>> {
   return chunks
 }
 
-type DeduplicationSource = Pick<PSUDataItem, "PatientNHSNumber" | "PharmacyODSCode">
-type NotificationMessage = NotifyDataItem | PostDatedNotifyDataItem
-
-function buildSqsBatchEntries<T extends DeduplicationSource>(
-  items: Array<T>,
+function buildSqsBatchEntries(
+  items: Array<PSUDataItem>,
   requestId: string,
-  sqsSalt: string,
-  toMessageBody: (item: T) => NotificationMessage
+  sqsSalt: string
 ): Array<SQSBatchMessage> {
   return items.map((item, idx) => ({
     Id: idx.toString(),
-    MessageBody: JSON.stringify(toMessageBody(item)),
+    MessageBody: JSON.stringify(item as NotifyDataItem),
     MessageDeduplicationId: saltedHash(`${item.PatientNHSNumber}:${item.PharmacyODSCode}`, sqsSalt),
     MessageGroupId: requestId,
     MessageAttributes: {
@@ -299,8 +294,7 @@ async function sendItemsToSQS(
   const entries = buildSqsBatchEntries(
     items,
     requestId,
-    sqsSalt,
-    item => item as PostDatedNotifyDataItem // TODO: When we sunset PostDated, change this to NotifyDataItem
+    sqsSalt
   )
 
   return sendEntriesToQueue(entries, sqsUrl, requestId, logger)

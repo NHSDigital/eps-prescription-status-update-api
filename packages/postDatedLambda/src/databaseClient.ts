@@ -2,7 +2,7 @@ import {Logger} from "@aws-lambda-powertools/logger"
 import {DynamoDBClient, QueryCommand, QueryCommandInput} from "@aws-sdk/client-dynamodb"
 import {unmarshall} from "@aws-sdk/util-dynamodb"
 
-import {PSUDataItem, PostDatedNotifyDataItem} from "@psu-common/commonTypes"
+import {PSUDataItem, NotifyDataItem} from "@psu-common/commonTypes"
 import {
   PostDatedPrescriptionWithExistingRecords,
   PostDatedSQSMessage,
@@ -102,7 +102,7 @@ export async function getExistingRecordsByPrescriptionID(
  *   Existing records are sorted by LastModified descending.
  */
 export async function fetchExistingRecordsForPrescriptions(
-  postDatedItems: Array<PostDatedNotifyDataItem>,
+  postDatedItems: Array<NotifyDataItem>,
   logger: Logger
 ): Promise<Array<PostDatedPrescriptionWithExistingRecords>> {
   logger.info("Fetching existing records for post-dated prescriptions", {

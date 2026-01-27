@@ -1,12 +1,12 @@
 import {Message} from "@aws-sdk/client-sqs"
-import {PostDatedNotifyDataItem, PSUDataItem} from "@psu-common/commonTypes"
+import {NotifyDataItem, PSUDataItem} from "@psu-common/commonTypes"
 
 /**
  * Extended SQS message interface for post-dated prescription messages.
  * Contains the parsed prescription data from the message body.
  */
 export interface PostDatedSQSMessage extends Message {
-  prescriptionData: PostDatedNotifyDataItem
+  prescriptionData: NotifyDataItem
 }
 
 /**
@@ -15,7 +15,7 @@ export interface PostDatedSQSMessage extends Message {
  */
 export interface PostDatedPrescriptionWithExistingRecords {
   /** The post-dated prescription data from the SQS message */
-  postDatedData: PostDatedNotifyDataItem
+  postDatedData: NotifyDataItem
   /** Existing records from DynamoDB that match the prescription ID */
   existingRecords: Array<PSUDataItem>
 }

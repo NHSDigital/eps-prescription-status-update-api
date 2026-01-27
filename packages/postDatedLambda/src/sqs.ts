@@ -9,7 +9,7 @@ import {
 } from "@aws-sdk/client-sqs"
 import {Logger} from "@aws-lambda-powertools/logger"
 
-import {PostDatedNotifyDataItem, SQSBatchMessage} from "@psu-common/commonTypes"
+import {NotifyDataItem, SQSBatchMessage} from "@psu-common/commonTypes"
 
 import {BatchProcessingResult, PostDatedSQSMessage} from "./types"
 
@@ -212,7 +212,7 @@ export async function receivePostDatedSQSMessages(logger: Logger): Promise<Array
       return []
     }
     try {
-      const parsedBody: PostDatedNotifyDataItem = JSON.parse(m.Body)
+      const parsedBody: NotifyDataItem = JSON.parse(m.Body)
       return [
         {
           ...m,
