@@ -373,7 +373,8 @@ describe("sqs", () => {
 
       const batchResult: BatchProcessingResult = {
         maturedPrescriptionUpdates: maturedMessages,
-        immaturePrescriptionUpdates: immatureMessages
+        immaturePrescriptionUpdates: immatureMessages,
+        ignoredPrescriptionUpdates: []
       }
 
       // Mock SQS responses
@@ -403,7 +404,8 @@ describe("sqs", () => {
     it("should handle empty matured and immature message arrays gracefully", async () => {
       const batchResult: BatchProcessingResult = {
         maturedPrescriptionUpdates: [],
-        immaturePrescriptionUpdates: []
+        immaturePrescriptionUpdates: [],
+        ignoredPrescriptionUpdates: []
       }
 
       await handleProcessedMessages(batchResult, logger)
@@ -411,6 +413,41 @@ describe("sqs", () => {
       expect(mockSend).toHaveBeenCalledTimes(0)
       expect(infoSpy).not.toHaveBeenCalledWith("Successfully removed")
       expect(infoSpy).not.toHaveBeenCalledWith("Returning messages to queue with timeouts", expect.anything())
+    })
+
+    it("should remove ignored messages from the queue so they are not reprocessed", async () => {
+      const testUrl = "https://sqs.us-east-1.amazonaws.com/123456789012/test-queue"
+      process.env.POST_DATED_PRESCRIPTIONS_SQS_QUEUE_URL = testUrl
+
+      const ignoredMessages: Array<PostDatedSQSMessage> = [
+        {
+          MessageId: "ignored-1",
+          ReceiptHandle: "ignored-handle-1",
+          prescriptionData: createMockPostModifiedDataItem({}),
+          Attributes: {MessageDeduplicationId: "dedup-ignored", MessageGroupId: "group-ignored"}
+        }
+      ]
+
+      const batchResult: BatchProcessingResult = {
+        maturedPrescriptionUpdates: [],
+        immaturePrescriptionUpdates: [],
+        ignoredPrescriptionUpdates: ignoredMessages
+      }
+
+      mockSend.mockReturnValueOnce({
+        Successful: ignoredMessages.map((msg) => ({Id: msg.MessageId})),
+        Failed: []
+      })
+
+      await handleProcessedMessages(batchResult, logger)
+
+      expect(mockSend).toHaveBeenCalledTimes(1)
+
+      const deleteCommand = mockSend.mock.calls[0][0] as {input: {Entries: Array<{Id: string; ReceiptHandle: string}>}}
+      expect(deleteCommand.input.Entries).toEqual([
+        {Id: "ignored-1", ReceiptHandle: "ignored-handle-1"}
+      ])
+      expect(infoSpy).toHaveBeenCalledWith("Successfully removed 1 messages from SQS")
     })
   })
 })
