@@ -2,6 +2,9 @@ import {Logger} from "@aws-lambda-powertools/logger"
 
 import {PostDatedSQSMessageWithExistingRecords} from "./types"
 
+const POST_DATED_OVERRIDE = process.env.POST_DATED_OVERRIDE === "true"
+const POST_DATED_OVERRIDE_VALUE = process.env.POST_DATED_OVERRIDE_VALUE === "true"
+
 /**
  * Process a single post-dated prescription message.
  * This is a placeholder function that I'll implement properly later.
@@ -20,6 +23,12 @@ export async function processMessage(
     existingRecordsCount: message.existingRecords.length,
     existingRecordTaskIds: message.existingRecords.map((r) => r.TaskID)
   })
+  if (POST_DATED_OVERRIDE) {
+    logger.info("Post-dated override is enabled, returning override value", {
+      overrideValue: POST_DATED_OVERRIDE_VALUE
+    })
+    return POST_DATED_OVERRIDE_VALUE
+  }
 
   // TODO: Implement actual business logic for post-dated prescription processing
   // The existingRecords array contains all records from the DynamoDB table
@@ -27,6 +36,18 @@ export async function processMessage(
 
   // NOTE: It is technically possible for the array to be empty if no existing records are found
   // This SHOULD never happen in practice, but the code should handle it gracefully just in case
+
+  const mostRecentRecord = message.existingRecords.reduce((latest, record) => {
+    return new Date(record.LastModified) > new Date(latest.LastModified) ? record : latest
+  }, message.existingRecords[0])
+  const mostRecentLastModified = new Date(mostRecentRecord.LastModified)
+  const desiredTransitionTime = new Date(mostRecentRecord.PostDatedLastModifiedSetAt as string)
+  const currentTime = new Date()
+  logger.info("Post-dated prescription timing details", {
+    mostRecentLastModified: mostRecentLastModified.toISOString(),
+    desiredTransitionTime: desiredTransitionTime.toISOString(),
+    currentTime: currentTime.toISOString()
+  })
 
   return true
 }
