@@ -1,9 +1,40 @@
 import {Logger} from "@aws-lambda-powertools/logger"
 
-import {PostDatedSQSMessageWithExistingRecords} from "./types"
+import {PSUDataItem} from "@psu-common/commonTypes"
 
+import {PostDatedSQSMessageWithExistingRecords, PostDatedProcessingResult} from "./types"
+
+// defaults to false
 const POST_DATED_OVERRIDE = process.env.POST_DATED_OVERRIDE === "true"
-const POST_DATED_OVERRIDE_VALUE = process.env.POST_DATED_OVERRIDE_VALUE === "true"
+
+// set from environment variable POST_DATED_OVERRIDE_VALUE
+const POST_DATED_OVERRIDE_VALUE_ENV = process.env.POST_DATED_OVERRIDE_VALUE ?? "ignore"
+let POST_DATED_OVERRIDE_VALUE: PostDatedProcessingResult
+switch (POST_DATED_OVERRIDE_VALUE_ENV.toLowerCase()) {
+  case "matured":
+    POST_DATED_OVERRIDE_VALUE = PostDatedProcessingResult.MATURED
+    break
+  case "immature":
+    POST_DATED_OVERRIDE_VALUE = PostDatedProcessingResult.IMMATURE
+    break
+  default:
+    POST_DATED_OVERRIDE_VALUE = PostDatedProcessingResult.IGNORE
+    break
+}
+
+export function getMostRecentRecord(
+  existingRecords: Array<PSUDataItem>
+): PSUDataItem {
+  return existingRecords.reduce((latest, record) => {
+    const latestTimestamp = latest.PostDatedLastModifiedSetAt
+      ? new Date(latest.PostDatedLastModifiedSetAt)
+      : new Date(latest.LastModified)
+    const recordTimestamp = record.PostDatedLastModifiedSetAt
+      ? new Date(record.PostDatedLastModifiedSetAt)
+      : new Date(record.LastModified)
+    return recordTimestamp > latestTimestamp ? record : latest
+  }, existingRecords[0])
+}
 
 /**
  * Process a single post-dated prescription message.
@@ -13,15 +44,14 @@ const POST_DATED_OVERRIDE_VALUE = process.env.POST_DATED_OVERRIDE_VALUE === "tru
  * @param message - The SQS message containing post-dated prescription data and existing records
  * @returns Promise<boolean> - true if the post-dated prescription has matured, and false otherwise
  */
-export async function processMessage(
+export function processMessage(
   logger: Logger,
   message: PostDatedSQSMessageWithExistingRecords
-): Promise<boolean> {
-  logger.info("Processing post-dated prescription message (dummy)", {
+): string {
+  logger.info("Processing post-dated prescription message", {
     messageId: message.MessageId,
     prescriptionData: message.prescriptionData,
-    existingRecordsCount: message.existingRecords.length,
-    existingRecordTaskIds: message.existingRecords.map((r) => r.TaskID)
+    existingRecords: message.existingRecords
   })
   if (POST_DATED_OVERRIDE) {
     logger.info("Post-dated override is enabled, returning override value", {
@@ -30,18 +60,50 @@ export async function processMessage(
     return POST_DATED_OVERRIDE_VALUE
   }
 
-  // TODO: Implement actual business logic for post-dated prescription processing
   // The existingRecords array contains all records from the DynamoDB table
   // that match this prescription's PrescriptionID
 
   // NOTE: It is technically possible for the array to be empty if no existing records are found
-  // This SHOULD never happen in practice, but the code should handle it gracefully just in case
+  // This SHOULD never happen in practice, but catch it anyway
+  if (message.existingRecords.length === 0) {
+    logger.error("No existing records found for post-dated prescription, cannot process", {
+      badMessage: message
+    })
 
-  const mostRecentRecord = message.existingRecords.reduce((latest, record) => {
-    return new Date(record.LastModified) > new Date(latest.LastModified) ? record : latest
-  }, message.existingRecords[0])
+    // throw new Error("No existing records found for post-dated prescription") // maybe?
+    return PostDatedProcessingResult.IGNORE
+  }
+
+  // We only care about the most recent submission for this prescription
+  // If PostDatedLastModifiedSetAt IS set, it is the timestamp we received the submission
+  // If it is NOT set, then LastModified is the timestamp we received the submission
+  const mostRecentRecord = getMostRecentRecord(message.existingRecords)
+
+  logger.info("Most recent NPPTS record for post-dated processing", {
+    mostRecentRecord
+  })
+
+  // Is it post-dated?
+  if (!mostRecentRecord.PostDatedLastModifiedSetAt) {
+    logger.info(
+      "Most recent record is not marked as post-dated, and will have been processed " +
+      "by the standard logic already. Marking as to be ignored by the post-dated notifications lambda."
+    )
+    return PostDatedProcessingResult.IGNORE
+  }
+
+  // Is it still RTC?
+  const mostRecentStatus = mostRecentRecord.Status.toLowerCase()
+  const notifiableStatuses: Array<string> = ["ready to collect", "ready to collect - partial"]
+  if (!notifiableStatuses.includes(mostRecentStatus)) {
+    logger.info("Most recent status in the NPPTS data store is not a notifiable status, so will be ignored", {
+      mostRecentStatus: mostRecentStatus
+    })
+    return PostDatedProcessingResult.IGNORE
+  }
+
   const mostRecentLastModified = new Date(mostRecentRecord.LastModified)
-  const desiredTransitionTime = new Date(mostRecentRecord.PostDatedLastModifiedSetAt as string)
+  const desiredTransitionTime = new Date(mostRecentRecord.PostDatedLastModifiedSetAt)
   const currentTime = new Date()
   logger.info("Post-dated prescription timing details", {
     mostRecentLastModified: mostRecentLastModified.toISOString(),
@@ -49,5 +111,5 @@ export async function processMessage(
     currentTime: currentTime.toISOString()
   })
 
-  return true
+  return PostDatedProcessingResult.MATURED
 }

@@ -243,7 +243,8 @@ export async function sendSQSMessagesToNotificationQueue(
   messages: Array<PostDatedSQSMessage>
 ): Promise<Array<string>> {
   if (messages.length === 0) {
-    logger.info("No matured post-dated messages to forward to notifications queue")
+    // exit early so we don't send a SendMessageBatch with no entries
+    logger.info("No messages to forward to notifications queue")
     return []
   }
 
@@ -272,6 +273,7 @@ export async function removeSQSMessages(
   messages: Array<Message>
 ): Promise<void> {
   if (messages.length === 0) {
+    // exit early so we don't send a DeleteMessageBatch with no entries
     logger.info("No messages to delete")
     return
   }
@@ -319,6 +321,7 @@ export async function returnMessagesToQueue(
   messages: Array<Message>
 ): Promise<void> {
   if (messages.length === 0) {
+    // exit early so we don't send a ChangeMessageVisibilityBatch with no entries
     logger.info("No messages to return to queue")
     return
   }
@@ -377,16 +380,15 @@ export async function handleProcessedMessages(
   result: BatchProcessingResult,
   logger: Logger
 ): Promise<void> {
-  const {maturedPrescriptionUpdates, immaturePrescriptionUpdates} = result
+  const {maturedPrescriptionUpdates, immaturePrescriptionUpdates, ignoredPrescriptionUpdates} = result
 
   // Move matured messages to the notification queue and remove them from the post-dated queue
-  if (maturedPrescriptionUpdates.length > 0) {
-    await sendSQSMessagesToNotificationQueue(logger, maturedPrescriptionUpdates)
-    await removeSQSMessages(logger, maturedPrescriptionUpdates)
-  }
+  await sendSQSMessagesToNotificationQueue(logger, maturedPrescriptionUpdates)
+  await removeSQSMessages(logger, maturedPrescriptionUpdates)
 
   // Return failed messages to the queue
-  if (immaturePrescriptionUpdates.length > 0) {
-    await returnMessagesToQueue(logger, immaturePrescriptionUpdates)
-  }
+  await returnMessagesToQueue(logger, immaturePrescriptionUpdates)
+
+  // Remove ignored messages from the queue, so they are not reprocessed
+  await removeSQSMessages(logger, ignoredPrescriptionUpdates)
 }

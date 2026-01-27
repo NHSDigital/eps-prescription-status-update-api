@@ -29,10 +29,18 @@ export interface PostDatedSQSMessageWithExistingRecords extends PostDatedSQSMess
   existingRecords: Array<PSUDataItem>
 }
 
+// Enum of strings, "matured", "immature", "ignore"
+export enum PostDatedProcessingResult {
+  MATURED = "matured",
+  IMMATURE = "immature",
+  IGNORE = "ignore"
+}
+
 /**
  * Result of processing a batch of messages.
  */
 export interface BatchProcessingResult {
   maturedPrescriptionUpdates: Array<PostDatedSQSMessage>
   immaturePrescriptionUpdates: Array<PostDatedSQSMessage>
+  ignoredPrescriptionUpdates: Array<PostDatedSQSMessage>
 }

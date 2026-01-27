@@ -3,7 +3,7 @@ import {Logger} from "@aws-lambda-powertools/logger"
 import {processMessage} from "./businessLogic"
 import {enrichMessagesWithExistingRecords} from "./databaseClient"
 import {receivePostDatedSQSMessages, reportQueueStatus, handleProcessedMessages} from "./sqs"
-import {BatchProcessingResult, PostDatedSQSMessage} from "./types"
+import {BatchProcessingResult, PostDatedProcessingResult, PostDatedSQSMessage} from "./types"
 
 export const MAX_QUEUE_RUNTIME = 14 * 60 * 1000 // 14 minutes, to avoid Lambda timeout issues (timeout is 15 minutes)
 const MIN_RECEIVED_THRESHOLD = 3 // If fewer than this number of messages are received, consider the queue empty
@@ -21,24 +21,22 @@ export async function processMessages(
   messages: Array<PostDatedSQSMessage>,
   logger: Logger
 ): Promise<BatchProcessingResult> {
-  if (messages.length === 0) {
-    logger.info("No messages to process in batch")
-    return {maturedPrescriptionUpdates: [], immaturePrescriptionUpdates: []}
-  }
-
   // Enrich messages with existing records from DynamoDB
   const enrichedMessages = await enrichMessagesWithExistingRecords(messages, logger)
 
   const maturedPrescriptionUpdates: Array<PostDatedSQSMessage> = []
   const immaturePrescriptionUpdates: Array<PostDatedSQSMessage> = []
+  const ignoredPrescriptionUpdates: Array<PostDatedSQSMessage> = []
 
   for (const message of enrichedMessages) {
     try {
-      const success = await processMessage(logger, message)
-      if (success) {
+      const action = processMessage(logger, message)
+      if (action === PostDatedProcessingResult.MATURED) {
         maturedPrescriptionUpdates.push(message)
-      } else {
+      } else if (action === PostDatedProcessingResult.IMMATURE) {
         immaturePrescriptionUpdates.push(message)
+      } else {
+        ignoredPrescriptionUpdates.push(message)
       }
     } catch (error) {
       logger.error("Error processing message", {
@@ -52,10 +50,11 @@ export async function processMessages(
   logger.info("Batch processing complete", {
     totalMessages: messages.length,
     maturedPrescriptionUpdatesCount: maturedPrescriptionUpdates.length,
-    immaturePrescriptionUpdatesCount: immaturePrescriptionUpdates.length
+    immaturePrescriptionUpdatesCount: immaturePrescriptionUpdates.length,
+    ignoredPrescriptionUpdatesCount: ignoredPrescriptionUpdates.length
   })
 
-  return {maturedPrescriptionUpdates, immaturePrescriptionUpdates}
+  return {maturedPrescriptionUpdates, immaturePrescriptionUpdates, ignoredPrescriptionUpdates}
 }
 
 /**
