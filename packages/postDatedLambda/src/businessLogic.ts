@@ -38,7 +38,7 @@ export function getMostRecentRecord(
 
 /**
  * Process a single post-dated prescription message.
- * This is a placeholder function that I'll implement properly later.
+ * A flow diagram of this logic is available at ../docs/mature_prescription_check.md
  *
  * @param logger - The AWS Lambda Powertools logger instance
  * @param message - The SQS message containing post-dated prescription data and existing records
@@ -102,12 +102,27 @@ export function processMessage(
     return PostDatedProcessingResult.IGNORE
   }
 
+  // We know that we have a recent, post-dated prescription status update.
+  // Check if its LastModified time is in the future.
+
+  // Stored as YYYY-MM-DDTHH:mm:ss.sssZ
   const mostRecentLastModified = new Date(mostRecentRecord.LastModified)
-  const desiredTransitionTime = new Date(mostRecentRecord.PostDatedLastModifiedSetAt)
   const currentTime = new Date()
-  logger.info("Post-dated prescription timing details", {
-    mostRecentLastModified: mostRecentLastModified.toISOString(),
-    desiredTransitionTime: desiredTransitionTime.toISOString(),
+  logger.info("Most recent NPPTS record is Post-dated. Checking if the post-dated prescription has matured", {
+    LastModified: mostRecentLastModified.toISOString(),
+    currentTime: currentTime.toISOString()
+  })
+
+  if (mostRecentLastModified > currentTime) {
+    logger.info("Post-dated prescription is still immature (LastModified is in the future)", {
+      lastModified: mostRecentLastModified.toISOString(),
+      currentTime: currentTime.toISOString()
+    })
+    return PostDatedProcessingResult.IMMATURE
+  }
+
+  logger.info("Post-dated prescription has matured (LastModified is in the past)", {
+    lastModified: mostRecentLastModified.toISOString(),
     currentTime: currentTime.toISOString()
   })
 
