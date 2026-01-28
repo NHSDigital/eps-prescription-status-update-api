@@ -238,7 +238,7 @@ export async function receivePostDatedSQSMessages(logger: Logger): Promise<Array
 /**
  * Forward matured post-dated messages to the Notify queue using the same payload as the update lambda.
  */
-export async function sendSQSMessagesToNotificationQueue(
+export async function forwardSQSMessagesToNotificationQueue(
   logger: Logger,
   messages: Array<PostDatedSQSMessage>
 ): Promise<Array<string>> {
@@ -383,7 +383,7 @@ export async function handleProcessedMessages(
   const {maturedPrescriptionUpdates, immaturePrescriptionUpdates, ignoredPrescriptionUpdates} = result
 
   // Move matured messages to the notification queue and remove them from the post-dated queue
-  await sendSQSMessagesToNotificationQueue(logger, maturedPrescriptionUpdates)
+  await forwardSQSMessagesToNotificationQueue(logger, maturedPrescriptionUpdates)
   await removeSQSMessages(logger, maturedPrescriptionUpdates)
 
   // Return failed messages to the queue

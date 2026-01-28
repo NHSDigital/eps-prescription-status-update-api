@@ -199,12 +199,5 @@ export async function enrichMessagesWithExistingRecords(
     existingRecords: recordsMap.get(message.prescriptionData.PrescriptionID) ?? []
   }))
 
-  for (const msg of enrichedMessages) {
-    logger.info("Prescription and most recent existing record", {
-      prescriptionID: msg.prescriptionData.PrescriptionID,
-      existingRecordCount: msg.existingRecords.length
-    })
-  }
-
   return enrichedMessages
 }

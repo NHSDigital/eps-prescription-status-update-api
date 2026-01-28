@@ -66,7 +66,7 @@ export function processMessage(
   // NOTE: It is technically possible for the array to be empty if no existing records are found
   // This SHOULD never happen in practice, but catch it anyway
   if (message.existingRecords.length === 0) {
-    logger.error("No existing records found for post-dated prescription, cannot process", {
+    logger.error("No existing records found for post-dated prescription, cannot process. Ignoring this message", {
       badMessage: message
     })
 
