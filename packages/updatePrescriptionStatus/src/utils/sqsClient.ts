@@ -236,6 +236,7 @@ export async function pushPrescriptionToNotificationSQS(
     .filter(({current, previous}) => {
       if (!previous) return true // no previous item (or hit an error getting one) -> treat as changed
       if (previous.PostDatedLastModifiedSetAt) return true // previous was post-dated -> treat as changed
+      if (current.PostDatedLastModifiedSetAt) return true // current is post-dated -> treat as changed
       return norm(current.Status) !== norm(previous.Status)
     })
     .map(({current}) => current)
