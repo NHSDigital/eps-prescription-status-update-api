@@ -34,7 +34,7 @@ const {
   removeSQSMessages,
   returnMessagesToQueue,
   handleProcessedMessages,
-  sendSQSMessagesToNotificationQueue
+  forwardSQSMessagesToNotificationQueue: sendSQSMessagesToNotificationQueue
 } = await import("../src/sqs")
 
 const ORIGINAL_ENV = {...process.env}
@@ -299,9 +299,9 @@ describe("sqs", () => {
       const testUrl = "https://sqs.us-east-1.amazonaws.com/123456789012/test-queue"
       process.env.POST_DATED_PRESCRIPTIONS_SQS_QUEUE_URL = testUrl
 
-      const messagesToReturn = [
-        {MessageId: "1", ReceiptHandle: "handle1"},
-        {MessageId: "2", ReceiptHandle: "handle2"}
+      const messagesToReturn: Array<PostDatedSQSMessage> = [
+        {MessageId: "1", ReceiptHandle: "handle1", prescriptionData: createMockPostModifiedDataItem({})},
+        {MessageId: "2", ReceiptHandle: "handle2", prescriptionData: createMockPostModifiedDataItem({})}
       ]
 
       // Mock SQS change visibility response
@@ -333,8 +333,8 @@ describe("sqs", () => {
       const testUrl = "https://sqs.us-east-1.amazonaws.com/123456789012/test-queue"
       process.env.POST_DATED_PRESCRIPTIONS_SQS_QUEUE_URL = testUrl
 
-      const messagesToReturn = [
-        {MessageId: "1", ReceiptHandle: "handle1"}
+      const messagesToReturn: Array<PostDatedSQSMessage> = [
+        {MessageId: "1", ReceiptHandle: "handle1", prescriptionData: createMockPostModifiedDataItem({})}
       ]
 
       // Mock SQS change visibility to throw an error

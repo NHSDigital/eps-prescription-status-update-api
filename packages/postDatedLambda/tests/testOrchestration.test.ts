@@ -7,9 +7,11 @@ import {
 
 // Mock the imports from local modules
 const mockProcessMessage = jest.fn()
+const mockComputeTimeUntilMaturity = jest.fn().mockReturnValue(300)
 jest.unstable_mockModule("../src/businessLogic", () => {
   return {
-    processMessage: mockProcessMessage
+    processMessage: mockProcessMessage,
+    computeTimeUntilMaturity: mockComputeTimeUntilMaturity
   }
 })
 

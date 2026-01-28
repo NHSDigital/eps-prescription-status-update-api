@@ -15,6 +15,8 @@ import {BatchProcessingResult, PostDatedSQSMessage} from "./types"
 
 const sqs = new SQSClient({region: process.env.AWS_REGION})
 
+const DEFAULT_VISIBILITY_TIMEOUT_SECONDS = 300 // 5 minutes
+
 // Note that a lot of the code to send an SQS message is copied from the updatePrescriptionStatus lambda,
 // and I've NOT moved the code into a shared location for the two.
 // This is because I don't want to alter the updatePrescriptionStatus lambda in that way
@@ -318,7 +320,7 @@ export async function removeSQSMessages(
  */
 export async function returnMessagesToQueue(
   logger: Logger,
-  messages: Array<Message>
+  messages: Array<PostDatedSQSMessage>
 ): Promise<void> {
   if (messages.length === 0) {
     // exit early so we don't send a ChangeMessageVisibilityBatch with no entries
@@ -328,13 +330,10 @@ export async function returnMessagesToQueue(
 
   const sqsUrl = getPostDatedQueueUrl(logger)
 
-  // TODO: Each message needs to have an appropriate visibility timeout based on when it is due to be retried.
-  // For now, use a fixed 5 minute timeout for all messages.
-  const visibilityTimeoutSeconds = 300
   const entries = messages.map((m) => ({
     Id: m.MessageId!,
     ReceiptHandle: m.ReceiptHandle!,
-    VisibilityTimeout: visibilityTimeoutSeconds
+    VisibilityTimeout: m.visibilityTimeoutSeconds || DEFAULT_VISIBILITY_TIMEOUT_SECONDS
   }))
 
   logger.info(

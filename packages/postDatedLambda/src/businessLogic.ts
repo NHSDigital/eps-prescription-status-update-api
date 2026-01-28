@@ -128,3 +128,20 @@ export function processMessage(
 
   return PostDatedProcessingResult.MATURED
 }
+
+/**
+ * returns time in seconds until maturity, or undefined if cannot be determined
+ */
+export function computeTimeUntilMaturity(
+  data: PostDatedSQSMessageWithExistingRecords
+): number | undefined {
+  const prescriptionRecord = getMostRecentRecord(data.existingRecords)
+  if (!prescriptionRecord.PostDatedLastModifiedSetAt) {
+    return undefined
+  }
+
+  const lastModified = new Date(prescriptionRecord.LastModified)
+  const currentTime = new Date()
+
+  return lastModified.getTime() - currentTime.getTime()
+}

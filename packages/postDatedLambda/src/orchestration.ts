@@ -1,6 +1,6 @@
 import {Logger} from "@aws-lambda-powertools/logger"
 
-import {processMessage} from "./businessLogic"
+import {computeTimeUntilMaturity, processMessage} from "./businessLogic"
 import {enrichMessagesWithExistingRecords} from "./databaseClient"
 import {receivePostDatedSQSMessages, reportQueueStatus, handleProcessedMessages} from "./sqs"
 import {BatchProcessingResult, PostDatedProcessingResult, PostDatedSQSMessage} from "./types"
@@ -34,6 +34,8 @@ export async function processMessages(
       if (action === PostDatedProcessingResult.MATURED) {
         maturedPrescriptionUpdates.push(message)
       } else if (action === PostDatedProcessingResult.IMMATURE) {
+        // Set visibility timeout to time until maturity, or default if calculation fails
+        message.visibilityTimeoutSeconds = computeTimeUntilMaturity(message)
         immaturePrescriptionUpdates.push(message)
       } else {
         ignoredPrescriptionUpdates.push(message)

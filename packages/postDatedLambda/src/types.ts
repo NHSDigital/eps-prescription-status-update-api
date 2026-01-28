@@ -7,6 +7,7 @@ import {NotifyDataItem, PSUDataItem} from "@psu-common/commonTypes"
  */
 export interface PostDatedSQSMessage extends Message {
   prescriptionData: NotifyDataItem
+  visibilityTimeoutSeconds?: number
 }
 
 /**
