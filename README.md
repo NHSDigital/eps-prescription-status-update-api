@@ -1,12 +1,12 @@
 # EPS Prescription Status Update API
 
-![Build](https://github.com/NHSDigital/eps-prescription-status-update-api/actions/workflows/ci.yml/badge.svg?branch=main)  
+![Build](https://github.com/NHSDigital/eps-prescription-status-update-api/actions/workflows/ci.yml/badge.svg?branch=main)
 ![Release](https://github.com/NHSDigital/eps-prescription-status-update-api/actions/workflows/release.yml/badge.svg?branch=main)
 
 ## Versions and deployments
 
-Version release history can be found ot https://github.com/NHSDigital/eps-prescription-status-update-api/releases.  
-We use eslint convention for commit messages for commits to main branch. Descriptions for the types of changes in a release can be found in the [contributing guidelines](./CONTRIBUTING.md)  
+Version release history can be found ot https://github.com/NHSDigital/eps-prescription-status-update-api/releases.
+We use eslint convention for commit messages for commits to main branch. Descriptions for the types of changes in a release can be found in the [contributing guidelines](./CONTRIBUTING.md)
 Deployment history can be found at https://nhsdigital.github.io/eps-prescription-status-update-api/
 
 ## Introduction
@@ -20,6 +20,7 @@ This is the AWS layer that provides an API for EPS Prescription Status Update.
 - `packages/capabilityStatement` Returns a static capability statement.
 - `packages/cpsuLambda` Handles updating prescription status using a custom format.
 - `packages/nhsNotifyLambda` Handles sending prescription notifications to the NHS Notify service.
+- `packages/postDatedLambda` Handles business logic for post-dated prescriptions getting notifications \[deprecated\].
 - `packages/nhsNotifyUpdateCallback` Handles receiving notification updates from the NHS Notify service.
 - `packages/checkPrescriptionStatusUpdates` Validates and retrieves prescription status update data.
 - `packages/gsul` Expose data owned by PSU but needed by [PfP](https://github.com/NHSDigital/prescriptionsforpatients)
@@ -56,9 +57,9 @@ The contents of this repository are protected by Crown Copyright (C).
 
 ## Development
 
-It is recommended that you use visual studio code and a devcontainer as this will install all necessary components and correct versions of tools and languages.  
-See https://code.visualstudio.com/docs/devcontainers/containers for details on how to set this up on your host machine.  
-There is also a workspace file in .vscode that should be opened once you have started the devcontainer. The workspace file can also be opened outside of a devcontainer if you wish.  
+It is recommended that you use visual studio code and a devcontainer as this will install all necessary components and correct versions of tools and languages.
+See https://code.visualstudio.com/docs/devcontainers/containers for details on how to set this up on your host machine.
+There is also a workspace file in .vscode that should be opened once you have started the devcontainer. The workspace file can also be opened outside of a devcontainer if you wish.
 The project uses [SAM](https://aws.amazon.com/serverless/sam/) to develop and deploy the APIs and associated resources.
 
 All commits must be made using [signed commits](https://docs.github.com/en/authentication/managing-commit-signature-verification/signing-commits).
@@ -239,8 +240,8 @@ Workflows are in the `.github/workflows` folder:
 
 ### Github pages
 
-Github pages is used to display deployment information. The source for github pages is in the gh-pages branch.  
-As part of the ci and release workflows, the release tag (either the short commit SHA or release tag) is appended to \_data/{environment}\_deployments.csv so we have a history of releases and replaced in \_data/{environment}\_latest.csv so we now what the latest released version is.  
+Github pages is used to display deployment information. The source for github pages is in the gh-pages branch.
+As part of the ci and release workflows, the release tag (either the short commit SHA or release tag) is appended to \_data/{environment}\_deployments.csv so we have a history of releases and replaced in \_data/{environment}\_latest.csv so we now what the latest released version is.
 There are different makefile targets in this branch. These are
 
 - `run-jekyll` - runs the site locally so changes can be previewed during development

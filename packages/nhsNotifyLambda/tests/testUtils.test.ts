@@ -611,6 +611,7 @@ describe("NHS notify lambda helper functions", () => {
       const data = [
         constructPSUDataItemMessage({
           PSUDataItem: {
+            PrescriptionID: "prescription-id",
             RequestID: "r1",
             PatientNHSNumber: "n1",
             PharmacyODSCode: "o1",
@@ -620,6 +621,7 @@ describe("NHS notify lambda helper functions", () => {
         }),
         constructPSUDataItemMessage({
           PSUDataItem: {
+            PrescriptionID: "prescription-id",
             RequestID: "r2",
             PatientNHSNumber: "n2",
             PharmacyODSCode: "o2",
@@ -688,6 +690,7 @@ describe("NHS notify lambda helper functions", () => {
       const data = [
         constructPSUDataItemMessage({
           PSUDataItem: {
+            PrescriptionID: "prescription-id",
             RequestID: "rA",
             PatientNHSNumber: "nx",
             PharmacyODSCode: "ox",
@@ -734,6 +737,7 @@ describe("NHS notify lambda helper functions", () => {
       const data = [
         constructPSUDataItemMessage({
           PSUDataItem: {
+            PrescriptionID: "prescription-id",
             RequestID: "rX",
             PatientNHSNumber: "ny",
             PharmacyODSCode: "oy",
@@ -743,6 +747,7 @@ describe("NHS notify lambda helper functions", () => {
         }),
         constructPSUDataItemMessage({
           PSUDataItem: {
+            PrescriptionID: "prescription-id",
             RequestID: "rY",
             PatientNHSNumber: "nz",
             PharmacyODSCode: "oz",
@@ -782,6 +787,7 @@ describe("NHS notify lambda helper functions", () => {
       const data = Array.from({length: 7}, (_, i) =>
         constructPSUDataItemMessage({
           PSUDataItem: {
+            PrescriptionID: "prescription-id",
             RequestID: `r${i}`,
             PatientNHSNumber: `n${i}`,
             PharmacyODSCode: `o${i}`,
@@ -829,6 +835,7 @@ describe("NHS notify lambda helper functions", () => {
       const data = [
         constructPSUDataItemMessage({
           PSUDataItem: {
+            PrescriptionID: "prescription-id",
             RequestID: "r1",
             PatientNHSNumber: "n1",
             PharmacyODSCode: "o1",
@@ -838,6 +845,7 @@ describe("NHS notify lambda helper functions", () => {
         }),
         constructPSUDataItemMessage({
           PSUDataItem: {
+            PrescriptionID: "prescription-id",
             RequestID: "r2",
             PatientNHSNumber: "n2",
             PharmacyODSCode: "o2",
@@ -887,6 +895,7 @@ describe("NHS notify lambda helper functions", () => {
       const data = [
         constructPSUDataItemMessage({
           PSUDataItem: {
+            PrescriptionID: "prescription-id",
             RequestID: "r1",
             PatientNHSNumber: "n1",
             PharmacyODSCode: "o1",
@@ -896,6 +905,7 @@ describe("NHS notify lambda helper functions", () => {
         }),
         constructPSUDataItemMessage({
           PSUDataItem: {
+            PrescriptionID: "prescription-id",
             RequestID: "r2",
             PatientNHSNumber: "n2",
             PharmacyODSCode: "o2",
@@ -964,6 +974,7 @@ describe("NHS notify lambda helper functions", () => {
       const dataWithMixed = [
         constructPSUDataItemMessage({
           PSUDataItem: {
+            PrescriptionID: "prescription-id",
             RequestID: "r1",
             PatientNHSNumber: "n1",
             PharmacyODSCode: "o1",
@@ -973,6 +984,7 @@ describe("NHS notify lambda helper functions", () => {
         }),
         constructPSUDataItemMessage({
           PSUDataItem: {
+            PrescriptionID: "prescription-id",
             RequestID: "r2",
             PatientNHSNumber: "n2",
             PharmacyODSCode: "o2",
@@ -1004,6 +1016,7 @@ describe("NHS notify lambda helper functions", () => {
 
       const data = [constructPSUDataItemMessage({
         PSUDataItem: {
+          PrescriptionID: "prescription-id",
           RequestID: "r1",
           PatientNHSNumber: "n1",
           PharmacyODSCode: "o1",
@@ -1026,6 +1039,7 @@ describe("NHS notify lambda helper functions", () => {
 
       const data = [constructPSUDataItemMessage({
         PSUDataItem: {
+          PrescriptionID: "prescription-id",
           RequestID: "r1",
           PatientNHSNumber: "n1",
           PharmacyODSCode: "o1",
