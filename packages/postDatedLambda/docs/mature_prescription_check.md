@@ -15,3 +15,17 @@ flowchart TD
     O -- Yes --> P["return IMMATURE"]
     O -- No --> Q["return MATURED"]
 ```
+
+
+```mermaid
+flowchart TB
+  PSU[PSU] -- "Post dated" --> Qp["Post-dated SQS queue"]
+  PSU -- "Contemporary" --> Qn[Notifications SQS queue]
+
+  Qp --> lp["Post-dated lambda"]
+  Qn --> ln["Notifications lambda"]
+
+  lp -- MATURE --> Qn
+  lp -- IMMATURE --> Qp
+  lp -- IGNORE --> X((Delete))
+```
