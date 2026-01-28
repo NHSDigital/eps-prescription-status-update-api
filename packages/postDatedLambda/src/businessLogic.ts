@@ -143,5 +143,5 @@ export function computeTimeUntilMaturity(
   const lastModified = new Date(prescriptionRecord.LastModified)
   const currentTime = new Date()
 
-  return lastModified.getTime() - currentTime.getTime()
+  return (lastModified.getTime() - currentTime.getTime()) / 1000
 }
