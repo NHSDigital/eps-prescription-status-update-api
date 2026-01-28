@@ -233,6 +233,9 @@ export async function pushPrescriptionToNotificationSQS(
   // we don't want items that have gone from "ready to collect" to "ready to collect"
   // So chuck those out.
   const changedStatus = candidates
+    // In this check, don't consider previous updates that have a defined PostDatedLastModifiedSetAt
+    // This is because if the last one was post-dated, and the current one ISN'T, we DO want to send a notification
+    .filter(item => item.previous?.PostDatedLastModifiedSetAt === undefined)
     .filter(({current, previous}) => {
       if (!previous) return true // no previous item (or hit an error getting one) -> treat as changed
       return norm(current.Status) !== norm(previous.Status)
