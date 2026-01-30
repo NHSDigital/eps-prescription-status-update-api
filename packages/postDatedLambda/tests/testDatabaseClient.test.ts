@@ -27,7 +27,6 @@ export function mockDynamoDBClient() {
 
 const {mockSend} = mockDynamoDBClient()
 const {
-  createPrescriptionLookupKey,
   getExistingRecordsByPrescriptionID,
   fetchExistingRecordsForPrescriptions,
   enrichMessagesWithExistingRecords
@@ -36,33 +35,19 @@ const {
 const logger = new Logger({serviceName: "postDatedLambdaTEST"})
 
 describe("databaseClient", () => {
-  describe("createPrescriptionLookupKey", () => {
-    it("should create the correct lookup key", () => {
-      const prescriptionID = "abc123"
-      const pharmacyODSCode = "pharm001"
-      const expectedKey = "ABC123#PHARM001"
-
-      const result = createPrescriptionLookupKey(prescriptionID, pharmacyODSCode)
-      expect(result).toBe(expectedKey)
-    })
-  })
-
   describe("getExistingRecordsByPrescriptionID", () => {
     it("should return existing records from DynamoDB", async () => {
       const prescriptionID = "testPrescID"
-      const pharmacyODSCode = "testPharmODS"
 
       // Mock DynamoDB response
       const mockItems = [
         {
           PrescriptionID: {S: prescriptionID},
-          PharmacyODSCode: {S: pharmacyODSCode},
           Status: {S: "Dispensed"},
           LastModified: {S: "2024-01-01T12:00:00Z"}
         },
         {
           PrescriptionID: {S: prescriptionID},
-          PharmacyODSCode: {S: pharmacyODSCode},
           Status: {S: "ReadyForCollection"},
           LastModified: {S: "2023-12-31T12:00:00Z"}
         }
@@ -75,7 +60,6 @@ describe("databaseClient", () => {
 
       const records = await getExistingRecordsByPrescriptionID(
         prescriptionID,
-        pharmacyODSCode,
         logger
       )
 
@@ -86,7 +70,6 @@ describe("databaseClient", () => {
 
     it("Should log and throw an error if the DynamoDB query fails", async () => {
       const prescriptionID = "errorPrescID"
-      const pharmacyODSCode = "errorPharmODS"
 
       // Mock DynamoDB to throw an error
       const mockError = new Error("DynamoDB query failed")
@@ -97,7 +80,6 @@ describe("databaseClient", () => {
       await expect(
         getExistingRecordsByPrescriptionID(
           prescriptionID,
-          pharmacyODSCode,
           logger
         )
       ).rejects.toThrow("DynamoDB query failed")

@@ -202,10 +202,8 @@ Resources:
               WriteCapacityUnits: !Ref MinWritePrescriptionStatusUpdatesCapacity
             - !Ref "AWS::NoValue"
         # TODO: Remove this when we deprecate post modified prescriptions.
-        - IndexName: PharmacyODSCodePrescriptionIDIndexPostDatedIndex
+        - IndexName: PrescriptionIDPostDatedIndex
           KeySchema:
-            - AttributeName: PharmacyODSCode
-              KeyType: HASH
             - AttributeName: PrescriptionID
               KeyType: RANGE
           Projection:

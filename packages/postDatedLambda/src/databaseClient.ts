@@ -11,16 +11,12 @@ import {
 
 const client = new DynamoDBClient()
 const tableName = process.env.TABLE_NAME ?? "PrescriptionStatusUpdates"
-const pharmacyPrescriptionIndexName = "PharmacyODSCodePrescriptionIDIndexPostDatedIndex"
+const pharmacyPrescriptionIndexName = "PrescriptionIDPostDatedIndex"
 
 type PrescriptionLookupRequest = {
   lookupKey: string
   prescriptionID: string
   pharmacyODSCode: string
-}
-
-export function createPrescriptionLookupKey(prescriptionID: string, pharmacyODSCode: string): string {
-  return `${prescriptionID.toUpperCase()}#${pharmacyODSCode.toUpperCase()}`
 }
 
 /**
@@ -35,7 +31,6 @@ export function createPrescriptionLookupKey(prescriptionID: string, pharmacyODSC
  */
 export async function getExistingRecordsByPrescriptionID(
   prescriptionID: string,
-  pharmacyODSCode: string,
   logger: Logger
 ): Promise<Array<PSUDataItem>> {
   const normalizedPrescriptionID = prescriptionID.toUpperCase()
@@ -116,7 +111,7 @@ export async function fetchExistingRecordsForPrescriptions(
   // Map each post-dated item to its corresponding existing records
   const results: Array<PostDatedPrescriptionWithExistingRecords> = postDatedItems.map(
     (postDatedData) => {
-      const lookupKey = createPrescriptionLookupKey(postDatedData.PrescriptionID, postDatedData.PharmacyODSCode)
+      const lookupKey = postDatedData.PrescriptionID.toUpperCase() // Case insensitive
       const existingRecords = existingRecordsMap.get(lookupKey) ?? []
 
       return {
@@ -133,7 +128,7 @@ function buildLookupRequests(postDatedItems: Array<NotifyDataItem>): Array<Presc
   const lookups = new Map<string, PrescriptionLookupRequest>()
 
   for (const item of postDatedItems) {
-    const lookupKey = createPrescriptionLookupKey(item.PrescriptionID, item.PharmacyODSCode)
+    const lookupKey = item.PrescriptionID.toUpperCase() // Case insensitive
 
     // dont worry about overwriting entries, since they'll be identical
     lookups.set(lookupKey, {
@@ -156,7 +151,7 @@ async function buildExistingRecordsMap(
   await Promise.all(
     lookupRequests.map(async ({lookupKey, prescriptionID, pharmacyODSCode}) => {
       try {
-        const records = await getExistingRecordsByPrescriptionID(prescriptionID, pharmacyODSCode, logger)
+        const records = await getExistingRecordsByPrescriptionID(prescriptionID, logger)
         existingRecordsMap.set(lookupKey, records)
       } catch (error) {
         logger.error("Failed to fetch existing records for prescription", {
