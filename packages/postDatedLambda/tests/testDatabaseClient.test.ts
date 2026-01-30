@@ -35,6 +35,10 @@ const {
 const logger = new Logger({serviceName: "postDatedLambdaTEST"})
 
 describe("databaseClient", () => {
+  beforeEach(() => {
+    mockSend.mockReset()
+  })
+
   describe("getExistingRecordsByPrescriptionID", () => {
     it("should return existing records from DynamoDB", async () => {
       const prescriptionID = "testPrescID"
@@ -43,12 +47,12 @@ describe("databaseClient", () => {
       const mockItems = [
         {
           PrescriptionID: {S: prescriptionID},
-          Status: {S: "Dispensed"},
+          Status: {S: "With pharmacy"},
           LastModified: {S: "2024-01-01T12:00:00Z"}
         },
         {
           PrescriptionID: {S: prescriptionID},
-          Status: {S: "ReadyForCollection"},
+          Status: {S: "Ready to collect"},
           LastModified: {S: "2023-12-31T12:00:00Z"}
         }
       ]
@@ -64,8 +68,21 @@ describe("databaseClient", () => {
       )
 
       expect(records).toHaveLength(2)
-      expect(records[0].Status).toBe("Dispensed")
-      expect(records[1].Status).toBe("ReadyForCollection")
+      expect(records[0].Status).toBe("With pharmacy")
+      expect(records[1].Status).toBe("Ready to collect")
+    })
+
+    it("should return an empty array when DynamoDB returns no items", async () => {
+      const prescriptionID = "noRecordsPrescID"
+
+      mockSend.mockReturnValueOnce({
+        Items: [],
+        LastEvaluatedKey: undefined
+      })
+
+      const records = await getExistingRecordsByPrescriptionID(prescriptionID, logger)
+
+      expect(records).toEqual([])
     })
 
     it("Should log and throw an error if the DynamoDB query fails", async () => {
@@ -84,6 +101,45 @@ describe("databaseClient", () => {
         )
       ).rejects.toThrow("DynamoDB query failed")
     })
+
+    it("should paginate through multiple DynamoDB result pages", async () => {
+      const prescriptionID = "pagedPrescID"
+
+      const firstPageItems = [
+        {
+          PrescriptionID: {S: prescriptionID},
+          Status: {S: "Ready to collect"},
+          LastModified: {S: "2024-01-01T12:00:00Z"}
+        }
+      ]
+
+      const secondPageItems = [
+        {
+          PrescriptionID: {S: prescriptionID},
+          Status: {S: "With pharmacy"},
+          LastModified: {S: "2024-01-02T12:00:00Z"}
+        }
+      ]
+
+      mockSend
+        .mockReturnValueOnce({
+          Items: firstPageItems,
+          LastEvaluatedKey: {
+            PrescriptionID: {S: prescriptionID}
+          }
+        })
+        .mockReturnValueOnce({
+          Items: secondPageItems,
+          LastEvaluatedKey: undefined
+        })
+
+      const records = await getExistingRecordsByPrescriptionID(prescriptionID, logger)
+
+      expect(mockSend).toHaveBeenCalledTimes(2)
+      expect(records).toHaveLength(2)
+      expect(records[0].Status).toBe("Ready to collect")
+      expect(records[1].Status).toBe("With pharmacy")
+    })
   })
 
   describe("fetchExistingRecordsForPrescriptions", () => {
@@ -98,7 +154,7 @@ describe("databaseClient", () => {
         {
           PrescriptionID: {S: "presc1"},
           PharmacyODSCode: {S: "pharmA"},
-          Status: {S: "Dispensed"},
+          Status: {S: "With pharmacy"},
           LastModified: {S: "2024-01-01T12:00:00Z"}
         }
       ]
@@ -107,7 +163,7 @@ describe("databaseClient", () => {
         {
           PrescriptionID: {S: "presc2"},
           PharmacyODSCode: {S: "pharmB"},
-          Status: {S: "ReadyForCollection"},
+          Status: {S: "Ready to collect"},
           LastModified: {S: "2024-01-02T12:00:00Z"}
         }
       ]
@@ -129,9 +185,9 @@ describe("databaseClient", () => {
 
       expect(result.length).toBe(2)
       expect(result[0].existingRecords.length).toBe(1)
-      expect(result[0].existingRecords[0].Status).toBe("Dispensed")
+      expect(result[0].existingRecords[0].Status).toBe("With pharmacy")
       expect(result[1].existingRecords.length).toBe(1)
-      expect(result[1].existingRecords[0].Status).toBe("ReadyForCollection")
+      expect(result[1].existingRecords[0].Status).toBe("Ready to collect")
     })
 
     it(
@@ -147,7 +203,7 @@ describe("databaseClient", () => {
           {
             PrescriptionID: {S: "presc1"},
             PharmacyODSCode: {S: "pharmA"},
-            Status: {S: "Dispensed"},
+            Status: {S: "With pharmacy"},
             LastModified: {S: "2024-01-01T12:00:00Z"}
           }
         ]
@@ -168,9 +224,32 @@ describe("databaseClient", () => {
 
         expect(result.length).toBe(2)
         expect(result[0].existingRecords.length).toBe(1)
-        expect(result[0].existingRecords[0].Status).toBe("Dispensed")
+        expect(result[0].existingRecords[0].Status).toBe("With pharmacy")
         expect(result[1].existingRecords.length).toBe(0)
       })
+
+    it("should return prescriptions with empty existingRecords when DynamoDB has no matches", async () => {
+      const prescriptions = [
+        createMockPostModifiedDataItem({PrescriptionID: "noPresc1", PharmacyODSCode: "pharmA"}),
+        createMockPostModifiedDataItem({PrescriptionID: "noPresc2", PharmacyODSCode: "pharmB"})
+      ]
+
+      mockSend
+        .mockReturnValueOnce({
+          Items: [],
+          LastEvaluatedKey: undefined
+        })
+        .mockReturnValueOnce({
+          Items: [],
+          LastEvaluatedKey: undefined
+        })
+
+      const result = await fetchExistingRecordsForPrescriptions(prescriptions, logger)
+
+      expect(result).toHaveLength(2)
+      expect(result[0].existingRecords).toEqual([])
+      expect(result[1].existingRecords).toEqual([])
+    })
   })
 
   describe("enrichMessagesWithExistingRecords", () => {
@@ -185,7 +264,7 @@ describe("databaseClient", () => {
         {
           PrescriptionID: {S: "presc1"},
           PharmacyODSCode: {S: "pharmA"},
-          Status: {S: "Dispensed"},
+          Status: {S: "With pharmacy"},
           LastModified: {S: "2024-01-01T12:00:00Z"}
         }
       ]
@@ -194,7 +273,7 @@ describe("databaseClient", () => {
         {
           PrescriptionID: {S: "presc2"},
           PharmacyODSCode: {S: "pharmB"},
-          Status: {S: "ReadyForCollection"},
+          Status: {S: "Ready to collect"},
           LastModified: {S: "2024-01-02T12:00:00Z"}
         }
       ]
@@ -220,18 +299,15 @@ describe("databaseClient", () => {
 
       expect(enrichedMessages.length).toBe(2)
       expect(enrichedMessages[0].existingRecords.length).toBe(1)
-      expect(enrichedMessages[0].existingRecords[0].Status).toBe("Dispensed")
+      expect(enrichedMessages[0].existingRecords[0].Status).toBe("With pharmacy")
       expect(enrichedMessages[1].existingRecords.length).toBe(1)
-      expect(enrichedMessages[1].existingRecords[0].Status).toBe("ReadyForCollection")
+      expect(enrichedMessages[1].existingRecords[0].Status).toBe("Ready to collect")
     })
-  })
 
-  it("Should return empty array when no messages are provided", async () => {
-    const enrichedMessages = await enrichMessagesWithExistingRecords(
-      [],
-      logger
-    )
+    it("should return an empty array when no messages are provided", async () => {
+      const enrichedMessages = await enrichMessagesWithExistingRecords([], logger)
 
-    expect(enrichedMessages).toEqual([])
+      expect(enrichedMessages).toEqual([])
+    })
   })
 })

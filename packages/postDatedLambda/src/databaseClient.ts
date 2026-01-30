@@ -73,9 +73,6 @@ export async function getExistingRecordsByPrescriptionID(
       recordCount: items.length
     })
 
-    // Sort by LastModified ascending so most recent is first
-    items.sort((a, b) => new Date(b.LastModified).valueOf() - new Date(a.LastModified).valueOf())
-
     return items
   } catch (err) {
     logger.error("Error querying DynamoDB for existing prescription records", {
