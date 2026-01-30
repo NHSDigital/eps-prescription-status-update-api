@@ -205,7 +205,7 @@ Resources:
         - IndexName: PrescriptionIDPostDatedIndex
           KeySchema:
             - AttributeName: PrescriptionID
-              KeyType: RANGE
+              KeyType: HASH
           Projection:
             NonKeyAttributes:
               - PatientNHSNumber
