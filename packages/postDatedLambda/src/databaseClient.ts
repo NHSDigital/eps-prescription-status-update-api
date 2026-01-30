@@ -16,16 +16,14 @@ const pharmacyPrescriptionIndexName = "PrescriptionIDPostDatedIndex"
 type PrescriptionLookupRequest = {
   lookupKey: string
   prescriptionID: string
-  pharmacyODSCode: string
 }
 
 /**
- * Query the PrescriptionStatusUpdates table for all records matching a given prescription ID and ODS code.
+ * Query the PrescriptionStatusUpdates table for all records matching a given prescription ID.
  * There should always be at least one result, but there may be multiple if the prescription has been
  * updated multiple times.
  *
  * @param prescriptionID - The prescription ID to query for
- * @param pharmacyODSCode - The pharmacy ODS code to query for
  * @param logger - The AWS Lambda Powertools logger instance
  * @returns Array of PSUDataItem records matching the prescription ID. Sorted by LastModified descending.
  */
@@ -35,7 +33,7 @@ export async function getExistingRecordsByPrescriptionID(
 ): Promise<Array<PSUDataItem>> {
   const normalizedPrescriptionID = prescriptionID.toUpperCase()
 
-  // Use the GSI to query by PharmacyODSCode and PrescriptionID
+  // Use the GSI to query by PrescriptionID
   const query: QueryCommandInput = {
     TableName: tableName,
     IndexName: pharmacyPrescriptionIndexName,
@@ -133,8 +131,7 @@ function buildLookupRequests(postDatedItems: Array<NotifyDataItem>): Array<Presc
     // dont worry about overwriting entries, since they'll be identical
     lookups.set(lookupKey, {
       lookupKey,
-      prescriptionID: item.PrescriptionID,
-      pharmacyODSCode: item.PharmacyODSCode
+      prescriptionID: item.PrescriptionID
     })
   }
 
@@ -149,14 +146,13 @@ async function buildExistingRecordsMap(
 
   // await all lookups in parallel
   await Promise.all(
-    lookupRequests.map(async ({lookupKey, prescriptionID, pharmacyODSCode}) => {
+    lookupRequests.map(async ({lookupKey, prescriptionID}) => {
       try {
         const records = await getExistingRecordsByPrescriptionID(prescriptionID, logger)
         existingRecordsMap.set(lookupKey, records)
       } catch (error) {
         logger.error("Failed to fetch existing records for prescription", {
           prescriptionID,
-          pharmacyODSCode,
           error
         })
         existingRecordsMap.set(lookupKey, []) // Continue processing other prescriptions even when one fails
