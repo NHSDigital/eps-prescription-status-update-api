@@ -39,15 +39,13 @@ export async function getExistingRecordsByPrescriptionID(
   logger: Logger
 ): Promise<Array<PSUDataItem>> {
   const normalizedPrescriptionID = prescriptionID.toUpperCase()
-  const normalizedPharmacyODSCode = pharmacyODSCode.toUpperCase()
 
   // Use the GSI to query by PharmacyODSCode and PrescriptionID
   const query: QueryCommandInput = {
     TableName: tableName,
     IndexName: pharmacyPrescriptionIndexName,
-    KeyConditionExpression: "PharmacyODSCode = :ods AND PrescriptionID = :pid",
+    KeyConditionExpression: "PrescriptionID = :pid",
     ExpressionAttributeValues: {
-      ":ods": {S: normalizedPharmacyODSCode},
       ":pid": {S: normalizedPrescriptionID}
     }
   }
@@ -63,7 +61,6 @@ export async function getExistingRecordsByPrescriptionID(
 
       logger.info("Querying DynamoDB for existing prescription records", {
         prescriptionID: normalizedPrescriptionID,
-        pharmacyODSCode: normalizedPharmacyODSCode,
         tableName,
         indexName: pharmacyPrescriptionIndexName
       })
@@ -80,7 +77,6 @@ export async function getExistingRecordsByPrescriptionID(
 
     logger.info("Retrieved existing prescription records from DynamoDB", {
       prescriptionID: normalizedPrescriptionID,
-      pharmacyODSCode: normalizedPharmacyODSCode,
       recordCount: items.length
     })
 
@@ -91,7 +87,6 @@ export async function getExistingRecordsByPrescriptionID(
   } catch (err) {
     logger.error("Error querying DynamoDB for existing prescription records", {
       prescriptionID: normalizedPrescriptionID,
-      pharmacyODSCode: normalizedPharmacyODSCode,
       error: err
     })
     throw err
