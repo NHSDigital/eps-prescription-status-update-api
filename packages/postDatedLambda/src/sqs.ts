@@ -16,6 +16,7 @@ import {BatchProcessingResult, PostDatedSQSMessage} from "./types"
 const sqs = new SQSClient({region: process.env.AWS_REGION})
 
 const DEFAULT_VISIBILITY_TIMEOUT_SECONDS = 300 // 5 minutes
+const MAXIMUM_VISIBILITY_TIMEOUT_SECONDS = 10 * 60 * 60 // 10 hours
 
 // Note that a lot of the code to send an SQS message is copied from the updatePrescriptionStatus lambda,
 // and I've NOT moved the code into a shared location for the two.
@@ -333,7 +334,9 @@ export async function returnMessagesToQueue(
   const entries = messages.map((m) => ({
     Id: m.MessageId!,
     ReceiptHandle: m.ReceiptHandle!,
-    VisibilityTimeout: m.visibilityTimeoutSeconds || DEFAULT_VISIBILITY_TIMEOUT_SECONDS
+    VisibilityTimeout: Math.min(
+      m.visibilityTimeoutSeconds || DEFAULT_VISIBILITY_TIMEOUT_SECONDS,
+      MAXIMUM_VISIBILITY_TIMEOUT_SECONDS) // Cap at the max
   }))
 
   logger.info(
