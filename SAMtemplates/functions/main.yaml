@@ -90,6 +90,10 @@ Parameters:
   DeployCheckPrescriptionStatusUpdate:
     Type: String
 
+  DeployNotificationsReporting:
+    Type: String
+    Default: false
+
   Environment:
     Type: String
 
@@ -112,6 +116,10 @@ Conditions:
   ShouldDeployCheckPrescriptionStatusUpdate: !Equals
     - true
     - !Ref DeployCheckPrescriptionStatusUpdate
+
+  ShouldDeployNotificationsReporting: !Equals
+    - true
+    - !Ref DeployNotificationsReporting
 
   EnableBackupCondition: !Equals
     - "True"
@@ -396,6 +404,53 @@ Resources:
           - ","
           - - Fn::ImportValue: !Sub ${StackName}:tables:${PrescriptionStatusUpdatesTableName}:TableReadPolicyArn
             - Fn::ImportValue: !Sub ${StackName}:tables:UsePrescriptionStatusUpdatesKMSKeyPolicyArn
+        LogRetentionInDays: !Ref LogRetentionInDays
+        CloudWatchKMSKeyId: !ImportValue account-resources:CloudwatchLogsKmsKeyArn
+        EnableSplunk: !Ref EnableSplunk
+        SplunkSubscriptionFilterRole: !ImportValue lambda-resources:SplunkSubscriptionFilterRole
+        SplunkDeliveryStreamArn: !ImportValue lambda-resources:SplunkDeliveryStream
+
+  NotificationsReporting:
+    Condition: ShouldDeployNotificationsReporting
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub ${StackName}-NotificationsReporting
+      CodeUri: ../../packages
+      Handler: notificationsReportingLambda.handler
+      Role: !GetAtt NotificationsReportingResources.Outputs.LambdaRoleArn
+      Environment:
+        Variables:
+          TABLE_NAME: !Ref PrescriptionNotificationStatesTableName
+    Metadata:
+      BuildMethod: esbuild
+      guard:
+        SuppressedRules:
+          - LAMBDA_DLQ_CHECK
+          - LAMBDA_INSIDE_VPC
+          - LAMBDA_CONCURRENCY_CHECK
+      BuildProperties:
+        Minify: true
+        Target: es2020
+        Sourcemap: true
+        tsconfig: notificationsReportingLambda/tsconfig.json
+        packages: bundle
+        EntryPoints:
+          - notificationsReportingLambda/src/notificationsReportingLambda.ts
+
+  NotificationsReportingResources:
+    Condition: ShouldDeployNotificationsReporting
+    Type: AWS::Serverless::Application
+    Properties:
+      Location: lambda_resources.yaml
+      Parameters:
+        StackName: !Ref StackName
+        LambdaName: !Sub ${StackName}-NotificationsReporting
+        LambdaArn: !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:${StackName}-NotificationsReporting
+        IncludeAdditionalPolicies: true
+        AdditionalPolicies: !Join
+          - ","
+          - - Fn::ImportValue: !Sub ${StackName}:tables:${PrescriptionNotificationStatesTableName}:TableReadPolicyArn
+            - Fn::ImportValue: !Sub ${StackName}:tables:UsePrescriptionNotificationStatesKMSKeyPolicyArn
         LogRetentionInDays: !Ref LogRetentionInDays
         CloudWatchKMSKeyId: !ImportValue account-resources:CloudwatchLogsKmsKeyArn
         EnableSplunk: !Ref EnableSplunk
@@ -824,6 +879,20 @@ Outputs:
   NHSNotifyUpdateCallbackFunctionArn:
     Description: The function ARN of the NHSNotifyUpdateCallback lambda
     Value: !GetAtt NHSNotifyUpdateCallback.Arn
+
+  NotificationsReportingFunctionName:
+    Description: The function name of the NotificationsReporting lambda
+    Value: !If
+      - ShouldDeployNotificationsReporting
+      - !Ref NotificationsReporting
+      - ""
+
+  NotificationsReportingFunctionArn:
+    Description: The function ARN of the NotificationsReporting lambda
+    Value: !If
+      - ShouldDeployNotificationsReporting
+      - !GetAtt NotificationsReporting.Arn
+      - ""
 
   # Post-dated lambda outputs
   PostDatedNotifyLambdaFunctionName:

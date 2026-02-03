@@ -66,6 +66,7 @@ export interface LastNotificationStateType extends NotificationUpdate {
   NHSNumber: string
   ODSCode: string
   RequestId: string // x-request-id header
+  PrescriptionID?: string
   SQSMessageID?: string // The SQS message ID
   NotifyMessageID?: string // The UUID we got back from Notify for the submitted message
   NotifyMessageReference: string // The references we generated for the message

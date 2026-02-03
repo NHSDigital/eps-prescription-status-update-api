@@ -34,6 +34,7 @@ sam-sync: guard-AWS_DEFAULT_PROFILE guard-stack_name compile
 		--parameter-overrides \
 			  EnableSplunk=false \
 			  DeployCheckPrescriptionStatusUpdate=true \
+			  DeployNotificationsReporting=true \
 			  EnableAlerts=false
 
 sam-deploy: guard-AWS_DEFAULT_PROFILE guard-stack_name
@@ -42,6 +43,7 @@ sam-deploy: guard-AWS_DEFAULT_PROFILE guard-stack_name
 		--parameter-overrides \
 			  EnableSplunk=false \
 			  DeployCheckPrescriptionStatusUpdate=true \
+			  DeployNotificationsReporting=true \
 			  EnableAlerts=false
 
 sam-delete: guard-AWS_DEFAULT_PROFILE guard-stack_name
@@ -120,6 +122,7 @@ lint-node: compile-node
 	npm run lint --workspace packages/cpsuLambda
 	npm run lint --workspace packages/checkPrescriptionStatusUpdates
 	npm run lint --workspace packages/nhsNotifyLambda
+	npm run lint --workspace packages/notificationsReportingLambda
 	npm run lint --workspace packages/postDatedLambda
 	npm run lint --workspace packages/nhsNotifyUpdateCallback
 	npm run lint --workspace packages/common/testing
@@ -153,6 +156,7 @@ test: compile
 	npm run test --workspace packages/cpsuLambda
 	npm run test --workspace packages/checkPrescriptionStatusUpdates
 	npm run test --workspace packages/nhsNotifyLambda
+	npm run test --workspace packages/notificationsReportingLambda
 	npm run test --workspace packages/postDatedLambda
 	npm run test --workspace packages/nhsNotifyUpdateCallback
 	npm run test --workspace packages/common/middyErrorHandler
@@ -174,6 +178,8 @@ clean:
 	rm -rf packages/cpsuLambda/lib
 	rm -rf packages/nhsNotifyLambda/coverage
 	rm -rf packages/nhsNotifyLambda/lib
+	rm -rf packages/notificationsReportingLambda/coverage
+	rm -rf packages/notificationsReportingLambda/lib
 	rm -rf packages/postDatedLambda/coverage
 	rm -rf packages/postDatedLambda/lib
 	rm -rf packages/nhsNotifyUpdateCallback/coverage
