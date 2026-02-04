@@ -1,15 +1,10 @@
 import {Logger} from "@aws-lambda-powertools/logger"
-import {SQSClient, SendMessageBatchCommand} from "@aws-sdk/client-sqs"
+import {SQSClient, SendMessageBatchCommand, SendMessageBatchRequestEntry} from "@aws-sdk/client-sqs"
 import {getSecret} from "@aws-lambda-powertools/parameters/secrets"
 
 import {createHmac} from "node:crypto"
 
-import {
-  NotifyDataItem,
-  PSUDataItem,
-  PSUDataItemWithPrevious,
-  SQSBatchMessage
-} from "@psu-common/commonTypes"
+import {NotifyDataItem, PSUDataItem, PSUDataItemWithPrevious} from "@psu-common/commonTypes"
 
 import {checkSiteOrSystemIsNotifyEnabled} from "../validation/notificationSiteAndSystemFilters"
 
@@ -43,7 +38,7 @@ function buildSqsBatchEntries(
   items: Array<PSUDataItem>,
   requestId: string,
   sqsSalt: string
-): Array<SQSBatchMessage> {
+): Array<SendMessageBatchRequestEntry> {
   return items.map((item, idx) => ({
     Id: idx.toString(),
     MessageBody: JSON.stringify(item as NotifyDataItem),
@@ -67,7 +62,7 @@ function buildSqsBatchEntries(
  * @returns An array of the created MessageIds
  */
 async function sendEntriesToQueue(
-  entries: Array<SQSBatchMessage>,
+  entries: Array<SendMessageBatchRequestEntry>,
   queueUrl: string,
   requestId: string,
   logger: Logger
