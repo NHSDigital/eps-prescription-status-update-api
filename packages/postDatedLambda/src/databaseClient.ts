@@ -46,27 +46,30 @@ export async function getExistingRecordsByPrescriptionID(
   let lastEvaluatedKey
   let items: Array<PSUDataItem> = []
 
+  logger.info("Querying DynamoDB for existing prescription records", {
+    prescriptionID: normalizedPrescriptionID,
+    tableName,
+    indexName: pharmacyPrescriptionIndexName
+  })
+
   try {
-    do {
+    while (true) {
       if (lastEvaluatedKey) {
         query.ExclusiveStartKey = lastEvaluatedKey
       }
-
-      logger.info("Querying DynamoDB for existing prescription records", {
-        prescriptionID: normalizedPrescriptionID,
-        tableName,
-        indexName: pharmacyPrescriptionIndexName
-      })
 
       const result = await client.send(new QueryCommand(query))
 
       if (result.Items) {
         const parsedItems = result.Items.map((item) => unmarshall(item) as PSUDataItem)
-        items = items.concat(parsedItems)
+        items.push(parsedItems)
       }
 
       lastEvaluatedKey = result.LastEvaluatedKey
-    } while (lastEvaluatedKey)
+      if (!lastEvaluatedKey) {
+        break
+      }
+    }
 
     logger.info("Retrieved existing prescription records from DynamoDB", {
       prescriptionID: normalizedPrescriptionID,
