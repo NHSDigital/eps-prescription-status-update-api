@@ -61,8 +61,8 @@ export async function getExistingRecordsByPrescriptionID(
       const result = await client.send(new QueryCommand(query))
 
       if (result.Items) {
-        const parsedItems = result.Items.map((item) => unmarshall(item) as PSUDataItem)
-        items.push(parsedItems)
+        const parsedItems: Array<PSUDataItem> = result.Items.map((item) => unmarshall(item) as PSUDataItem)
+        items.push(...parsedItems)
       }
 
       lastEvaluatedKey = result.LastEvaluatedKey
