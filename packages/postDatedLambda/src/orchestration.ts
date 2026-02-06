@@ -1,12 +1,35 @@
 import {Logger} from "@aws-lambda-powertools/logger"
 
-import {computeTimeUntilMaturity, processMessage} from "./businessLogic"
-import {enrichMessagesWithExistingRecords} from "./databaseClient"
-import {receivePostDatedSQSMessages, reportQueueStatus, handleProcessedMessages} from "./sqs"
-import {BatchProcessingResult, PostDatedProcessingResult, PostDatedSQSMessage} from "./types"
+import {computeTimeUntilMaturity, determineAction} from "./businessLogic"
+import {enrichMessagesWithMostRecentDataItem} from "./databaseClient"
+import {
+  receivePostDatedSQSMessages,
+  reportQueueStatus,
+  forwardSQSMessageToNotificationQueue,
+  removeSQSMessage,
+  returnMessageToQueue
+} from "./sqs"
+import {PostDatedProcessingResult, PostDatedSQSMessage, PostDatedSQSMessageWithRecentDataItem} from "./types"
 
 export const MAX_QUEUE_RUNTIME = 14 * 60 * 1000 // 14 minutes, to avoid Lambda timeout issues (timeout is 15 minutes)
 const MIN_RECEIVED_THRESHOLD = 3 // If fewer than this number of messages are received, consider the queue empty
+
+async function handleMaturedPrescription(
+  logger: Logger,
+  message: PostDatedSQSMessageWithRecentDataItem
+): Promise<void> {
+  await forwardSQSMessageToNotificationQueue(logger, message)
+  await removeSQSMessage(logger, message)
+}
+
+async function handleImmaturePrescription(
+  logger: Logger,
+  message: PostDatedSQSMessageWithRecentDataItem
+): Promise<void> {
+  // Set visibility timeout to time until maturity, or default if calculation fails
+  message.visibilityTimeoutSeconds = computeTimeUntilMaturity(message)
+  await returnMessageToQueue(logger, message)
+}
 
 /**
  * Process a batch of SQS messages. Returns arrays of matured and immature prescription updates.
@@ -20,53 +43,34 @@ const MIN_RECEIVED_THRESHOLD = 3 // If fewer than this number of messages are re
 export async function processMessages(
   messages: Array<PostDatedSQSMessage>,
   logger: Logger
-): Promise<BatchProcessingResult> {
-  // Enrich messages with existing records from DynamoDB
-  const enrichedMessages = await enrichMessagesWithExistingRecords(messages, logger)
+): Promise<void> {
+  const enrichedMessages = await enrichMessagesWithMostRecentDataItem(messages, logger)
 
-  const maturedPrescriptionUpdates: Array<PostDatedSQSMessage> = []
-  const immaturePrescriptionUpdates: Array<PostDatedSQSMessage> = []
-  const ignoredPrescriptionUpdates: Array<PostDatedSQSMessage> = []
-
+  // Build an array of promises to await in parallel
+  const promises = []
   for (const message of enrichedMessages) {
-    try {
-      const action = processMessage(logger, message)
-      switch (action) {
-        case PostDatedProcessingResult.MATURED:
-          maturedPrescriptionUpdates.push(message)
-          break
-        case PostDatedProcessingResult.IMMATURE:
-          // Set visibility timeout to time until maturity, or default if calculation fails
-          message.visibilityTimeoutSeconds = computeTimeUntilMaturity(message)
-          immaturePrescriptionUpdates.push(message)
-          break
-        case PostDatedProcessingResult.IGNORE:
-          ignoredPrescriptionUpdates.push(message)
-          break
-        default:
-          logger.error("Unexpected processing result", {
-            messageId: message.MessageId,
-            action
-          })
-          ignoredPrescriptionUpdates.push(message)
-      }
-    } catch (error) {
-      logger.error("Error processing message", {
-        messageId: message.MessageId,
-        error
-      })
-      immaturePrescriptionUpdates.push(message)
+    const action = determineAction(logger, message)
+
+    switch (action) {
+      case PostDatedProcessingResult.REPROCESS:
+        promises.push(handleImmaturePrescription(logger, message))
+        break
+      case PostDatedProcessingResult.FORWARD_TO_NOTIFICATIONS:
+        promises.push(handleMaturedPrescription(logger, message))
+        break
+      case PostDatedProcessingResult.REMOVE_FROM_PD_QUEUE:
+        promises.push(removeSQSMessage(logger, message))
+        break
+      default:
+        logger.error("Unexpected processing result", {
+          messageId: message.MessageId,
+          action
+        })
+        throw new Error(`Unexpected processing result: ${action}`)
     }
   }
 
-  logger.info("Batch processing complete", {
-    totalMessages: messages.length,
-    maturedPrescriptionUpdatesCount: maturedPrescriptionUpdates.length,
-    immaturePrescriptionUpdatesCount: immaturePrescriptionUpdates.length,
-    ignoredPrescriptionUpdatesCount: ignoredPrescriptionUpdates.length
-  })
-
-  return {maturedPrescriptionUpdates, immaturePrescriptionUpdates, ignoredPrescriptionUpdates}
+  await Promise.all(promises)
 }
 
 /**
@@ -101,7 +105,6 @@ export async function processPostDatedQueue(logger: Logger): Promise<void> {
     }
 
     // Process messages for this batch
-    const result = await processMessages(messages, logger)
-    await handleProcessedMessages(result, logger)
+    await processMessages(messages, logger)
   }
 }
