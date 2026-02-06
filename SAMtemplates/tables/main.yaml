@@ -201,6 +201,25 @@ Resources:
             - ReadCapacityUnits: 1
               WriteCapacityUnits: !Ref MinWritePrescriptionStatusUpdatesCapacity
             - !Ref "AWS::NoValue"
+        # TODO: Remove this when we deprecate post modified prescriptions.
+        - IndexName: PrescriptionIDPostDatedIndex
+          KeySchema:
+            - AttributeName: PrescriptionID
+              KeyType: HASH
+          Projection:
+            NonKeyAttributes:
+              - PatientNHSNumber
+              - LineItemID
+              - TerminalStatus
+              - LastModified
+              - Status
+              - PostDatedLastModifiedSetAt
+            ProjectionType: INCLUDE
+          ProvisionedThroughput: !If
+            - EnableDynamoDBAutoScalingCondition
+            - ReadCapacityUnits: 1
+              WriteCapacityUnits: !Ref MinWritePrescriptionStatusUpdatesCapacity
+            - !Ref "AWS::NoValue"
       Tags:
         - Key: "EPS-Tablename"
           Value: "PrescriptionStatusUpdates"

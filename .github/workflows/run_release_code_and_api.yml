@@ -84,6 +84,10 @@ on:
         required: false
         type: boolean
         default: false
+      ENABLE_POST_DATED_NOTIFICATIONS:
+        required: false
+        type: boolean
+        default: false
       ENABLED_SYSTEMS:
         required: true
         type: string
@@ -120,6 +124,9 @@ on:
       FORWARD_CSOC_LOGS:
         required: true
         type: boolean
+      DEPLOY_NOTIFICATIONS_REPORTING_ENDPOINT:
+        type: boolean
+        default: false
     secrets:
       CLOUD_FORMATION_DEPLOY_ROLE:
         required: true
@@ -215,6 +222,7 @@ jobs:
           ENABLE_BACKUP: ${{ inputs.ENABLE_BACKUP }}
           ENABLE_NOTIFICATIONS_INTERNAL: ${{ inputs.ENABLE_NOTIFICATIONS_INTERNAL }}
           ENABLE_NOTIFICATIONS_EXTERNAL: ${{ inputs.ENABLE_NOTIFICATIONS_EXTERNAL }}
+          ENABLE_POST_DATED_NOTIFICATIONS: ${{ inputs.ENABLE_POST_DATED_NOTIFICATIONS }}
           REQUIRE_APPLICATION_NAME: ${{ inputs.REQUIRE_APPLICATION_NAME }}
           ENABLED_SITE_ODS_CODES: ${{ steps.read.outputs.ods_csv }}
           ENABLED_SYSTEMS: ${{ inputs.ENABLED_SYSTEMS }}
@@ -226,6 +234,7 @@ jobs:
           TEST_PRESCRIPTIONS_3: ${{ inputs.TEST_PRESCRIPTIONS_3 || 'noval' }}
           TEST_PRESCRIPTIONS_4: ${{ inputs.TEST_PRESCRIPTIONS_4 || 'noval' }}
           FORWARD_CSOC_LOGS: ${{ inputs.FORWARD_CSOC_LOGS }}
+          DEPLOY_NOTIFICATIONS_REPORTING: ${{ inputs.DEPLOY_NOTIFICATIONS_REPORTING_ENDPOINT }}
         run: ./release_code.sh
 
       - name: get mtls secrets

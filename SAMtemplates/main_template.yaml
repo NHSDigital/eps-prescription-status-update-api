@@ -71,6 +71,10 @@ Parameters:
   DeployCheckPrescriptionStatusUpdate:
     Type: String
 
+  DeployNotificationsReporting:
+    Type: String
+    Default: false
+
   Environment:
     Type: String
 
@@ -121,6 +125,10 @@ Parameters:
   BlockedSiteODSCodesValue:
     Type: String
     Default: " "
+
+  EnablePostDatedNotifications:
+    Type: String
+    Default: "false"
 
   NotifyRoutingPlanIDValue:
     Type: String
@@ -217,9 +225,12 @@ Resources:
         CheckPrescriptionStatusUpdatesFunctionArn: !GetAtt Functions.Outputs.CheckPrescriptionStatusUpdatesFunctionArn
         NHSNotifyUpdateCallbackFunctionName: !GetAtt Functions.Outputs.NHSNotifyUpdateCallbackFunctionName
         NHSNotifyUpdateCallbackFunctionArn: !GetAtt Functions.Outputs.NHSNotifyUpdateCallbackFunctionArn
+        NotificationsReportingFunctionName: !GetAtt Functions.Outputs.NotificationsReportingFunctionName
+        NotificationsReportingFunctionArn: !GetAtt Functions.Outputs.NotificationsReportingFunctionArn
         LogRetentionInDays: !Ref LogRetentionInDays
         EnableSplunk: !Ref EnableSplunk
         DeployCheckPrescriptionStatusUpdate: !Ref DeployCheckPrescriptionStatusUpdate
+        DeployNotificationsReporting: !Ref DeployNotificationsReporting
         ForwardCsocLogs: !Ref ForwardCsocLogs
 
   Functions:
@@ -231,6 +242,8 @@ Resources:
         PrescriptionStatusUpdatesTableName: !GetAtt Tables.Outputs.PrescriptionStatusUpdatesTableName
         PrescriptionNotificationStatesTableName: !GetAtt Tables.Outputs.PrescriptionNotificationStatesTableName
         NHSNotifyPrescriptionsSQSQueueUrl: !GetAtt Messaging.Outputs.NHSNotifyPrescriptionsSQSQueueUrl
+        PostDatedNotificationsSQSQueueUrl: !GetAtt Messaging.Outputs.PostDatedNotificationsSQSQueueUrl
+        EnablePostDatedNotifications: !Ref EnablePostDatedNotifications
         SQSSaltSecret: !GetAtt Secrets.Outputs.SQSSaltSecret
         EnabledSiteODSCodesParam: !GetAtt Parameters.Outputs.EnabledSiteODSCodesParameterName
         EnabledSystemsParam: !GetAtt Parameters.Outputs.EnabledSystemsParameterName
@@ -245,6 +258,7 @@ Resources:
         VersionNumber: !Ref VersionNumber
         CommitId: !Ref CommitId
         DeployCheckPrescriptionStatusUpdate: !Ref DeployCheckPrescriptionStatusUpdate
+        DeployNotificationsReporting: !Ref DeployNotificationsReporting
         Environment: !Ref Environment
         EnableBackup: !Ref EnableBackup
         RequireApplicationName: !Ref RequireApplicationName

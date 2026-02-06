@@ -35,6 +35,7 @@ export async function addPrescriptionMessagesToNotificationStateStore(
       NHSNumber: data.PSUDataItem.PatientNHSNumber,
       ODSCode: data.PSUDataItem.PharmacyODSCode,
       RequestId: data.PSUDataItem.RequestID,
+      PrescriptionID: data.PSUDataItem.PrescriptionID, // only used for reporting and tracing
       SQSMessageID: data.MessageId,
       LastNotifiedPrescriptionStatus: data.PSUDataItem.Status,
       MessageStatus: data.messageStatus ?? "unknown", // Fall back to unknown if not set
@@ -43,7 +44,7 @@ export async function addPrescriptionMessagesToNotificationStateStore(
       NotifyMessageReference: data.messageReference,
       NotifyMessageBatchReference: data.messageBatchReference, // Will be undefined when request fails
       LastNotificationRequestTimestamp: new Date().toISOString(),
-      ExpiryTime: (Math.floor(+new Date() / 1000) + TTL_DELTA)
+      ExpiryTime: (Math.floor(Date.now() / 1000) + TTL_DELTA)
     }
 
     try {
