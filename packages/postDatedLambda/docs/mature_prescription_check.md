@@ -4,9 +4,7 @@ The business logic's `processMessage()` function accepts the SQS message for thi
 
 ```mermaid
 flowchart TD
-    A["Start `processMessage()`"] --> C{"POST_DATED_OVERRIDE?"}
-    C -- Yes --> D["Log override + return override value"]
-    C -- No --> E{"existingRecords empty?"}
+    A["Start `processMessage()`"] --> E{"existingRecords empty?"}
     E -- Yes --> F["Log error + return IGNORE"]
     E -- No --> G["Fetch most recently submitted NPPTS record"]
     G --> H{"PostDatedLastModifiedSetAt present?"}

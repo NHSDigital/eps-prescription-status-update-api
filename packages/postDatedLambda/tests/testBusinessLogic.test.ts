@@ -142,18 +142,6 @@ describe("businessLogic", () => {
   })
 
   describe("processMessage", () => {
-    it("should return the override value when override mode is enabled", async () => {
-      const {processMessage} = await loadBusinessLogic({
-        POST_DATED_OVERRIDE: "true",
-        POST_DATED_OVERRIDE_VALUE: "immature"
-      })
-      const logger = new Logger({serviceName: "post-dated-tests"})
-
-      const result = processMessage(logger, createMessage())
-
-      expect(result).toBe(PostDatedProcessingResult.IMMATURE)
-    })
-
     it("should ignore messages that have no existing records", async () => {
       const {processMessage} = await loadBusinessLogic()
       const logger = new Logger({serviceName: "post-dated-tests"})
