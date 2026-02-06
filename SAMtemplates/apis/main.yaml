@@ -564,47 +564,47 @@ Resources:
       Timeout: "1"
       Count: 0
 
-    NotificationsReportingResource:
-      Condition: ShouldDeployNotificationsReporting
-      Type: AWS::ApiGateway::Resource
-      Properties:
-        RestApiId: !Ref RestApiGateway
-        ParentId: !GetAtt RestApiGateway.RootResourceId
-        PathPart: notifications-reporting
+  NotificationsReportingResource:
+    Condition: ShouldDeployNotificationsReporting
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId: !Ref RestApiGateway
+      ParentId: !GetAtt RestApiGateway.RootResourceId
+      PathPart: notifications-reporting
 
-    NotificationsReportingMethod:
-      Condition: ShouldDeployNotificationsReporting
-      Type: AWS::ApiGateway::Method
-      Properties:
-        RestApiId: !Ref RestApiGateway
-        ResourceId: !Ref NotificationsReportingResource
-        HttpMethod: GET
-        AuthorizationType: NONE
-        Integration:
-          Type: AWS_PROXY
-          Credentials: !GetAtt RestApiGatewayResources.Outputs.ApiGwRoleArn
-          IntegrationHttpMethod: POST
-          Uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${NotificationsReportingFunctionArn}/invocations
+  NotificationsReportingMethod:
+    Condition: ShouldDeployNotificationsReporting
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref RestApiGateway
+      ResourceId: !Ref NotificationsReportingResource
+      HttpMethod: GET
+      AuthorizationType: NONE
+      Integration:
+        Type: AWS_PROXY
+        Credentials: !GetAtt RestApiGatewayResources.Outputs.ApiGwRoleArn
+        IntegrationHttpMethod: POST
+        Uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${NotificationsReportingFunctionArn}/invocations
 
-    NotificationsReportingHandle:
-      Condition: ShouldDeployNotificationsReporting
-      DependsOn: NotificationsReportingMethod
-      Type: "AWS::CloudFormation::WaitConditionHandle"
+  NotificationsReportingHandle:
+    Condition: ShouldDeployNotificationsReporting
+    DependsOn: NotificationsReportingMethod
+    Type: "AWS::CloudFormation::WaitConditionHandle"
 
-    NotificationsReportingWaitHandle:
-      Type: "AWS::CloudFormation::WaitConditionHandle"
+  NotificationsReportingWaitHandle:
+    Type: "AWS::CloudFormation::WaitConditionHandle"
 
-    NotificationsReportingWaitCondition:
-      Type: "AWS::CloudFormation::WaitCondition"
-      Properties:
-        Handle:
-          !If [
-            ShouldDeployNotificationsReporting,
-            !Ref NotificationsReportingHandle,
-            !Ref NotificationsReportingWaitHandle,
-          ]
-        Timeout: "1"
-        Count: 0
+  NotificationsReportingWaitCondition:
+    Type: "AWS::CloudFormation::WaitCondition"
+    Properties:
+      Handle:
+        !If [
+          ShouldDeployNotificationsReporting,
+          !Ref NotificationsReportingHandle,
+          !Ref NotificationsReportingWaitHandle,
+        ]
+      Timeout: "1"
+      Count: 0
 
   # *********************************************************************
   # if you add a new endpoint, then change the name of this resource
