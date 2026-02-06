@@ -84,6 +84,10 @@ on:
         required: false
         type: boolean
         default: false
+      ENABLE_POST_DATED_NOTIFICATIONS:
+        required: false
+        type: boolean
+        default: false
       ENABLED_SYSTEMS:
         required: true
         type: string
@@ -215,6 +219,7 @@ jobs:
           ENABLE_BACKUP: ${{ inputs.ENABLE_BACKUP }}
           ENABLE_NOTIFICATIONS_INTERNAL: ${{ inputs.ENABLE_NOTIFICATIONS_INTERNAL }}
           ENABLE_NOTIFICATIONS_EXTERNAL: ${{ inputs.ENABLE_NOTIFICATIONS_EXTERNAL }}
+          ENABLE_POST_DATED_NOTIFICATIONS: ${{ inputs.ENABLE_POST_DATED_NOTIFICATIONS }}
           REQUIRE_APPLICATION_NAME: ${{ inputs.REQUIRE_APPLICATION_NAME }}
           ENABLED_SITE_ODS_CODES: ${{ steps.read.outputs.ods_csv }}
           ENABLED_SYSTEMS: ${{ inputs.ENABLED_SYSTEMS }}

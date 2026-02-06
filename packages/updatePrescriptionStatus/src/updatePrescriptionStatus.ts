@@ -381,11 +381,11 @@ export function buildDataItems(
       TaskID: task.id!,
       TerminalStatus: task.status,
       ApplicationName: applicationName,
-      ExpiryTime: (Math.floor(+new Date() / 1000) + TTL_DELTA)
+      ExpiryTime: (Math.floor(Date.now() / 1000) + TTL_DELTA)
     }
 
     if (task.meta?.lastUpdated) {
-      (dataItem as any).PostDatedLastModifiedSetAt = task.meta.lastUpdated
+      dataItem.PostDatedLastModifiedSetAt = task.meta.lastUpdated
     }
 
     dataItems.push(dataItem)
@@ -413,7 +413,7 @@ async function logTransitions(dataItems: Array<PSUDataItemWithPrevious>): Promis
       if (previousItem) {
         const newDate = new Date(currentItem.LastModified)
         const previousDate = new Date(previousItem.LastModified)
-        logger.info("Transitioning item status.", {
+        logger.info(LOG_MESSAGES.PSU0001, {
           prescriptionID: currentItem.PrescriptionID,
           lineItemID: currentItem.LineItemID,
           nhsNumber: currentItem.PatientNHSNumber,
@@ -424,7 +424,8 @@ async function logTransitions(dataItems: Array<PSUDataItemWithPrevious>): Promis
           newStatus: currentItem.Status,
           previousStatus: previousItem.Status,
           newTerminalStatus: currentItem.TerminalStatus,
-          previousTerminalStatus: previousItem.TerminalStatus
+          previousTerminalStatus: previousItem.TerminalStatus,
+          isPostDated: currentItem.PostDatedLastModifiedSetAt
         })
       }
     } catch (e) {

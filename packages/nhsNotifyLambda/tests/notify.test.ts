@@ -46,6 +46,7 @@ describe("logNotificationRequest", () => {
     const dataItem1: NotifyDataItemMessage = {
       messageReference: "msg-ref-1",
       PSUDataItem: {
+        PrescriptionID: "presc-1",
         PatientNHSNumber: "9453740578",
         PharmacyODSCode: "FA566",
         RequestID: "req-1",
@@ -57,6 +58,7 @@ describe("logNotificationRequest", () => {
     const dataItem2: NotifyDataItemMessage = {
       messageReference: "msg-ref-2",
       PSUDataItem: {
+        PrescriptionID: "presc-2",
         PatientNHSNumber: "9912003071",
         PharmacyODSCode: "A83008",
         RequestID: "req-2",

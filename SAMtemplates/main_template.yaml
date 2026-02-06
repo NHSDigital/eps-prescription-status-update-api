@@ -122,6 +122,10 @@ Parameters:
     Type: String
     Default: " "
 
+  EnablePostDatedNotifications:
+    Type: String
+    Default: "false"
+
   NotifyRoutingPlanIDValue:
     Type: String
     Default: " "
@@ -231,6 +235,8 @@ Resources:
         PrescriptionStatusUpdatesTableName: !GetAtt Tables.Outputs.PrescriptionStatusUpdatesTableName
         PrescriptionNotificationStatesTableName: !GetAtt Tables.Outputs.PrescriptionNotificationStatesTableName
         NHSNotifyPrescriptionsSQSQueueUrl: !GetAtt Messaging.Outputs.NHSNotifyPrescriptionsSQSQueueUrl
+        PostDatedNotificationsSQSQueueUrl: !GetAtt Messaging.Outputs.PostDatedNotificationsSQSQueueUrl
+        EnablePostDatedNotifications: !Ref EnablePostDatedNotifications
         SQSSaltSecret: !GetAtt Secrets.Outputs.SQSSaltSecret
         EnabledSiteODSCodesParam: !GetAtt Parameters.Outputs.EnabledSiteODSCodesParameterName
         EnabledSystemsParam: !GetAtt Parameters.Outputs.EnabledSystemsParameterName
