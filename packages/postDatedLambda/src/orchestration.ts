@@ -31,14 +31,24 @@ export async function processMessages(
   for (const message of enrichedMessages) {
     try {
       const action = processMessage(logger, message)
-      if (action === PostDatedProcessingResult.MATURED) {
-        maturedPrescriptionUpdates.push(message)
-      } else if (action === PostDatedProcessingResult.IMMATURE) {
-        // Set visibility timeout to time until maturity, or default if calculation fails
-        message.visibilityTimeoutSeconds = computeTimeUntilMaturity(message)
-        immaturePrescriptionUpdates.push(message)
-      } else {
-        ignoredPrescriptionUpdates.push(message)
+      switch (action) {
+        case PostDatedProcessingResult.MATURED:
+          maturedPrescriptionUpdates.push(message)
+          break
+        case PostDatedProcessingResult.IMMATURE:
+          // Set visibility timeout to time until maturity, or default if calculation fails
+          message.visibilityTimeoutSeconds = computeTimeUntilMaturity(message)
+          immaturePrescriptionUpdates.push(message)
+          break
+        case PostDatedProcessingResult.IGNORE:
+          ignoredPrescriptionUpdates.push(message)
+          break
+        default:
+          logger.error("Unexpected processing result", {
+            messageId: message.MessageId,
+            action
+          })
+          ignoredPrescriptionUpdates.push(message)
       }
     } catch (error) {
       logger.error("Error processing message", {
