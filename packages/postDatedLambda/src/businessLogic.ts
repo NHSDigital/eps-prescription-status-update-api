@@ -4,24 +4,6 @@ import {PSUDataItem} from "@psu-common/commonTypes"
 
 import {PostDatedSQSMessageWithExistingRecords, PostDatedProcessingResult} from "./types"
 
-// defaults to false
-const POST_DATED_OVERRIDE = process.env.POST_DATED_OVERRIDE === "true"
-
-// set from environment variable POST_DATED_OVERRIDE_VALUE
-const POST_DATED_OVERRIDE_VALUE_ENV = process.env.POST_DATED_OVERRIDE_VALUE ?? "ignore"
-let POST_DATED_OVERRIDE_VALUE: PostDatedProcessingResult
-switch (POST_DATED_OVERRIDE_VALUE_ENV.toLowerCase()) {
-  case "matured":
-    POST_DATED_OVERRIDE_VALUE = PostDatedProcessingResult.MATURED
-    break
-  case "immature":
-    POST_DATED_OVERRIDE_VALUE = PostDatedProcessingResult.IMMATURE
-    break
-  default:
-    POST_DATED_OVERRIDE_VALUE = PostDatedProcessingResult.IGNORE
-    break
-}
-
 export function getMostRecentRecord(
   existingRecords: Array<PSUDataItem>
 ): PSUDataItem {
@@ -53,12 +35,6 @@ export function processMessage(
     prescriptionData: message.prescriptionData,
     existingRecords: message.existingRecords
   })
-  if (POST_DATED_OVERRIDE) {
-    logger.info("Post-dated override is enabled, returning override value", {
-      overrideValue: POST_DATED_OVERRIDE_VALUE
-    })
-    return POST_DATED_OVERRIDE_VALUE
-  }
 
   // The existingRecords array contains all records from the DynamoDB table
   // that match this prescription's PrescriptionID
@@ -141,7 +117,7 @@ export function computeTimeUntilMaturity(
   }
 
   const lastModified = new Date(prescriptionRecord.LastModified)
-  const currentTime = new Date()
+  const currentTime = Date.now()
 
-  return (lastModified.getTime() - currentTime.getTime()) / 1000
+  return (lastModified.getTime() - currentTime) / 1000
 }

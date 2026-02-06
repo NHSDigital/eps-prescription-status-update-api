@@ -596,8 +596,6 @@ Resources:
           LOG_LEVEL: !Ref LogLevel
           NHS_NOTIFY_PRESCRIPTIONS_SQS_QUEUE_URL: !Ref NHSNotifyPrescriptionsSQSQueueUrl
           POST_DATED_PRESCRIPTIONS_SQS_QUEUE_URL: !Ref PostDatedNotificationsSQSQueueUrl
-          POST_DATED_OVERRIDE: false
-          POST_DATED_OVERRIDE_VALUE: false # By default, override never matures post dated prescriptions
           TABLE_NAME: !Ref PrescriptionStatusUpdatesTableName
       Events:
         ScheduleEvent:

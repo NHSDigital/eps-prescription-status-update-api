@@ -5,11 +5,12 @@ import {
   ChangeMessageVisibilityBatchCommand,
   GetQueueAttributesCommand,
   SendMessageBatchCommand,
+  SendMessageBatchRequestEntry,
   Message
 } from "@aws-sdk/client-sqs"
 import {Logger} from "@aws-lambda-powertools/logger"
 
-import {NotifyDataItem, SQSBatchMessage} from "@psu-common/commonTypes"
+import {NotifyDataItem} from "@psu-common/commonTypes"
 
 import {BatchProcessingResult, PostDatedSQSMessage} from "./types"
 
@@ -35,7 +36,7 @@ function chunkArray<T>(arr: Array<T>, size: number): Array<Array<T>> {
 function buildNotificationBatchEntries(
   messages: Array<PostDatedSQSMessage>,
   logger: Logger
-): Array<SQSBatchMessage> {
+): Array<SendMessageBatchRequestEntry> {
   return messages.map((message, idx) => {
     const {prescriptionData} = message
 
@@ -70,7 +71,7 @@ function buildNotificationBatchEntries(
 }
 
 async function sendEntriesToQueue(
-  entries: Array<SQSBatchMessage>,
+  entries: Array<SendMessageBatchRequestEntry>,
   queueUrl: string,
   logger: Logger
 ): Promise<Array<string>> {

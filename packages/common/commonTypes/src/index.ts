@@ -29,21 +29,6 @@ export interface NotifyDataItem {
 }
 
 /**
- * The structure of a single SQS message in a batch send.
- * I couldn't find this type exported from the SDK, and the Message type that IS exported is for receiving data,
- * not sending it.
- *
- * So, I've just done it myself. These are the core attrtibutes we use.
- */
-export interface SQSBatchMessage {
-  Id: string
-  MessageBody: string
-  MessageDeduplicationId: string
-  MessageGroupId: string
-  MessageAttributes: {[key: string]: {DataType: string; StringValue: string}}
-}
-
-/**
  * The fields stored in the Notifications table potentially updated by the Notify callback.
  */
 export interface NotificationUpdate {
