@@ -4,18 +4,17 @@ The lambda drains the post-dated SQS queue in batches and handles each message b
 ```mermaid
 flowchart TB
   START["Scheduled EventBridge trigger"] --> REPORT["Report post-dated queue status"]
-  REPORT --> LOOP{"Within max runtime?"}
+  REPORT --> LOOP{"Within max runtime?<br>Still messages to process?"}
   LOOP -- No --> EXIT["Exit and report queue status"]
-  LOOP -- Yes --> RECV["Receive up to 10 SQS messages (long poll)"]
+  LOOP -- Yes --> RECV["Receive up to 10 SQS messages"]
   RECV --> ENRICH["Enrich messages with most recent NPPTS record"]
   ENRICH --> DETERMINE["Run `determineAction()` per message"]
-  DETERMINE --> REPROCESS["Change visibility timeout (reprocess later)"]
-  DETERMINE --> FORWARD["Forward to Notifications queue"]
-  DETERMINE --> REMOVE["Remove from post-dated queue"]
-  FORWARD --> DELETE["Delete from post-dated queue"]
+  DETERMINE -- FORWARD_TO_NOTIFICATIONS --> FORWARD["Forward to Notifications queue"]
+  DETERMINE -- REPROCESS --> REPROCESS["Change visibility timeout (reprocess later)"]
+  DETERMINE -- REMOVE_FROM_PD_QUEUE --> REMOVE["Remove from post-dated queue"]
+  FORWARD --> REMOVE
   REPROCESS --> LOOP
   REMOVE --> LOOP
-  DELETE --> LOOP
 ```
 
 The `determineAction()` function accepts the SQS message for this prescription ID, enriched with the most recent NPPTS record for this prescription ID. It checks whether that record is post-dated and still in a notifiable status, then compares `LastModified` (i.e. the time that a post-dated update will transition) to the current time to determine whether the update is still immature or has matured. The decision of if a notification needs to be sent to this patient is handled by the notifications lambda, still.
