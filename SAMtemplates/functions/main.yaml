@@ -547,7 +547,7 @@ Resources:
           Type: ScheduleV2
           Properties:
             Name: !Sub ${StackName}-PostDatedNotifySchedule
-            ScheduleExpression: "rate(2 minutes)" # TODO: Increase to 15 minutes
+            ScheduleExpression: "rate(15 minutes)"
             RoleArn: !GetAtt PostDatedNotifyLambdaScheduleEventRole.Arn
     Metadata:
       BuildMethod: esbuild
