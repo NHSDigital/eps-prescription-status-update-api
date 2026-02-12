@@ -84,6 +84,7 @@ jobs:
       ENABLE_BACKUP: "True"
       ENABLE_NOTIFICATIONS_INTERNAL: false
       ENABLE_NOTIFICATIONS_EXTERNAL: false
+      ENABLE_POST_DATED_NOTIFICATIONS: true
       ENABLED_SYSTEMS: "Internal Test System"
       BLOCKED_SITE_ODS_CODES: "XXXXX" # Workaround empty string handling
       NOTIFY_ROUTING_PLAN_ID: "e57fe5cc-0567-4854-abe2-b7dd9014a50c"
@@ -223,6 +224,7 @@ jobs:
       ENABLE_BACKUP: "False"
       ENABLE_NOTIFICATIONS_INTERNAL: false
       ENABLE_NOTIFICATIONS_EXTERNAL: false
+      ENABLE_POST_DATED_NOTIFICATIONS: true
       ENABLED_SYSTEMS: "Internal Test System, Apotec Ltd - Apotec CRM - Production, CrxPatientApp, nhsPrescriptionApp, Titan PSU Prod"
       BLOCKED_SITE_ODS_CODES: "B3J1Z"
       NOTIFY_ROUTING_PLAN_ID: "e57fe5cc-0567-4854-abe2-b7dd9014a50c"
@@ -266,6 +268,7 @@ jobs:
       ENABLE_BACKUP: "True"
       ENABLE_NOTIFICATIONS_INTERNAL: true
       ENABLE_NOTIFICATIONS_EXTERNAL: true
+      ENABLE_POST_DATED_NOTIFICATIONS: true
       ENABLED_SYSTEMS: "Internal Test System" # Workaround empty string handling
       BLOCKED_SITE_ODS_CODES: "XXXXX" # Workaround empty string handling
       NOTIFY_ROUTING_PLAN_ID: "e57fe5cc-0567-4854-abe2-b7dd9014a50c"

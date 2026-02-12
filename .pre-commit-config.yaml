@@ -86,7 +86,7 @@ repos:
         files: ^packages\/checkPrescriptionStatusUpdates
         types_or: [ts, tsx, javascript, jsx, json]
         pass_filenames: false
-        
+
       - id: lint-nhsNotifyLambda
         name: Lint nhsNotifyLambda
         entry: npm
@@ -94,6 +94,16 @@ repos:
           ["run", "--prefix=packages/nhsNotifyLambda", "lint"]
         language: system
         files: ^packages\/nhsNotifyLambda
+        types_or: [ts, tsx, javascript, jsx, json]
+        pass_filenames: false
+
+      - id: lint-postDatedLambda
+        name: List Post-dated handling lambda
+        entry: npm
+        args:
+          ["run", "--prefix=packages/postDatedLambda", "lint"]
+        language: system
+        files: ^packages\/postDatedLambda
         types_or: [ts, tsx, javascript, jsx, json]
         pass_filenames: false
 

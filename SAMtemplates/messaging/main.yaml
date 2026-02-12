@@ -102,6 +102,65 @@ Resources:
               - kms:Decrypt
             Resource: !GetAtt NHSNotifyPrescriptionsSQSQueue.Arn
 
+  ## Post-dated SQS queue starts here
+  PostDatedNotificationsSQSQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: !Sub ${StackName}-PostDatedNotifications.fifo
+      FifoQueue: true
+      ContentBasedDeduplication: false
+      KmsMasterKeyId: !Ref NotificationSQSQueueKMSKeyAlias
+      MessageRetentionPeriod: 86400    # 1 day in seconds
+      RedrivePolicy:
+        deadLetterTargetArn: !GetAtt PostDatedNotificationsDeadLetterQueue.Arn
+        maxReceiveCount: 166 # 999 hours / 6 hours
+      VisibilityTimeout: 300
+
+  PostDatedNotificationsDeadLetterQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: !Sub ${StackName}-PostDatedNotificationsDeadLetter.fifo
+      FifoQueue: true
+      ContentBasedDeduplication: false
+      KmsMasterKeyId: !Ref NotificationSQSQueueKMSKeyAlias
+      MessageRetentionPeriod: 604800   # 1 week in seconds
+      VisibilityTimeout: 300
+
+  ReadPostDatedNotificationsSQSQueuePolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action:
+              - sqs:ReceiveMessage
+              - sqs:DeleteMessage
+              - sqs:ChangeMessageVisibility
+              - sqs:GetQueueAttributes
+              - sqs:GetQueueUrl
+              - kms:GenerateDataKey
+              - kms:Decrypt
+            Resource: !GetAtt PostDatedNotificationsSQSQueue.Arn
+
+  WritePostDatedNotificationsSQSQueuePolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      ManagedPolicyName: !Sub ${StackName}-PostDatedNotificationsSendMessagePolicy
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Action:
+              - sqs:SendMessage
+              - sqs:SendMessageBatch
+              - sqs:DeleteMessage
+              - sqs:GetQueueUrl
+              - kms:GenerateDataKey
+              - kms:Decrypt
+            Resource: !GetAtt PostDatedNotificationsSQSQueue.Arn
+  # End of post-dated stuff
+
 Outputs:
   NHSNotifyPrescriptionsSQSQueueUrl:
     Description: The URL of the NHS Notify Prescriptions SQS Queue
@@ -138,3 +197,35 @@ Outputs:
     Value: !Ref UseNotificationSQSQueueKMSKeyPolicy
     Export:
       Name: !Sub ${StackName}-UseNotificationSQSQueueKMSKeyPolicyArn
+
+  # Post dated SQS outputs start here
+  PostDatedNotificationsSQSQueueUrl:
+    Description: The URL of the Post Dated Notifications SQS Queue
+    Value: !Ref PostDatedNotificationsSQSQueue
+    Export:
+      Name: !Sub ${StackName}-PostDatedNotificationsSQSQueueUrl
+
+  PostDatedNotificationsSQSQueueArn:
+    Description: The ARN of the Post Dated Notifications SQS Queue
+    Value: !GetAtt PostDatedNotificationsSQSQueue.Arn
+    Export:
+      Name: !Sub ${StackName}-PostDatedNotificationsSQSQueueArn
+
+  PostDatedNotificationsDeadLetterQueueArn:
+    Description: The ARN of the Post Dated Notifications Dead Letter Queue
+    Value: !GetAtt PostDatedNotificationsDeadLetterQueue.Arn
+    Export:
+      Name: !Sub ${StackName}-PostDatedNotificationsDeadLetterQueueArn
+
+  ReadPostDatedNotificationsSQSQueuePolicyArn:
+    Description: ARN of policy granting permission to read the post dated notifications queue
+    Value: !Ref ReadPostDatedNotificationsSQSQueuePolicy
+    Export:
+      Name: !Sub ${StackName}-ReadPostDatedNotificationsSQSQueuePolicyArn
+
+  WritePostDatedNotificationsSQSQueuePolicyArn:
+    Description: ARN of policy granting permission to write to the post dated notifications queue
+    Value: !Ref WritePostDatedNotificationsSQSQueuePolicy
+    Export:
+      Name: !Sub ${StackName}-WritePostDatedNotificationsSQSQueuePolicyArn
+  # End

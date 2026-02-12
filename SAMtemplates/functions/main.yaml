@@ -33,6 +33,10 @@ Parameters:
     Type: String
     Default: none
 
+  PostDatedNotificationsSQSQueueUrl:
+    Type: String
+    Default: none
+
   SQSSaltSecret:
     Type: AWS::SecretsManager::Secret::Name<String>
 
@@ -56,6 +60,10 @@ Parameters:
 
   EnableNotificationsInternalParam:
     Type: AWS::SSM::Parameter::Name<String>
+
+  EnablePostDatedNotifications:
+    Type: AWS::SSM::Parameter::Name<String>
+    Default: "false"
 
   RequireApplicationName:
     Type: String
@@ -121,6 +129,8 @@ Resources:
         Variables:
           TABLE_NAME: !Ref PrescriptionStatusUpdatesTableName
           NHS_NOTIFY_PRESCRIPTIONS_SQS_QUEUE_URL: !Ref NHSNotifyPrescriptionsSQSQueueUrl
+          POST_DATED_PRESCRIPTIONS_SQS_QUEUE_URL: !Ref PostDatedNotificationsSQSQueueUrl
+          ENABLE_POST_DATED_NOTIFICATIONS: !Ref EnablePostDatedNotifications
           SQS_SALT: !Ref SQSSaltSecret
           ENABLED_SITE_ODS_CODES_PARAM: !Ref EnabledSiteODSCodesParam
           ENABLED_SYSTEMS_PARAM: !Ref EnabledSystemsParam
@@ -165,6 +175,7 @@ Resources:
             - Fn::ImportValue: !Sub ${StackName}:tables:UsePrescriptionStatusUpdatesKMSKeyPolicyArn
             - Fn::ImportValue: !Sub ${StackName}-UseNotificationSQSQueueKMSKeyPolicyArn
             - Fn::ImportValue: !Sub ${StackName}-WriteNHSNotifyPrescriptionsSQSQueuePolicyArn
+            - Fn::ImportValue: !Sub ${StackName}-WritePostDatedNotificationsSQSQueuePolicyArn
             - Fn::ImportValue: !Sub ${StackName}-GetSQSSaltSecretPolicy
             - Fn::ImportValue: !Sub ${StackName}-GetNotificationsParameterPolicy
         LogRetentionInDays: !Ref LogRetentionInDays
@@ -489,6 +500,98 @@ Resources:
             - Fn::ImportValue: !Sub ${StackName}-GetPSUSecretPolicy
             - Fn::ImportValue: !Sub ${StackName}-UsePSUSecretsKMSKeyPolicyArn
 
+  ## Post-dated lambda definitions
+  PostDatedNotifyLambdaScheduleEventRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - scheduler.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      ManagedPolicyArns:
+        - !Ref PostDatedNotifyLambdaScheduleEventRolePolicy
+
+  PostDatedNotifyLambdaScheduleEventRolePolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action:
+              - lambda:InvokeFunction
+            Resource:
+              - !GetAtt PostDatedNotifyLambda.Arn
+
+  PostDatedNotifyLambda:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub ${StackName}-postDatedNotifyLambda
+      Timeout: 900
+      CodeUri: ../../packages/
+      Handler: main.handler
+      Role: !GetAtt PostDatedNotifyLambdaResources.Outputs.LambdaRoleArn
+      Environment:
+        Variables:
+          LOG_LEVEL: !Ref LogLevel
+          NHS_NOTIFY_PRESCRIPTIONS_SQS_QUEUE_URL: !Ref NHSNotifyPrescriptionsSQSQueueUrl
+          POST_DATED_PRESCRIPTIONS_SQS_QUEUE_URL: !Ref PostDatedNotificationsSQSQueueUrl
+          TABLE_NAME: !Ref PrescriptionStatusUpdatesTableName
+      Events:
+        ScheduleEvent:
+          Type: ScheduleV2
+          Properties:
+            Name: !Sub ${StackName}-PostDatedNotifySchedule
+            ScheduleExpression: "rate(15 minutes)"
+            RoleArn: !GetAtt PostDatedNotifyLambdaScheduleEventRole.Arn
+    Metadata:
+      BuildMethod: esbuild
+      guard:
+        SuppressedRules:
+          - LAMBDA_DLQ_CHECK
+          - LAMBDA_INSIDE_VPC
+          - LAMBDA_CONCURRENCY_CHECK
+      BuildProperties:
+        Minify: true
+        Target: es2020
+        Sourcemap: true
+        packages: bundle
+        # set tsconfig path to whatever you actually have for this lambda package
+        tsconfig: postDatedLambda/tsconfig.json
+        EntryPoints:
+          - postDatedLambda/src/main.ts
+
+  PostDatedNotifyLambdaResources:
+    Type: AWS::Serverless::Application
+    Properties:
+      Location: lambda_resources.yaml
+      Parameters:
+        StackName: !Ref StackName
+        LambdaName: !Sub ${StackName}-postDatedNotifyLambda
+        LambdaArn: !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:${StackName}-postDatedNotifyLambda
+        LogRetentionInDays: !Ref LogRetentionInDays
+        CloudWatchKMSKeyId: !ImportValue account-resources:CloudwatchLogsKmsKeyArn
+        EnableSplunk: !Ref EnableSplunk
+        SplunkSubscriptionFilterRole: !ImportValue lambda-resources:SplunkSubscriptionFilterRole
+        SplunkDeliveryStreamArn: !ImportValue lambda-resources:SplunkDeliveryStream
+        IncludeAdditionalPolicies: true
+        AdditionalPolicies: !Join
+          - ","
+          - - Fn::ImportValue: !Sub ${StackName}-WriteNHSNotifyPrescriptionsSQSQueuePolicyArn
+            - Fn::ImportValue: !Sub ${StackName}-ReadNHSNotifyPrescriptionsSQSQueuePolicyArn
+            - Fn::ImportValue: !Sub ${StackName}-UseNotificationSQSQueueKMSKeyPolicyArn
+            - Fn::ImportValue: !Sub ${StackName}-WritePostDatedNotificationsSQSQueuePolicyArn
+            - Fn::ImportValue: !Sub ${StackName}-ReadPostDatedNotificationsSQSQueuePolicyArn
+            - Fn::ImportValue: !Sub ${StackName}:tables:${PrescriptionStatusUpdatesTableName}:TableWritePolicyArn
+            - Fn::ImportValue: !Sub ${StackName}:tables:${PrescriptionStatusUpdatesTableName}:TableReadPolicyArn
+            - Fn::ImportValue: !Sub ${StackName}:tables:UsePrescriptionStatusUpdatesKMSKeyPolicyArn
+  ## End of post-dated lambda bits
+
   NHSNotifyUpdateCallback:
     Type: AWS::Serverless::Function
     Properties:
@@ -719,3 +822,12 @@ Outputs:
   NHSNotifyUpdateCallbackFunctionArn:
     Description: The function ARN of the NHSNotifyUpdateCallback lambda
     Value: !GetAtt NHSNotifyUpdateCallback.Arn
+
+  # Post-dated lambda outputs
+  PostDatedNotifyLambdaFunctionName:
+    Description: The function name of the postDatedNotifyLambda
+    Value: !Ref PostDatedNotifyLambda
+
+  PostDatedNotifyLambdaFunctionArn:
+    Description: The function ARN of the postDatedNotifyLambda
+    Value: !GetAtt PostDatedNotifyLambda.Arn
