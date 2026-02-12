@@ -31,18 +31,66 @@ sam-sync: guard-AWS_DEFAULT_PROFILE guard-stack_name compile
 		--stack-name $$stack_name \
 		--watch \
 		--template-file SAMtemplates/main_template.yaml \
+		--capabilities CAPABILITY_NAMED_IAM CAPABILITY_AUTO_EXPAND \
 		--parameter-overrides \
+			  TruststoreVersion=$${TRUSTSTORE_VERSION:-none} \
+			  EnableMutualTLS=$${ENABLE_MUTUAL_TLS:-false} \
 			  EnableSplunk=false \
+			  EnableDynamoDBAutoScaling=$${DYNAMODB_AUTOSCALE:-true} \
+			  VersionNumber=$${VERSION_NUMBER:-dev} \
+			  CommitId=$${COMMIT_ID:-local} \
+			  LogLevel=$${LOG_LEVEL:-INFO} \
+			  LogRetentionInDays=$${LOG_RETENTION_DAYS:-30} \
 			  DeployCheckPrescriptionStatusUpdate=true \
-			  EnableAlerts=false
+			  EnableAlerts=false \
+			  Environment=$$AWS_ENVIRONMENT \
+			  StateMachineLogLevel=$${STATE_MACHINE_LOG_LEVEL:-ALL} \
+			  RequireApplicationName=$${REQUIRE_APPLICATION_NAME:-false} \
+			  ForwardCsocLogs=$${FORWARD_CSOC_LOGS:-false} \
+			  TestPresciptionsParamValue1=$${TEST_PRESCRIPTIONS_1:-PLACEHOLDER} \
+			  TestPresciptionsParamValue2=$${TEST_PRESCRIPTIONS_2:-PLACEHOLDER} \
+			  TestPresciptionsParamValue3=$${TEST_PRESCRIPTIONS_3:-PLACEHOLDER} \
+			  TestPresciptionsParamValue4=$${TEST_PRESCRIPTIONS_4:-PLACEHOLDER} \
+			  "EnabledSystemsValue=$${ENABLED_SYSTEMS:-Internal Test System}" \
+			  "EnabledSiteODSCodesValue=$${ENABLED_SITE_ODS_CODES:-A83008,FA565}" \
+			  BlockedSiteODSCodesValue=$${BLOCKED_SITE_ODS_CODES:-XXXXX} \
+			  NotifyRoutingPlanIDValue=$${NOTIFY_ROUTING_PLAN_ID:-e57fe5cc-0567-4854-abe2-b7dd9014a50c} \
+			  NotifyAPIBaseURLValue=$${NOTIFY_API_BASE_URL:-https://int.api.service.nhs.uk} \
+			  EnableNotificationsInternal=$${ENABLE_NOTIFICATIONS_INTERNAL:-true} \
+			  EnableNotificationsExternal=$${ENABLE_NOTIFICATIONS_EXTERNAL:-false} \
+			  EnableBackup=$${ENABLE_BACKUP:-False}
 
 sam-deploy: guard-AWS_DEFAULT_PROFILE guard-stack_name
 	sam deploy \
 		--stack-name $$stack_name \
+		--capabilities CAPABILITY_NAMED_IAM CAPABILITY_AUTO_EXPAND \
 		--parameter-overrides \
+			  TruststoreVersion=$${TRUSTSTORE_VERSION:-none} \
+			  EnableMutualTLS=$${ENABLE_MUTUAL_TLS:-false} \
 			  EnableSplunk=false \
+			  EnableDynamoDBAutoScaling=$${DYNAMODB_AUTOSCALE:-true} \
+			  VersionNumber=$${VERSION_NUMBER:-dev} \
+			  CommitId=$${COMMIT_ID:-local} \
+			  LogLevel=$${LOG_LEVEL:-INFO} \
+			  LogRetentionInDays=$${LOG_RETENTION_DAYS:-30} \
 			  DeployCheckPrescriptionStatusUpdate=true \
-			  EnableAlerts=false
+			  EnableAlerts=false \
+			  Environment=$$AWS_ENVIRONMENT \
+			  StateMachineLogLevel=$${STATE_MACHINE_LOG_LEVEL:-ALL} \
+			  RequireApplicationName=$${REQUIRE_APPLICATION_NAME:-false} \
+			  ForwardCsocLogs=$${FORWARD_CSOC_LOGS:-false} \
+			  TestPresciptionsParamValue1=$${TEST_PRESCRIPTIONS_1:-PLACEHOLDER} \
+			  TestPresciptionsParamValue2=$${TEST_PRESCRIPTIONS_2:-PLACEHOLDER} \
+			  TestPresciptionsParamValue3=$${TEST_PRESCRIPTIONS_3:-PLACEHOLDER} \
+			  TestPresciptionsParamValue4=$${TEST_PRESCRIPTIONS_4:-PLACEHOLDER} \
+			  "EnabledSystemsValue=$${ENABLED_SYSTEMS:-Internal Test System}" \
+			  "EnabledSiteODSCodesValue=$${ENABLED_SITE_ODS_CODES:-A83008,FA565}" \
+			  BlockedSiteODSCodesValue=$${BLOCKED_SITE_ODS_CODES:-XXXXX} \
+			  NotifyRoutingPlanIDValue=$${NOTIFY_ROUTING_PLAN_ID:-e57fe5cc-0567-4854-abe2-b7dd9014a50c} \
+			  NotifyAPIBaseURLValue=$${NOTIFY_API_BASE_URL:-https://int.api.service.nhs.uk} \
+			  EnableNotificationsInternal=$${ENABLE_NOTIFICATIONS_INTERNAL:-true} \
+			  EnableNotificationsExternal=$${ENABLE_NOTIFICATIONS_EXTERNAL:-false} \
+			  EnableBackup=$${ENABLE_BACKUP:-False}
 
 sam-delete: guard-AWS_DEFAULT_PROFILE guard-stack_name
 	sam delete --stack-name $$stack_name
