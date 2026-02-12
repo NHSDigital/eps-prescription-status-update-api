@@ -3,7 +3,5 @@ vulnerabilities:
     statement: fast-xml-parser vulnerability accepted as risk - dependency of aws-sdk/client-dynamodb
     expired_at: 2026-03-01
   - id: CVE-2026-25547
-    paths:
-      - "package-lock.json"
-    statement: downstream dependency of @isaacs/brace-expansion
-    expired_at: 2026-06-01
+    statement:  isaacs/brace-expansion vulnerability accepted as risk - dependency of aws-sdk/client-dynamodb
+    expired_at: 2026-03-01
