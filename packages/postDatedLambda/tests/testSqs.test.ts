@@ -9,7 +9,7 @@ import {SpiedFunction} from "jest-mock"
 import {Logger} from "@aws-lambda-powertools/logger"
 import {LogItemMessage, LogItemExtraInput} from "@aws-lambda-powertools/logger/lib/cjs/types/Logger"
 import * as sqs from "@aws-sdk/client-sqs"
-import {BatchProcessingResult, PostDatedSQSMessage} from "../src/types"
+import {PostDatedSQSMessage} from "../src/types"
 import {createMockPostModifiedDataItem} from "./testUtils"
 
 export function mockSQSClient() {
@@ -31,10 +31,9 @@ const {
   getPostDatedQueueUrl,
   reportQueueStatus,
   receivePostDatedSQSMessages,
-  removeSQSMessages,
-  returnMessagesToQueue,
-  handleProcessedMessages,
-  forwardSQSMessagesToNotificationQueue: sendSQSMessagesToNotificationQueue
+  removeSQSMessage,
+  returnMessageToQueue,
+  forwardSQSMessageToNotificationQueue
 } = await import("../src/sqs")
 
 const ORIGINAL_ENV = {...process.env}
@@ -180,90 +179,67 @@ describe("sqs", () => {
     })
   })
 
-  describe("sendSQSMessagesToNotificationQueue", () => {
-    it("should send matured post-dated messages to the notifications queue", async () => {
+  describe("forwardSQSMessageToNotificationQueue", () => {
+    it("should send a matured post-dated message to the notifications queue", async () => {
       const notifyUrl = "https://sqs.eu-west-2.amazonaws.com/123456789012/notify"
       process.env.NHS_NOTIFY_PRESCRIPTIONS_SQS_QUEUE_URL = notifyUrl
 
-      const messages: Array<PostDatedSQSMessage> = [
-        {
-          MessageId: "1",
-          ReceiptHandle: "handle-1",
-          prescriptionData: createMockPostModifiedDataItem({RequestID: "req-1"}),
-          Attributes: {MessageDeduplicationId: "dedup1", MessageGroupId: "group1"}
-        }
-      ]
+      const message: PostDatedSQSMessage = {
+        MessageId: "1",
+        ReceiptHandle: "handle-1",
+        prescriptionData: createMockPostModifiedDataItem({RequestID: "req-1"}),
+        Attributes: {MessageDeduplicationId: "dedup1", MessageGroupId: "group1"}
+      }
 
       mockSend.mockReturnValueOnce({
         Successful: [{Id: "0", MessageId: "notify-msg-1"}],
         Failed: []
       })
 
-      const result = await sendSQSMessagesToNotificationQueue(logger, messages)
+      const result = await forwardSQSMessageToNotificationQueue(logger, message)
 
       expect(mockSend).toHaveBeenCalledTimes(1)
       const command = mockSend.mock.calls[0][0] as {input: {QueueUrl: string; Entries: Array<{MessageBody: string}>}}
       expect(command.input.QueueUrl).toBe(notifyUrl)
-      expect(command.input.Entries[0].MessageBody).toBe(JSON.stringify(messages[0].prescriptionData))
-      expect(result).toEqual(["notify-msg-1"])
-    })
-
-    it("should short circuit when there are no matured messages", async () => {
-      process.env.NHS_NOTIFY_PRESCRIPTIONS_SQS_QUEUE_URL = "https://sqs.eu-west-2.amazonaws.com/123456789012/notify"
-
-      const result = await sendSQSMessagesToNotificationQueue(logger, [])
-
-      expect(result).toEqual([])
-      expect(mockSend).not.toHaveBeenCalled()
+      expect(command.input.Entries[0].MessageBody).toBe(JSON.stringify(message.prescriptionData))
+      expect(result).toBe("notify-msg-1")
     })
 
     it("should throw an error if the deduplication ID is missing", async () => {
       process.env.NHS_NOTIFY_PRESCRIPTIONS_SQS_QUEUE_URL = "https://sqs.eu-west-2.amazonaws.com/123456789012/notify"
 
-      const messages: Array<PostDatedSQSMessage> = [
-        {
-          MessageId: "1",
-          ReceiptHandle: "handle-1",
-          prescriptionData: createMockPostModifiedDataItem({RequestID: "req-1"}),
-          Attributes: {} // Missing MessageDeduplicationId
-        }
-      ]
+      const message: PostDatedSQSMessage = {
+        MessageId: "1",
+        ReceiptHandle: "handle-1",
+        prescriptionData: createMockPostModifiedDataItem({RequestID: "req-1"}),
+        Attributes: {} // Missing MessageDeduplicationId
+      }
 
       await expect(
-        sendSQSMessagesToNotificationQueue(logger, messages)
+        forwardSQSMessageToNotificationQueue(logger, message)
       ).rejects.toThrow("Missing MessageDeduplicationId in SQS message attributes")
 
       expect(mockSend).not.toHaveBeenCalled()
     })
   })
 
-  describe("removeSQSMessages", () => {
-    it("Should remove messages from the SQS queue", async () => {
+  describe("removeSQSMessage", () => {
+    it("Should remove a message from the SQS queue", async () => {
       const testUrl = "https://sqs.us-east-1.amazonaws.com/123456789012/test-queue"
       process.env.POST_DATED_PRESCRIPTIONS_SQS_QUEUE_URL = testUrl
 
-      const messagesToRemove = [
-        {MessageId: "1", ReceiptHandle: "handle1"},
-        {MessageId: "2", ReceiptHandle: "handle2"}
-      ]
+      const messageToRemove = {MessageId: "1", ReceiptHandle: "handle1"}
 
       // Mock SQS delete response
       mockSend.mockReturnValueOnce({
-        Successful: messagesToRemove.map((msg) => ({Id: msg.MessageId})),
+        Successful: [{Id: messageToRemove.MessageId}],
         Failed: []
       })
 
-      await removeSQSMessages(logger, messagesToRemove)
+      await removeSQSMessage(logger, messageToRemove)
 
       expect(mockSend).toHaveBeenCalledTimes(1)
-      expect(infoSpy).toHaveBeenCalledWith("Successfully removed 2 messages from SQS")
-    })
-
-    it("Should handle empty message array gracefully", async () => {
-      await removeSQSMessages(logger, [])
-
-      expect(mockSend).toHaveBeenCalledTimes(0)
-      expect(infoSpy).toHaveBeenCalledWith("No messages to delete")
+      expect(infoSpy).toHaveBeenCalledWith("Successfully removed 1 messages from SQS")
     })
 
     it("Should log errors but not throw if deletion fails", async () => {
@@ -273,181 +249,67 @@ describe("sqs", () => {
       const testUrl = "https://sqs.us-east-1.amazonaws.com/123456789012/test-queue"
       process.env.POST_DATED_PRESCRIPTIONS_SQS_QUEUE_URL = testUrl
 
-      const messagesToRemove = [
-        {MessageId: "1", ReceiptHandle: "handle1"},
-        {MessageId: "2", ReceiptHandle: "handle2"}
-      ]
+      const messageToRemove = {MessageId: "1", ReceiptHandle: "handle1"}
 
       // Mock SQS delete response with failures
       mockSend.mockReturnValueOnce({
-        Successful: [{Id: "1"}],
-        Failed: [{Id: "2", Message: "Some error"}]
+        Successful: [],
+        Failed: [{Id: "1", Message: "Some error"}]
       })
 
-      await removeSQSMessages(logger, messagesToRemove)
+      await removeSQSMessage(logger, messageToRemove)
 
       expect(mockSend).toHaveBeenCalledTimes(1)
       expect(errorSpy).toHaveBeenCalledWith("Some messages failed to delete", {
-        failed: [{Id: "2", Message: "Some error"}]
+        failed: [{Id: "1", Message: "Some error"}]
       })
-      expect(infoSpy).toHaveBeenCalledWith("Successfully removed 1 messages from SQS")
     })
   })
 
-  describe("returnMessagesToQueue", () => {
-    it("Should return messages to the SQS queue by updating their visibility timeout", async () => {
+  describe("returnMessageToQueue", () => {
+    it("Should return a message to the SQS queue by updating its visibility timeout", async () => {
       const testUrl = "https://sqs.us-east-1.amazonaws.com/123456789012/test-queue"
       process.env.POST_DATED_PRESCRIPTIONS_SQS_QUEUE_URL = testUrl
 
-      const messagesToReturn: Array<PostDatedSQSMessage> = [
-        {MessageId: "1", ReceiptHandle: "handle1", prescriptionData: createMockPostModifiedDataItem({})},
-        {MessageId: "2", ReceiptHandle: "handle2", prescriptionData: createMockPostModifiedDataItem({})}
-      ]
+      const messageToReturn: PostDatedSQSMessage = {
+        MessageId: "1",
+        ReceiptHandle: "handle1",
+        prescriptionData: createMockPostModifiedDataItem({})
+      }
 
       // Mock SQS change visibility response
       mockSend.mockReturnValueOnce({
         // No specific return value needed for ChangeMessageVisibilityBatch
       })
 
-      await returnMessagesToQueue(logger, messagesToReturn)
+      await returnMessageToQueue(logger, messageToReturn)
 
       expect(mockSend).toHaveBeenCalledTimes(1)
-      expect(infoSpy).toHaveBeenCalledWith("Returning messages to queue with timeouts", {
-        numberOfMessages: 2,
-        idAndTimeouts: [
-          {id: "1", visibilityTimeout: 300},
-          {id: "2", visibilityTimeout: 300}
-        ]
+      expect(infoSpy).toHaveBeenCalledWith("Returning message to queue with timeouts", {
+        sqsMessage: messageToReturn,
+        visibilityTimeout: 300
       })
       expect(errorSpy).not.toHaveBeenCalled()
-    })
-
-    it("Should handle empty message array gracefully", async () => {
-      await returnMessagesToQueue(logger, [])
-
-      expect(mockSend).toHaveBeenCalledTimes(0)
-      expect(infoSpy).toHaveBeenCalledWith("No messages to return to queue")
     })
 
     it("should log an error if SQS change visibility fails", async () => {
       const testUrl = "https://sqs.us-east-1.amazonaws.com/123456789012/test-queue"
       process.env.POST_DATED_PRESCRIPTIONS_SQS_QUEUE_URL = testUrl
 
-      const messagesToReturn: Array<PostDatedSQSMessage> = [
-        {MessageId: "1", ReceiptHandle: "handle1", prescriptionData: createMockPostModifiedDataItem({})}
-      ]
+      const messageToReturn: PostDatedSQSMessage = {
+        MessageId: "1",
+        ReceiptHandle: "handle1",
+        prescriptionData: createMockPostModifiedDataItem({})
+      }
 
       // Mock SQS change visibility to throw an error
       const expectedError = new Error("SQS change visibility failed")
-      mockSend.mockImplementationOnce(() => {
-        throw expectedError
-      })
+      mockSend.mockReturnValueOnce(Promise.reject(expectedError))
 
-      await returnMessagesToQueue(logger, messagesToReturn)
+      await returnMessageToQueue(logger, messageToReturn)
 
       expect(mockSend).toHaveBeenCalledTimes(1)
       expect(errorSpy).toHaveBeenCalledWith("SQS change visibility failed", {error: expectedError})
-    })
-  })
-
-  describe("handleProcessedMessages", () => {
-    it("should remove matured messages and return immature messages to the queue", async () => {
-      const testUrl = "https://sqs.us-east-1.amazonaws.com/123456789012/test-queue"
-      process.env.POST_DATED_PRESCRIPTIONS_SQS_QUEUE_URL = testUrl
-      process.env.NHS_NOTIFY_PRESCRIPTIONS_SQS_QUEUE_URL = "https://sqs.us-east-1.amazonaws.com/123456789012/notify"
-
-      const maturedMessages: Array<PostDatedSQSMessage> = [
-        {
-          MessageId: "1", ReceiptHandle: "handle1",
-          prescriptionData: createMockPostModifiedDataItem({}),
-          Attributes: {MessageDeduplicationId: "dedup1", MessageGroupId: "group1"}
-        }
-      ]
-      const immatureMessages: Array<PostDatedSQSMessage> = [
-        {
-          MessageId: "2", ReceiptHandle: "handle2",
-          prescriptionData: createMockPostModifiedDataItem({}),
-          Attributes: {MessageDeduplicationId: "dedup2", MessageGroupId: "group2"}
-        }
-      ]
-
-      const batchResult: BatchProcessingResult = {
-        maturedPrescriptionUpdates: maturedMessages,
-        immaturePrescriptionUpdates: immatureMessages,
-        ignoredPrescriptionUpdates: []
-      }
-
-      // Mock SQS responses
-      mockSend
-        .mockReturnValueOnce({
-          Successful: [{Id: "0", MessageId: "notify-msg"}],
-          Failed: []
-        }) // sendSQSMessagesToNotificationQueue
-        .mockReturnValueOnce({
-          Successful: [{Id: "1"}],
-          Failed: []
-        }) // For removeSQSMessages
-        .mockReturnValueOnce({}) // For returnMessagesToQueue
-
-      await handleProcessedMessages(batchResult, logger)
-
-      expect(mockSend).toHaveBeenCalledTimes(3)
-      expect(infoSpy).toHaveBeenCalledWith("Successfully removed 1 messages from SQS")
-      expect(infoSpy).toHaveBeenCalledWith("Returning messages to queue with timeouts", {
-        numberOfMessages: 1,
-        idAndTimeouts: [
-          {id: "2", visibilityTimeout: 300}
-        ]
-      })
-    })
-
-    it("should handle empty matured and immature message arrays gracefully", async () => {
-      const batchResult: BatchProcessingResult = {
-        maturedPrescriptionUpdates: [],
-        immaturePrescriptionUpdates: [],
-        ignoredPrescriptionUpdates: []
-      }
-
-      await handleProcessedMessages(batchResult, logger)
-
-      expect(mockSend).toHaveBeenCalledTimes(0)
-      expect(infoSpy).not.toHaveBeenCalledWith("Successfully removed")
-      expect(infoSpy).not.toHaveBeenCalledWith("Returning messages to queue with timeouts", expect.anything())
-    })
-
-    it("should remove ignored messages from the queue so they are not reprocessed", async () => {
-      const testUrl = "https://sqs.us-east-1.amazonaws.com/123456789012/test-queue"
-      process.env.POST_DATED_PRESCRIPTIONS_SQS_QUEUE_URL = testUrl
-
-      const ignoredMessages: Array<PostDatedSQSMessage> = [
-        {
-          MessageId: "ignored-1",
-          ReceiptHandle: "ignored-handle-1",
-          prescriptionData: createMockPostModifiedDataItem({}),
-          Attributes: {MessageDeduplicationId: "dedup-ignored", MessageGroupId: "group-ignored"}
-        }
-      ]
-
-      const batchResult: BatchProcessingResult = {
-        maturedPrescriptionUpdates: [],
-        immaturePrescriptionUpdates: [],
-        ignoredPrescriptionUpdates: ignoredMessages
-      }
-
-      mockSend.mockReturnValueOnce({
-        Successful: ignoredMessages.map((msg) => ({Id: msg.MessageId})),
-        Failed: []
-      })
-
-      await handleProcessedMessages(batchResult, logger)
-
-      expect(mockSend).toHaveBeenCalledTimes(1)
-
-      const deleteCommand = mockSend.mock.calls[0][0] as {input: {Entries: Array<{Id: string; ReceiptHandle: string}>}}
-      expect(deleteCommand.input.Entries).toEqual([
-        {Id: "ignored-1", ReceiptHandle: "ignored-handle-1"}
-      ])
-      expect(infoSpy).toHaveBeenCalledWith("Successfully removed 1 messages from SQS")
     })
   })
 })

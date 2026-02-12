@@ -12,7 +12,7 @@ import {Logger} from "@aws-lambda-powertools/logger"
 
 import {NotifyDataItem} from "@psu-common/commonTypes"
 
-import {BatchProcessingResult, PostDatedSQSMessage} from "./types"
+import {PostDatedSQSMessage} from "./types"
 
 const sqs = new SQSClient({region: process.env.AWS_REGION})
 
@@ -25,99 +25,77 @@ const MAXIMUM_VISIBILITY_TIMEOUT_SECONDS = 10 * 60 * 60 // 10 hours
 // for the sake of temporarily supporting post-dated messages.
 //   - Jim Wild, Jan. 2026
 
-function chunkArray<T>(arr: Array<T>, size: number): Array<Array<T>> {
-  const chunks: Array<Array<T>> = []
-  for (let i = 0; i < arr.length; i += size) {
-    chunks.push(arr.slice(i, i + size))
-  }
-  return chunks
-}
-
-function buildNotificationBatchEntries(
-  messages: Array<PostDatedSQSMessage>,
+function buildNotificationBatchEntry(
+  message: PostDatedSQSMessage,
   logger: Logger
-): Array<SendMessageBatchRequestEntry> {
-  return messages.map((message, idx) => {
-    const {prescriptionData} = message
+): SendMessageBatchRequestEntry {
+  const {prescriptionData} = message
 
-    // If we get something with no deduplication ID, then something upstream is wrong and we should fail out
-    if (!message.Attributes?.MessageDeduplicationId) {
-      logger.error("Post-dated SQS message is missing MessageDeduplicationId attribute", {
-        messageId: message.MessageId, messageContents: message
-      })
-      throw new Error("Missing MessageDeduplicationId in SQS message attributes")
-    }
-    // Same for group ID
-    if (!message.Attributes?.MessageGroupId) {
-      logger.error("Post-dated SQS message is missing MessageGroupId attribute", {
-        messageId: message.MessageId, messageContents: message
-      })
-      throw new Error("Missing MessageGroupId in SQS message attributes")
-    }
+  // If we get something with no deduplication ID, then something upstream is wrong and we should fail out
+  if (!message.Attributes?.MessageDeduplicationId) {
+    logger.error("Post-dated SQS message is missing MessageDeduplicationId attribute", {
+      messageId: message.MessageId, messageContents: message
+    })
+    throw new Error("Missing MessageDeduplicationId in SQS message attributes")
+  }
+  // Same for group ID
+  if (!message.Attributes?.MessageGroupId) {
+    logger.error("Post-dated SQS message is missing MessageGroupId attribute", {
+      messageId: message.MessageId, messageContents: message
+    })
+    throw new Error("Missing MessageGroupId in SQS message attributes")
+  }
 
-    return {
-      Id: idx.toString(),
-      MessageBody: JSON.stringify(prescriptionData),
-      MessageDeduplicationId: message.Attributes?.MessageDeduplicationId,
-      MessageGroupId: message.Attributes?.MessageGroupId,
-      MessageAttributes: {
-        RequestId: {
-          DataType: "String",
-          StringValue: message.Attributes?.MessageGroupId
-        }
+  return {
+    Id: message.MessageId!,
+    MessageBody: JSON.stringify(prescriptionData),
+    MessageDeduplicationId: message.Attributes?.MessageDeduplicationId,
+    MessageGroupId: message.Attributes?.MessageGroupId,
+    MessageAttributes: {
+      RequestId: {
+        DataType: "String",
+        StringValue: message.Attributes?.MessageGroupId
       }
     }
-  })
+  }
 }
 
-async function sendEntriesToQueue(
-  entries: Array<SendMessageBatchRequestEntry>,
+/** Send an entry to an SQS queue. Returns the message ID if successful, throw otherwise */
+async function sendEntryToQueue(
+  entry: SendMessageBatchRequestEntry,
   queueUrl: string,
   logger: Logger
-): Promise<Array<string>> {
-  if (entries.length === 0) {
-    return []
+): Promise<string> {
+
+  logger.info(
+    "Pushing a notification request to SQS",
+    {
+      deduplicationId: entry.MessageDeduplicationId,
+      queueUrl
+    }
+  )
+
+  const command = new SendMessageBatchCommand({
+    QueueUrl: queueUrl,
+    Entries: [entry]
+  })
+  const result = await sqs.send(command)
+
+  if (result.Failed && result.Failed.length > 0) {
+    logger.error("Failed to send message to notification queue", {failed: result.Failed})
+    throw new Error(`Failed to send message to notification queue: ${JSON.stringify(result.Failed)}`)
   }
 
-  const batches = chunkArray(entries, 10)
+  // It may be that the send was successful but we didn't get a message ID back,
+  // which shouldn't happen but if it does we should catch it and log an error rather than returning undefined
+  const sentMessageId = result.Successful?.[0].MessageId
+  if (!sentMessageId) {
+    logger.error("No message ID returned from SQS for successful send", {result})
+    throw new Error("No message ID returned from SQS for successful send")
+  }
 
-  const batchPromises = batches.map(async (batch) => {
-    try {
-      logger.info(
-        "Pushing a batch of notification requests to SQS",
-        {
-          batchLength: batch.length,
-          deduplicationIds: batch.map((entry) => entry.MessageDeduplicationId),
-          queueUrl
-        }
-      )
-
-      const command = new SendMessageBatchCommand({
-        QueueUrl: queueUrl,
-        Entries: batch
-      })
-      const result = await sqs.send(command)
-
-      let successfulIds: Array<string> = []
-      if (result.Successful?.length) {
-        logger.info("Successfully sent a batch of prescriptions to the SQS", {result, queueUrl})
-        successfulIds = result.Successful
-          .map((entry) => entry.MessageId)
-          .filter((msgId): msgId is string => msgId !== undefined)
-      }
-
-      if (result.Failed?.length) {
-        throw new Error(`Failed to send a batch of prescriptions to the SQS ${queueUrl}`)
-      }
-
-      return successfulIds
-    } catch (error) {
-      logger.error("Failed to send a batch of prescriptions to the SQS", {error, queueUrl})
-      throw error
-    }
-  })
-
-  return Promise.all(batchPromises).then((results) => results.flat())
+  logger.info("Successfully sent message to notification queue", {sentMessageId})
+  return sentMessageId
 }
 
 /**
@@ -242,57 +220,32 @@ export async function receivePostDatedSQSMessages(logger: Logger): Promise<Array
 /**
  * Forward matured post-dated messages to the Notify queue using the same payload as the update lambda.
  */
-export async function forwardSQSMessagesToNotificationQueue(
+export async function forwardSQSMessageToNotificationQueue(
   logger: Logger,
-  messages: Array<PostDatedSQSMessage>
-): Promise<Array<string>> {
-  if (messages.length === 0) {
-    // exit early so we don't send a SendMessageBatch with no entries
-    logger.info("No messages to forward to notifications queue")
-    return []
-  }
-
+  message: PostDatedSQSMessage
+): Promise<string> {
   const queueUrl = getNotificationQueueUrl(logger)
-  const entries = buildNotificationBatchEntries(messages, logger)
+  const entry = buildNotificationBatchEntry(message, logger)
 
-  const sentMessageIds = await sendEntriesToQueue(entries, queueUrl, logger)
-
-  logger.info("Forwarded matured post-dated messages to notifications queue", {
-    queueUrl,
-    forwardedCount: sentMessageIds.length,
-    sqsMessageIds: sentMessageIds
-  })
-
-  return sentMessageIds
+  return sendEntryToQueue(entry, queueUrl, logger)
 }
 
 /**
- * Delete successfully processed messages from the SQS queue.
+ * Delete successfully processed message from the SQS queue.
  *
  * @param logger - The logging object
- * @param messages - The messages that were successfully processed and should be deleted
+ * @param message - The message that should be deleted
  */
-export async function removeSQSMessages(
+export async function removeSQSMessage(
   logger: Logger,
-  messages: Array<Message>
+  message: Message
 ): Promise<void> {
-  if (messages.length === 0) {
-    // exit early so we don't send a DeleteMessageBatch with no entries
-    logger.info("No messages to delete")
-    return
-  }
-
   const sqsUrl = getPostDatedQueueUrl(logger)
 
-  const entries = messages.map((m) => ({
-    Id: m.MessageId!,
-    ReceiptHandle: m.ReceiptHandle!
-  }))
-
-  logger.info("Deleting messages from SQS", {
-    numberOfMessages: entries.length,
-    messageIds: entries.map((e) => e.Id)
-  })
+  const entries = [{
+    Id: message.MessageId!,
+    ReceiptHandle: message.ReceiptHandle!
+  }]
 
   const deleteCmd = new DeleteMessageBatchCommand({
     QueueUrl: sqsUrl,
@@ -320,32 +273,26 @@ export async function removeSQSMessages(
  * @param logger - The logging object
  * @param messages - The messages that failed processing and should be returned to the queue
  */
-export async function returnMessagesToQueue(
+export async function returnMessageToQueue(
   logger: Logger,
-  messages: Array<PostDatedSQSMessage>
+  message: PostDatedSQSMessage
 ): Promise<void> {
-  if (messages.length === 0) {
-    // exit early so we don't send a ChangeMessageVisibilityBatch with no entries
-    logger.info("No messages to return to queue")
-    return
-  }
-
   const sqsUrl = getPostDatedQueueUrl(logger)
 
-  const entries = messages.map((m) => ({
-    Id: m.MessageId!,
-    ReceiptHandle: m.ReceiptHandle!,
-    VisibilityTimeout: Math.min(
-      m.visibilityTimeoutSeconds || DEFAULT_VISIBILITY_TIMEOUT_SECONDS,
-      MAXIMUM_VISIBILITY_TIMEOUT_SECONDS) // Cap at the max
-  }))
+  const timeout = Math.max(0, Math.min( // greater than 0
+    message.visibilityTimeoutSeconds || DEFAULT_VISIBILITY_TIMEOUT_SECONDS, // fallback
+    MAXIMUM_VISIBILITY_TIMEOUT_SECONDS // limit
+  ))
+
+  const entries = [{
+    Id: message.MessageId!,
+    ReceiptHandle: message.ReceiptHandle!,
+    VisibilityTimeout: timeout
+  }]
 
   logger.info(
-    `Returning messages to queue with timeouts`,
-    {
-      numberOfMessages: entries.length,
-      idAndTimeouts: entries.map((e) => ({id: e.Id, visibilityTimeout: e.VisibilityTimeout}))
-    }
+    `Returning message to queue with timeouts`,
+    {sqsMessage: message, visibilityTimeout: timeout}
   )
 
   const changeVisibilityCmd = new ChangeMessageVisibilityBatchCommand({
@@ -368,30 +315,4 @@ export async function returnMessagesToQueue(
     const message = error instanceof Error ? error.message : "Failed to change SQS message visibility"
     logger.error(message, {error})
   }
-}
-
-/**
- * Handle the results of message processing:
- * - Delete matured messages from the queue
- * - Return immature messages to the queue with a visibility timeout
- * Does not alter the input result object, only performs side effects.
- *
- * @param result - The batch processing result
- * @param logger - The logging object
- */
-export async function handleProcessedMessages(
-  result: BatchProcessingResult,
-  logger: Logger
-): Promise<void> {
-  const {maturedPrescriptionUpdates, immaturePrescriptionUpdates, ignoredPrescriptionUpdates} = result
-
-  // Move matured messages to the notification queue and remove them from the post-dated queue
-  await forwardSQSMessagesToNotificationQueue(logger, maturedPrescriptionUpdates)
-  await removeSQSMessages(logger, maturedPrescriptionUpdates)
-
-  // Return failed messages to the queue
-  await returnMessagesToQueue(logger, immaturePrescriptionUpdates)
-
-  // Remove ignored messages from the queue, so they are not reprocessed
-  await removeSQSMessages(logger, ignoredPrescriptionUpdates)
 }

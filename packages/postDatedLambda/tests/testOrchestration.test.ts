@@ -6,37 +6,41 @@ import {
 } from "@jest/globals"
 
 // Mock the imports from local modules
-const mockProcessMessage = jest.fn()
+const mockDetermineAction = jest.fn()
 const mockComputeTimeUntilMaturity = jest.fn().mockReturnValue(300)
 jest.unstable_mockModule("../src/businessLogic", () => {
   return {
-    processMessage: mockProcessMessage,
+    determineAction: mockDetermineAction,
     computeTimeUntilMaturity: mockComputeTimeUntilMaturity
   }
 })
 
-const mockEnrichMessagesWithExistingRecords = jest.fn()
+const mockEnrichMessagesWithMostRecentDataItem = jest.fn()
 jest.unstable_mockModule("../src/databaseClient", () => {
   return {
-    enrichMessagesWithExistingRecords: mockEnrichMessagesWithExistingRecords
+    enrichMessagesWithMostRecentDataItem: mockEnrichMessagesWithMostRecentDataItem
   }
 })
 
 const mockReceivePostDatedSQSMessages = jest.fn()
 const mockReportQueueStatus = jest.fn()
-const mockHandleProcessedMessages = jest.fn()
+const mockForwardSQSMessageToNotificationQueue = jest.fn()
+const mockRemoveSQSMessage = jest.fn()
+const mockReturnMessageToQueue = jest.fn()
 jest.unstable_mockModule("../src/sqs", () => {
   return {
     receivePostDatedSQSMessages: mockReceivePostDatedSQSMessages,
     reportQueueStatus: mockReportQueueStatus,
-    handleProcessedMessages: mockHandleProcessedMessages
+    forwardSQSMessageToNotificationQueue: mockForwardSQSMessageToNotificationQueue,
+    removeSQSMessage: mockRemoveSQSMessage,
+    returnMessageToQueue: mockReturnMessageToQueue
   }
 })
 
 import {Logger} from "@aws-lambda-powertools/logger"
 
 import {createMockPostModifiedDataItem} from "./testUtils"
-import {BatchProcessingResult, PostDatedProcessingResult, PostDatedSQSMessage} from "../src/types"
+import {PostDatedProcessingResult, PostDatedSQSMessage, PostDatedSQSMessageWithRecentDataItem} from "../src/types"
 
 // Import the orchestration module after mocking dependencies
 const {processMessages, processPostDatedQueue} = await import("../src/orchestration")
@@ -52,10 +56,10 @@ function createBatch(ids: Array<string>): Array<PostDatedSQSMessage> {
   }))
 }
 
-function enrich(messages: Array<PostDatedSQSMessage>) {
+function enrich(messages: Array<PostDatedSQSMessage>): Array<PostDatedSQSMessageWithRecentDataItem> {
   return messages.map((message) => ({
     ...message,
-    existingRecords: []
+    mostRecentRecord: undefined
   }))
 }
 
@@ -63,6 +67,9 @@ describe("orchestration", () => {
   describe("processMessages", () => {
     beforeEach(() => {
       jest.clearAllMocks()
+      mockForwardSQSMessageToNotificationQueue.mockReturnValue(Promise.resolve("forwarded-id"))
+      mockRemoveSQSMessage.mockReturnValue(Promise.resolve())
+      mockReturnMessageToQueue.mockReturnValue(Promise.resolve())
     })
 
     it("should process messages and categorize them correctly", async () => {
@@ -73,58 +80,28 @@ describe("orchestration", () => {
       ]
 
       // Mock the enrichment function to return the same messages
-      mockEnrichMessagesWithExistingRecords.mockReturnValueOnce(mockMessages)
+      mockEnrichMessagesWithMostRecentDataItem.mockReturnValueOnce(enrich(mockMessages))
 
-      // Mock processMessage to return true for first message and false for second
-      mockProcessMessage
-        .mockReturnValueOnce(PostDatedProcessingResult.MATURED)
-        .mockReturnValueOnce(PostDatedProcessingResult.IMMATURE)
-        .mockReturnValueOnce(PostDatedProcessingResult.IGNORE)
+      // Mock determineAction to return action for each message
+      mockDetermineAction
+        .mockReturnValueOnce(PostDatedProcessingResult.FORWARD_TO_NOTIFICATIONS)
+        .mockReturnValueOnce(PostDatedProcessingResult.REPROCESS)
+        .mockReturnValueOnce(PostDatedProcessingResult.REMOVE_FROM_PD_QUEUE)
 
-      const result = await processMessages(mockMessages, logger)
-
-      expect(result.maturedPrescriptionUpdates).toHaveLength(1)
-      expect(result.maturedPrescriptionUpdates[0].MessageId).toBe("1")
-      expect(result.immaturePrescriptionUpdates).toHaveLength(1)
-      expect(result.immaturePrescriptionUpdates[0].MessageId).toBe("2")
-      expect(result.ignoredPrescriptionUpdates).toHaveLength(1)
-      expect(result.ignoredPrescriptionUpdates[0].MessageId).toBe("3")
+      await processMessages(mockMessages, logger)
+      expect(mockForwardSQSMessageToNotificationQueue).toHaveBeenCalledTimes(1)
+      expect(mockReturnMessageToQueue).toHaveBeenCalledTimes(1)
+      expect(mockRemoveSQSMessage).toHaveBeenCalledTimes(2)
     })
 
     it("should handle empty message array", async () => {
-      mockEnrichMessagesWithExistingRecords.mockReturnValueOnce([])
-      const result = await processMessages([], logger)
+      mockEnrichMessagesWithMostRecentDataItem.mockReturnValueOnce([])
 
-      expect(result.maturedPrescriptionUpdates).toHaveLength(0)
-      expect(result.immaturePrescriptionUpdates).toHaveLength(0)
-      expect(result.ignoredPrescriptionUpdates).toHaveLength(0)
-    })
+      await processMessages([], logger)
 
-    it("should log errors and mark messages immature when processing throws", async () => {
-      const mockMessages: Array<PostDatedSQSMessage> = [
-        {MessageId: "1", Body: "Message 1", prescriptionData: createMockPostModifiedDataItem({})},
-        {MessageId: "2", Body: "Message 2", prescriptionData: createMockPostModifiedDataItem({})}
-      ]
-
-      mockEnrichMessagesWithExistingRecords.mockReturnValueOnce(mockMessages)
-      mockProcessMessage
-        .mockReturnValueOnce(PostDatedProcessingResult.MATURED)
-        .mockImplementationOnce(() => {
-          throw new Error("processing failed")
-        })
-
-      const errorSpy = jest.spyOn(logger, "error")
-      const result = await processMessages(mockMessages, logger)
-
-      expect(result.maturedPrescriptionUpdates).toHaveLength(1)
-      expect(result.immaturePrescriptionUpdates).toHaveLength(1)
-      expect(result.ignoredPrescriptionUpdates).toHaveLength(0)
-      expect(result.immaturePrescriptionUpdates[0].MessageId).toBe("2")
-      expect(errorSpy).toHaveBeenCalledWith(
-        "Error processing message",
-        expect.objectContaining({messageId: "2"})
-      )
-      errorSpy.mockRestore()
+      expect(mockForwardSQSMessageToNotificationQueue).not.toHaveBeenCalled()
+      expect(mockReturnMessageToQueue).not.toHaveBeenCalled()
+      expect(mockRemoveSQSMessage).not.toHaveBeenCalled()
     })
 
     it("should pass enriched records into processMessage", async () => {
@@ -132,23 +109,26 @@ describe("orchestration", () => {
         {MessageId: "1", Body: "Message 1", prescriptionData: createMockPostModifiedDataItem({})}
       ]
 
-      const enrichedMessage = {
+      const enrichedMessage: PostDatedSQSMessageWithRecentDataItem = {
         ...mockMessages[0],
-        existingRecords: [{prescriptionId: "abc"}]
+        mostRecentRecord: undefined
       }
 
-      mockEnrichMessagesWithExistingRecords.mockReturnValueOnce([enrichedMessage])
-      mockProcessMessage.mockReturnValue(PostDatedProcessingResult.MATURED)
+      mockEnrichMessagesWithMostRecentDataItem.mockReturnValueOnce([enrichedMessage])
+      mockDetermineAction.mockReturnValue(PostDatedProcessingResult.FORWARD_TO_NOTIFICATIONS)
 
       await processMessages(mockMessages, logger)
 
-      expect(mockProcessMessage).toHaveBeenCalledWith(logger, enrichedMessage)
+      expect(mockDetermineAction).toHaveBeenCalledWith(logger, enrichedMessage)
     })
   })
 
   describe("processPostDatedQueue", () => {
     beforeEach(() => {
       jest.clearAllMocks()
+      mockForwardSQSMessageToNotificationQueue.mockReturnValue(Promise.resolve("forwarded-id"))
+      mockRemoveSQSMessage.mockReturnValue(Promise.resolve())
+      mockReturnMessageToQueue.mockReturnValue(Promise.resolve())
     })
 
     it("should process the SQS queue correctly", async () => {
@@ -159,27 +139,21 @@ describe("orchestration", () => {
 
       const mockEnrichedMessages = mockMessages.map((message) => ({
         ...message,
-        existingRecords: []
+        mostRecentRecord: undefined
       }))
 
       mockReceivePostDatedSQSMessages.mockReturnValueOnce(mockMessages)
-      mockEnrichMessagesWithExistingRecords.mockReturnValueOnce(mockEnrichedMessages)
-      mockProcessMessage.mockReturnValue(PostDatedProcessingResult.MATURED)
+      mockEnrichMessagesWithMostRecentDataItem.mockReturnValueOnce(mockEnrichedMessages)
+      mockDetermineAction.mockReturnValue(PostDatedProcessingResult.FORWARD_TO_NOTIFICATIONS)
 
       await processPostDatedQueue(logger)
 
       expect(mockReceivePostDatedSQSMessages).toHaveBeenCalledWith(logger)
       expect(mockReportQueueStatus).not.toHaveBeenCalled()
-      expect(mockHandleProcessedMessages).toHaveBeenCalled()
-      const [res, lg] =
-        mockHandleProcessedMessages.mock.calls[0] as [BatchProcessingResult, Logger]
-      expect(lg).toBe(logger)
-      expect(res.maturedPrescriptionUpdates).toHaveLength(mockMessages.length)
-      expect(res.immaturePrescriptionUpdates).toHaveLength(0)
-      expect(res.maturedPrescriptionUpdates.map((message) => message.MessageId)).toEqual(
-        mockMessages.map((message) => message.MessageId)
-      )
-      expect(mockProcessMessage).toHaveBeenCalledTimes(mockMessages.length)
+      expect(mockForwardSQSMessageToNotificationQueue).toHaveBeenCalledTimes(mockMessages.length)
+      expect(mockRemoveSQSMessage).toHaveBeenCalledTimes(mockMessages.length)
+      expect(mockReturnMessageToQueue).not.toHaveBeenCalled()
+      expect(mockDetermineAction).toHaveBeenCalledTimes(mockMessages.length)
     })
 
     it("Should stop processing if the max runtime is exceeded", async () => {
@@ -194,20 +168,14 @@ describe("orchestration", () => {
       ]
 
       mockReceivePostDatedSQSMessages.mockReturnValue(mockMessages)
-      mockEnrichMessagesWithExistingRecords.mockReturnValue(
-        mockMessages.map((message) => ({
-          ...message,
-          existingRecords: []
-        }))
-      )
+      mockEnrichMessagesWithMostRecentDataItem.mockReturnValue(enrich(mockMessages))
       const {MAX_QUEUE_RUNTIME} = await import("../src/orchestration")
-      mockProcessMessage.mockImplementation(async () => {
-        // Overrun by a second
-        jest.advanceTimersByTime(MAX_QUEUE_RUNTIME + 1000)
-        return PostDatedProcessingResult.MATURED
-      })
+      mockDetermineAction.mockReturnValue(PostDatedProcessingResult.FORWARD_TO_NOTIFICATIONS)
 
-      await processPostDatedQueue(logger)
+      const promise = processPostDatedQueue(logger)
+      // Overrun by a second
+      jest.advanceTimersByTime(MAX_QUEUE_RUNTIME + 1000)
+      await promise
 
       expect(mockReportQueueStatus).toHaveBeenCalled()
       jest.useRealTimers()
@@ -222,31 +190,32 @@ describe("orchestration", () => {
         .mockReturnValueOnce(batch1)
         .mockReturnValueOnce(batch2)
         .mockReturnValueOnce(batch3)
-      mockEnrichMessagesWithExistingRecords
+      mockEnrichMessagesWithMostRecentDataItem
         .mockReturnValueOnce(enrich(batch1))
         .mockReturnValueOnce(enrich(batch2))
         .mockReturnValueOnce(enrich(batch3))
-      mockProcessMessage.mockReturnValue(PostDatedProcessingResult.MATURED)
+      mockDetermineAction.mockReturnValue(PostDatedProcessingResult.FORWARD_TO_NOTIFICATIONS)
 
       await processPostDatedQueue(logger)
 
       expect(mockReceivePostDatedSQSMessages).toHaveBeenCalledTimes(3)
-      expect(mockHandleProcessedMessages).toHaveBeenCalledTimes(3)
+      expect(mockForwardSQSMessageToNotificationQueue)
+        .toHaveBeenCalledTimes(batch1.length + batch2.length + batch3.length)
+      expect(mockRemoveSQSMessage).toHaveBeenCalledTimes(batch1.length + batch2.length + batch3.length)
       expect(mockReportQueueStatus).not.toHaveBeenCalled()
       const totalMessages = batch1.length + batch2.length + batch3.length
-      expect(mockProcessMessage).toHaveBeenCalledTimes(totalMessages)
+      expect(mockDetermineAction).toHaveBeenCalledTimes(totalMessages)
     })
 
     it("should treat empty receives as drained batches", async () => {
       mockReceivePostDatedSQSMessages.mockReturnValueOnce([])
-      mockEnrichMessagesWithExistingRecords.mockReturnValueOnce([])
+      mockEnrichMessagesWithMostRecentDataItem.mockReturnValueOnce([])
 
       await processPostDatedQueue(logger)
 
-      expect(mockHandleProcessedMessages).toHaveBeenCalledTimes(1)
-      const [result] = mockHandleProcessedMessages.mock.calls[0] as [BatchProcessingResult]
-      expect(result.maturedPrescriptionUpdates).toHaveLength(0)
-      expect(result.immaturePrescriptionUpdates).toHaveLength(0)
+      expect(mockForwardSQSMessageToNotificationQueue).not.toHaveBeenCalled()
+      expect(mockRemoveSQSMessage).not.toHaveBeenCalled()
+      expect(mockReturnMessageToQueue).not.toHaveBeenCalled()
     })
   })
 })

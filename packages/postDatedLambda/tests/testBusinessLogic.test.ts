@@ -10,7 +10,7 @@ import {Logger} from "@aws-lambda-powertools/logger"
 
 import {PSUDataItem} from "@psu-common/commonTypes"
 
-import {PostDatedProcessingResult, PostDatedSQSMessageWithExistingRecords} from "../src/types"
+import {PostDatedProcessingResult, PostDatedSQSMessageWithRecentDataItem} from "../src/types"
 import {createMockPostModifiedDataItem} from "./testUtils"
 
 type BusinessLogicModule = typeof import("../src/businessLogic")
@@ -50,10 +50,10 @@ function createPSURecord(overrides: Partial<PSUDataItem> = {}): PSUDataItem {
 }
 
 function createMessage(
-  overrides: Partial<PostDatedSQSMessageWithExistingRecords> = {}
-): PostDatedSQSMessageWithExistingRecords {
+  overrides: Partial<PostDatedSQSMessageWithRecentDataItem> = {}
+): PostDatedSQSMessageWithRecentDataItem {
   const prescData = createMockPostModifiedDataItem({})
-  const baseMessage: PostDatedSQSMessageWithExistingRecords = {
+  const baseMessage: PostDatedSQSMessageWithRecentDataItem = {
     MessageId: "msg-123",
     ReceiptHandle: "receipt-123",
     Body: JSON.stringify(prescData),
@@ -62,14 +62,16 @@ function createMessage(
     },
     prescriptionData: prescData,
     // In theory, this should contain the record corresponding to prescData, but for testing purposes it's fine
-    existingRecords: [createPSURecord()]
+    mostRecentRecord: createPSURecord()
   }
 
   return {
     ...baseMessage,
     ...overrides,
     prescriptionData: overrides.prescriptionData ?? baseMessage.prescriptionData,
-    existingRecords: overrides.existingRecords ?? baseMessage.existingRecords
+    mostRecentRecord: Object.hasOwn(overrides, "mostRecentRecord")
+      ? overrides.mostRecentRecord
+      : baseMessage.mostRecentRecord
   }
 }
 
@@ -141,116 +143,100 @@ describe("businessLogic", () => {
     })
   })
 
-  describe("processMessage", () => {
-    it("should ignore messages that have no existing records", async () => {
-      const {processMessage} = await loadBusinessLogic()
+  describe("determineAction", () => {
+    it("should remove messages that have no existing records", async () => {
+      const {determineAction} = await loadBusinessLogic()
       const logger = new Logger({serviceName: "post-dated-tests"})
-      const message = createMessage({existingRecords: []})
+      const message = createMessage({mostRecentRecord: undefined})
 
-      const result = processMessage(logger, message)
+      const result = determineAction(logger, message)
 
-      expect(result).toBe(PostDatedProcessingResult.IGNORE)
+      expect(result).toBe(PostDatedProcessingResult.REMOVE_FROM_PD_QUEUE)
     })
 
-    it("should ignore messages when the most recent record is not post-dated", async () => {
-      const {processMessage} = await loadBusinessLogic()
+    it("should remove messages when the most recent record is not post-dated", async () => {
+      const {determineAction} = await loadBusinessLogic()
       const logger = new Logger({serviceName: "post-dated-tests"})
       const message = createMessage({
-        existingRecords: [
-          createPSURecord({
-            LineItemID: "line-no-post-date",
-            PostDatedLastModifiedSetAt: undefined
-          })
-        ]
+        mostRecentRecord: createPSURecord({
+          LineItemID: "line-no-post-date",
+          PostDatedLastModifiedSetAt: undefined
+        })
       })
 
-      const result = processMessage(logger, message)
+      const result = determineAction(logger, message)
 
-      expect(result).toBe(PostDatedProcessingResult.IGNORE)
+      expect(result).toBe(PostDatedProcessingResult.REMOVE_FROM_PD_QUEUE)
     })
 
-    it("should ignore messages when the status is not notifiable", async () => {
-      const {processMessage} = await loadBusinessLogic()
+    it("should remove messages when the status is not notifiable", async () => {
+      const {determineAction} = await loadBusinessLogic()
       const logger = new Logger({serviceName: "post-dated-tests"})
       const message = createMessage({
-        existingRecords: [
-          createPSURecord({
-            Status: "dispensed",
-            LineItemID: "line-not-notifiable"
-          })
-        ]
+        mostRecentRecord: createPSURecord({
+          Status: "dispensed",
+          LineItemID: "line-not-notifiable"
+        })
       })
 
-      const result = processMessage(logger, message)
+      const result = determineAction(logger, message)
 
-      expect(result).toBe(PostDatedProcessingResult.IGNORE)
+      expect(result).toBe(PostDatedProcessingResult.REMOVE_FROM_PD_QUEUE)
     })
 
     it("should classify a message as immature when LastModified is in the future", async () => {
       jest.useFakeTimers()
       jest.setSystemTime(new Date("2026-01-01T12:00:00.000Z"))
-      const {processMessage} = await loadBusinessLogic()
+      const {determineAction} = await loadBusinessLogic()
       const logger = new Logger({serviceName: "post-dated-tests"})
       const message = createMessage({
-        existingRecords: [
-          createPSURecord({
-            LastModified: "2026-01-02T12:00:00.000Z",
-            PostDatedLastModifiedSetAt: "2026-01-02T12:00:00.000Z",
-            LineItemID: "line-future"
-          })
-        ]
+        mostRecentRecord: createPSURecord({
+          LastModified: "2026-01-02T12:00:00.000Z",
+          PostDatedLastModifiedSetAt: "2026-01-02T12:00:00.000Z",
+          LineItemID: "line-future"
+        })
       })
 
-      const result = processMessage(logger, message)
+      const result = determineAction(logger, message)
 
-      expect(result).toBe(PostDatedProcessingResult.IMMATURE)
+      expect(result).toBe(PostDatedProcessingResult.REPROCESS)
     })
 
     it("should classify a message as matured when LastModified is in the past", async () => {
       jest.useFakeTimers()
       jest.setSystemTime(new Date("2026-01-03T12:00:00.000Z"))
-      const {processMessage} = await loadBusinessLogic()
+      const {determineAction} = await loadBusinessLogic()
       const logger = new Logger({serviceName: "post-dated-tests"})
       const message = createMessage({
-        existingRecords: [
-          createPSURecord({
-            LastModified: "2026-01-02T12:00:00.000Z",
-            PostDatedLastModifiedSetAt: "2026-01-02T12:00:00.000Z",
-            LineItemID: "line-past"
-          })
-        ]
+        mostRecentRecord: createPSURecord({
+          LastModified: "2026-01-02T12:00:00.000Z",
+          PostDatedLastModifiedSetAt: "2026-01-02T12:00:00.000Z",
+          LineItemID: "line-past"
+        })
       })
 
-      const result = processMessage(logger, message)
+      const result = determineAction(logger, message)
 
-      expect(result).toBe(PostDatedProcessingResult.MATURED)
+      expect(result).toBe(PostDatedProcessingResult.FORWARD_TO_NOTIFICATIONS)
     })
 
-    it("should use the most recent record when determining maturity", async () => {
+    it("should use the provided most recent record when determining maturity", async () => {
       jest.useFakeTimers()
       jest.setSystemTime(new Date("2026-01-05T12:00:00.000Z"))
-      const {processMessage} = await loadBusinessLogic()
+      const {determineAction} = await loadBusinessLogic()
       const logger = new Logger({serviceName: "post-dated-tests"})
       const message = createMessage({
-        existingRecords: [
-          createPSURecord({
-            LineItemID: "line-old",
-            LastModified: "2026-01-01T12:00:00.000Z",
-            PostDatedLastModifiedSetAt: "2026-01-01T12:00:00.000Z",
-            Status: "ready to collect - partial"
-          }),
-          createPSURecord({
-            LineItemID: "line-new",
-            LastModified: "2026-01-06T12:00:00.000Z",
-            PostDatedLastModifiedSetAt: "2026-01-06T12:00:00.000Z",
-            Status: "ready to collect"
-          })
-        ]
+        mostRecentRecord: createPSURecord({
+          LineItemID: "line-new",
+          LastModified: "2026-01-06T12:00:00.000Z",
+          PostDatedLastModifiedSetAt: "2026-01-06T12:00:00.000Z",
+          Status: "ready to collect"
+        })
       })
 
-      const result = processMessage(logger, message)
+      const result = determineAction(logger, message)
 
-      expect(result).toBe(PostDatedProcessingResult.IMMATURE)
+      expect(result).toBe(PostDatedProcessingResult.REPROCESS)
     })
   })
 })

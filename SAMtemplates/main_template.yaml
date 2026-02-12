@@ -92,6 +92,10 @@ Parameters:
 
   StateMachineLogLevel:
     Type: String
+    AllowedValues: # OFF is not valid for state machine type EXPRESS
+      - ALL
+      - ERROR
+      - FATAL
 
   EnableBackup:
     Type: String

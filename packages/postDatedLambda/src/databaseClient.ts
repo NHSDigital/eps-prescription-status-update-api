@@ -3,11 +3,8 @@ import {DynamoDBClient, QueryCommand, QueryCommandInput} from "@aws-sdk/client-d
 import {unmarshall} from "@aws-sdk/util-dynamodb"
 
 import {PSUDataItem, NotifyDataItem} from "@psu-common/commonTypes"
-import {
-  PostDatedPrescriptionWithExistingRecords,
-  PostDatedSQSMessage,
-  PostDatedSQSMessageWithExistingRecords
-} from "./types"
+import {PostDatedSQSMessage, PostDatedSQSMessageWithRecentDataItem} from "./types"
+import {getMostRecentRecord} from "./businessLogic"
 
 const client = new DynamoDBClient()
 const tableName = process.env.TABLE_NAME ?? "PrescriptionStatusUpdates"
@@ -27,7 +24,7 @@ type PrescriptionLookupRequest = {
  * @param logger - The AWS Lambda Powertools logger instance
  * @returns Array of PSUDataItem records matching the prescription ID. Sorted by LastModified descending.
  */
-export async function getExistingRecordsByPrescriptionID(
+export async function getRecentDataItemByPrescriptionID(
   prescriptionID: string,
   logger: Logger
 ): Promise<Array<PSUDataItem>> {
@@ -86,41 +83,6 @@ export async function getExistingRecordsByPrescriptionID(
   }
 }
 
-/**
- * For each post-dated prescription, fetch any existing records from DynamoDB
- * that have a matching prescription ID.
- *
- * @param postDatedItems - Array of post-dated prescription data items
- * @param logger - The AWS Lambda Powertools logger instance
- * @returns Array of objects containing both the post-dated data and existing records.
- *   Existing records are sorted by LastModified descending.
- */
-export async function fetchExistingRecordsForPrescriptions(
-  postDatedItems: Array<NotifyDataItem>,
-  logger: Logger
-): Promise<Array<PostDatedPrescriptionWithExistingRecords>> {
-  logger.info("Fetching existing records for post-dated prescriptions", {
-    prescriptionCount: postDatedItems.length,
-    prescriptionIDs: postDatedItems.map((p) => p.PrescriptionID)
-  })
-  const lookupRequests = buildLookupRequests(postDatedItems)
-  const existingRecordsMap = await buildExistingRecordsMap(lookupRequests, logger)
-
-  // Map each post-dated item to its corresponding existing records
-  const results: Array<PostDatedPrescriptionWithExistingRecords> = postDatedItems.map(
-    (postDatedData) => {
-      const lookupKey = postDatedData.PrescriptionID.toUpperCase() // Case insensitive
-      const existingRecords = existingRecordsMap.get(lookupKey) ?? []
-
-      return {
-        postDatedData,
-        existingRecords
-      }
-    })
-
-  return results
-}
-
 function buildLookupRequests(postDatedItems: Array<NotifyDataItem>): Array<PrescriptionLookupRequest> {
   // Run though a map to deduplicate lookups
   const lookups = new Map<string, PrescriptionLookupRequest>()
@@ -138,29 +100,29 @@ function buildLookupRequests(postDatedItems: Array<NotifyDataItem>): Array<Presc
   return Array.from(lookups.values())
 }
 
-async function buildExistingRecordsMap(
+async function buildRecentDataItemMap(
   lookupRequests: Array<PrescriptionLookupRequest>,
   logger: Logger
 ): Promise<Map<string, Array<PSUDataItem>>> {
-  const existingRecordsMap = new Map<string, Array<PSUDataItem>>()
+  const RecentDataItemMap = new Map<string, Array<PSUDataItem>>()
 
   // await all lookups in parallel
   await Promise.all(
     lookupRequests.map(async ({lookupKey, prescriptionID}) => {
       try {
-        const records = await getExistingRecordsByPrescriptionID(prescriptionID, logger)
-        existingRecordsMap.set(lookupKey, records)
+        const records = await getRecentDataItemByPrescriptionID(prescriptionID, logger)
+        RecentDataItemMap.set(lookupKey, records)
       } catch (error) {
         logger.error("Failed to fetch existing records for prescription", {
           prescriptionID,
           error
         })
-        existingRecordsMap.set(lookupKey, []) // Continue processing other prescriptions even when one fails
+        RecentDataItemMap.set(lookupKey, []) // Continue processing other prescriptions even when one fails
       }
     })
   )
 
-  return existingRecordsMap
+  return RecentDataItemMap
 }
 
 /**
@@ -169,21 +131,35 @@ async function buildExistingRecordsMap(
  *
  * @param messages - Array of SQS messages to enrich
  * @param logger - Logger instance
- * @returns Array of enriched messages with existing records
+ * @returns Array of messages enriched with a mostRecentRecord field containing the most
+ *   recent matching record from DynamoDB, if any. If no matching records are found,
+ *   mostRecentRecord will be undefined.
  */
-export async function enrichMessagesWithExistingRecords(
+export async function enrichMessagesWithMostRecentDataItem(
   messages: Array<PostDatedSQSMessage>,
   logger: Logger
-): Promise<Array<PostDatedSQSMessageWithExistingRecords>> {
-  const postDatedItems = messages.map((m) => m.prescriptionData)
+): Promise<Array<PostDatedSQSMessageWithRecentDataItem>> {
+  if (messages.length === 0) {
+    return []
+  }
 
-  const prescriptionsWithRecords = await fetchExistingRecordsForPrescriptions(postDatedItems, logger)
-  // prescription IDs are unique, even across pharmacies. so we can build a map keyed by prescription ID just fine.
-  const recordsMap = new Map(prescriptionsWithRecords.map((p) => [p.postDatedData.PrescriptionID, p.existingRecords]))
-  const enrichedMessages: Array<PostDatedSQSMessageWithExistingRecords> = messages.map((message) => ({
-    ...message,
-    existingRecords: recordsMap.get(message.prescriptionData.PrescriptionID) ?? []
-  }))
+  const postDatedItems = messages.map((message) => message.prescriptionData)
+
+  // There may be repeated prescription IDs in the messages.
+  // Use a map to dedupe the lookups to dynamo, submit them all in async, then map the results back to the messages.
+  const lookupRequests = buildLookupRequests(postDatedItems)
+  const recentDataItemMap = await buildRecentDataItemMap(lookupRequests, logger)
+
+  const enrichedMessages: Array<PostDatedSQSMessageWithRecentDataItem> = messages.map((message) => {
+    const lookupKey = message.prescriptionData.PrescriptionID.toUpperCase()
+    const existingRecords = recentDataItemMap.get(lookupKey) ?? []
+    const mostRecentRecord = existingRecords.length > 0 ? getMostRecentRecord(existingRecords) : undefined
+
+    return {
+      ...message,
+      mostRecentRecord
+    }
+  })
 
   return enrichedMessages
 }
