@@ -1,0 +1,26 @@
+name: PSU Dev PR
+variables:
+  - name: host
+    value: internal-dev.api.service.nhs.uk
+  - secret: true
+    name: status_api_key
+  - secret: true
+    name: api_key
+  - secret: true
+    name: cpsu_api_key
+  - secret: true
+    name: private_key
+  - name: kid
+    value: PSU-DEV-JIM-WILD
+  - name: aws_pull_request_id
+    value: "2693"
+  - secret: true
+    name: authorization_header_value
+  - name: message_batch_reference
+    value: e8c63707-fe89-41eb-955e-43b5b3de42ca
+  - name: message_reference
+    value: 164d4f1b-21d3-420c-a8f3-c572d0f57c9a
+  - name: correlation_id
+    value: b3a7dc1e-e159-4c84-bc9b-c3da29389aad
+  - name: nhs_numbers
+    value: "9993301787"

@@ -1,0 +1,19 @@
+info:
+  name: AWS PULL REQUEST psu metadata
+  type: http
+  seq: 1
+
+http:
+  method: GET
+  url: https://psu-pr-{{aws_pull_request_id}}.dev.eps.national.nhs.uk/metadata
+  headers:
+    - name: x-request-id
+      value: "{{$guid}}"
+    - name: x-correlation-id
+      value: "{{$guid}}"
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

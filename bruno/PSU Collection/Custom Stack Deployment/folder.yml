@@ -1,0 +1,10 @@
+info:
+  name: Custom Stack Deployment
+  type: folder
+  seq: 1
+
+request:
+  auth: inherit
+  variables:
+    - name: custom_stack_name
+      value: dev
