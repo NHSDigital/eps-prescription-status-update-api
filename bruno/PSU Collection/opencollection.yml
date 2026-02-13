@@ -1,0 +1,219 @@
+opencollection: 1.0.0
+
+info:
+  name: PSU
+config:
+  proxy:
+    inherit: true
+    config:
+      protocol: http
+      hostname: ""
+      port: ""
+      auth:
+        username: ""
+        password: ""
+      bypassProxy: ""
+
+request:
+  auth:
+    type: bearer
+    token: "{{authorization_header_value}}"
+  scripts:
+    - type: before-request
+      code: |-
+        /**
+         * Bruno Pre-request Script: Fetch OAuth2 token using JWT client_assertion (RS512)
+         *
+         * Requirements:
+         * - `jsonwebtoken` + `uuid` installed in the collection folder and whitelisted in bruno.json
+         *   (see Bruno docs/blog for module whitelisting)
+         */
+
+        console.log("[auth] Fetching auth bearer token...");
+
+        const jwt = require("jsonwebtoken");
+        const { v4: uuidv4 } = require("uuid");
+
+        function toFormUrlEncoded(params) {
+          return Object.entries(params)
+            .map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(v ?? "")}`)
+            .join("&");
+        }
+
+        function normalisePem(pem) {
+          if (!pem) return pem;
+          // Common case: key stored with literal "\n" sequences
+          let out = pem.replace(/\\n/g, "\n").trim();
+
+          // If someone pasted with CRLF escaping weirdness
+          out = out.replace(/\r\n/g, "\n");
+
+          return out;
+        }
+
+        const privateKeyRaw = bru.getEnvVar("private_key") || "";
+        const apiKey = bru.getEnvVar("api_key") || "";
+        const host = bru.getEnvVar("host") || "";
+        const kid = bru.getEnvVar("kid") || "";
+        const envName = bru.getEnvName() || "";
+
+        // Mirror your Postman behaviour
+        if (envName.endsWith("sandbox")) {
+          console.log("[auth] sandbox environment detected, skipping token fetch.");
+          return;
+        }
+
+        if (!privateKeyRaw) throw new Error("Variable private_key must be set with your private key for signed JWT authentication.");
+        if (!apiKey) throw new Error("Variable api_key must be set with your integration testing application API key.");
+        if (!host) throw new Error("Variable host must be set with host name for the environment.");
+        if (!kid) throw new Error("Variable kid must be set with kid for the jwt.");
+
+        const privateKey = normalisePem(privateKeyRaw);
+
+        const authUrl = `https://${host}/oauth2/token`;
+        console.log("[auth] token url:", authUrl);
+
+        // JWT assertion (match Postman claims)
+        const now = Math.floor(Date.now() / 1000);
+
+        const clientAssertion = jwt.sign(
+          {
+            sub: apiKey,
+            iss: apiKey,
+            jti: uuidv4(),
+            aud: authUrl,
+            exp: now + 180,
+          },
+          privateKey,
+          {
+            algorithm: "RS512",
+            keyid: kid,            // sets protected header "kid"
+            header: { typ: "JWT" } // keep typ like Postman
+          }
+        );
+
+        // Send as *string* body, not object (important for x-www-form-urlencoded)
+        const bodyString = toFormUrlEncoded({
+          grant_type: "client_credentials",
+          client_assertion_type: "urn:ietf:params:oauth:client-assertion-type:jwt-bearer",
+          client_assertion: clientAssertion,
+        });
+
+        const { err, res } = await new Promise((resolve) => {
+          bru.sendRequest(
+            {
+              method: "POST",
+              url: authUrl,
+              headers: {
+                "Content-Type": "application/x-www-form-urlencoded",
+                "Accept": "application/json",
+              },
+              data: bodyString,
+            },
+            (err, res) => resolve({ err, res })
+          );
+        });
+
+        if (err) {
+          // Bruno often surfaces non-2xx as "err" — print whatever we can
+          console.error("[auth] token request error:", err?.message || err);
+          if (err?.response) {
+            console.error("[auth] status:", err.response.status);
+            console.error("[auth] body:", err.response.data);
+          }
+          if (res) {
+            console.error("[auth] status:", res.status);
+            console.error("[auth] body:", res.data);
+          }
+          throw new Error("[auth] Token request failed (see logs above).");
+        }
+
+        console.log("[auth] status:", res?.status);
+        console.log("[auth] body:", res?.data);
+
+        const accessToken = res?.data?.access_token;
+        if (!accessToken) {
+          throw new Error(
+            `[auth] Token endpoint did not return access_token. Status: ${res?.status}, Body: ${JSON.stringify(res?.data)}`
+          );
+        }
+
+        // Store for the request(s) to use
+        bru.setEnvVar("authorization_header_value", accessToken);
+        bru.setEnvVar("message_batch_reference", uuidv4());
+        bru.setEnvVar("message_reference", uuidv4());
+        bru.setEnvVar("correlation_id", uuidv4());
+
+        console.log("[auth] access token set (authorization_header_value).");
+
+docs:
+  content: |-
+    This collection provides endpoints for interacting with the Prescription Status Update API across multiple environments. It is designed for use by developers and testers, encompassing calls to all endpoints.
+
+    The collection is configured through the Digital Onboarding Services using the appropriate environment for the Apigee host, with access enabled for the APIs you intend to use. For Pull Request deployments, make sure to add the APIs specific to the relevant pull request.
+
+    The collection includes the following folders:
+
+    - `Custom Stack Deployment` Direct API calls to all endpoints on AWS
+        
+    - `Pull Request Deployment` API calls to endpoints on both Apigee and AWS
+        
+
+    ### Setup Instructions
+
+    To use this collection, you should define the following variables at a global level:
+
+    - `host`
+        
+    - `status_api_key` Obtain this from the APIM team
+        
+
+    To use the requests in the "Pull Request Deployment" folder, you should create a variable called `aws_pull_request_id` that represents the number of the pull request.
+
+    To use the requests in the "Custom Stack Deployment" folder, you should create a variable called `custom_stack_name` that represents the name of the stack you have defined.
+
+    ### Authentication Setup
+
+    There is a pre-request script at the top level that automates the authentication process. You must set the following variables for this to work. These should be set at an environment level as they differ between each environment.
+
+    - `host`
+        
+    - `api_key`
+        
+    - `cpsu_api_key` Used for Custom Prescription Status Update
+        
+    - `private_key`
+        
+    - `kid`
+        
+
+    ### Host Configuration
+
+    The `host` should be set to the base Apigee URL, depending on the environment you're working with. Below is a table detailing the URLs, their corresponding environments, and the Digital Onboarding Service registration links.
+
+    **Note:** Sandbox environments should be named so that they end with `sandbox`.
+
+    | **Apigee URL** | **Environment** | **Digital Onboarding Service** |
+    | --- | --- | --- |
+    | `internal-dev.api.service.nhs.uk` | Development (dev) | [Digital Onboarding Service PTL](https://dos-internal.ptl.api.platform.nhs.uk/) |
+    | `internal-dev-sandbox.api.service.nhs.uk` | Development (dev sandbox) | [Digital Onboarding Service PTL](https://dos-internal.ptl.api.platform.nhs.uk/) |
+    | `int.api.service.nhs.uk` | Integration Test (int) | [Digital Onboarding Service PROD](https://onboarding.prod.api.platform.nhs.uk/) |
+    | `sandbox.api.service.nhs.uk` | Sandbox (int sandbox) | [Digital Onboarding Service PROD](https://onboarding.prod.api.platform.nhs.uk/) |
+    | `internal-qa.api.service.nhs.uk` | Production (qa) | [Digital Onboarding Service PTL](https://dos-internal.ptl.api.platform.nhs.uk/) |
+    | `internal-qa.api.service.nhs.uk` | Production (ref) | [Digital Onboarding Service PTL](https://dos-internal.ptl.api.platform.nhs.uk/) |
+
+    ### API Key and JWT Setup
+
+    Follow the instructions at [NHS Developer Documentation](https://digital.nhs.uk/developer/guides-and-documentation/security-and-authorisation/application-restricted-restful-apis-signed-jwt-authentication#step-1-register-your-application-on-the-api-platform) to get an API key and create a public/private key pair, which you need to upload to the JWKS server.
+
+    - `api_key` Should be set to the Apigee API key for your application
+        
+    - `private_key` Should be your private key that you have created for the environment
+        
+    - `kid` Should be the KID that you used when creating the JWKS
+  type: text/markdown
+bundled: false
+extensions:
+  ignore:
+    - node_modules
+    - .git

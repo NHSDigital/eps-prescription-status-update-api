@@ -1,0 +1,19 @@
+info:
+  name: "AWS PULL REQUEST Get Notifications State "
+  type: http
+  seq: 8
+
+http:
+  method: GET
+  url: "{{aws_host}}/notifications-reporting?nhsNumber=9999969135"
+  params:
+    - name: nhsNumber
+      value: "9999969135"
+      type: query
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

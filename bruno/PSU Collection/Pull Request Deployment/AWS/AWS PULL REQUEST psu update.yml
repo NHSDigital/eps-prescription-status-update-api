@@ -1,0 +1,89 @@
+info:
+  name: AWS PULL REQUEST psu update
+  type: http
+  seq: 1
+
+http:
+  method: POST
+  url: "{{aws_host}}/"
+  headers:
+    - name: x-request-iD
+      value: "{{$guid}}"
+    - name: x-correlation-id
+      value: "{{$guid}}"
+    - name: Content-Type
+      value: application/fhir+json
+    - name: attribute-name
+      value: unknown
+  body:
+    type: json
+    data: |-
+      {
+        "resourceType": "Bundle",
+        "type": "transaction",
+        "entry": [
+          {
+            "fullUrl": "urn:uuid:a1b878be-a354-457e-9dab-96eda8c226cf",
+            "resource": {
+              "resourceType": "Task",
+              "id": "a1b878be-a354-457e-9dab-96eda8c226cf",
+              "basedOn": [
+                {
+                  "identifier": {
+                    "system": "https://fhir.nhs.uk/Id/prescription-order-number",
+                    "value": "YGK0NJ-FA565-M6XTEM"
+                  }
+                }
+              ],
+              "status": "in-progress",
+              "businessStatus": {
+                "coding": [
+                  {
+                    "system": "https://fhir.nhs.uk/CodeSystem/task-businessStatus-nppt",
+                    "code": "Ready to Collect"
+                  }
+                ]
+              },
+              "intent": "order",
+              "focus": {
+                "identifier": {
+                  "system": "https://fhir.nhs.uk/Id/prescription-order-item-number",
+                  "value": "41f1a13b-7354-4efb-afb6-445866d5cce7"
+                }
+              },
+              "for": {
+                "identifier": {
+                  "system": "https://fhir.nhs.uk/Id/nhs-number",
+                  "value": "9999969135"
+                }
+              },
+              "lastModified": "2026-02-13T16:44:43.686Z",
+              "owner": {
+                "identifier": {
+                  "system": "https://fhir.nhs.uk/Id/ods-organization-code",
+                  "value": "FA565"
+                }
+              }
+            },
+            "request": {
+              "method": "POST",
+              "url": "Task"
+            }
+          }
+        ]
+      }
+  auth: inherit
+
+runtime:
+  scripts:
+    - type: before-request
+      code: |-
+        const task_identifier=bru.interpolate("{{$guid}}");
+
+        bru.setEnvVar("task_identifier", task_identifier.toLowerCase());
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
