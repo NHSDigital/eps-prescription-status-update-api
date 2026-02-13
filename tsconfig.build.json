@@ -45,6 +45,9 @@
     },
     {
       "path": "packages/nhsNotifyUpdateCallback"
+    },
+    {
+      "path": "packages/notificationsReportingLambda"
     }
   ]
 }

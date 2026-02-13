@@ -61,6 +61,7 @@ sam deploy \
             LogRetentionInDays="$LOG_RETENTION_DAYS" \
             Environment="$TARGET_ENVIRONMENT" \
             DeployCheckPrescriptionStatusUpdate="$DEPLOY_CHECK_PRESCRIPTION_STATUS_UPDATE" \
+            DeployNotificationsReporting="$DEPLOY_NOTIFICATIONS_REPORTING" \
             EnableAlerts="$ENABLE_ALERTS" \
             StateMachineLogLevel="$STATE_MACHINE_LOG_LEVEL" \
             EnableNotificationsInternal="$ENABLE_NOTIFICATIONS_INTERNAL" \

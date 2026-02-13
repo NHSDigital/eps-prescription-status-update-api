@@ -23,6 +23,7 @@
     "packages/cpsuLambda",
     "packages/checkPrescriptionStatusUpdates",
     "packages/nhsNotifyLambda",
+    "packages/notificationsReportingLambda",
     "packages/postDatedLambda",
     "packages/psuRestoreValidationLambda",
     "packages/nhsNotifyUpdateCallback",
