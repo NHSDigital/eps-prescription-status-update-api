@@ -89,10 +89,12 @@ export const lambdaHandler = buildHandler(getDefaultRepository)
 export const handler = middy(lambdaHandler)
   .use(injectLambdaContext(logger, {clearState: true}))
   .use(httpHeaderNormalizer())
-  .use(inputOutputLogger({
-    logger: request => {
-      logger.info("notificationsReporting invocation", {hasBody: Boolean(request.event.body)})
-    }
-  }))
+  .use(
+    inputOutputLogger({
+      logger: (request) => {
+        logger.info(request)
+      }
+    })
+  )
 
 export {normalizeFilters, buildResponse}
