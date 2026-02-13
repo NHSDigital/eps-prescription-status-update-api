@@ -66,6 +66,7 @@ sam deploy \
             EnableNotificationsInternal="$ENABLE_NOTIFICATIONS_INTERNAL" \
             EnableNotificationsExternal="$ENABLE_NOTIFICATIONS_EXTERNAL" \
             EnabledSiteODSCodesValue="${ENABLED_SITE_ODS_CODES:-' '}" \
+            EnablePostDatedNotifications="$ENABLE_POST_DATED_NOTIFICATIONS" \
             EnabledSystemsValue="${ENABLED_SYSTEMS:-' '}" \
             BlockedSiteODSCodesValue="${BLOCKED_SITE_ODS_CODES:-' '}" \
             NotifyRoutingPlanIDValue="$NOTIFY_ROUTING_PLAN_ID" \
