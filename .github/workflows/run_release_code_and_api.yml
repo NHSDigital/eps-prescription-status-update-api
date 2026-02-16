@@ -124,6 +124,9 @@ on:
       FORWARD_CSOC_LOGS:
         required: true
         type: boolean
+      DEPLOY_NOTIFICATIONS_REPORTING_ENDPOINT:
+        type: boolean
+        default: false
     secrets:
       CLOUD_FORMATION_DEPLOY_ROLE:
         required: true
@@ -231,6 +234,7 @@ jobs:
           TEST_PRESCRIPTIONS_3: ${{ inputs.TEST_PRESCRIPTIONS_3 || 'noval' }}
           TEST_PRESCRIPTIONS_4: ${{ inputs.TEST_PRESCRIPTIONS_4 || 'noval' }}
           FORWARD_CSOC_LOGS: ${{ inputs.FORWARD_CSOC_LOGS }}
+          DEPLOY_NOTIFICATIONS_REPORTING: ${{ inputs.DEPLOY_NOTIFICATIONS_REPORTING_ENDPOINT }}
         run: ./release_code.sh
 
       - name: get mtls secrets

@@ -35,6 +35,7 @@ export async function addPrescriptionMessagesToNotificationStateStore(
       NHSNumber: data.PSUDataItem.PatientNHSNumber,
       ODSCode: data.PSUDataItem.PharmacyODSCode,
       RequestId: data.PSUDataItem.RequestID,
+      PrescriptionID: data.PSUDataItem.PrescriptionID, // only used for reporting and tracing
       SQSMessageID: data.MessageId,
       LastNotifiedPrescriptionStatus: data.PSUDataItem.Status,
       MessageStatus: data.messageStatus ?? "unknown", // Fall back to unknown if not set

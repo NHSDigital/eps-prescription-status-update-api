@@ -71,6 +71,10 @@ Parameters:
   DeployCheckPrescriptionStatusUpdate:
     Type: String
 
+  DeployNotificationsReporting:
+    Type: String
+    Default: false
+
   Environment:
     Type: String
 
@@ -225,9 +229,12 @@ Resources:
         CheckPrescriptionStatusUpdatesFunctionArn: !GetAtt Functions.Outputs.CheckPrescriptionStatusUpdatesFunctionArn
         NHSNotifyUpdateCallbackFunctionName: !GetAtt Functions.Outputs.NHSNotifyUpdateCallbackFunctionName
         NHSNotifyUpdateCallbackFunctionArn: !GetAtt Functions.Outputs.NHSNotifyUpdateCallbackFunctionArn
+        NotificationsReportingFunctionName: !GetAtt Functions.Outputs.NotificationsReportingFunctionName
+        NotificationsReportingFunctionArn: !GetAtt Functions.Outputs.NotificationsReportingFunctionArn
         LogRetentionInDays: !Ref LogRetentionInDays
         EnableSplunk: !Ref EnableSplunk
         DeployCheckPrescriptionStatusUpdate: !Ref DeployCheckPrescriptionStatusUpdate
+        DeployNotificationsReporting: !Ref DeployNotificationsReporting
         ForwardCsocLogs: !Ref ForwardCsocLogs
 
   Functions:
@@ -255,6 +262,7 @@ Resources:
         VersionNumber: !Ref VersionNumber
         CommitId: !Ref CommitId
         DeployCheckPrescriptionStatusUpdate: !Ref DeployCheckPrescriptionStatusUpdate
+        DeployNotificationsReporting: !Ref DeployNotificationsReporting
         Environment: !Ref Environment
         EnableBackup: !Ref EnableBackup
         RequireApplicationName: !Ref RequireApplicationName
