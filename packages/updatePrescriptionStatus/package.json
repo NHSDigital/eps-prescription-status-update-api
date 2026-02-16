@@ -22,7 +22,7 @@
     "@middy/core": "^7.0.2",
     "@middy/http-header-normalizer": "^7.0.2",
     "@middy/input-output-logger": "^7.0.2",
-    "@nhs/fhir-middy-error-handler": "^2.1.72"
+    "@nhs/fhir-middy-error-handler": "^2.1.73"
   },
   "devDependencies": {
     "@faker-js/faker": "^10.3.0",
