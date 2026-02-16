@@ -24,7 +24,9 @@ sam-build-sandbox: sam-validate-sandbox compile
 	sam build --template-file SAMtemplates/sandbox_template.yaml --region eu-west-2
 
 sam-run-local: sam-build
+    # --host: Access from outside container, example: regression test container
 	sam local start-api \
+		--host 0.0.0.0 \
 		--region eu-west-2 \
 		--parameter-overrides \
 			  TruststoreVersion=$${TRUSTSTORE_VERSION:-none} \
@@ -281,3 +283,9 @@ aws-login:
 
 cfn-guard:
 	./scripts/run_cfn_guard.sh
+
+test-bdd:
+	poetry run behave packages/bdd-tests/features
+
+test-bdd-tags:
+	poetry run behave packages/bdd-tests/features --tags=$(TAGS)
