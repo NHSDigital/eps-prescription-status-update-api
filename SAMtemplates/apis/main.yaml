@@ -54,6 +54,14 @@ Parameters:
     Type: String
     Default: none
 
+  GetStatusUpdatesFunctionName:
+    Type: String
+    Default: none
+
+  GetStatusUpdatesFunctionArn:
+    Type: String
+    Default: none
+
   NHSNotifyUpdateCallbackFunctionName:
     Type: String
     Default: none
@@ -526,6 +534,26 @@ Resources:
         IntegrationHttpMethod: POST
         Uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${CheckPrescriptionStatusUpdatesFunctionArn}/invocations
 
+  GetStatusUpdatesResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId: !Ref RestApiGateway
+      ParentId: !GetAtt RestApiGateway.RootResourceId
+      PathPart: updates
+
+  GetStatusUpdatesMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref RestApiGateway
+      ResourceId: !Ref GetStatusUpdatesResource
+      HttpMethod: POST
+      AuthorizationType: NONE
+      Integration:
+        Type: AWS_PROXY
+        Credentials: !GetAtt RestApiGatewayResources.Outputs.ApiGwRoleArn
+        IntegrationHttpMethod: POST
+        Uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${GetStatusUpdatesFunctionArn}/invocations
+
   # we can not use a conditional in depends on in ApiGateway::Deployment
   # so instead we use a wait condition that has the conditional in it and use that as a dependency
   # taken from https://garbe.io/blog/2017/07/17/cloudformation-hacks/
@@ -563,6 +591,7 @@ Resources:
       - Format1UpdatePrescriptionStatusMethod
       - CheckPrescriptionStatusUpdatesWaitCondition
       - NotificationDeliveryStatusCallbackMethod
+      - GetStatusUpdatesMethod
       # see note above if you add something in here when you add a new endpoint
     Properties:
       RestApiId: !Ref RestApiGateway
@@ -596,6 +625,7 @@ Resources:
             - Fn::ImportValue: !Sub ${StackName}:functions:${CapabilityStatementFunctionName}:ExecuteLambdaPolicyArn
             - Fn::ImportValue: !Sub ${StackName}:functions:${NHSNotifyUpdateCallbackFunctionName}:ExecuteLambdaPolicyArn
             - Fn::ImportValue: !Sub ${StackName}:state-machines:${Format1UpdatePrescriptionsStatusStateMachineName}:ExecuteStateMachinePolicy
+            - Fn::ImportValue: !Sub ${StackName}:functions:${GetStatusUpdatesFunctionName}:ExecuteLambdaPolicyArn
             - !If
               - ShouldDeployCheckPrescriptionStatusUpdate
               - Fn::ImportValue: !Sub ${StackName}:functions:${CheckPrescriptionStatusUpdatesFunctionName}:ExecuteLambdaPolicyArn
