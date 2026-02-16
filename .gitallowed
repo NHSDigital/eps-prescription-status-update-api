@@ -18,3 +18,6 @@ console\.log\(`access token : \${access_token}`\)
 .*node_modules.*
 self.token = token
 .*poetry\.lock.*brotli.*platform_python_implementation.*
+password: ""
+http://0\.0\.0\.0
+--host 0\.0\.0\.0
