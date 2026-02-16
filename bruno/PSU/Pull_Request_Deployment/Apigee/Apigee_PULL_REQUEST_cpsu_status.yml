@@ -1,0 +1,24 @@
+info:
+  name: Apigee PULL REQUEST cpsu status
+  type: http
+  seq: 1
+
+http:
+  method: GET
+  url: https://{{host}}/custom-prescription-status-update-pr-{{aws_pull_request_id}}/_status
+  headers:
+    - name: x-request-id
+      value: "{{$guid}}"
+    - name: x-correlation-id
+      value: "{{$guid}}"
+  auth:
+    type: apikey
+    key: apikey
+    value: "{{status_api_key}}"
+    placement: header
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

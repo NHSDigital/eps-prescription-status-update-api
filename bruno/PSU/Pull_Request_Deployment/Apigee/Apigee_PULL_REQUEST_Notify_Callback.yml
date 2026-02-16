@@ -1,0 +1,206 @@
+info:
+  name: Apigee PULL REQUEST Notify Callback
+  type: http
+  seq: 1
+
+http:
+  method: POST
+  url: https://{{host}}/prescription-status-update-pr-{{aws_pull_request_id}}/notification-delivery-status-callback
+  headers:
+    - name: x-request-id
+      value: "{{$guid}}"
+    - name: x-correlation-id
+      value: "{{$guid}}"
+    - name: Content-Type
+      value: application/fhir+json
+  body:
+    type: json
+    data: |
+      {
+        "data": [
+          {
+            "type": "MessageStatus",
+            "attributes": {
+              "messageId": "{{messageID}}",
+              "messageReference": "REF-ABC-123",
+              "messageStatus": "delivered",
+              "messageStatusDescription": "Message has been delivered",
+              "channels": [
+                {
+                  "type": "nhsapp",
+                  "channelStatus": "delivered"
+                }
+              ],
+              "timestamp": "{{$isoTimestamp}}",
+              "routingPlan": {
+                "id": "example-plan",
+                "name": "Example Template",
+                "version": "v1.0.0",
+                "createdDate": "2025-01-01T12:00:00Z"
+              }
+            },
+            "links": {
+              "message": "https://api.nhs.example.com/messages/{{messageID}}"
+            },
+            "meta": {
+              "idempotencyKey": "idemp-001-abc"
+            }
+          }
+        ]
+      }
+  auth:
+    type: apikey
+    key: apikey
+    value: "{{NOTIFY_API_KEY}}"
+    placement: header
+
+runtime:
+  scripts:
+    - type: before-request
+      code: "// const crypto = pm.require('npm:crypto-js@4.2.0')\r
+
+        \r
+
+        const appName = bru.getEnvVar(\"kid\");\r
+
+        const apiKey  = bru.getEnvVar(\"api_key\");\r
+
+        \r
+
+        if (!appName || !apiKey) {\r
+
+        \  console.error(\"Missing APP_NAME or API_KEY in environment!\");\r
+
+        }\r
+
+        \r
+
+        const secret = `${appName}.${apiKey}`;\r
+
+        \r
+
+        let body = \"\";\r
+
+        const raw = req.getBody().raw;\r
+
+        body = bru.interpolate(raw);\r
+
+        // need to make sure the body is synced later\r
+
+        req.getBody() = body\r
+
+        \r
+
+        const signature = crypto.HmacSHA256(body, secret).toString(crypto.enc.Hex);\r
+
+        \r
+
+        // Expects both the siganture and the api key. The app name is secret?\r
+
+        req.getHeaders().upsert({\r
+
+        \  key: \"x-hmac-sha256-signature\",\r
+
+        \  value: signature\r
+
+        });"
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+
+examples:
+  - name: ChannelStatus Callback
+    request:
+      url: https://{{host}}/prescription-status-update-pr-{{aws_pull_request_id}}/notification-delivery-status-callback
+      method: POST
+      headers:
+        - name: x-request-id
+          value: "{{$guid}}"
+        - name: x-correlation-id
+          value: "{{$guid}}"
+        - name: Content-Type
+          value: application/fhir+json
+      body:
+        type: json
+        data: |-
+          {
+              "data": [
+                  {
+                      "type": "ChannelStatus",
+                      "attributes": {
+                          "messageId": "{{messageID}}",
+                          "messageReference": "e39ec303-fa39-4f39-b8df-d9f1c0b7e7dd",
+                          "cascadeType": "primary",
+                          "cascadeOrder": 1,
+                          "channel": "nhsapp",
+                          "channelStatus": "sending",
+                          "supplierStatus": "received",
+                          "retryCount": 0,
+                          "timestamp": "{{$isoTimestamp}}"
+                      },
+                      "links": {
+                          "message": "https://int.api.service.nhs.uk/comms/v1/messages/{{messageID}}"
+                      },
+                      "meta": {
+                          "idempotencyKey": "178e8848ae762d9921686b7cb1a97a352b7674f3bdfbac462c641d30c1d6cd1d"
+                      }
+                  }
+              ]
+          }
+    response:
+      body:
+        type: text
+        data: ""
+  - name: MessageStatus Callback
+    request:
+      url: https://{{host}}/prescription-status-update-pr-{{aws_pull_request_id}}/notification-delivery-status-callback
+      method: POST
+      headers:
+        - name: x-request-id
+          value: "{{$guid}}"
+        - name: x-correlation-id
+          value: "{{$guid}}"
+        - name: Content-Type
+          value: application/fhir+json
+      body:
+        type: json
+        data: |-
+          {
+              "data": [
+                  {
+                      "type": "MessageStatus",
+                      "attributes": {
+                          "messageId": "{{messageID}}",
+                          "messageReference": "e39ec303-fa39-4f39-b8df-d9f1c0b7e7dd",
+                          "messageStatus": "delivered",
+                          "messageStatusDescription": "",
+                          "channels": [
+                              {
+                                  "type": "nhsapp",
+                                  "channelStatus": "delivered"
+                              }
+                          ],
+                          "routingPlan": {
+                              "id": "e57fe5cc-0567-4854-abe2-b7dd9014a50c",
+                              "version": "evkEMHe1D3.xBEbMJghpY8oROkFiB7T.",
+                              "name": "eps-collect-notification",
+                              "createdDate": "2025-06-16T13:18:42.000Z"
+                          },
+                          "timestamp": "{{$isoTimestamp}}"
+                      },
+                      "links": {
+                          "message": "https://int.api.service.nhs.uk/comms/v1/messages/{{messageID}}"
+                      },
+                      "meta": {
+                          "idempotencyKey": "6d4a7d4e66fe01cb99dfc22533b16dde2b1ee78b956f12bed36b3ca9d64ced6b"
+                      }
+                  }
+              ]
+          }
+    response:
+      body:
+        type: text
+        data: ""
