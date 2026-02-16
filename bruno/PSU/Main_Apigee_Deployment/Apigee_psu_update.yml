@@ -1,0 +1,142 @@
+info:
+  name: Apigee psu update
+  type: http
+  seq: 3
+
+http:
+  method: POST
+  url: https://{{host}}/prescription-status-update/
+  headers:
+    - name: x-request-id
+      value: "{{$guid}}"
+    - name: x-correlation-id
+      value: "{{$guid}}"
+    - name: Content-Type
+      value: application/fhir+json
+      disabled: true
+  body:
+    type: json
+    data: "{\r
+
+      \  \"resourceType\": \"Bundle\",\r
+
+      \  \"type\": \"transaction\",\r
+
+      \  \"entry\": [\r
+
+      \    {\r
+
+      \      \"fullUrl\": \"urn:uuid:b903d39f-f5ae-4d1c-9aa6-5da5740cc21b\",\r
+
+      \      \"resource\": {\r
+
+      \        \"resourceType\": \"Task\",\r
+
+      \        \"id\": \"b903d39f-f5ae-4d1c-9aa6-5da5740cc21b\",\r
+
+      \        \"basedOn\": [\r
+
+      \          {\r
+
+      \            \"identifier\": {\r
+
+      \              \"system\": \"https://fhir.nhs.uk/Id/prescription-order-number\",\r
+
+      \              \"value\": \"JC8YSE-FA565-TMAC06\"\r
+
+      \            }\r
+
+      \          }\r
+
+      \        ],\r
+
+      \        \"status\": \"in-progress\",\r
+
+      \        \"businessStatus\": {\r
+
+      \          \"coding\": [\r
+
+      \            {\r
+
+      \              \"system\": \"https://fhir.nhs.uk/CodeSystem/task-businessStatus-nppt\",\r
+
+      \              \"code\": \"Ready to Collect\"\r
+
+      \            }\r
+
+      \          ]\r
+
+      \        },\r
+
+      \        \"intent\": \"order\",\r
+
+      \        \"focus\": {\r
+
+      \          \"identifier\": {\r
+
+      \            \"system\": \"https://fhir.nhs.uk/Id/prescription-order-item-number\",\r
+
+      \            \"value\": \"8A6F9FE2-E536-4A84-A075-8FFC7F5E7F70\"\r
+
+      \          }\r
+
+      \        },\r
+
+      \        \"for\": {\r
+
+      \          \"identifier\": {\r
+
+      \            \"system\": \"https://fhir.nhs.uk/Id/nhs-number\",\r
+
+      \            \"value\": \"9733604526\"\r
+
+      \          }\r
+
+      \        },\r
+
+      \        \"lastModified\": \"2025-08-27T09:52:11Z\",\r
+
+      \        \"owner\": {\r
+
+      \          \"identifier\": {\r
+
+      \            \"system\": \"https://fhir.nhs.uk/Id/ods-organization-code\",\r
+
+      \            \"value\": \"FA565\"\r
+
+      \          }\r
+
+      \        }\r
+
+      \      },\r
+
+      \      \"request\": {\r
+
+      \        \"method\": \"POST\",\r
+
+      \        \"url\": \"Task\"\r
+
+      \      }\r
+
+      \    }\r
+
+      \  ]\r
+
+      }"
+  auth:
+    type: bearer
+    token: "{{authorization_header_value}}"
+
+runtime:
+  scripts:
+    - type: before-request
+      code: |-
+        const task_identifier=bru.interpolate("{{$guid}}");
+
+        bru.setGlobalEnvVar("task_identifier",task_identifier.toLowerCase());
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
