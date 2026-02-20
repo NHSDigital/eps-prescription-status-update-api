@@ -1,10 +1,4 @@
-guard-%:
-	@ if [ "${${*}}" = "" ]; then \
-		echo "Environment variable $* not set"; \
-		exit 1; \
-	fi
-
-.PHONY: install build test publish release clean
+.PHONY: install build test publish release clean lint
 
 install: install-node install-python install-hooks
 
@@ -237,19 +231,5 @@ deep-clean: clean
 	find . -name 'node_modules' -type d -prune -exec rm -rf '{}' +
 	poetry env remove --all
 
-check-licenses: check-licenses-node check-licenses-python
-
-check-licenses-node:
-	npm run check-licenses
-
-check-licenses-python:
-	scripts/check_python_licenses.sh
-
-aws-configure:
-	aws configure sso --region eu-west-2
-
-aws-login:
-	aws sso login --sso-session sso-session
-
-cfn-guard:
-	./scripts/run_cfn_guard.sh
+%:
+	@$(MAKE) -f /usr/local/share/eps/Mk/common.mk $@
