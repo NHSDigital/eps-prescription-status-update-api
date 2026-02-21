@@ -20,7 +20,7 @@
     "@aws-sdk/lib-dynamodb": "^3.994.0",
     "@middy/core": "^7.1.1",
     "@middy/http-header-normalizer": "^7.1.0",
-    "@middy/input-output-logger": "^7.0.2",
+    "@middy/input-output-logger": "^7.1.1",
     "@psu-common/middyErrorHandler": "^1.0.0"
   },
   "devDependencies": {
