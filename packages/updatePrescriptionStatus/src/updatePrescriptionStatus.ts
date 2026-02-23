@@ -193,7 +193,7 @@ const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPro
     testPrescriptionForcedError = !!interceptionResponse.testPrescriptionForcedError
   }
 
-  let dataItemsWithPrev = []
+  let dataItemsWithPrev: Array<PSUDataItemWithPrevious>
   try {
     dataItemsWithPrev = await Promise.all(dataItems.map((item) => getPreviousItem(item, logger)))
   } catch (e) {
