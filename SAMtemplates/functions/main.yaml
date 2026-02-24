@@ -38,31 +38,31 @@ Parameters:
     Default: none
 
   SQSSaltSecret:
-    Type: AWS::SecretsManager::Secret::Name<String>
+    Type: String
 
   EnabledSiteODSCodesParam:
-    Type: AWS::SSM::Parameter::Name<String>
+    Type: AWS::SSM::Parameter::Value<String>
 
   EnabledSystemsParam:
-    Type: AWS::SSM::Parameter::Name<String>
+    Type: AWS::SSM::Parameter::Value<String>
 
   BlockedSiteODSCodesParam:
-    Type: AWS::SSM::Parameter::Name<String>
+    Type: AWS::SSM::Parameter::Value<String>
 
   NotifyRoutingPlanIDParam:
-    Type: AWS::SSM::Parameter::Name<String>
+    Type: AWS::SSM::Parameter::Value<String>
 
   NotifyAPIBaseURLParam:
-    Type: AWS::SSM::Parameter::Name<String>
+    Type: AWS::SSM::Parameter::Value<String>
 
   EnableNotificationsExternalParam:
-    Type: AWS::SSM::Parameter::Name<String>
+    Type: AWS::SSM::Parameter::Value<String>
 
   EnableNotificationsInternalParam:
-    Type: AWS::SSM::Parameter::Name<String>
+    Type: AWS::SSM::Parameter::Value<String>
 
   EnablePostDatedNotifications:
-    Type: AWS::SSM::Parameter::Name<String>
+    Type: AWS::SSM::Parameter::Value<String>
     Default: "false"
 
   RequireApplicationName:
@@ -97,16 +97,16 @@ Parameters:
     Type: String
 
   TestPrescriptionsParamName1:
-    Type: AWS::SSM::Parameter::Name<String>
+    Type: AWS::SSM::Parameter::Value<String>
 
   TestPrescriptionsParamName2:
-    Type: AWS::SSM::Parameter::Name<String>
+    Type: AWS::SSM::Parameter::Value<String>
 
   TestPrescriptionsParamName3:
-    Type: AWS::SSM::Parameter::Name<String>
+    Type: AWS::SSM::Parameter::Value<String>
 
   TestPrescriptionsParamName4:
-    Type: AWS::SSM::Parameter::Name<String>
+    Type: AWS::SSM::Parameter::Value<String>
 
 Conditions:
   ShouldDeployCheckPrescriptionStatusUpdate: !Equals
@@ -717,9 +717,6 @@ Resources:
 
   PsuRestoreValidationLambdaInvokePermission:
     Condition: EnableBackupCondition
-    DependsOn:
-      - PsuBackupRestoreJobStateChangeRule
-      - PsuRestoreValidation
     Type: "AWS::Lambda::Permission"
     Properties:
       Action: "lambda:InvokeFunction"

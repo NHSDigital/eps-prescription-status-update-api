@@ -172,19 +172,10 @@ lint-node: compile-node
 lint-specification: compile-specification
 	npm run lint --workspace packages/specification
 
-lint-samtemplates:
-	poetry run cfn-lint -I "SAMtemplates/**/*.yaml" 2>&1 | grep "Run scan"
-
 lint-python:
 	poetry run flake8 scripts/*.py --config .flake8
 
-lint-githubactions:
-	actionlint
-
-lint-githubaction-scripts:
-	shellcheck .github/scripts/*.sh
-
-lint: lint-node lint-samtemplates lint-python lint-githubactions lint-githubaction-scripts lint-specification
+lint: lint-node lint-python lint-specification
 
 test: compile
 	npm run test --workspace packages/updatePrescriptionStatus

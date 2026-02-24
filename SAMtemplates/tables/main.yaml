@@ -237,7 +237,6 @@ Resources:
 
   PrescriptionStatusUpdatesTableWriteScalingTarget:
     Type: AWS::ApplicationAutoScaling::ScalableTarget
-    DependsOn: PrescriptionStatusUpdatesTable
     Condition: EnableDynamoDBAutoScalingCondition
     Properties:
       MinCapacity: !Ref MinWritePrescriptionStatusUpdatesCapacity
@@ -263,7 +262,6 @@ Resources:
 
   PrescriptionStatusUpdatesTableReadScalingTarget:
     Type: AWS::ApplicationAutoScaling::ScalableTarget
-    DependsOn: PrescriptionStatusUpdatesTable
     Condition: EnableDynamoDBAutoScalingCondition
     Properties:
       MaxCapacity: 100
@@ -289,7 +287,6 @@ Resources:
 
   PharmacyIndexScalingWriteTarget:
     Type: AWS::ApplicationAutoScaling::ScalableTarget
-    DependsOn: PrescriptionStatusUpdatesTable
     Condition: EnableDynamoDBAutoScalingCondition
     Properties:
       MinCapacity: !Ref MinWritePrescriptionStatusUpdatesCapacity
@@ -315,7 +312,6 @@ Resources:
 
   PharmacyIndexScalingReadTarget:
     Type: AWS::ApplicationAutoScaling::ScalableTarget
-    DependsOn: PrescriptionStatusUpdatesTable
     Condition: EnableDynamoDBAutoScalingCondition
     Properties:
       MaxCapacity: 100
@@ -341,7 +337,6 @@ Resources:
 
   NHSNumberIndexScalingWriteTarget:
     Type: AWS::ApplicationAutoScaling::ScalableTarget
-    DependsOn: PrescriptionStatusUpdatesTable
     Condition: EnableDynamoDBAutoScalingCondition
     Properties:
       MinCapacity: !Ref MinWritePrescriptionStatusUpdatesCapacity
@@ -367,7 +362,6 @@ Resources:
 
   NHSNumberIndexScalingReadTarget:
     Type: AWS::ApplicationAutoScaling::ScalableTarget
-    DependsOn: PrescriptionStatusUpdatesTable
     Condition: EnableDynamoDBAutoScalingCondition
     Properties:
       MaxCapacity: 100
@@ -523,7 +517,6 @@ Resources:
   # Auto scaling for the table
   PrescriptionNotificationStatesTableV1WriteScalingTarget:
     Type: AWS::ApplicationAutoScaling::ScalableTarget
-    DependsOn: PrescriptionNotificationStatesTableV1
     Condition: EnableDynamoDBAutoScalingCondition
     Properties:
       MinCapacity: !Ref MinWritePrescriptionNotificationStatesCapacity
@@ -549,7 +542,6 @@ Resources:
 
   PrescriptionNotificationStatesTableV1ReadScalingTarget:
     Type: AWS::ApplicationAutoScaling::ScalableTarget
-    DependsOn: PrescriptionNotificationStatesTableV1
     Condition: EnableDynamoDBAutoScalingCondition
     Properties:
       MinCapacity: 1
@@ -577,7 +569,6 @@ Resources:
 
   PatientPharmacyIndexScalingWriteTarget:
     Type: AWS::ApplicationAutoScaling::ScalableTarget
-    DependsOn: PrescriptionNotificationStatesTableV1
     Condition: EnableDynamoDBAutoScalingCondition
     Properties:
       MinCapacity: !Ref MinWritePrescriptionNotificationStatesCapacity
@@ -603,7 +594,6 @@ Resources:
 
   NotifyMessageIDIndexScalingWriteTarget:
     Type: AWS::ApplicationAutoScaling::ScalableTarget
-    DependsOn: PrescriptionNotificationStatesTableV1
     Condition: EnableDynamoDBAutoScalingCondition
     Properties:
       MinCapacity: !Ref MinWritePrescriptionNotificationStatesCapacity
@@ -629,7 +619,6 @@ Resources:
 
   PatientPharmacyIndexScalingReadTarget:
     Type: AWS::ApplicationAutoScaling::ScalableTarget
-    DependsOn: PrescriptionNotificationStatesTableV1
     Condition: EnableDynamoDBAutoScalingCondition
     Properties:
       MinCapacity: 1
@@ -655,7 +644,6 @@ Resources:
 
   NotifyMessageIDIndexScalingReadTarget:
     Type: AWS::ApplicationAutoScaling::ScalableTarget
-    DependsOn: PrescriptionNotificationStatesTableV1
     Condition: EnableDynamoDBAutoScalingCondition
     Properties:
       MinCapacity: 1
