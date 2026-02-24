@@ -1,4 +1,4 @@
-.PHONY: install build test publish release clean lint
+.PHONY: install build test publish release clean lint compile
 
 install: install-node install-python install-hooks
 
