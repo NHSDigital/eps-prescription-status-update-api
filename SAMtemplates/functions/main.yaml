@@ -38,31 +38,31 @@ Parameters:
     Default: none
 
   SQSSaltSecret:
-    Type: String
+    Type: AWS::SecretsManager::Secret::Name<String>
 
   EnabledSiteODSCodesParam:
-    Type: AWS::SSM::Parameter::Value<String>
+    Type: AWS::SSM::Parameter::Name<String>
 
   EnabledSystemsParam:
-    Type: AWS::SSM::Parameter::Value<String>
+    Type: AWS::SSM::Parameter::Name<String>
 
   BlockedSiteODSCodesParam:
-    Type: AWS::SSM::Parameter::Value<String>
+    Type: AWS::SSM::Parameter::Name<String>
 
   NotifyRoutingPlanIDParam:
-    Type: AWS::SSM::Parameter::Value<String>
+    Type: AWS::SSM::Parameter::Name<String>
 
   NotifyAPIBaseURLParam:
-    Type: AWS::SSM::Parameter::Value<String>
+    Type: AWS::SSM::Parameter::Name<String>
 
   EnableNotificationsExternalParam:
-    Type: AWS::SSM::Parameter::Value<String>
+    Type: AWS::SSM::Parameter::Name<String>
 
   EnableNotificationsInternalParam:
-    Type: AWS::SSM::Parameter::Value<String>
+    Type: AWS::SSM::Parameter::Name<String>
 
   EnablePostDatedNotifications:
-    Type: AWS::SSM::Parameter::Value<String>
+    Type: AWS::SSM::Parameter::Name<String>
     Default: "false"
 
   RequireApplicationName:
