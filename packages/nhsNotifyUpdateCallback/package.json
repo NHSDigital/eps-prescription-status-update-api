@@ -20,7 +20,7 @@
     "@aws-sdk/client-secrets-manager": "^3.994.0",
     "@middy/core": "^7.1.1",
     "@middy/input-output-logger": "^7.1.1",
-    "@nhs/fhir-middy-error-handler": "^2.1.74",
+    "@nhs/fhir-middy-error-handler": "^2.1.75",
     "axios": "^1.13.5"
   },
   "devDependencies": {

@@ -21,7 +21,7 @@
     "@aws-sdk/client-ssm": "^3.995.0",
     "@middy/core": "^7.1.1",
     "@middy/input-output-logger": "^7.1.1",
-    "@nhs/fhir-middy-error-handler": "^2.1.74",
+    "@nhs/fhir-middy-error-handler": "^2.1.75",
     "axios": "^1.13.5",
     "axios-retry": "^4.5.0",
     "jose": "^6.1.3",
