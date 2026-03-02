@@ -18,7 +18,7 @@
     "@aws-lambda-powertools/logger": "^2.30.0",
     "@aws-sdk/client-dynamodb": "^3.994.0",
     "@aws-sdk/client-sqs": "^3.995.0",
-    "@aws-sdk/util-dynamodb": "^3.991.0",
+    "@aws-sdk/util-dynamodb": "^3.996.1",
     "@middy/core": "^7.1.1",
     "@middy/input-output-logger": "^7.1.1",
     "@nhs/fhir-middy-error-handler": "^2.1.74",
