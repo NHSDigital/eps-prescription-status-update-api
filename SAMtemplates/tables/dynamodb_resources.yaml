@@ -14,7 +14,7 @@ Parameters:
 
   TableArn:
     Type: String
-    Default: none
+    AllowedPattern: "^(arn:(aws[A-Za-z\\-]*?|\\*):[^:]+:[^:]*(:(?:\\d{12}|\\*|aws)?:.+|)|\\*)$"
 
 Resources:
   TableReadManagedPolicy:

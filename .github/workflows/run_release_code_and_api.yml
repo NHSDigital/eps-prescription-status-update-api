@@ -124,6 +124,13 @@ on:
       FORWARD_CSOC_LOGS:
         required: true
         type: boolean
+      runtime_docker_image:
+        required: true
+        type: string
+      verify_published_from_main_image:
+        type: boolean
+        required: true
+
     secrets:
       CLOUD_FORMATION_DEPLOY_ROLE:
         required: true
@@ -141,14 +148,29 @@ on:
         required: true
 
 jobs:
+  verify_attestation:
+    uses: NHSDigital/eps-common-workflows/.github/workflows/verify-attestation.yml@36677e1d6bfaa010d7b78942a1ade12fbefecb80
+    with:
+      runtime_docker_image: "${{ inputs.runtime_docker_image }}"
+      verify_published_from_main_image: ${{ inputs.verify_published_from_main_image }}
   release_code_and_api:
     runs-on: ubuntu-22.04
+    needs: verify_attestation
     environment: ${{ inputs.AWS_ENVIRONMENT }}
+    container:
+      image: ${{ needs.verify_attestation.outputs.pinned_image }}
+      options: --user 1001:1001 --group-add 128
+    defaults:
+      run:
+        shell: bash
     permissions:
       id-token: write
       contents: write
 
     steps:
+      - name: copy .tool-versions
+        run: |
+          cp /home/vscode/.tool-versions "$HOME/.tool-versions"
       - name: Checkout local github actions
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
         with:
@@ -194,7 +216,7 @@ jobs:
       - name: read ODS codes
         id: read
         run: |
-          INPUT_FILE="${GITHUB_WORKSPACE}/.github/cfg/ods_codes_${{ inputs.AWS_ENVIRONMENT }}.txt"
+          INPUT_FILE="${GITHUB_WORKSPACE}/.github/config/ods_codes_${{ inputs.AWS_ENVIRONMENT }}.txt"
           CSV=$(sed ':a;N;$!ba;s/\r\?\n/,/g;s/,$//' < "$INPUT_FILE")
           echo "ods_csv=${CSV}" >> "$GITHUB_OUTPUT"
 
@@ -351,5 +373,6 @@ jobs:
     with:
       ENVIRONMENT: ${{ inputs.APIGEE_ENVIRONMENT }}
       VERSION_NUMBER: ${{ inputs.VERSION_NUMBER }}
+      runtime_docker_image: "${{ inputs.runtime_docker_image }}"
     secrets:
       REGRESSION_TESTS_PEM: ${{ secrets.REGRESSION_TESTS_PEM }}

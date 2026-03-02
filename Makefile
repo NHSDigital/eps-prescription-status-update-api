@@ -1,10 +1,4 @@
-guard-%:
-	@ if [ "${${*}}" = "" ]; then \
-		echo "Environment variable $* not set"; \
-		exit 1; \
-	fi
-
-.PHONY: install build test publish release clean
+.PHONY: install build test publish release clean lint compile
 
 install: install-node install-python install-hooks
 
@@ -178,19 +172,10 @@ lint-node: compile-node
 lint-specification: compile-specification
 	npm run lint --workspace packages/specification
 
-lint-samtemplates:
-	poetry run cfn-lint -I "SAMtemplates/**/*.yaml" 2>&1 | grep "Run scan"
-
 lint-python:
 	poetry run flake8 scripts/*.py --config .flake8
 
-lint-githubactions:
-	actionlint
-
-lint-githubaction-scripts:
-	shellcheck .github/scripts/*.sh
-
-lint: lint-node lint-samtemplates lint-python lint-githubactions lint-githubaction-scripts lint-specification
+lint: lint-node lint-python lint-specification
 
 test: compile
 	npm run test --workspace packages/updatePrescriptionStatus
@@ -237,19 +222,5 @@ deep-clean: clean
 	find . -name 'node_modules' -type d -prune -exec rm -rf '{}' +
 	poetry env remove --all
 
-check-licenses: check-licenses-node check-licenses-python
-
-check-licenses-node:
-	npm run check-licenses
-
-check-licenses-python:
-	scripts/check_python_licenses.sh
-
-aws-configure:
-	aws configure sso --region eu-west-2
-
-aws-login:
-	aws sso login --sso-session sso-session
-
-cfn-guard:
-	./scripts/run_cfn_guard.sh
+%:
+	@$(MAKE) -f /usr/local/share/eps/Mk/common.mk $@
