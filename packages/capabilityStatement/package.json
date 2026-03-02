@@ -18,7 +18,7 @@
     "@aws-lambda-powertools/logger": "^2.31.0",
     "@middy/core": "^7.1.1",
     "@middy/input-output-logger": "^7.1.1",
-    "@nhs/fhir-middy-error-handler": "^2.1.74"
+    "@nhs/fhir-middy-error-handler": "^2.1.75"
   },
   "devDependencies": {
     "@psu-common/testing": "^1.0.0"
