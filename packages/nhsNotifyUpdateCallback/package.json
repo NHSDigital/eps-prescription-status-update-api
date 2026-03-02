@@ -21,7 +21,7 @@
     "@middy/core": "^7.1.2",
     "@middy/input-output-logger": "^7.1.2",
     "@nhs/fhir-middy-error-handler": "^2.1.75",
-    "axios": "^1.13.5"
+    "axios": "^1.13.6"
   },
   "devDependencies": {
     "@psu-common/testing": "^1.0.0",
