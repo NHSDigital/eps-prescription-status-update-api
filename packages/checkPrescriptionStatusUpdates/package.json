@@ -19,7 +19,7 @@
     "@aws-sdk/client-dynamodb": "^3.994.0",
     "@aws-sdk/lib-dynamodb": "^3.1000.0",
     "@middy/core": "^7.1.2",
-    "@middy/http-header-normalizer": "^7.1.0",
+    "@middy/http-header-normalizer": "^7.1.2",
     "@middy/input-output-logger": "^7.1.2",
     "@psu-common/middyErrorHandler": "^1.0.0"
   },
