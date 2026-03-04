@@ -51,6 +51,10 @@ export const filterOutFutureReduceToLatestUpdates = (
     const updateTime = Date.parse(item.lastUpdateDateTime)
     return updateTime <= currentTime
   })
+  logger.info("filtered future post-dated updates", {
+    count_dropped: (items.length - validTimeUpdates.length),
+    count_received: items.length, inputPrescription, validTimeUpdates
+  })
 
   // group by itemId and separate post-dated from regular updates
   const itemGroups: Record<string, {regular: itemType | null, postDated: itemType | null}> = {}
@@ -79,6 +83,7 @@ export const filterOutFutureReduceToLatestUpdates = (
       }
     }
   })
+  logger.info("grouped updates by itemId and type", {itemGroups})
 
   // flatten both regular and post-dated updates into single array
   // but exclude post-dated updates if they have been revoked by a subsequent regular update
@@ -96,12 +101,16 @@ export const filterOutFutureReduceToLatestUpdates = (
       }
     }
   })
+  logger.info("flattened updates into unique items", {
+    validTimeCount: validTimeUpdates.length, uniqueItemsCount: uniqueItems.length, itemGroups, uniqueItems
+  })
 
   const result: outputPrescriptionType = {
     prescriptionID: inputPrescription.prescriptionID,
     onboarded: items.length > 0, // consider onboarded even if all updates were post-dated
     items: uniqueItems
   }
+  logger.info("returning updates result", {result})
   return result
 }
 
