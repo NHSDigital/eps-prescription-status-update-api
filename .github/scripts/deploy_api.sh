@@ -10,6 +10,7 @@ echo "Apigee environment: ${APIGEE_ENVIRONMENT}"
 echo "Proxygen private key name: ${PROXYGEN_PRIVATE_KEY_NAME}"
 echo "Proxygen KID: ${PROXYGEN_KID}"
 echo "Deploy Check Prescription Status Update: ${DEPLOY_CHECK_PRESCRIPTION_STATUS_UPDATE}"
+echo "Expose Get Status Updates: ${EXPOSE_GET_STATUS_UPDATES}"
 echo "Dry run: ${DRY_RUN}"
 # shellcheck disable=SC2153
 echo "is_pull_request: ${IS_PULL_REQUEST}"
@@ -103,6 +104,14 @@ if [[ "${DEPLOY_CHECK_PRESCRIPTION_STATUS_UPDATE}" == "false" ]]; then
     if [[ "${API_TYPE}" == "standard" ]]; then
         echo "Removing checkprescriptionstatusupdates endpoint"
         jq 'del(.paths."/checkprescriptionstatusupdates")' "$SPEC_PATH" > temp.json && mv temp.json "$SPEC_PATH"
+    fi
+fi
+
+# Remove get-status-updates if not needed
+if [[ "${EXPOSE_GET_STATUS_UPDATES}" == "false" ]]; then
+    if [[ "${API_TYPE}" == "standard" ]]; then
+        echo "Removing get-status-updates endpoint"
+        jq 'del(.paths."/get-status-updates")' "$SPEC_PATH" > temp.json && mv temp.json "$SPEC_PATH"
     fi
 fi
 
