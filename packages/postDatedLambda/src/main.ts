@@ -29,6 +29,6 @@ export const lambdaHandler = async (
 export const handler = middy(lambdaHandler)
   .use(injectLambdaContext(logger, {clearState: true}))
   .use(
-    inputOutputLogger({logger: (req) => logger.info(req)})
+    inputOutputLogger({logger: (request) => logger.info("inputOutputLogger request", {request})})
   )
   .use(errorHandler({logger}))
