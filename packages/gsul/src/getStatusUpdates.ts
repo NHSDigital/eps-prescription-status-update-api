@@ -119,10 +119,11 @@ export const handler = middy(lambdaHandler)
   .use(
     inputOutputLogger({
       logger: (request) => {
-        if (request.response) {
-          logger.info(request.response)
+        const response = (request as {response?: unknown} | null | undefined)?.response
+        if (response === undefined) {
+          logger.info("inputOutputLogger request", {request})
         } else {
-          logger.info(request)
+          logger.info("inputOutputLogger response", {response})
         }
       }
     })
