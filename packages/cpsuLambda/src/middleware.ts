@@ -15,10 +15,11 @@ export const MIDDLEWARE: Record<string, MiddlewareGenerator> = {
   inputOutputLogger: (logger) =>
     inputOutputLogger({
       logger: (request) => {
-        if (request.response) {
-          logger.debug(request)
+        const response = (request as {response?: unknown} | null | undefined)?.response
+        if (response === undefined) {
+          logger.info("inputOutputLogger request", {request})
         } else {
-          logger.info(request)
+          logger.debug("inputOutputLogger response", {response})
         }
       }
     }),
