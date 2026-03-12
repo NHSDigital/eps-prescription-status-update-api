@@ -37,10 +37,10 @@ jobs:
           } >> "$GITHUB_OUTPUT"
 
   quality_checks:
-    uses: NHSDigital/eps-common-workflows/.github/workflows/quality-checks-devcontainer.yml@36677e1d6bfaa010d7b78942a1ade12fbefecb80
+    uses: NHSDigital/eps-common-workflows/.github/workflows/quality-checks-devcontainer.yml@dac60c1e29babc62013e7bb9ade002cb381c4c49
     needs: [get_config_values]
     with:
-      runtime_docker_image: "${{ needs.get_config_values.outputs.devcontainer_image }}:githubactions-${{ needs.get_config_values.outputs.devcontainer_version }}"
+      pinned_image: "${{ needs.get_config_values.outputs.devcontainer_image }}:githubactions-${{ needs.get_config_values.outputs.devcontainer_version }}"
     secrets:
       SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
@@ -79,7 +79,7 @@ jobs:
     uses: NHSDigital/eps-common-workflows/.github/workflows/tag-release-devcontainer.yml@dac60c1e29babc62013e7bb9ade002cb381c4c49
     with:
       dry_run: true
-      runtime_docker_image: "${{ needs.get_config_values.outputs.devcontainer_image }}:githubactions-${{ needs.get_config_values.outputs.devcontainer_version }}"
+      pinned_image: "${{ needs.get_config_values.outputs.devcontainer_image }}:githubactions-${{ needs.get_config_values.outputs.devcontainer_version }}"
       branch_name: ${{ github.event.pull_request.head.ref }}
       tag_format: ${{ needs.get_config_values.outputs.tag_format }}
       verify_published_from_main_image: false
