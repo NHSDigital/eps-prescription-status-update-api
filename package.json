@@ -35,7 +35,7 @@
     "@eslint/js": "^10.0.1",
     "@types/aws-lambda": "^8.10.161",
     "@types/jest": "^30.0.0",
-    "@types/node": "^25.3.3",
+    "@types/node": "^25.4.0",
     "@typescript-eslint/eslint-plugin": "^8.56.0",
     "@typescript-eslint/parser": "^8.56.0",
     "aws-lambda": "^1.0.7",
