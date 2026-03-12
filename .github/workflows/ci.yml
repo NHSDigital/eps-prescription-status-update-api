@@ -56,7 +56,6 @@ jobs:
       pinned_image: "${{ needs.get_config_values.outputs.devcontainer_image }}:githubactions-${{ needs.get_config_values.outputs.devcontainer_version }}"
       branch_name: main
       tag_format: ${{ needs.get_config_values.outputs.tag_format }}
-      verify_published_from_main_image: true
     secrets: inherit
 
   package_code:
