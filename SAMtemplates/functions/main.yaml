@@ -97,16 +97,16 @@ Parameters:
     Type: String
 
   TestPrescriptionsParamName1:
-    Type: AWS::SSM::Parameter::Value<String>
+    Type: String
 
   TestPrescriptionsParamName2:
-    Type: AWS::SSM::Parameter::Value<String>
+    Type: String
 
   TestPrescriptionsParamName3:
-    Type: AWS::SSM::Parameter::Value<String>
+    Type: String
 
   TestPrescriptionsParamName4:
-    Type: AWS::SSM::Parameter::Value<String>
+    Type: String
 
 Conditions:
   ShouldDeployCheckPrescriptionStatusUpdate: !Equals
