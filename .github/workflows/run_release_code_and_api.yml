@@ -151,7 +151,6 @@ jobs:
   verify_attestation:
     uses: NHSDigital/eps-common-workflows/.github/workflows/get-repo-config.yml@dac60c1e29babc62013e7bb9ade002cb381c4c49
     with:
-      runtime_docker_image: "${{ inputs.runtime_docker_image }}"
       verify_published_from_main_image: ${{ inputs.verify_published_from_main_image }}
   release_code_and_api:
     runs-on: ubuntu-22.04
