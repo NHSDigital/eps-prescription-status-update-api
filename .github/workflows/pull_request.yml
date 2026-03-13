@@ -82,15 +82,13 @@ jobs:
     needs: [get_issue_number, get_config_values]
     uses: ./.github/workflows/run_package_code_and_api.yml
     with:
-      runtime_docker_image: "${{ needs.get_config_values.outputs.devcontainer_image }}:githubactions-${{ needs.get_config_values.outputs.devcontainer_version }}"
-      verify_published_from_main_image: false
+      pinned_image: ${{ needs.get_config_values.outputs.pinned_image }}
 
   release_code:
     needs: [get_issue_number, package_code, get_commit_id, get_config_values]
     uses: ./.github/workflows/run_release_code_and_api.yml
     with:
-      runtime_docker_image: "${{ needs.get_config_values.outputs.devcontainer_image }}:githubactions-${{ needs.get_config_values.outputs.devcontainer_version }}"
-      verify_published_from_main_image: false
+      pinned_image: ${{ needs.get_config_values.outputs.pinned_image }}
       STACK_NAME: psu-pr-${{needs.get_issue_number.outputs.issue_number}}
       ARTIFACT_BUCKET_PREFIX: PR-${{needs.get_issue_number.outputs.issue_number}}
       AWS_ENVIRONMENT: dev
@@ -134,8 +132,7 @@ jobs:
     needs: [get_issue_number, package_code, get_commit_id, get_config_values]
     uses: ./.github/workflows/run_release_code_and_api.yml
     with:
-      runtime_docker_image: "${{ needs.get_config_values.outputs.devcontainer_image }}:githubactions-${{ needs.get_config_values.outputs.devcontainer_version }}"
-      verify_published_from_main_image: false
+      pinned_image: ${{ needs.get_config_values.outputs.pinned_image }}
       STACK_NAME: psu-pr-${{needs.get_issue_number.outputs.issue_number}}-sandbox
       ARTIFACT_BUCKET_PREFIX: PR-${{needs.get_issue_number.outputs.issue_number}}-sandbox
       AWS_ENVIRONMENT: dev

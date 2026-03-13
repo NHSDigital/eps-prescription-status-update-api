@@ -11,7 +11,7 @@ on:
         type: string
       REGRESSION_TESTS_PEM:
         type: string
-      runtime_docker_image:
+      pinned_image:
         type: string
         required: true
     secrets:
@@ -19,15 +19,10 @@ on:
         required: true
 
 jobs:
-  verify_attestation:
-    uses: NHSDigital/eps-common-workflows/.github/workflows/get-repo-config.yml@dac60c1e29babc62013e7bb9ade002cb381c4c49
-    with:
-      verify_published_from_main_image: false
   run_regression_tests:
     runs-on: ubuntu-22.04
-    needs: verify_attestation
     container:
-      image: ${{ needs.verify_attestation.outputs.pinned_image }}
+      image: ${{ inputs.pinned_image }}
       options: --user 1001:1001 --group-add 128
     defaults:
       run:

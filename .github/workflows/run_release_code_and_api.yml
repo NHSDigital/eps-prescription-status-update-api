@@ -124,13 +124,9 @@ on:
       FORWARD_CSOC_LOGS:
         required: true
         type: boolean
-      runtime_docker_image:
+      pinned_image:
         required: true
         type: string
-      verify_published_from_main_image:
-        type: boolean
-        required: true
-
     secrets:
       CLOUD_FORMATION_DEPLOY_ROLE:
         required: true
@@ -148,16 +144,11 @@ on:
         required: true
 
 jobs:
-  verify_attestation:
-    uses: NHSDigital/eps-common-workflows/.github/workflows/get-repo-config.yml@dac60c1e29babc62013e7bb9ade002cb381c4c49
-    with:
-      verify_published_from_main_image: ${{ inputs.verify_published_from_main_image }}
   release_code_and_api:
     runs-on: ubuntu-22.04
-    needs: verify_attestation
     environment: ${{ inputs.AWS_ENVIRONMENT }}
     container:
-      image: ${{ needs.verify_attestation.outputs.pinned_image }}
+      image: ${{ inputs.pinned_image }}
       options: --user 1001:1001 --group-add 128
     defaults:
       run:
@@ -372,6 +363,6 @@ jobs:
     with:
       ENVIRONMENT: ${{ inputs.APIGEE_ENVIRONMENT }}
       VERSION_NUMBER: ${{ inputs.VERSION_NUMBER }}
-      runtime_docker_image: "${{ inputs.runtime_docker_image }}"
+      pinned_image: "${{ inputs.pinned_image }}"
     secrets:
       REGRESSION_TESTS_PEM: ${{ secrets.REGRESSION_TESTS_PEM }}
