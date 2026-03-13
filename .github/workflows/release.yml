@@ -8,32 +8,14 @@ env:
 
 jobs:
   get_config_values:
-    runs-on: ubuntu-22.04
-    outputs:
-      tag_format: ${{ steps.load-config.outputs.TAG_FORMAT }}
-      devcontainer_version: ${{ steps.load-config.outputs.DEVCONTAINER_VERSION }}
-      devcontainer_image: ${{ steps.load-config.outputs.DEVCONTAINER_IMAGE }}
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
-
-      - name: Load config value
-        id: load-config
-        run: |
-          TAG_FORMAT=$(yq '.TAG_FORMAT' .github/config/settings.yml)
-          DEVCONTAINER_IMAGE=$(jq -r '.build.args.IMAGE_NAME' .devcontainer/devcontainer.json)
-          DEVCONTAINER_VERSION=$(jq -r '.build.args.IMAGE_VERSION' .devcontainer/devcontainer.json)
-          {
-            echo "TAG_FORMAT=$TAG_FORMAT" 
-            echo "DEVCONTAINER_IMAGE=$DEVCONTAINER_IMAGE"
-            echo "DEVCONTAINER_VERSION=$DEVCONTAINER_VERSION"
-          } >> "$GITHUB_OUTPUT"
-
+    uses: NHSDigital/eps-common-workflows/.github/workflows/get-repo-config.yml@dac60c1e29babc62013e7bb9ade002cb381c4c49
+    with:
+      verify_published_from_main_image: true
   quality_checks:
-    uses: NHSDigital/eps-common-workflows/.github/workflows/quality-checks-devcontainer.yml@36677e1d6bfaa010d7b78942a1ade12fbefecb80
+    uses: NHSDigital/eps-common-workflows/.github/workflows/quality-checks-devcontainer.yml@dac60c1e29babc62013e7bb9ade002cb381c4c49
     needs: [get_config_values]
     with:
-      runtime_docker_image: "${{ needs.get_config_values.outputs.devcontainer_image }}:githubactions-${{ needs.get_config_values.outputs.devcontainer_version }}"
+      pinned_image: ${{ needs.get_config_values.outputs.pinned_image }}
     secrets:
       SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
@@ -49,28 +31,25 @@ jobs:
 
   tag_release:
     needs: [quality_checks, get_commit_id, get_config_values]
-    uses: NHSDigital/eps-common-workflows/.github/workflows/tag-release-devcontainer.yml@36677e1d6bfaa010d7b78942a1ade12fbefecb80
+    uses: NHSDigital/eps-common-workflows/.github/workflows/tag-release-devcontainer.yml@dac60c1e29babc62013e7bb9ade002cb381c4c49
     with:
       dry_run: false
-      runtime_docker_image: "${{ needs.get_config_values.outputs.devcontainer_image }}:githubactions-${{ needs.get_config_values.outputs.devcontainer_version }}"
+      pinned_image: ${{ needs.get_config_values.outputs.pinned_image }}
       branch_name: main
       tag_format: ${{ needs.get_config_values.outputs.tag_format }}
-      verify_published_from_main_image: true
     secrets: inherit
 
   package_code:
     needs: [tag_release, get_config_values]
     uses: ./.github/workflows/run_package_code_and_api.yml
     with:
-      runtime_docker_image: "${{ needs.get_config_values.outputs.devcontainer_image }}:githubactions-${{ needs.get_config_values.outputs.devcontainer_version }}"
-      verify_published_from_main_image: true
+      pinned_image: ${{ needs.get_config_values.outputs.pinned_image }}
 
   release_dev:
     needs: [tag_release, package_code, get_commit_id, get_config_values]
     uses: ./.github/workflows/run_release_code_and_api.yml
     with:
-      runtime_docker_image: "${{ needs.get_config_values.outputs.devcontainer_image }}:githubactions-${{ needs.get_config_values.outputs.devcontainer_version }}"
-      verify_published_from_main_image: true
+      pinned_image: ${{ needs.get_config_values.outputs.pinned_image }}
       ARTIFACT_BUCKET_PREFIX: ${{needs.tag_release.outputs.version_tag}}
       STACK_NAME: psu
       AWS_ENVIRONMENT: dev
@@ -121,8 +100,7 @@ jobs:
     needs: [tag_release, package_code, get_commit_id, get_config_values]
     uses: ./.github/workflows/run_release_code_and_api.yml
     with:
-      runtime_docker_image: "${{ needs.get_config_values.outputs.devcontainer_image }}:githubactions-${{ needs.get_config_values.outputs.devcontainer_version }}"
-      verify_published_from_main_image: true
+      pinned_image: ${{ needs.get_config_values.outputs.pinned_image }}
       ARTIFACT_BUCKET_PREFIX: ${{needs.tag_release.outputs.version_tag}}-sandbox
       STACK_NAME: psu-sandbox
       AWS_ENVIRONMENT: dev
@@ -172,8 +150,7 @@ jobs:
       ]
     uses: ./.github/workflows/run_release_code_and_api.yml
     with:
-      runtime_docker_image: "${{ needs.get_config_values.outputs.devcontainer_image }}:githubactions-${{ needs.get_config_values.outputs.devcontainer_version }}"
-      verify_published_from_main_image: true
+      pinned_image: ${{ needs.get_config_values.outputs.pinned_image }}
       ARTIFACT_BUCKET_PREFIX: ${{needs.tag_release.outputs.version_tag}}
       STACK_NAME: psu
       AWS_ENVIRONMENT: ref
@@ -225,8 +202,7 @@ jobs:
       ]
     uses: ./.github/workflows/run_release_code_and_api.yml
     with:
-      runtime_docker_image: "${{ needs.get_config_values.outputs.devcontainer_image }}:githubactions-${{ needs.get_config_values.outputs.devcontainer_version }}"
-      verify_published_from_main_image: true
+      pinned_image: ${{ needs.get_config_values.outputs.pinned_image }}
       ARTIFACT_BUCKET_PREFIX: ${{needs.tag_release.outputs.version_tag}}
       STACK_NAME: psu
       AWS_ENVIRONMENT: qa
@@ -270,8 +246,7 @@ jobs:
     needs: [tag_release, release_qa, package_code, get_commit_id, get_config_values]
     uses: ./.github/workflows/run_release_code_and_api.yml
     with:
-      runtime_docker_image: "${{ needs.get_config_values.outputs.devcontainer_image }}:githubactions-${{ needs.get_config_values.outputs.devcontainer_version }}"
-      verify_published_from_main_image: true
+      pinned_image: ${{ needs.get_config_values.outputs.pinned_image }}
       ARTIFACT_BUCKET_PREFIX: ${{needs.tag_release.outputs.version_tag}}
       STACK_NAME: psu
       AWS_ENVIRONMENT: int
@@ -321,8 +296,7 @@ jobs:
     needs: [tag_release, release_qa, package_code, get_commit_id, get_config_values]
     uses: ./.github/workflows/run_release_code_and_api.yml
     with:
-      runtime_docker_image: "${{ needs.get_config_values.outputs.devcontainer_image }}:githubactions-${{ needs.get_config_values.outputs.devcontainer_version }}"
-      verify_published_from_main_image: true
+      pinned_image: ${{ needs.get_config_values.outputs.pinned_image }}
       ARTIFACT_BUCKET_PREFIX: ${{needs.tag_release.outputs.version_tag}}-sandbox
       STACK_NAME: psu-sandbox
       AWS_ENVIRONMENT: int
@@ -372,8 +346,7 @@ jobs:
       ]
     uses: ./.github/workflows/run_release_code_and_api.yml
     with:
-      runtime_docker_image: "${{ needs.get_config_values.outputs.devcontainer_image }}:githubactions-${{ needs.get_config_values.outputs.devcontainer_version }}"
-      verify_published_from_main_image: true
+      pinned_image: ${{ needs.get_config_values.outputs.pinned_image }}
       ARTIFACT_BUCKET_PREFIX: ${{needs.tag_release.outputs.version_tag}}
       STACK_NAME: psu
       AWS_ENVIRONMENT: prod
