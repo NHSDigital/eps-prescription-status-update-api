@@ -811,14 +811,14 @@ windows-terminal = ["colorama (>=0.4.6)"]
 
 [[package]]
 name = "pyjwt"
-version = "2.11.0"
+version = "2.12.0"
 description = "JSON Web Token implementation in Python"
 optional = false
 python-versions = ">=3.9"
 groups = ["main"]
 files = [
-    {file = "pyjwt-2.11.0-py3-none-any.whl", hash = "sha256:94a6bde30eb5c8e04fee991062b534071fd1439ef58d2adc9ccb823e7bcd0469"},
-    {file = "pyjwt-2.11.0.tar.gz", hash = "sha256:35f95c1f0fbe5d5ba6e43f00271c275f7a1a4db1dab27bf708073b75318ea623"},
+    {file = "pyjwt-2.12.0-py3-none-any.whl", hash = "sha256:9bb459d1bdd0387967d287f5656bf7ec2b9a26645d1961628cda1764e087fd6e"},
+    {file = "pyjwt-2.12.0.tar.gz", hash = "sha256:2f62390b667cd8257de560b850bb5a883102a388829274147f1d724453f8fb02"},
 ]
 
 [package.dependencies]
@@ -1069,4 +1069,4 @@ platformdirs = ">=3.9.1,<5"
 [metadata]
 lock-version = "2.1"
 python-versions = "^3.12"
-content-hash = "0d47861984aece2495a8e326644eaf06a56d4b88374fa68ac08dd2a70b06e4a9"
+content-hash = "1c323bab283833538324396865b130066310d22a7163b9ad0249cdbc011707e3"
