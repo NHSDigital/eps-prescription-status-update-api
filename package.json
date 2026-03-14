@@ -56,6 +56,6 @@
     "@psu-common/commonTypes": "^1.0.0",
     "@psu-common/middyErrorHandler": "^1.0.0",
     "@psu-common/utilities": "^1.0.0",
-    "esbuild": "^0.27.3"
+    "esbuild": "^0.27.4"
   }
 }
