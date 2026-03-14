@@ -27,3 +27,4 @@ _site/
 .jekyll-metadata
 vendor
 .cfn_guard_out/
+.trivy_out/
