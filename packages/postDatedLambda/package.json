@@ -21,7 +21,7 @@
     "@aws-sdk/util-dynamodb": "^3.991.0",
     "@middy/core": "^7.1.2",
     "@middy/input-output-logger": "^7.1.6",
-    "@nhs/fhir-middy-error-handler": "^2.1.75",
+    "@nhs/fhir-middy-error-handler": "^2.1.77",
     "@psu-common/commonTypes": "^1.0.0"
   },
   "devDependencies": {
