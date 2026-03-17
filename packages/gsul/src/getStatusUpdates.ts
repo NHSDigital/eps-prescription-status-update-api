@@ -51,7 +51,7 @@ export const filterOutFutureReduceToLatestUpdates = (
     const updateTime = Date.parse(item.lastUpdateDateTime)
     return updateTime <= currentTime
   })
-  logger.info("filtered future post-dated updates", {
+  logger.debug("filtered future post-dated updates", {
     count_dropped: (items.length - validTimeUpdates.length),
     count_received: items.length, inputPrescription, validTimeUpdates
   })
@@ -83,7 +83,7 @@ export const filterOutFutureReduceToLatestUpdates = (
       }
     }
   })
-  logger.info("grouped updates by itemId and type", {itemGroups})
+  logger.debug("grouped updates by itemId and type", {itemGroups})
 
   // flatten both regular and post-dated updates into single array
   // but exclude post-dated updates if they have been revoked by a subsequent regular update
@@ -101,7 +101,7 @@ export const filterOutFutureReduceToLatestUpdates = (
       }
     }
   })
-  logger.info("flattened updates into unique items", {
+  logger.debug("flattened updates into unique items", {
     validTimeCount: validTimeUpdates.length, uniqueItemsCount: uniqueItems.length, itemGroups, uniqueItems
   })
 
