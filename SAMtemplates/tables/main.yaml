@@ -184,6 +184,8 @@ Resources:
               - TerminalStatus
               - LastModified
               - Status
+                # TODO: Remove this when we deprecate post modified prescriptions.
+              - PostDatedLastModifiedSetAt
             ProjectionType: INCLUDE
           ProvisionedThroughput: !If
             - EnableDynamoDBAutoScalingCondition
