@@ -51,9 +51,10 @@ export const filterOutFutureReduceToLatestUpdates = (
     const updateTime = Date.parse(item.lastUpdateDateTime)
     return updateTime <= currentTime
   })
-  logger.debug("filtered future post-dated updates", {
+  logger.debug("filtered out future updates (should only be post-dated ones)", {
+    prescriptionID: inputPrescription.prescriptionID,
     count_dropped: (items.length - validTimeUpdates.length),
-    count_received: items.length, inputPrescription, validTimeUpdates
+    count_received: items.length
   })
 
   // group by itemId and separate post-dated from regular updates
