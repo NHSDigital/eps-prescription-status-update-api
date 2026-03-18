@@ -113,7 +113,11 @@ export const filterOutFutureReduceToLatestUpdates = (
     onboarded: items.length > 0, // consider onboarded even if all updates were post-dated
     items: uniqueItems
   }
-  logger.info("returning updates result", {result})
+  logger.info("returning updates result", {
+    prescriptionID: result.prescriptionID,
+    onboarded: result.onboarded,
+    itemCount: result.items.length
+  })
   return result
 }
 
