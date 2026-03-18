@@ -83,7 +83,9 @@ export const filterOutFutureReduceToLatestUpdates = (
       }
     }
   })
-  logger.debug("grouped updates by itemId and type", {itemGroups})
+  logger.debug("grouped updates by itemId and type", {
+    itemGroupCount: Object.entries(itemGroups).length
+  })
 
   // flatten both regular and post-dated updates into single array
   // but exclude post-dated updates if they have been revoked by a subsequent regular update
@@ -102,7 +104,7 @@ export const filterOutFutureReduceToLatestUpdates = (
     }
   })
   logger.debug("flattened updates into unique items", {
-    validTimeCount: validTimeUpdates.length, uniqueItemsCount: uniqueItems.length, itemGroups, uniqueItems
+    validTimeCount: validTimeUpdates.length, uniqueItemsCount: uniqueItems.length
   })
 
   const result: outputPrescriptionType = {
