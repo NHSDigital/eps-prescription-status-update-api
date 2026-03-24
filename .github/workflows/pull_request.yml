@@ -116,7 +116,7 @@ jobs:
       ENABLE_NOTIFICATIONS_INTERNAL: true
       ENABLE_NOTIFICATIONS_EXTERNAL: false
       ENABLE_POST_DATED_NOTIFICATIONS: true
-      ENABLED_SYSTEMS: "Internal Test System"
+      ENABLED_SYSTEMS: "CrxPatientApp"
       BLOCKED_SITE_ODS_CODES: "XXXXX" # Workaround empty string handling
       NOTIFY_ROUTING_PLAN_ID: "e57fe5cc-0567-4854-abe2-b7dd9014a50c"
       NOTIFY_API_BASE_URL: "https://int.api.service.nhs.uk"
