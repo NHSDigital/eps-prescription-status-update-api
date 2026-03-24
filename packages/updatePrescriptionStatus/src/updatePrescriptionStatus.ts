@@ -385,7 +385,12 @@ export function buildDataItems(
     }
 
     if (task.meta?.lastUpdated) {
+      logger.info("Post-dated update",
+        {taskID: task.id, lastUpdated: task.meta.lastUpdated, lastModified: task.lastModified, isPostDated: true}
+      )
       dataItem.PostDatedLastModifiedSetAt = task.meta.lastUpdated
+    } else {
+      logger.debug("No meta.lastUpdated found for task, regular update", {taskID: task.id})
     }
 
     dataItems.push(dataItem)
