@@ -184,8 +184,6 @@ Resources:
               - TerminalStatus
               - LastModified
               - Status
-                # TODO: Remove this when we deprecate post dated prescriptions.
-              - PostDatedLastModifiedSetAt
             ProjectionType: INCLUDE
           ProvisionedThroughput: !If
             - EnableDynamoDBAutoScalingCondition
@@ -222,6 +220,27 @@ Resources:
             - ReadCapacityUnits: 1
               WriteCapacityUnits: !Ref MinWritePrescriptionStatusUpdatesCapacity
             - !Ref "AWS::NoValue"
+        - IndexName: PharmacyODSCodePrescriptionIDIndexIncPostDated
+          KeySchema:
+            - AttributeName: PharmacyODSCode
+              KeyType: HASH
+            - AttributeName: PrescriptionID
+              KeyType: RANGE
+          Projection:
+            NonKeyAttributes:
+              - PatientNHSNumber
+              - LineItemID
+              - TerminalStatus
+              - LastModified
+              - Status
+                # TODO: Remove this when we deprecate post dated prescriptions.
+              - PostDatedLastModifiedSetAt
+            ProjectionType: INCLUDE
+          ProvisionedThroughput: !If
+            - EnableDynamoDBAutoScalingCondition
+            - ReadCapacityUnits: 1
+              WriteCapacityUnits: !Ref MinWritePrescriptionStatusUpdatesCapacity
+            - !Ref "AWS::NoValue"            
       Tags:
         - Key: "EPS-Tablename"
           Value: "PrescriptionStatusUpdates"
