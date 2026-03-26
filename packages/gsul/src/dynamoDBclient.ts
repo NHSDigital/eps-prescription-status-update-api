@@ -50,7 +50,8 @@ export async function getItemsUpdatesForPrescription(
 export function createQueryCommandInput(odsCode: string, prescriptionID: string): QueryCommandInput {
   return {
     TableName: tableName,
-    IndexName: "PharmacyODSCodePrescriptionIDIndex",
+    // TODO: revert to PharmacyODSCodePrescriptionIDIndex once post-dated no longer required
+    IndexName: "PharmacyODSCodePrescriptionIDIndexIncPostDated",
     KeyConditionExpression: "PrescriptionID = :inputPrescriptionID AND PharmacyODSCode = :inputPharmacyODSCode",
     ExpressionAttributeValues: {
       ":inputPharmacyODSCode": odsCode.toUpperCase(),

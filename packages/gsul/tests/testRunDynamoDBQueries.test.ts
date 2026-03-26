@@ -48,7 +48,7 @@ describe("testing dynamoDBClient", () => {
 
     const expected = {
       TableName: undefined,
-      IndexName: "PharmacyODSCodePrescriptionIDIndex",
+      IndexName: "PharmacyODSCodePrescriptionIDIndexIncPostDated",
       KeyConditionExpression: "PrescriptionID = :inputPrescriptionID AND PharmacyODSCode = :inputPharmacyODSCode",
       ExpressionAttributeValues: {
         ":inputPharmacyODSCode": "ODSCODE",
