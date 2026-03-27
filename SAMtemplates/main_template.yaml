@@ -129,7 +129,7 @@ Parameters:
     Type: String
     Default: " "
 
-  EnabledSupplierProductIDsValue:
+  EnabledSupplierApplicationIDsValue:
     Type: String
     Default: " "
 
@@ -192,7 +192,7 @@ Resources:
         EnableNotificationsExternalValue: !Ref EnableNotificationsExternal
         EnabledSiteODSCodesValue: !Ref EnabledSiteODSCodesValue
         EnabledSystemsValue: !Ref EnabledSystemsValue
-        EnabledSupplierProductIDsValue: !Ref EnabledSupplierProductIDsValue
+        EnabledSupplierApplicationIDsValue: !Ref EnabledSupplierApplicationIDsValue
         BlockedSiteODSCodesValue: !Ref BlockedSiteODSCodesValue
         NotifyRoutingPlanIDValue: !Ref NotifyRoutingPlanIDValue
         NotifyAPIBaseURLValue: !Ref NotifyAPIBaseURLValue
@@ -259,7 +259,7 @@ Resources:
         SQSSaltSecret: !GetAtt Secrets.Outputs.SQSSaltSecret
         EnabledSiteODSCodesParam: !GetAtt Parameters.Outputs.EnabledSiteODSCodesParameterName
         EnabledSystemsParam: !GetAtt Parameters.Outputs.EnabledSystemsParameterName
-        EnabledSupplierProductIDsParam: !GetAtt Parameters.Outputs.EnabledSupplierProductIDsParameterName
+        EnabledSupplierApplicationIDsParam: !GetAtt Parameters.Outputs.EnabledSupplierApplicationIDsParameterName
         BlockedSiteODSCodesParam: !GetAtt Parameters.Outputs.BlockedSiteODSCodesParameterName
         NotifyRoutingPlanIDParam: !GetAtt Parameters.Outputs.NotifyRoutingPlanIDParameterName
         NotifyAPIBaseURLParam: !GetAtt Parameters.Outputs.NotifyAPIBaseURLParameterName

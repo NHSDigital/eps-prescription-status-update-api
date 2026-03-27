@@ -46,7 +46,7 @@ Parameters:
   EnabledSystemsParam:
     Type: AWS::SSM::Parameter::Name<String>
 
-  EnabledSupplierProductIDsParam:
+  EnabledSupplierApplicationIDsParam:
     Type: AWS::SSM::Parameter::Name<String>
 
   BlockedSiteODSCodesParam:
@@ -140,7 +140,7 @@ Resources:
           USE_PRODUCT_ID_FOR_NOTIFICATIONS_FILTERING: false
           ENABLED_SYSTEMS_PARAM: !Ref EnabledSystemsParam
           #
-          ENABLED_PRODUCT_IDS_PARAM: !Ref EnabledSupplierProductIDsParam
+          ENABLED_PRODUCT_IDS_PARAM: !Ref EnabledSupplierApplicationIDsParam
           ENABLED_SITE_ODS_CODES_PARAM: !Ref EnabledSiteODSCodesParam
           BLOCKED_SITE_ODS_CODES_PARAM: !Ref BlockedSiteODSCodesParam
           ENABLE_NOTIFICATIONS_PARAM: !Ref EnableNotificationsInternalParam
