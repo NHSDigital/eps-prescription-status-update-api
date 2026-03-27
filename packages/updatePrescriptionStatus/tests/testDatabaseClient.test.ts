@@ -35,6 +35,7 @@ describe("Unit test persistDataItems", () => {
         TaskID: "TaskID_1",
         TerminalStatus: "TerminalStatus_1",
         ApplicationName: "name",
+        ApplicationID: "id",
         ExpiryTime: 10
       },
       {
@@ -48,6 +49,7 @@ describe("Unit test persistDataItems", () => {
         TaskID: "TaskID_1",
         TerminalStatus: "TerminalStatus_2",
         ApplicationName: "name",
+        ApplicationID: "id",
         ExpiryTime: 10
       }
     ]
@@ -87,6 +89,7 @@ describe("Unit test persistDataItems", () => {
         TaskID: "TaskID_1",
         TerminalStatus: "TerminalStatus_1",
         ApplicationName: "name",
+        ApplicationID: "id",
         ExpiryTime: 10
       },
       {
@@ -100,6 +103,7 @@ describe("Unit test persistDataItems", () => {
         TaskID: "TaskID_1",
         TerminalStatus: "TerminalStatus_2",
         ApplicationName: "name",
+        ApplicationID: "id",
         ExpiryTime: 10
       }
     ]
@@ -123,6 +127,7 @@ describe("Unit test persistDataItems", () => {
       TaskID: "TaskID_1",
       TerminalStatus: "TerminalStatus_1",
       ApplicationName: "name",
+      ApplicationID: "id",
       ExpiryTime: 10
     }
     const dataItems = Array(150).fill(dataItem)
@@ -148,6 +153,7 @@ describe("Unit test persistDataItems", () => {
         TaskID: "TaskID_1",
         TerminalStatus: "TerminalStatus_1",
         ApplicationName: "name",
+        ApplicationID: "id",
         ExpiryTime: 10
       },
       {
@@ -161,6 +167,7 @@ describe("Unit test persistDataItems", () => {
         TaskID: "TaskID_1",
         TerminalStatus: "TerminalStatus_2",
         ApplicationName: "name",
+        ApplicationID: "id",
         ExpiryTime: 10
       }
     ]
@@ -194,6 +201,7 @@ describe("Unit test getPreviousItem", () => {
     TaskID: "previous-task-id",
     TerminalStatus: "ready to collect",
     ApplicationName: "Jim's Pills",
+    ApplicationID: "id",
     ExpiryTime: 123
   }
   const previousItem = {
@@ -207,6 +215,7 @@ describe("Unit test getPreviousItem", () => {
     TaskID: "previous-task-id",
     TerminalStatus: "ready to collect",
     ApplicationName: "Jim's Pills",
+    ApplicationID: "id",
     ExpiryTime: 123
   }
   const currentItem = {
@@ -220,6 +229,7 @@ describe("Unit test getPreviousItem", () => {
     TaskID: "current-task-id",
     TerminalStatus: "ready to collect",
     ApplicationName: "Jim's Pills",
+    ApplicationID: "id",
     ExpiryTime: 123
   }
 
@@ -334,6 +344,7 @@ describe("Unit test rollbackDataItems", () => {
     TaskID: "TaskID_1",
     TerminalStatus: "TerminalStatus_1",
     ApplicationName: "name",
+    ApplicationID: "id",
     ExpiryTime: 10,
     ...overrides
   })

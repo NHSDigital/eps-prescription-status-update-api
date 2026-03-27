@@ -13,7 +13,7 @@ function str2set(value: string | undefined): Set<string> {
 
 async function loadConfig(): Promise<{
   enabledSiteODSCodes: Set<string>,
-  enabledSystems: Set<string>,
+  enabledSystemAppIds: Set<string>,
   blockedSiteODSCodes: Set<string>
 }> {
   const paramNames = {
@@ -24,12 +24,12 @@ async function loadConfig(): Promise<{
   const all = await initiatedSSMProvider.getParametersByName(paramNames)
 
   const enabledSiteODSCodes = str2set(all[process.env.ENABLED_SITE_ODS_CODES_PARAM!] as string)
-  const enabledSystems = str2set(all[process.env.ENABLED_SYSTEMS_PARAM!] as string)
+  const enabledSystemAppIds = str2set(all[process.env.ENABLED_SYSTEMS_PARAM!] as string)
   const blockedSiteODSCodes = str2set(all[process.env.BLOCKED_SITE_ODS_CODES_PARAM!] as string)
 
   return {
     enabledSiteODSCodes,
-    enabledSystems,
+    enabledSystemAppIds,
     blockedSiteODSCodes
   }
 }
@@ -48,15 +48,15 @@ export async function checkSiteOrSystemIsNotifyEnabled(
   logger?: Logger
 ): Promise<Array<PSUDataItemWithPrevious>> {
   // Get the configuration from either the cache or SSM
-  const {enabledSiteODSCodes, enabledSystems, blockedSiteODSCodes} = await loadConfig()
+  const {enabledSiteODSCodes, enabledSystemAppIds, blockedSiteODSCodes} = await loadConfig()
   const unfilteredItemCount = data.length
 
   const filteredItems = data.filter((item) => {
-    const appName = item.current.ApplicationName.trim().toLowerCase()
+    const appId = item.current.ApplicationID.trim().toLowerCase()
     const odsCode = item.current.PharmacyODSCode.trim().toLowerCase()
 
     // Is this item either ODS enabled, or supplier enabled?
-    const isEnabledSystem = enabledSiteODSCodes.has(odsCode) || enabledSystems.has(appName)
+    const isEnabledSystem = enabledSiteODSCodes.has(odsCode) || enabledSystemAppIds.has(appId)
     if (!isEnabledSystem) {
       return false
     }
