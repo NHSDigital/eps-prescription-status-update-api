@@ -69,6 +69,7 @@ sam deploy \
             EnabledSiteODSCodesValue="${ENABLED_SITE_ODS_CODES:-' '}" \
             EnablePostDatedNotifications="$ENABLE_POST_DATED_NOTIFICATIONS" \
             EnabledSystemsValue="${ENABLED_SYSTEMS:-' '}" \
+            EnabledSupplierApplicationIDsValue="${ENABLED_SUPPLIER_PRODUCT_IDS:-' '}" \
             BlockedSiteODSCodesValue="${BLOCKED_SITE_ODS_CODES:-' '}" \
             NotifyRoutingPlanIDValue="$NOTIFY_ROUTING_PLAN_ID" \
             NotifyAPIBaseURLValue="$NOTIFY_API_BASE_URL" \
