@@ -85,6 +85,9 @@ on:
       BLOCKED_SITE_ODS_CODES:
         required: true
         type: string
+      ENABLED_SUPPLIER_PRODUCT_IDS:
+        required: true
+        type: string
       NOTIFY_ROUTING_PLAN_ID:
         required: true
         type: string
@@ -216,6 +219,7 @@ jobs:
           ENABLED_SITE_ODS_CODES: ${{ steps.read.outputs.ods_csv }}
           ENABLED_SYSTEMS: ${{ inputs.ENABLED_SYSTEMS }}
           BLOCKED_SITE_ODS_CODES: ${{ inputs.BLOCKED_SITE_ODS_CODES }}
+          ENABLED_SUPPLIER_PRODUCT_IDS: ${{ inputs.ENABLED_SUPPLIER_PRODUCT_IDS }}
           NOTIFY_ROUTING_PLAN_ID: ${{ inputs.NOTIFY_ROUTING_PLAN_ID }}
           NOTIFY_API_BASE_URL: ${{ inputs.NOTIFY_API_BASE_URL }}
           TEST_PRESCRIPTIONS_1: ${{ inputs.TEST_PRESCRIPTIONS_1 || 'noval' }}
