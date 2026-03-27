@@ -439,7 +439,6 @@ security:
 x-nhsd-apim:
   temporary: false
   monitoring: true
-  productidcheck: true
   access:
     - title: Application Restricted
       grants:
