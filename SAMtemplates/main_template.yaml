@@ -254,6 +254,7 @@ Resources:
         SQSSaltSecret: !GetAtt Secrets.Outputs.SQSSaltSecret
         EnabledSiteODSCodesParam: !GetAtt Parameters.Outputs.EnabledSiteODSCodesParameterName
         EnabledSystemsParam: !GetAtt Parameters.Outputs.EnabledSystemsParameterName
+        EnabledSupplierProductIDsParam: !GetAtt Parameters.Outputs.EnabledSupplierProductIDsParameterName
         BlockedSiteODSCodesParam: !GetAtt Parameters.Outputs.BlockedSiteODSCodesParameterName
         NotifyRoutingPlanIDParam: !GetAtt Parameters.Outputs.NotifyRoutingPlanIDParameterName
         NotifyAPIBaseURLParam: !GetAtt Parameters.Outputs.NotifyAPIBaseURLParameterName

@@ -46,6 +46,9 @@ Parameters:
   EnabledSystemsParam:
     Type: AWS::SSM::Parameter::Name<String>
 
+  EnabledSupplierProductIDsParam:
+    Type: AWS::SSM::Parameter::Name<String>
+
   BlockedSiteODSCodesParam:
     Type: AWS::SSM::Parameter::Name<String>
 
@@ -132,8 +135,13 @@ Resources:
           POST_DATED_PRESCRIPTIONS_SQS_QUEUE_URL: !Ref PostDatedNotificationsSQSQueueUrl
           ENABLE_POST_DATED_NOTIFICATIONS: !Ref EnablePostDatedNotifications
           SQS_SALT: !Ref SQSSaltSecret
-          ENABLED_SITE_ODS_CODES_PARAM: !Ref EnabledSiteODSCodesParam
+          # Remove this once we've confirmed that product ID based filtering is working as expected and we
+          # no longer need the ability to switch back to the old filtering method
+          USE_PRODUCT_ID_FOR_NOTIFICATIONS_FILTERING: false
           ENABLED_SYSTEMS_PARAM: !Ref EnabledSystemsParam
+          #
+          ENABLED_PRODUCT_IDS_PARAM: !Ref EnabledSupplierProductIDsParam
+          ENABLED_SITE_ODS_CODES_PARAM: !Ref EnabledSiteODSCodesParam
           BLOCKED_SITE_ODS_CODES_PARAM: !Ref BlockedSiteODSCodesParam
           ENABLE_NOTIFICATIONS_PARAM: !Ref EnableNotificationsInternalParam
           LOG_LEVEL: !Ref LogLevel
