@@ -129,6 +129,10 @@ Parameters:
     Type: String
     Default: " "
 
+  EnabledSupplierProductIDsValue:
+    Type: String
+    Default: " "
+
   BlockedSiteODSCodesValue:
     Type: String
     Default: " "
@@ -188,6 +192,7 @@ Resources:
         EnableNotificationsExternalValue: !Ref EnableNotificationsExternal
         EnabledSiteODSCodesValue: !Ref EnabledSiteODSCodesValue
         EnabledSystemsValue: !Ref EnabledSystemsValue
+        EnabledSupplierProductIDsValue: !Ref EnabledSupplierProductIDsValue
         BlockedSiteODSCodesValue: !Ref BlockedSiteODSCodesValue
         NotifyRoutingPlanIDValue: !Ref NotifyRoutingPlanIDValue
         NotifyAPIBaseURLValue: !Ref NotifyAPIBaseURLValue
