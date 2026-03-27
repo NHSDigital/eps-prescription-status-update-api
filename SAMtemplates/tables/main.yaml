@@ -184,8 +184,6 @@ Resources:
               - TerminalStatus
               - LastModified
               - Status
-                # TODO: Remove this when we deprecate post dated prescriptions.
-              - PostDatedLastModifiedSetAt
             ProjectionType: INCLUDE
           ProvisionedThroughput: !If
             - EnableDynamoDBAutoScalingCondition
@@ -215,6 +213,27 @@ Resources:
               - TerminalStatus
               - LastModified
               - Status
+              - PostDatedLastModifiedSetAt
+            ProjectionType: INCLUDE
+          ProvisionedThroughput: !If
+            - EnableDynamoDBAutoScalingCondition
+            - ReadCapacityUnits: 1
+              WriteCapacityUnits: !Ref MinWritePrescriptionStatusUpdatesCapacity
+            - !Ref "AWS::NoValue"
+        - IndexName: PharmacyODSCodePrescriptionIDIndexIncPostDated
+          KeySchema:
+            - AttributeName: PharmacyODSCode
+              KeyType: HASH
+            - AttributeName: PrescriptionID
+              KeyType: RANGE
+          Projection:
+            NonKeyAttributes:
+              - PatientNHSNumber
+              - LineItemID
+              - TerminalStatus
+              - LastModified
+              - Status
+              # TODO: Remove this when we deprecate post dated prescriptions.
               - PostDatedLastModifiedSetAt
             ProjectionType: INCLUDE
           ProvisionedThroughput: !If
@@ -330,6 +349,56 @@ Resources:
       PolicyName: NHSNumberIndexReadScalingPolicy
       PolicyType: TargetTrackingScaling
       ScalingTargetId: !Ref PharmacyIndexScalingReadTarget
+      TargetTrackingScalingPolicyConfiguration:
+        TargetValue: 70
+        ScaleInCooldown: 600
+        ScaleOutCooldown: 10
+        PredefinedMetricSpecification:
+          PredefinedMetricType: DynamoDBReadCapacityUtilization
+
+  PharmacyIndexIncPostDatedScalingWriteTarget:
+    Type: AWS::ApplicationAutoScaling::ScalableTarget
+    Condition: EnableDynamoDBAutoScalingCondition
+    Properties:
+      MinCapacity: !Ref MinWritePrescriptionStatusUpdatesCapacity
+      MaxCapacity: !Ref MaxWritePrescriptionStatusUpdatesCapacity
+      ResourceId: !Sub table/${PrescriptionStatusUpdatesTable}/index/PharmacyODSCodePrescriptionIDIndexIncPostDated
+      RoleARN: !GetAtt DynamoDbScalingRole.Arn
+      ScalableDimension: "dynamodb:index:WriteCapacityUnits"
+      ServiceNamespace: dynamodb
+
+  PharmacyIndexIncPostDatedScalingWritePolicy:
+    Type: AWS::ApplicationAutoScaling::ScalingPolicy
+    Condition: EnableDynamoDBAutoScalingCondition
+    Properties:
+      PolicyName: PharmacyIndexIncPostDatedWriteScalingPolicy
+      PolicyType: TargetTrackingScaling
+      ScalingTargetId: !Ref PharmacyIndexIncPostDatedScalingWriteTarget
+      TargetTrackingScalingPolicyConfiguration:
+        TargetValue: 50
+        ScaleInCooldown: 600
+        ScaleOutCooldown: 0
+        PredefinedMetricSpecification:
+          PredefinedMetricType: DynamoDBWriteCapacityUtilization
+
+  PharmacyIndexIncPostDatedScalingReadTarget:
+    Type: AWS::ApplicationAutoScaling::ScalableTarget
+    Condition: EnableDynamoDBAutoScalingCondition
+    Properties:
+      MaxCapacity: 100
+      MinCapacity: 1
+      ResourceId: !Sub table/${PrescriptionStatusUpdatesTable}/index/PharmacyODSCodePrescriptionIDIndexIncPostDated
+      RoleARN: !GetAtt DynamoDbScalingRole.Arn
+      ScalableDimension: "dynamodb:index:ReadCapacityUnits"
+      ServiceNamespace: dynamodb
+
+  PharmacyIndexIncPostDatedScalingReadPolicy:
+    Type: AWS::ApplicationAutoScaling::ScalingPolicy
+    Condition: EnableDynamoDBAutoScalingCondition
+    Properties:
+      PolicyName: PharmacyIndexIncPostDatedReadScalingPolicy
+      PolicyType: TargetTrackingScaling
+      ScalingTargetId: !Ref PharmacyIndexIncPostDatedScalingReadTarget
       TargetTrackingScalingPolicyConfiguration:
         TargetValue: 70
         ScaleInCooldown: 600
