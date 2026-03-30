@@ -66,7 +66,7 @@ export async function checkSiteOrSystemIsNotifyEnabled(
 
     logger?.info(
       "Product ID, application name, and ODS code",
-      {ApplicationID: appId, applicationName: appName, odsCode}
+      {appId, appName, odsCode}
     )
 
     // Is this item supplier enabled?
