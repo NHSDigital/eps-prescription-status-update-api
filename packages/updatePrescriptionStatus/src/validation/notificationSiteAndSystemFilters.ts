@@ -24,7 +24,7 @@ async function loadConfig(): Promise<{
   const paramNames = {
     [process.env.ENABLED_SITE_ODS_CODES_PARAM!]: {maxAge: 5},
     [process.env.ENABLED_SYSTEMS_PARAM!]: {maxAge: 5},
-    [process.env.ENABLED_PRODUCT_IDS_PARAM!]: {maxAge: 5},
+    [process.env.ENABLED_APPLICATION_IDS_PARAM!]: {maxAge: 5},
     [process.env.BLOCKED_SITE_ODS_CODES_PARAM!]: {maxAge: 5}
   }
   const all = await initiatedSSMProvider.getParametersByName(paramNames)

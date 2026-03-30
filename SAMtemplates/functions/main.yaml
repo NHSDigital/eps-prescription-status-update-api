@@ -140,7 +140,7 @@ Resources:
           USE_APP_ID_FOR_NOTIFICATIONS_FILTERING: false
           ENABLED_SYSTEMS_PARAM: !Ref EnabledSystemsParam
           #
-          ENABLED_PRODUCT_IDS_PARAM: !Ref EnabledSupplierApplicationIDsParam
+          ENABLED_APPLICATION_IDS_PARAM: !Ref EnabledSupplierApplicationIDsParam
           ENABLED_SITE_ODS_CODES_PARAM: !Ref EnabledSiteODSCodesParam
           BLOCKED_SITE_ODS_CODES_PARAM: !Ref BlockedSiteODSCodesParam
           ENABLE_NOTIFICATIONS_PARAM: !Ref EnableNotificationsInternalParam
