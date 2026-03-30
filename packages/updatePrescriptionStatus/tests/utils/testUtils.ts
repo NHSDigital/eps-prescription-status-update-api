@@ -209,7 +209,7 @@ export function createMockDataItem(overrides: Partial<PSUDataItem>): PSUDataItem
     TaskID: "mnopqr-ghijkl-abcdef",
     TerminalStatus: "ready to collect",
     ApplicationName: "Internal Test System",
-    ApplicationID: "Internal Test System",
+    ApplicationID: "550e8400-e29b-41d4-a716-446655440000",
     ExpiryTime: 123,
     ...overrides
   }

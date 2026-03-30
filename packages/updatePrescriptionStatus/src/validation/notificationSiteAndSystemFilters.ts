@@ -2,8 +2,8 @@ import {PSUDataItemWithPrevious} from "@psu-common/commonTypes"
 import {initiatedSSMProvider} from "@psu-common/utilities"
 import {Logger} from "@aws-lambda-powertools/logger"
 
-const USE_PRODUCT_ID_FOR_NOTIFICATIONS_FILTERING =
-  (process.env.USE_PRODUCT_ID_FOR_NOTIFICATIONS_FILTERING || "false")
+const USE_APP_ID_FOR_NOTIFICATIONS_FILTERING =
+  (process.env.USE_APP_ID_FOR_NOTIFICATIONS_FILTERING || "false")
     .toLowerCase() === "true"
 
 function str2set(value: string | undefined): Set<string> {
@@ -31,7 +31,7 @@ async function loadConfig(): Promise<{
 
   const enabledSiteODSCodes = str2set(all[process.env.ENABLED_SITE_ODS_CODES_PARAM!] as string)
   const enabledSystemAppNames = str2set(all[process.env.ENABLED_SYSTEMS_PARAM!] as string)
-  const enabledSystemAppIds = str2set(all[process.env.ENABLED_PRODUCT_IDS_PARAM!] as string)
+  const enabledSystemAppIds = str2set(all[process.env.ENABLED_SYSTEM_APP_IDS_PARAM!] as string)
   const blockedSiteODSCodes = str2set(all[process.env.BLOCKED_SITE_ODS_CODES_PARAM!] as string)
 
   return {
@@ -66,17 +66,17 @@ export async function checkSiteOrSystemIsNotifyEnabled(
 
     logger?.info(
       "Product ID, application name, and ODS code",
-      {ApplicationID: appId, applicationName: appName, odsCode, enabledSystemAppIds}
+      {ApplicationID: appId, applicationName: appName, odsCode}
     )
 
     // Is this item supplier enabled?
-    if (USE_PRODUCT_ID_FOR_NOTIFICATIONS_FILTERING) {
-      const isEnabledProduct = enabledSiteODSCodes.has(odsCode) || enabledSystemAppIds.has(appId)
-      if (!isEnabledProduct) {
+    if (USE_APP_ID_FOR_NOTIFICATIONS_FILTERING) {
+      const isEnabledApplication = enabledSiteODSCodes.has(odsCode) || enabledSystemAppIds.has(appId)
+      if (!isEnabledApplication) {
         return false
       }
     } else {
-      const isEnabledSystem = enabledSiteODSCodes.has(odsCode) || enabledSystemAppNames.has(appId)
+      const isEnabledSystem = enabledSiteODSCodes.has(odsCode) || enabledSystemAppNames.has(appName)
       if (!isEnabledSystem) {
         return false
       }

@@ -137,7 +137,7 @@ Resources:
           SQS_SALT: !Ref SQSSaltSecret
           # Remove this once we've confirmed that product ID based filtering is working as expected and we
           # no longer need the ability to switch back to the old filtering method
-          USE_PRODUCT_ID_FOR_NOTIFICATIONS_FILTERING: false
+          USE_APP_ID_FOR_NOTIFICATIONS_FILTERING: false
           ENABLED_SYSTEMS_PARAM: !Ref EnabledSystemsParam
           #
           ENABLED_PRODUCT_IDS_PARAM: !Ref EnabledSupplierApplicationIDsParam
