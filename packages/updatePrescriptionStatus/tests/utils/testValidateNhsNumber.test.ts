@@ -1,5 +1,6 @@
 // https://github.com/tbrd/nhs-numbers
 
+import {describe, it, expect} from "vitest"
 import {generateInvalidNhsNumbers, generateValidNhsNumbers} from "./nhsNumber"
 import {validateNhsNumber} from "../../src/utils/nhsNumber"
 

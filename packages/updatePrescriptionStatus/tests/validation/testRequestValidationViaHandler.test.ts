@@ -5,8 +5,9 @@ import {
   expect,
   describe,
   it,
-  jest
-} from "@jest/globals"
+  vi,
+  beforeEach
+} from "vitest"
 
 import {
   DEFAULT_DATE,
@@ -21,28 +22,31 @@ import {ONE_DAY_IN_MS} from "../../src/validation/content"
 import requestSingleItem from "../../../specification/examples/request-dispatched.json"
 import requestMultipleItems from "../../../specification/examples/request-multiple-items.json"
 import {accepted, badRequest, bundleWrap} from "../../src/utils/responses"
-import {LOG_MESSAGES} from "@psu-common/utilities"
 
-const mockGetParametersByName = jest.fn(async () => Promise.resolve(
-  {[process.env.ENABLE_NOTIFICATIONS_PARAM!]: "false"}
-))
+const {mockInitiatedSSMProvider} = vi.hoisted(() => {
+  const mockGetParametersByName = vi.fn(async () => Promise.resolve(
+    {[process.env.ENABLE_NOTIFICATIONS_PARAM!]: "false"}
+  ))
+  return {
+    mockInitiatedSSMProvider: {getParametersByName: mockGetParametersByName}
+  }
+})
 
-const mockInitiatedSSMProvider = {
-  getParametersByName: mockGetParametersByName
-}
-
-jest.unstable_mockModule("@psu-common/utilities", async () => ({
-  getTestPrescriptions: getTestPrescriptions,
-  initiatedSSMProvider: mockInitiatedSSMProvider,
-  LOG_MESSAGES: LOG_MESSAGES
-}))
+vi.mock("@psu-common/utilities", async (importOriginal) => {
+  const mod = await importOriginal<typeof import("@psu-common/utilities")>()
+  return {
+    ...mod,
+    getTestPrescriptions: getTestPrescriptions,
+    initiatedSSMProvider: mockInitiatedSSMProvider
+  }
+})
 
 const {handler} = await import("../../src/updatePrescriptionStatus")
 
 describe("Integration tests for validation via updatePrescriptionStatus handler", () => {
   beforeEach(() => {
-    jest.resetModules()
-    jest.useFakeTimers().setSystemTime(DEFAULT_DATE)
+    vi.resetModules()
+    vi.useFakeTimers().setSystemTime(DEFAULT_DATE)
   })
 
   // eslint-disable-next-line max-len

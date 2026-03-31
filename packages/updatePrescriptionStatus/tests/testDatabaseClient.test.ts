@@ -2,24 +2,36 @@ import {
   expect,
   describe,
   it,
-  jest
-} from "@jest/globals"
+  vi,
+  beforeEach
+} from "vitest"
 
 import {TransactionCanceledException} from "@aws-sdk/client-dynamodb"
-import {mockDynamoDBClient} from "./utils/testUtils"
 import {Logger} from "@aws-lambda-powertools/logger"
 import {marshall} from "@aws-sdk/util-dynamodb"
 
-const {mockSend} = mockDynamoDBClient()
+const {mockSend} = vi.hoisted(() => ({mockSend: vi.fn()}))
+
+vi.mock(
+  "@aws-sdk/client-dynamodb",
+  async (importOriginal: () => Promise<typeof import("@aws-sdk/client-dynamodb")>) => {
+    const mod = await importOriginal()
+    return {
+      ...mod,
+      DynamoDBClient: vi.fn().mockImplementation(() => ({send: mockSend}))
+    }
+  }
+)
+
 const {persistDataItems, getPreviousItem, rollbackDataItems} = await import("../src/utils/databaseClient")
 
 const logger = new Logger({serviceName: "updatePrescriptionStatus_TEST"})
 
 describe("Unit test persistDataItems", () => {
   beforeEach(() => {
-    jest.resetModules()
-    jest.clearAllMocks()
-    jest.resetAllMocks()
+    vi.resetModules()
+    vi.clearAllMocks()
+    vi.resetAllMocks()
   })
 
   it("when the conditional check fails, an error is thrown", async () => {
@@ -59,7 +71,7 @@ describe("Unit test persistDataItems", () => {
         CancellationReasons: [{Code: "ConditionalCheckFailedException"}]
       }) as never
     )
-    const loggerSpy = jest.spyOn(logger, "error")
+    const loggerSpy = vi.spyOn(logger, "error")
 
     await expect(persistDataItems(dataItems, logger)).rejects.toThrow(
       new TransactionCanceledException({
@@ -104,7 +116,7 @@ describe("Unit test persistDataItems", () => {
       }
     ]
 
-    const loggerSpy = jest.spyOn(logger, "error")
+    const loggerSpy = vi.spyOn(logger, "error")
 
     const result = await persistDataItems(dataItems, logger)
     expect(result).toBe(true)
@@ -127,7 +139,7 @@ describe("Unit test persistDataItems", () => {
     }
     const dataItems = Array(150).fill(dataItem)
 
-    const loggerSpy = jest.spyOn(logger, "error")
+    const loggerSpy = vi.spyOn(logger, "error")
 
     const result = await persistDataItems(dataItems, logger)
     expect(result).toBe(true)
@@ -165,7 +177,7 @@ describe("Unit test persistDataItems", () => {
       }
     ]
 
-    const loggerSpy = jest.spyOn(logger, "error")
+    const loggerSpy = vi.spyOn(logger, "error")
     mockSend.mockRejectedValue(
       new Error("General error") as never
     )
@@ -178,9 +190,9 @@ describe("Unit test persistDataItems", () => {
 
 describe("Unit test getPreviousItem", () => {
   beforeEach(() => {
-    jest.resetModules()
-    jest.clearAllMocks()
-    jest.resetAllMocks()
+    vi.resetModules()
+    vi.clearAllMocks()
+    vi.resetAllMocks()
   })
 
   const initialItem = {
@@ -304,7 +316,7 @@ describe("Unit test getPreviousItem", () => {
   it("Should return undefined and log error when there is an error", async () => {
     mockSend.mockRejectedValue("Something went wrong" as never)
 
-    const loggerSpy = jest.spyOn(logger, "error")
+    const loggerSpy = vi.spyOn(logger, "error")
     const result = await getPreviousItem(currentItem, logger)
     expect(result).toEqual({
       current: currentItem,
@@ -318,9 +330,9 @@ describe("Unit test getPreviousItem", () => {
 
 describe("Unit test rollbackDataItems", () => {
   beforeEach(() => {
-    jest.resetModules()
-    jest.clearAllMocks()
-    jest.resetAllMocks()
+    vi.resetModules()
+    vi.clearAllMocks()
+    vi.resetAllMocks()
   })
 
   const makeItem = (overrides = {}) => ({
@@ -344,8 +356,8 @@ describe("Unit test rollbackDataItems", () => {
     // success for each conditioned delete
     mockSend.mockImplementation(async () => Promise.resolve())
 
-    const loggerWarn = jest.spyOn(logger, "warn")
-    const loggerError = jest.spyOn(logger, "error")
+    const loggerWarn = vi.spyOn(logger, "warn")
+    const loggerError = vi.spyOn(logger, "error")
 
     const result = await rollbackDataItems(items, logger)
     expect(result).toBe(true)
@@ -368,8 +380,8 @@ describe("Unit test rollbackDataItems", () => {
         })
       ))
 
-    const loggerWarn = jest.spyOn(logger, "warn")
-    const loggerError = jest.spyOn(logger, "error")
+    const loggerWarn = vi.spyOn(logger, "warn")
+    const loggerError = vi.spyOn(logger, "error")
 
     const result = await rollbackDataItems(items, logger)
     expect(result).toBe(true) // still overall success (safe to skip)
@@ -383,7 +395,7 @@ describe("Unit test rollbackDataItems", () => {
 
     mockSend.mockImplementationOnce(async () => Promise.reject(new Error("error")))
 
-    const loggerError = jest.spyOn(logger, "error")
+    const loggerError = vi.spyOn(logger, "error")
 
     const result = await rollbackDataItems(items, logger)
     expect(result).toBe(false)
@@ -405,8 +417,8 @@ describe("Unit test rollbackDataItems", () => {
       ))
       .mockImplementationOnce(async () => Promise.resolve()) // C: delete ok
 
-    const loggerWarn = jest.spyOn(logger, "warn")
-    const loggerError = jest.spyOn(logger, "error")
+    const loggerWarn = vi.spyOn(logger, "warn")
+    const loggerError = vi.spyOn(logger, "error")
 
     const result = await rollbackDataItems(items, logger)
     expect(result).toBe(true)
@@ -416,8 +428,8 @@ describe("Unit test rollbackDataItems", () => {
   })
 
   it("does not fail if there are zero items", async () => {
-    const loggerWarn = jest.spyOn(logger, "warn")
-    const loggerError = jest.spyOn(logger, "error")
+    const loggerWarn = vi.spyOn(logger, "warn")
+    const loggerError = vi.spyOn(logger, "error")
 
     const result = await rollbackDataItems([], logger)
     expect(result).toBe(true)

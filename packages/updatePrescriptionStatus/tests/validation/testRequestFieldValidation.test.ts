@@ -1,5 +1,5 @@
 
-import {expect, describe, it} from "@jest/globals"
+import {expect, describe, it} from "vitest"
 import {BundleEntry, Task} from "fhir/r4"
 
 import {taskFields, validateFields} from "../../src/validation/fields"

@@ -1,9 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import {APIGatewayProxyEvent} from "aws-lambda"
-import {jest} from "@jest/globals"
-import * as dynamo from "@aws-sdk/client-dynamodb"
-import * as sqs from "@aws-sdk/client-sqs"
+import {vi, expect} from "vitest"
 
 import {
   LINE_ITEM_ID_CODESYSTEM,
@@ -159,42 +157,26 @@ export function generateExpectedItems(itemCount: number = 1) {
   return {input: {TransactItems: items}}
 }
 
-// Uses unstable jest method to enable mocking while using ESM. To be replaced in future.
-export function mockInternalDependency(modulePath: string, module: object, dependency: string) {
-  const mockDependency = jest.fn()
-  jest.unstable_mockModule(modulePath, () => ({
-    ...module,
-    [dependency]: mockDependency
-  }))
-  return mockDependency
+// Deprecated: use vi.hoisted() + vi.mock() in the consuming test file instead.
+export function mockInternalDependency(): never {
+  throw new Error(
+    "mockInternalDependency() is not supported with Vitest. " +
+    "Use vi.hoisted() + vi.mock() in the test file instead."
+  )
 }
 
-// Uses unstable jest method to enable mocking while using ESM. To be replaced in future.
-export function mockDynamoDBClient() {
-  const mockSend = jest.fn()
-  jest.unstable_mockModule("@aws-sdk/client-dynamodb", () => {
-    return {
-      ...dynamo,
-      DynamoDBClient: jest.fn().mockImplementation(() => ({
-        send: mockSend
-      }))
-    }
-  })
-  return {mockSend}
+export function mockDynamoDBClient(): never {
+  throw new Error(
+    "mockDynamoDBClient() is not supported with Vitest. " +
+    "Use vi.hoisted() + vi.mock() in the test file instead."
+  )
 }
 
-// Similarly mock the SQS client
-export function mockSQSClient() {
-  const mockSend = jest.fn()
-  jest.unstable_mockModule("@aws-sdk/client-sqs", () => {
-    return {
-      ...sqs,
-      SQSClient: jest.fn().mockImplementation(() => ({
-        send: mockSend
-      }))
-    }
-  })
-  return {mockSend}
+export function mockSQSClient(): never {
+  throw new Error(
+    "mockSQSClient() is not supported with Vitest. " +
+    "Use vi.hoisted() + vi.mock() in the test file instead."
+  )
 }
 
 export function createMockDataItem(overrides: Partial<PSUDataItem>): PSUDataItem {
@@ -222,7 +204,7 @@ const mockPrescriptions = new Map([
   ["TEST_PRESCRIPTIONS_PARAM_4", [TASK_VALUES[0].prescriptionID]]
 ])
 
-export const getTestPrescriptions = jest.fn()
+export const getTestPrescriptions = vi.fn()
   .mockName("getTestPrescriptions")
   .mockImplementation((param: unknown) => {
     return Promise.resolve(mockPrescriptions.get(param as string) || [])
