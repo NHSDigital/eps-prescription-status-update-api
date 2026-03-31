@@ -1,13 +1,21 @@
 import {
-  jest,
+  vi,
+  expect,
   describe,
   it,
   beforeAll,
   afterEach
-} from "@jest/globals"
+} from "vitest"
 
-const mockReportQueueStatus = jest.fn()
-jest.unstable_mockModule(
+const {
+  mockReportQueueStatus,
+  mockProcessPostDatedQueue
+} = vi.hoisted(() => ({
+  mockReportQueueStatus: vi.fn(),
+  mockProcessPostDatedQueue: vi.fn()
+}))
+
+vi.mock(
   "../src/sqs",
   async () => ({
     __esModule: true,
@@ -15,8 +23,7 @@ jest.unstable_mockModule(
   })
 )
 
-const mockProcessPostDatedQueue = jest.fn()
-jest.unstable_mockModule(
+vi.mock(
   "../src/orchestration",
   async () => ({
     __esModule: true,
@@ -37,8 +44,8 @@ describe("Unit test for post-dated lambda handler", () => {
   afterEach(() => {
     process.env = {...ORIGINAL_ENV}
 
-    jest.clearAllMocks()
-    jest.restoreAllMocks()
+    vi.clearAllMocks()
+    vi.restoreAllMocks()
   })
 
   it("should run the lambda handler successfully", async () => {

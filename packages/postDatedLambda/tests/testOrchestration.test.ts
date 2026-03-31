@@ -2,32 +2,46 @@ import {
   expect,
   describe,
   it,
-  jest
-} from "@jest/globals"
+  vi,
+  beforeEach,
+  afterEach
+} from "vitest"
 
 // Mock the imports from local modules
-const mockDetermineAction = jest.fn()
-const mockComputeTimeUntilMaturity = jest.fn().mockReturnValue(300)
-jest.unstable_mockModule("../src/businessLogic", () => {
+const {
+  mockDetermineAction,
+  mockComputeTimeUntilMaturity,
+  mockEnrichMessagesWithMostRecentDataItem,
+  mockReceivePostDatedSQSMessages,
+  mockReportQueueStatus,
+  mockForwardSQSMessageToNotificationQueue,
+  mockRemoveSQSMessage,
+  mockReturnMessageToQueue
+} = vi.hoisted(() => ({
+  mockDetermineAction: vi.fn(),
+  mockComputeTimeUntilMaturity: vi.fn().mockReturnValue(300),
+  mockEnrichMessagesWithMostRecentDataItem: vi.fn(),
+  mockReceivePostDatedSQSMessages: vi.fn(),
+  mockReportQueueStatus: vi.fn(),
+  mockForwardSQSMessageToNotificationQueue: vi.fn(),
+  mockRemoveSQSMessage: vi.fn(),
+  mockReturnMessageToQueue: vi.fn()
+}))
+
+vi.mock("../src/businessLogic", () => {
   return {
     determineAction: mockDetermineAction,
     computeTimeUntilMaturity: mockComputeTimeUntilMaturity
   }
 })
 
-const mockEnrichMessagesWithMostRecentDataItem = jest.fn()
-jest.unstable_mockModule("../src/databaseClient", () => {
+vi.mock("../src/databaseClient", () => {
   return {
     enrichMessagesWithMostRecentDataItem: mockEnrichMessagesWithMostRecentDataItem
   }
 })
 
-const mockReceivePostDatedSQSMessages = jest.fn()
-const mockReportQueueStatus = jest.fn()
-const mockForwardSQSMessageToNotificationQueue = jest.fn()
-const mockRemoveSQSMessage = jest.fn()
-const mockReturnMessageToQueue = jest.fn()
-jest.unstable_mockModule("../src/sqs", () => {
+vi.mock("../src/sqs", () => {
   return {
     receivePostDatedSQSMessages: mockReceivePostDatedSQSMessages,
     reportQueueStatus: mockReportQueueStatus,
@@ -66,7 +80,7 @@ function enrich(messages: Array<PostDatedSQSMessage>): Array<PostDatedSQSMessage
 describe("orchestration", () => {
   describe("processMessages", () => {
     beforeEach(() => {
-      jest.clearAllMocks()
+      vi.clearAllMocks()
       mockForwardSQSMessageToNotificationQueue.mockReturnValue(Promise.resolve("forwarded-id"))
       mockRemoveSQSMessage.mockReturnValue(Promise.resolve())
       mockReturnMessageToQueue.mockReturnValue(Promise.resolve())
@@ -125,10 +139,15 @@ describe("orchestration", () => {
 
   describe("processPostDatedQueue", () => {
     beforeEach(() => {
-      jest.clearAllMocks()
+      vi.clearAllMocks()
       mockForwardSQSMessageToNotificationQueue.mockReturnValue(Promise.resolve("forwarded-id"))
       mockRemoveSQSMessage.mockReturnValue(Promise.resolve())
       mockReturnMessageToQueue.mockReturnValue(Promise.resolve())
+    })
+
+    afterEach(() => {
+      vi.useRealTimers()
+      vi.restoreAllMocks()
     })
 
     it("should process the SQS queue correctly", async () => {
@@ -157,7 +176,6 @@ describe("orchestration", () => {
     })
 
     it("Should stop processing if the max runtime is exceeded", async () => {
-      jest.useFakeTimers()
       const mockMessages: Array<PostDatedSQSMessage> = [
         {MessageId: "1", Body: "Message 1", prescriptionData: createMockPostModifiedDataItem({})},
         {MessageId: "2", Body: "Message 2", prescriptionData: createMockPostModifiedDataItem({})},
@@ -171,14 +189,13 @@ describe("orchestration", () => {
       mockEnrichMessagesWithMostRecentDataItem.mockReturnValue(enrich(mockMessages))
       const {MAX_QUEUE_RUNTIME} = await import("../src/orchestration")
       mockDetermineAction.mockReturnValue(PostDatedProcessingResult.FORWARD_TO_NOTIFICATIONS)
+      vi.spyOn(Date, "now")
+        .mockReturnValueOnce(0)
+        .mockReturnValueOnce(MAX_QUEUE_RUNTIME + 1000)
 
-      const promise = processPostDatedQueue(logger)
-      // Overrun by a second
-      jest.advanceTimersByTime(MAX_QUEUE_RUNTIME + 1000)
-      await promise
+      await processPostDatedQueue(logger)
 
       expect(mockReportQueueStatus).toHaveBeenCalled()
-      jest.useRealTimers()
     })
 
     it("should continue processing batches until message count drops below threshold", async () => {

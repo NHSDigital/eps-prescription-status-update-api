@@ -2,30 +2,27 @@ import {
   expect,
   describe,
   it,
-  jest
-} from "@jest/globals"
-
-import * as dynamo from "@aws-sdk/client-dynamodb"
+  vi,
+  beforeEach
+} from "vitest"
 
 import {Logger} from "@aws-lambda-powertools/logger"
 
 import {createMockPostModifiedDataItem} from "./testUtils"
 
-// Uses unstable jest method to enable mocking while using ESM. To be replaced in future.
-export function mockDynamoDBClient() {
-  const mockSend = jest.fn()
-  jest.unstable_mockModule("@aws-sdk/client-dynamodb", () => {
-    return {
-      ...dynamo,
-      DynamoDBClient: jest.fn().mockImplementation(() => ({
-        send: mockSend
-      }))
-    }
-  })
-  return {mockSend}
-}
+const {mockSend} = vi.hoisted(() => ({
+  mockSend: vi.fn()
+}))
 
-const {mockSend} = mockDynamoDBClient()
+vi.mock("@aws-sdk/client-dynamodb", async () => {
+  const dynamo = await vi.importActual<typeof import("@aws-sdk/client-dynamodb")>("@aws-sdk/client-dynamodb")
+  return {
+    ...dynamo,
+    DynamoDBClient: vi.fn().mockImplementation(() => ({
+      send: mockSend
+    }))
+  }
+})
 const {
   getRecentDataItemByPrescriptionID,
   enrichMessagesWithMostRecentDataItem
