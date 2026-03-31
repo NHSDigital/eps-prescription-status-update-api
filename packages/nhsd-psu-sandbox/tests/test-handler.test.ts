@@ -1,6 +1,6 @@
 import {APIGatewayProxyEvent, APIGatewayProxyResult} from "aws-lambda"
 import {handler} from "../src/sandbox"
-import {expect, describe, it} from "@jest/globals"
+import {expect, describe, it} from "vitest"
 import successData from "../../specification/examples/response-multiple-items.json"
 
 const dummyContext = {}
