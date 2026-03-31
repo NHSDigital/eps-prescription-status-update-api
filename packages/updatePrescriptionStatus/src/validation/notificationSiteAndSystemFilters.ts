@@ -31,7 +31,7 @@ async function loadConfig(): Promise<{
 
   const enabledSiteODSCodes = str2set(all[process.env.ENABLED_SITE_ODS_CODES_PARAM!] as string)
   const enabledSystemAppNames = str2set(all[process.env.ENABLED_SYSTEMS_PARAM!] as string)
-  const enabledSystemAppIds = str2set(all[process.env.ENABLED_SYSTEM_APP_IDS_PARAM!] as string)
+  const enabledSystemAppIds = str2set(all[process.env.ENABLED_APPLICATION_IDS_PARAM!] as string)
   const blockedSiteODSCodes = str2set(all[process.env.BLOCKED_SITE_ODS_CODES_PARAM!] as string)
 
   return {
