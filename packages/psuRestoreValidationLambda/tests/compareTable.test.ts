@@ -1,17 +1,17 @@
 import {DynamoDBDocumentClient} from "@aws-sdk/lib-dynamodb"
-import {jest} from "@jest/globals"
+import {beforeEach, describe, expect, it, vi, type Mocked} from "vitest"
 import {Logger} from "@aws-lambda-powertools/logger"
 
-const mockSend = jest.fn()
+const mockSend = vi.fn()
 const mockDocumentClient = {
   send: mockSend
-} as unknown as jest.Mocked<DynamoDBDocumentClient>
+} as unknown as Mocked<DynamoDBDocumentClient>
 
 const mockLogger: Partial<Logger> = {
-  info: jest.fn(),
-  debug: jest.fn(),
-  error: jest.fn(),
-  warn: jest.fn()
+  info: vi.fn(),
+  debug: vi.fn(),
+  error: vi.fn(),
+  warn: vi.fn()
 }
 
 const SOURCE_ITEM = {
@@ -24,9 +24,9 @@ const {compareTables} = await import("../src/compareTable")
 
 describe("Compare table function", () => {
   beforeEach(() => {
-    jest.resetModules()
-    jest.clearAllMocks()
-    jest.resetAllMocks()
+    vi.resetModules()
+    vi.clearAllMocks()
+    vi.resetAllMocks()
   })
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

@@ -1,17 +1,18 @@
 import {EventBridgeEvent} from "aws-lambda"
 import {
-  jest,
+  beforeAll,
   expect,
   describe,
-  it
-} from "@jest/globals"
+  it,
+  vi
+} from "vitest"
 import {backupEventCompletedDetail} from "../src/types"
 import {Backup} from "@aws-sdk/client-backup"
 
 import {mockContext} from "@psu-common/testing"
 
-const mockCompareTables = jest.fn()
-jest.unstable_mockModule("../src/compareTable", () => {
+const mockCompareTables = vi.fn()
+vi.mock("../src/compareTable", () => {
   return {
     compareTables: mockCompareTables
   }
@@ -49,7 +50,7 @@ const dummyEvent: EventBridgeEvent<"Restore Job State Change", backupEventComple
 describe("Unit test for psuRestoreValidationLambda", function () {
   let mockPutRestoreValidationResult: unknown
   beforeAll(()=> {
-    mockPutRestoreValidationResult = jest
+    mockPutRestoreValidationResult = vi
       .spyOn( Backup.prototype, "putRestoreValidationResult")
       .mockResolvedValue("success" as never)
 
