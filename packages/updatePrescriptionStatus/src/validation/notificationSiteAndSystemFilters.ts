@@ -59,6 +59,15 @@ export async function checkSiteOrSystemIsNotifyEnabled(
   const {enabledSiteODSCodes, enabledSystemAppNames, enabledSystemAppIds, blockedSiteODSCodes} = await loadConfig()
   const unfilteredItemCount = data.length
 
+  logger?.info("Filtering items based on enabled sites and systems configuration",
+    {
+      enabledSystemAppIds: Array.from(enabledSystemAppIds),
+      enabledSystemAppNames: Array.from(enabledSystemAppNames),
+      enabledODSCodes: Array.from(enabledSiteODSCodes),
+      blockedODSCodes: Array.from(blockedSiteODSCodes)
+    }
+  )
+
   const filteredItems = data.filter((item) => {
     const appId = item.current.ApplicationID.trim().toLowerCase()
     const appName = item.current.ApplicationName.trim().toLowerCase()
@@ -71,11 +80,13 @@ export async function checkSiteOrSystemIsNotifyEnabled(
 
     // Is this item supplier enabled?
     if (USE_APP_ID_FOR_NOTIFICATIONS_FILTERING) {
+      logger?.info("Using application ID for notifications filtering")
       const isEnabledApplication = enabledSiteODSCodes.has(odsCode) || enabledSystemAppIds.has(appId)
       if (!isEnabledApplication) {
         return false
       }
     } else {
+      logger?.info("Using application name for notifications filtering")
       const isEnabledSystem = enabledSiteODSCodes.has(odsCode) || enabledSystemAppNames.has(appName)
       if (!isEnabledSystem) {
         return false
@@ -84,6 +95,7 @@ export async function checkSiteOrSystemIsNotifyEnabled(
 
     // Cannot have a blocked ODS code
     if (blockedSiteODSCodes.has(odsCode)) {
+      logger?.info("Site ODS code is explicitly blocked", {odsCode})
       return false
     }
 
