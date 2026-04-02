@@ -48,7 +48,7 @@ sam-sync: guard-AWS_DEFAULT_PROFILE guard-stack_name compile
 			  "EnabledSystemsValue=$${ENABLED_SYSTEMS:-Internal Test System}" \
 			  "EnabledSiteODSCodesValue=$${ENABLED_SITE_ODS_CODES:-A83008,FA565}" \
 			  BlockedSiteODSCodesValue=$${BLOCKED_SITE_ODS_CODES:-XXXXX} \
-			  EnabledSupplierApplicationIDsValue=$${ENABLED_SUPPLIER_PRODUCT_IDS:-XXXXX} \
+			  EnabledSupplierApplicationIDsValue=$${ENABLED_SUPPLIER_APPLICATION_IDS:-XXXXX} \
 			  NotifyRoutingPlanIDValue=$${NOTIFY_ROUTING_PLAN_ID:-e57fe5cc-0567-4854-abe2-b7dd9014a50c} \
 			  NotifyAPIBaseURLValue=$${NOTIFY_API_BASE_URL:-https://int.api.service.nhs.uk} \
 			  EnableNotificationsInternal=$${ENABLE_NOTIFICATIONS_INTERNAL:-true} \
@@ -81,7 +81,7 @@ sam-deploy: guard-AWS_DEFAULT_PROFILE guard-stack_name
 			  "EnabledSystemsValue=$${ENABLED_SYSTEMS:-Internal Test System}" \
 			  "EnabledSiteODSCodesValue=$${ENABLED_SITE_ODS_CODES:-A83008,FA565}" \
 			  BlockedSiteODSCodesValue=$${BLOCKED_SITE_ODS_CODES:-XXXXX} \
-			  EnabledSupplierApplicationIDsValue=$${ENABLED_SUPPLIER_PRODUCT_IDS:-XXXXX} \
+			  EnabledSupplierApplicationIDsValue=$${ENABLED_SUPPLIER_APPLICATION_IDS:-XXXXX} \
 			  NotifyRoutingPlanIDValue=$${NOTIFY_ROUTING_PLAN_ID:-e57fe5cc-0567-4854-abe2-b7dd9014a50c} \
 			  NotifyAPIBaseURLValue=$${NOTIFY_API_BASE_URL:-https://int.api.service.nhs.uk} \
 			  EnableNotificationsInternal=$${ENABLE_NOTIFICATIONS_INTERNAL:-true} \

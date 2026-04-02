@@ -77,7 +77,7 @@ Resources:
     Type: AWS::SSM::Parameter
     Properties:
       Name: !Sub ${StackName}-PSUNotifyEnabledSupplierApplicationIDs
-      Description: "List of supplier product IDs for which notifications are enabled"
+      Description: "List of supplier application IDs for which notifications are enabled"
       Type: String
       Value: !Ref EnabledSupplierApplicationIDsValue
 
@@ -193,7 +193,7 @@ Outputs:
       Name: !Sub ${StackName}-PSUNotifyEnabledSystemsParam
 
   EnabledSupplierApplicationIDsParameterName:
-    Description: "Name of the SSM parameter holding enabled supplier product IDs"
+    Description: "Name of the SSM parameter holding enabled supplier apigee application IDs"
     Value: !Ref EnabledSupplierApplicationIDsParameter
     Export:
       Name: !Sub ${StackName}-PSUNotifyEnabledSupplierApplicationIDsParam
