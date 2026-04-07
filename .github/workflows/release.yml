@@ -44,7 +44,6 @@ jobs:
       jira_release_prefix: "psu"
     secrets:
       EXECUTE_JIRA_LAMBDA_ROLE: ${{ secrets.DEV_CLOUD_FORMATION_EXECUTE_LAMBDA_ROLE }}
-  
 
   package_code:
     needs: [tag_release, get_config_values]
@@ -83,6 +82,7 @@ jobs:
       ENABLE_POST_DATED_NOTIFICATIONS: true
       ENABLED_SYSTEMS: "Internal Test System"
       BLOCKED_SITE_ODS_CODES: "XXXXX" # Workaround empty string handling
+      ENABLED_SUPPLIER_APPLICATION_IDS: "XXXXX"
       NOTIFY_ROUTING_PLAN_ID: "e57fe5cc-0567-4854-abe2-b7dd9014a50c"
       NOTIFY_API_BASE_URL: "https://int.api.service.nhs.uk"
       MTLS_KEY: psu-mtls-1
@@ -129,6 +129,7 @@ jobs:
       ENABLE_POST_DATED_NOTIFICATIONS: false
       ENABLED_SYSTEMS: "Internal Test System"
       BLOCKED_SITE_ODS_CODES: "B3J1Z"
+      ENABLED_SUPPLIER_APPLICATION_IDS: "XXXXX"
       NOTIFY_ROUTING_PLAN_ID: "e57fe5cc-0567-4854-abe2-b7dd9014a50c"
       NOTIFY_API_BASE_URL: "https://int.api.service.nhs.uk"
       MTLS_KEY: psu-mtls-1
@@ -181,6 +182,7 @@ jobs:
       ENABLE_POST_DATED_NOTIFICATIONS: false
       ENABLED_SYSTEMS: "Internal Test System, Apotec Ltd - Apotec CRM - Production, CrxPatientApp, nhsPrescriptionApp, Titan PSU Prod"
       BLOCKED_SITE_ODS_CODES: "B3J1Z"
+      ENABLED_SUPPLIER_APPLICATION_IDS: "XXXXX"
       NOTIFY_ROUTING_PLAN_ID: "e57fe5cc-0567-4854-abe2-b7dd9014a50c"
       NOTIFY_API_BASE_URL: "https://int.api.service.nhs.uk"
       MTLS_KEY: psu-mtls-1
@@ -233,6 +235,7 @@ jobs:
       ENABLE_POST_DATED_NOTIFICATIONS: true
       ENABLED_SYSTEMS: "Internal Test System, Apotec Ltd - Apotec CRM - Production, CrxPatientApp, nhsPrescriptionApp, Titan PSU Prod"
       BLOCKED_SITE_ODS_CODES: "B3J1Z"
+      ENABLED_SUPPLIER_APPLICATION_IDS: "XXXXX"
       NOTIFY_ROUTING_PLAN_ID: "e57fe5cc-0567-4854-abe2-b7dd9014a50c"
       NOTIFY_API_BASE_URL: "https://int.api.service.nhs.uk"
       MTLS_KEY: psu-mtls-1
@@ -248,7 +251,8 @@ jobs:
       REGRESSION_TESTS_PEM: ${{ secrets.REGRESSION_TESTS_PEM }}
 
   release_int:
-    needs: [tag_release, release_qa, package_code, get_commit_id, get_config_values]
+    needs:
+      [tag_release, release_qa, package_code, get_commit_id, get_config_values]
     uses: ./.github/workflows/run_release_code_and_api.yml
     with:
       pinned_image: ${{ needs.get_config_values.outputs.pinned_image }}
@@ -277,6 +281,7 @@ jobs:
       ENABLE_POST_DATED_NOTIFICATIONS: true
       ENABLED_SYSTEMS: "CrxPatientApp"
       BLOCKED_SITE_ODS_CODES: "XXXXX" # Workaround empty string handling
+      ENABLED_SUPPLIER_APPLICATION_IDS: "XXXXX"
       NOTIFY_ROUTING_PLAN_ID: "e57fe5cc-0567-4854-abe2-b7dd9014a50c"
       NOTIFY_API_BASE_URL: "https://int.api.service.nhs.uk"
       MTLS_KEY: psu-mtls-1
@@ -296,7 +301,8 @@ jobs:
       REGRESSION_TESTS_PEM: ${{ secrets.REGRESSION_TESTS_PEM }}
 
   release_int_sandbox:
-    needs: [tag_release, release_qa, package_code, get_commit_id, get_config_values]
+    needs:
+      [tag_release, release_qa, package_code, get_commit_id, get_config_values]
     uses: ./.github/workflows/run_release_code_and_api.yml
     with:
       pinned_image: ${{ needs.get_config_values.outputs.pinned_image }}
@@ -323,6 +329,7 @@ jobs:
       ENABLE_POST_DATED_NOTIFICATIONS: false
       ENABLED_SYSTEMS: "Internal Test System, Apotec Ltd - Apotec CRM - Production, CrxPatientApp, nhsPrescriptionApp, Titan PSU Prod"
       BLOCKED_SITE_ODS_CODES: "B3J1Z"
+      ENABLED_SUPPLIER_APPLICATION_IDS: "XXXXX"
       NOTIFY_ROUTING_PLAN_ID: "e57fe5cc-0567-4854-abe2-b7dd9014a50c"
       NOTIFY_API_BASE_URL: "https://int.api.service.nhs.uk"
       MTLS_KEY: psu-mtls-1
@@ -375,6 +382,7 @@ jobs:
       ENABLE_POST_DATED_NOTIFICATIONS: false
       ENABLED_SYSTEMS: "CrxPatientApp"
       BLOCKED_SITE_ODS_CODES: "XXXXX" # Workaround empty string handling
+      ENABLED_SUPPLIER_APPLICATION_IDS: "XXXXX"
       NOTIFY_ROUTING_PLAN_ID: "e57fe5cc-0567-4854-abe2-b7dd9014a50c" # INT and PROD share a value
       NOTIFY_API_BASE_URL: "https://api.service.nhs.uk"
       MTLS_KEY: psu-mtls-1
