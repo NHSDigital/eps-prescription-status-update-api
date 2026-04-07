@@ -37,7 +37,7 @@
     "@types/jest": "^30.0.0",
     "@types/node": "^25.5.0",
     "@vitest/coverage-v8": "^3.2.4",
-    "@typescript-eslint/eslint-plugin": "^8.57.1",
+    "@typescript-eslint/eslint-plugin": "^8.57.2",
     "@typescript-eslint/parser": "^8.57.1",
     "aws-lambda": "^1.0.7",
     "eslint": "^10.1.0",
@@ -52,10 +52,10 @@
     "vite-tsconfig-paths": "^5.1.4",
     "vitest": "^3.2.4",
     "typescript": "^5.9.3",
-    "typescript-eslint": "^8.57.0"
+    "typescript-eslint": "^8.57.2"
   },
   "dependencies": {
-    "@aws-sdk/lib-dynamodb": "^3.1014.0",
+    "@aws-sdk/lib-dynamodb": "^3.1019.0",
     "@psu-common/commonTypes": "^1.0.0",
     "@psu-common/middyErrorHandler": "^1.0.0",
     "@psu-common/utilities": "^1.0.0",

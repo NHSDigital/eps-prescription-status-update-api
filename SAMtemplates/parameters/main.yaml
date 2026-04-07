@@ -28,6 +28,10 @@ Parameters:
     Type: String
     Default: " "
 
+  EnabledSupplierApplicationIDsValue:
+    Type: String
+    Default: " "
+
   BlockedSiteODSCodesValue:
     Type: String
     Default: " "
@@ -39,7 +43,7 @@ Parameters:
   NotifyAPIBaseURLValue:
     Type: String
     Default: " "
-  
+
   TestPresciptionsParamValue1:
     Type: String
 
@@ -68,6 +72,14 @@ Resources:
       Description: "List of application names for which notifications are enabled"
       Type: String
       Value: !Ref EnabledSystemsValue
+
+  EnabledSupplierApplicationIDsParameter:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub ${StackName}-PSUNotifyEnabledSupplierApplicationIDs
+      Description: "List of supplier application IDs for which notifications are enabled"
+      Type: String
+      Value: !Ref EnabledSupplierApplicationIDsValue
 
   BlockedSiteODSCodesParameter:
     Type: AWS::SSM::Parameter
@@ -155,6 +167,7 @@ Resources:
             Resource:
               - !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${StackName}-PSUNotifyEnabledSiteODSCodes
               - !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${StackName}-PSUNotifyEnabledSystems
+              - !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${StackName}-PSUNotifyEnabledSupplierApplicationIDs
               - !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${StackName}-PSUNotifyBlockedSiteODSCodes
               - !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${StackName}-PSUNotifyRoutingPlanID
               - !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${StackName}-PSUNotifyApiBaseUrl
@@ -178,6 +191,12 @@ Outputs:
     Value: !Ref EnabledSystemsParameter
     Export:
       Name: !Sub ${StackName}-PSUNotifyEnabledSystemsParam
+
+  EnabledSupplierApplicationIDsParameterName:
+    Description: "Name of the SSM parameter holding enabled supplier apigee application IDs"
+    Value: !Ref EnabledSupplierApplicationIDsParameter
+    Export:
+      Name: !Sub ${StackName}-PSUNotifyEnabledSupplierApplicationIDsParam
 
   BlockedSiteODSCodesParameterName:
     Description: "Name of the SSM parameter holding blocked site ODS codes"

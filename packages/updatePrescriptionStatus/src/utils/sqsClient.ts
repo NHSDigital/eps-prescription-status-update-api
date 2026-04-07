@@ -212,7 +212,7 @@ export async function pushPrescriptionToNotificationSQS(
   }
 
   // Only allow through sites and systems that are allowedSitesAndSystems
-  const allowedSitesAndSystemsData = await checkSiteOrSystemIsNotifyEnabled(data)
+  const allowedSitesAndSystemsData = await checkSiteOrSystemIsNotifyEnabled(data, logger)
 
   // Only these statuses will be pushed to the SQS
   const updateStatuses: Set<string> = new Set([

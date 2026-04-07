@@ -106,6 +106,7 @@ const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPro
 
   const xRequestID = getXRequestID(event, responseEntries)
   const applicationName = event.headers["attribute-name"] ?? "unknown"
+  const applicationId = event.headers["nhsd-application-id"] ?? "unknown"
 
   if (!xRequestID) {
     return response(400, responseEntries)
@@ -131,7 +132,7 @@ const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPro
     return response(400, responseEntries)
   }
 
-  const dataItems = buildDataItems(requestEntries, xRequestID, applicationName)
+  const dataItems = buildDataItems(requestEntries, xRequestID, applicationName, applicationId)
 
   // If the dataItems contain any invalid ODS codes, then return an error
   const invalidODSCodes = dataItems
@@ -358,7 +359,8 @@ export function handleTransactionCancelledException(
 export function buildDataItems(
   requestEntries: Array<BundleEntry>,
   xRequestID: string,
-  applicationName: string
+  applicationName: string,
+  applicationId: string
 ): Array<PSUDataItem> {
   const dataItems: Array<PSUDataItem> = []
 
@@ -381,6 +383,7 @@ export function buildDataItems(
       TaskID: task.id!,
       TerminalStatus: task.status,
       ApplicationName: applicationName,
+      ApplicationID: applicationId,
       ExpiryTime: (Math.floor(Date.now() / 1000) + TTL_DELTA)
     }
 

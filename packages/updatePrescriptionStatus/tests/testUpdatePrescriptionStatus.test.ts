@@ -248,7 +248,7 @@ describe("buildDataItems", () => {
       fullUrl: ""
     }
 
-    const dataItems = buildDataItems([requestEntry], "", "")
+    const dataItems = buildDataItems([requestEntry], "", "", "")
 
     expect(dataItems[0].LineItemID).toEqual(lineItemID)
     expect(dataItems[0].PrescriptionID).toEqual(prescriptionID)
@@ -278,7 +278,7 @@ describe("buildDataItems", () => {
       fullUrl: ""
     }
 
-    const dataItems = buildDataItems([requestEntry], "", "")
+    const dataItems = buildDataItems([requestEntry], "", "", "")
 
     expect(dataItems[0].RepeatNo).toEqual(repeatNo)
   })
@@ -292,7 +292,7 @@ describe("buildDataItems", () => {
       fullUrl: ""
     }
 
-    const dataItems = buildDataItems([requestEntry], "", "")
+    const dataItems = buildDataItems([requestEntry], "", "", "")
 
     expect(dataItems[0].ExpiryTime).toBeGreaterThan(expectedExpiryTime)
   })
@@ -309,7 +309,7 @@ describe("buildDataItems", () => {
       fullUrl: ""
     }
 
-    const dataItems = buildDataItems([requestEntry], "", "")
+    const dataItems = buildDataItems([requestEntry], "", "", "")
     const first: any = dataItems[0]
     expect(first.PostDatedLastModifiedSetAt).toEqual(lastUpdated)
   })
