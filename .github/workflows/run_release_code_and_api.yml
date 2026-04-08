@@ -324,8 +324,8 @@ jobs:
     uses: ./.github/workflows/run_regression_tests.yml
     needs: release_code_and_api
     permissions:
-      contents: read
       id-token: write
+      contents: write
     with:
       ENVIRONMENT: ${{ inputs.APIGEE_ENVIRONMENT }}
       VERSION_NUMBER: ${{ inputs.VERSION_NUMBER }}
