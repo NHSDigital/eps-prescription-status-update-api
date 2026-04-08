@@ -1,0 +1,3 @@
+ignore:
+  # path-to-regexp - dependency of aws-sdk-client-mock
+  - vulnerability: GHSA-j3q9-mxjg-w52f
