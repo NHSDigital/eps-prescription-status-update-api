@@ -487,7 +487,8 @@ describe("Unit tests for checkSiteOrSystemIsNotifyEnabled", () => {
     })
     const item2 = createMockDataItem({
       PharmacyODSCode: "zzz999",
-      ApplicationName: "internal test SYSTEM"
+      ApplicationName: "internal test SYSTEM",
+      ApplicationID: "550e8400-e29b-41d4-a716-446655440000"
     })
     const result = await checkSiteOrSystemIsNotifyEnabled([
       {
@@ -530,11 +531,13 @@ describe("Unit tests for checkSiteOrSystemIsNotifyEnabled", () => {
     const previous = createMockDataItem({
       PharmacyODSCode: "NOTINLIST",
       ApplicationName: "Some Other System",
+      ApplicationID: "550e8400-e29b-41d4-a716-446655441234",
       Status: "previous"
     })
     const current = createMockDataItem({
       PharmacyODSCode: "NOTINLIST",
-      ApplicationName: "Some Other System"
+      ApplicationName: "Some Other System",
+      ApplicationID: "550e8400-e29b-41d4-a716-446655441234"
     })
     const result = await checkSiteOrSystemIsNotifyEnabled([{previous, current}], logger)
     expect(result).toEqual([])

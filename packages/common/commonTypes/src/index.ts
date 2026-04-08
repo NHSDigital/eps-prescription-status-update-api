@@ -10,6 +10,7 @@ export interface PSUDataItem {
   TaskID: string
   TerminalStatus: string
   ApplicationName: string
+  ApplicationID: string
   ExpiryTime: number
   // (Optional, legacy batch-processors only) Indicates that {@link LastModified} is postdated;
   // contains the ISO 8601 timestamp when the postdated update was set.

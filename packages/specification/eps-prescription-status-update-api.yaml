@@ -460,6 +460,9 @@ x-nhsd-apim:
     - name: show-all-suppliers
       required: false
       header: show-all-suppliers
+    - name: id
+      required: false
+      header: nhsd-application-id
   ratelimiting:
     proxy:
       limit: 20000

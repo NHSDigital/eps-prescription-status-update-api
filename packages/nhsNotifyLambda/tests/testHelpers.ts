@@ -53,6 +53,7 @@ export function constructPSUDataItem(overrides: Partial<PSUDataItem> = {}): PSUD
     TaskID: "mnopqr-ghijkl-abcdef",
     TerminalStatus: "ready to collect",
     ApplicationName: "Jim's Pills",
+    ApplicationID: "550e8400-e29b-41d4-a716-446655440000",
     ExpiryTime: 123,
     ...overrides
   }
