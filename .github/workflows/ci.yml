@@ -4,8 +4,7 @@ on:
   push:
     branches: [main]
 
-env:
-  BRANCH_NAME: ${{ github.event.ref.BRANCH_NAME }}
+permissions: {}
 
 jobs:
   get_config_values:
@@ -42,7 +41,6 @@ jobs:
       pinned_image: ${{ needs.get_config_values.outputs.pinned_image }}
       branch_name: main
       tag_format: ${{ needs.get_config_values.outputs.tag_format }}
-    secrets: inherit
 
   package_code:
     needs: [tag_release, get_config_values]

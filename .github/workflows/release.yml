@@ -3,8 +3,7 @@ name: deploy to environments
 on:
   workflow_dispatch:
 
-env:
-  BRANCH_NAME: ${{ github.event.ref.BRANCH_NAME }}
+permissions: {}
 
 jobs:
   get_config_values:
