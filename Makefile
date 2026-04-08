@@ -6,7 +6,7 @@ install-python:
 	poetry install
 
 install-node:
-	npm ci --legacy-peer-deps
+	npm ci --ignore-scripts
 
 install-hooks: install-python
 	poetry run pre-commit install --install-hooks --overwrite

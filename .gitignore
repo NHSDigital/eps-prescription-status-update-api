@@ -28,3 +28,4 @@ _site/
 vendor
 .cfn_guard_out/
 .trivy_out/
+.sbom/
