@@ -4,7 +4,8 @@ import {
   it,
   beforeEach,
   afterEach,
-  expect
+  expect,
+  type MockInstance
 } from "vitest"
 import {createHmac} from "crypto"
 
@@ -39,7 +40,7 @@ const ORIGINAL_ENV = {...process.env}
 
 describe("helpers.ts", () => {
   // Keep this broad to avoid over-constraining overloaded AWS SDK client signatures in tests.
-  let sendSpy: any
+  let sendSpy: MockInstance<DynamoDBDocumentClient["send"]>
 
   beforeEach(() => {
     vi.resetModules()

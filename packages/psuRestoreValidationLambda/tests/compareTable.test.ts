@@ -1,5 +1,12 @@
 import {DynamoDBDocumentClient} from "@aws-sdk/lib-dynamodb"
-import {beforeEach, describe, expect, it, vi, type Mocked} from "vitest"
+import {
+  beforeEach,
+  describe,
+  expect,
+  it,
+  vi,
+  type Mocked
+} from "vitest"
 import {Logger} from "@aws-lambda-powertools/logger"
 
 const mockSend = vi.fn()
