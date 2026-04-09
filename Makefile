@@ -1,3 +1,20 @@
+SHELL = /bin/bash
+.SHELLFLAGS = -o pipefail -c
+export CDK_APP_NAME=PsuStatelessApp
+export CDK_CONFIG_stackName=${stack_name}
+export CDK_CONFIG_versionNumber=undefined
+export CDK_CONFIG_commitId=undefined
+export CDK_CONFIG_isPullRequest=true
+export CDK_CONFIG_environment=dev
+export CDK_CONFIG_logRetentionInDays=30
+export CDK_CONFIG_logLevel=DEBUG
+
+guard-%:
+	@ if [ "${${*}}" = "" ]; then \
+		echo "Environment variable $* not set"; \
+		exit 1; \
+	fi
+
 .PHONY: install build test publish release clean lint compile
 
 install: install-node install-python install-hooks
@@ -156,6 +173,7 @@ compile-specification:
 compile: compile-node compile-specification
 
 lint-node: compile-node
+	npm run lint --workspace packages/cdk
 	npm run lint --workspace packages/updatePrescriptionStatus
 	npm run lint --workspace packages/gsul
 	npm run lint --workspace packages/nhsd-psu-sandbox
@@ -217,12 +235,29 @@ clean:
 	rm -rf packages/common/testing/lib
 	rm -rf packages/common/middyErrorHandler/lib
 	rm -rf packages/common/commonTypes/lib
+	rm -rf packages/cdk/lib
 	rm -rf .aws-sam
+	rm -rf cdk.out
 
 deep-clean: clean
 	rm -rf venv
 	find . -name 'node_modules' -type d -prune -exec rm -rf '{}' +
 	poetry env remove --all
+
+cdk-deploy:
+	REQUIRE_APPROVAL="$${REQUIRE_APPROVAL:-any-change}" && \
+	npm run cdk-deploy --workspace packages/cdk
+
+cdk-synth:
+	CDK_CONFIG_stackName=psu-api \
+	npm run cdk-synth --workspace packages/cdk
+
+cdk-diff:
+	npm run cdk-diff --workspace packages/cdk
+
+cdk-watch:
+	REQUIRE_APPROVAL="$${REQUIRE_APPROVAL:-any-change}" && \
+	npm run cdk-watch --workspace packages/cdk
 
 %:
 	@$(MAKE) -f /usr/local/share/eps/Mk/common.mk $@

@@ -19,6 +19,7 @@ release_notes
 /ecs-*.yml
 .venv
 .aws-sam
+cdk.out
 lib/
 *.tsbuildinfo
 _site/
@@ -29,3 +30,4 @@ vendor
 .cfn_guard_out/
 .trivy_out/
 .sbom/
+.npmrc
