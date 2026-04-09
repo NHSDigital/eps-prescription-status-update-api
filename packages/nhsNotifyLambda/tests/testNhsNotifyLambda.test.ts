@@ -2,6 +2,7 @@ import {
   vi,
   describe,
   it,
+  expect,
   beforeAll,
   beforeEach,
   afterEach
