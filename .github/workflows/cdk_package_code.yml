@@ -49,10 +49,6 @@ jobs:
       - name: make compile
         run: make compile
 
-      - name: download the get secrets lambda layer
-        run: |
-          make download-get-secrets-layer
-
       - name: "Tar files"
         run: |
           tar -rf artifact.tar \
