@@ -6,6 +6,6 @@ export default mergeConfig(defaultConfig, defineConfig({
   test: {
     minWorkers: 1,
     maxWorkers: 1,
-    setupFiles: ["./.jest/setEnvVars.js"]
+    setupFiles: ["./.vitest/setup-env.js"]
   }
 }))

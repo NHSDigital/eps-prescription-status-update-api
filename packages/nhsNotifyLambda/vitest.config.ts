@@ -5,6 +5,6 @@ export default mergeConfig(defaultConfig, defineConfig({
   root: "./",
   test: {
     globals: true,
-    setupFiles: ["./.jest/setEnvVars.js"]
+    setupFiles: ["./.vitest/setup-env.js"]
   }
 }))

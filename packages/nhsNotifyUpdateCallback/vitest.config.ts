@@ -4,6 +4,6 @@ import defaultConfig from "../../vitest.default.config.ts"
 export default mergeConfig(defaultConfig, defineConfig({
   root: "./",
   test: {
-    setupFiles: ["./.jest/setEnvVars.js"]
+    setupFiles: ["./.vitest/setup-env.js"]
   }
 }))
