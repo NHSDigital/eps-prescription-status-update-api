@@ -18,9 +18,9 @@
   },
   "homepage": "https://github.com/NHSDigital/eps-prescription-status-update-api",
   "devDependencies": {
+    "yaml": "^2.8.3"
   },
   "dependencies": {
-    "yaml": "^2.8.3",
     "@redocly/cli": "^2.25.2"
   }
 }
