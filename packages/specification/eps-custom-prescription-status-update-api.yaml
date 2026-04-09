@@ -24,8 +24,9 @@ info:
     supply status updates by September 2024, so they can provide and push the information required to a central NHS data store.
     ## Related APIs
     The following APIs are related to the "Custom Prescription Status Update" API:
-    * [Electronic Prescriptions Service](https://digital.nhs.uk/developer/api-catalogue/electronic-prescription-service-fhir): the national service for creating and dispensing prescriptions across health and social care.
-    * [Prescriptions for Patients](https://digital.nhs.uk/developer/api-catalogue/prescriptions-for-patients): the national service to retrieve prescriptions data for individual patients from the Electronic Prescription Service (EPS), for use in patient-facing applications.
+    * [Electronic Prescriptions Service Prescribing](https://digital.nhs.uk/developer/api-catalogue/eps-fhir-prescribing-api): the national service for creating prescriptions across health and social care.
+    * [Electronic Prescriptions Service Dispensing](https://digital.nhs.uk/developer/api-catalogue/eps-fhir-dispensing-api): the national service for dispensing prescriptions across health and social care.
+    * [Prescriptions for Patients](https://digital.nhs.uk/developer/api-catalogue/prescriptions-for-patients-fhir-api-v2): the national service to retrieve prescriptions data for individual patients from the Electronic Prescription Service (EPS), for use in patient-facing applications.
     ## API status and roadmap
     This API is [in development](https://digital.nhs.uk/developer/guides-and-documentation/reference-guide#statuses), meaning the API will soon be available for testing via a sandbox service or an integration environment - but we expect to make breaking changes based on developer feedback.
     ## Service Level
