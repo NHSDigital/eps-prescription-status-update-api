@@ -8,6 +8,10 @@ export CDK_CONFIG_isPullRequest=true
 export CDK_CONFIG_environment=dev
 export CDK_CONFIG_logRetentionInDays=30
 export CDK_CONFIG_logLevel=DEBUG
+export CDK_CONFIG_trustStoreFile=psu-truststore.pem
+export CDK_CONFIG_forwardCsocLogs=false
+export CDK_CONFIG_deployCheckPrescriptionStatusUpdate=true
+export CDK_CONFIG_exposeGetStatusUpdates=false
 
 guard-%:
 	@ if [ "${${*}}" = "" ]; then \

@@ -81,6 +81,10 @@ jobs:
       LOG_RETENTION_IN_DAYS: "30"
       LOG_LEVEL: DEBUG
       IS_PULL_REQUEST: false
+      TRUSTSTORE_FILE: psu-truststore.pem
+      FORWARD_CSOC_LOGS: false
+      DEPLOY_CHECK_PRESCRIPTION_STATUS_UPDATE: true
+      EXPOSE_GET_STATUS_UPDATES: false
     secrets:
       CLOUD_FORMATION_DEPLOY_ROLE: ${{ secrets.DEV_CLOUD_FORMATION_DEPLOY_ROLE }}
 

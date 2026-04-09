@@ -28,6 +28,7 @@
   "include": [
     "stacks/**/*",
     "bin/**/*",
+    "resources/**/*",
     "nagSuppressions.ts"
   ],
   "exclude": [
