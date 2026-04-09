@@ -7,7 +7,7 @@ import {
   expect,
   type MockInstance
 } from "vitest"
-import {createHmac} from "crypto"
+import {createHmac} from "node:crypto"
 
 // Mock the getSecret call
 const mockGetSecret = vi.fn((secretName: string) => {
@@ -25,7 +25,6 @@ vi.mock("@aws-lambda-powertools/parameters/secrets", async () => ({
 }))
 
 import {DynamoDBDocumentClient, QueryCommand, UpdateCommand} from "@aws-sdk/lib-dynamodb"
-import type {UpdateCommandInput} from "@aws-sdk/lib-dynamodb"
 import {Logger} from "@aws-lambda-powertools/logger"
 import {MessageStatusResponse} from "../src/types"
 import {generateMockChannelStatusResponse, generateMockEvent, generateMockMessageStatusResponse} from "./utilities"
@@ -237,7 +236,7 @@ describe("helpers.ts", () => {
       await updateNotificationsTable(logger, mockResponse)
 
       const updateCmd = sendSpy.mock.calls[1][0] as UpdateCommand
-      const input = updateCmd.input as UpdateCommandInput
+      const input = updateCmd.input
 
       // Note that Javascript guarantees the order of this to be preserved, so we're okay to check values like this.
       // We should have only three statuses
@@ -309,7 +308,7 @@ describe("helpers.ts", () => {
       await updateNotificationsTable(logger, mockResponse)
 
       const updateCmd = sendSpy.mock.calls[1][0] as UpdateCommand
-      const input = updateCmd.input as UpdateCommandInput
+      const input = updateCmd.input
 
       // Note that Javascript guarantees the order of this to be preserved, so we're okay to check values like this.
       // 5 defined key value pairs should be in there

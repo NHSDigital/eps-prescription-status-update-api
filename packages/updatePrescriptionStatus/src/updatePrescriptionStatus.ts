@@ -341,10 +341,10 @@ export function handleTransactionCancelledException(
         return entryTaskId === taskId
       })
 
-      if (index !== -1) {
-        responseEntries[index] = conflictedEntry
-      } else {
+      if (index === -1) {
         responseEntries.push(conflictedEntry)
+      } else {
+        responseEntries[index] = conflictedEntry
       }
 
       taskIdSet.add(taskId)
