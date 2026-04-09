@@ -398,7 +398,7 @@ describe("NHS notify lambda helper functions", () => {
     let logger: Logger
     let infoSpy: Spy
     let errorSpy: Spy
-    let sendSpy = vi.spyOn(DynamoDBDocumentClient.prototype, "send")
+    let sendSpy: Spy
 
     beforeEach(() => {
       vi.resetModules()
@@ -409,7 +409,7 @@ describe("NHS notify lambda helper functions", () => {
       logger = new Logger({serviceName: "test-service"})
       infoSpy = vi.spyOn(logger, "info")
       errorSpy = vi.spyOn(logger, "error")
-      sendSpy = vi.spyOn(DynamoDBDocumentClient.prototype, "send")
+      sendSpy = vi.spyOn(DynamoDBDocumentClient.prototype, "send") as unknown as Spy
     })
 
     it("throws and logs error if TABLE_NAME is not set", async () => {
@@ -479,7 +479,7 @@ describe("NHS notify lambda helper functions", () => {
     let logger: Logger
     let infoSpy: Spy
     let errorSpy: Spy
-    let sendSpy = vi.spyOn(DynamoDBDocumentClient.prototype, "send")
+    let sendSpy: Spy
 
     beforeEach(async () => {
       vi.resetModules()
@@ -490,7 +490,11 @@ describe("NHS notify lambda helper functions", () => {
       logger = new Logger({serviceName: "test-service"})
       infoSpy = vi.spyOn(logger, "info")
       errorSpy = vi.spyOn(logger, "error")
-      sendSpy = vi.spyOn(DynamoDBDocumentClient.prototype, "send")
+      sendSpy = vi.spyOn(DynamoDBDocumentClient.prototype, "send") as unknown as Spy
+    })
+
+    afterEach(() => {
+      sendSpy.mockRestore()
     })
 
     afterAll(() => {
