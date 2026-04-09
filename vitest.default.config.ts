@@ -10,7 +10,16 @@ const vitestConfig = defineConfig({
     coverage: {
       provider: "v8",
       reportsDirectory: "coverage",
-      reporter: ["text", "lcov"]
+      reporter: ["text", "lcov"],
+      exclude: [
+        "**/node_modules/**",
+        "**/lib/**",
+        "**/coverage/**",
+        "**/tests/**",
+        "**/*.config.ts",
+        "**/*.d.ts",
+        "**/vitest.default.config.ts"
+      ]
     }
   }
 })
