@@ -157,28 +157,6 @@ export function generateExpectedItems(itemCount: number = 1) {
   return {input: {TransactItems: items}}
 }
 
-// Deprecated: use vi.hoisted() + vi.mock() in the consuming test file instead.
-export function mockInternalDependency(): never {
-  throw new Error(
-    "mockInternalDependency() is not supported with Vitest. " +
-    "Use vi.hoisted() + vi.mock() in the test file instead."
-  )
-}
-
-export function mockDynamoDBClient(): never {
-  throw new Error(
-    "mockDynamoDBClient() is not supported with Vitest. " +
-    "Use vi.hoisted() + vi.mock() in the test file instead."
-  )
-}
-
-export function mockSQSClient(): never {
-  throw new Error(
-    "mockSQSClient() is not supported with Vitest. " +
-    "Use vi.hoisted() + vi.mock() in the test file instead."
-  )
-}
-
 export function createMockDataItem(overrides: Partial<PSUDataItem>): PSUDataItem {
   return {
     LastModified: "2023-01-02T00:00:00Z",
