@@ -18,12 +18,18 @@ async function main() {
   new PsuStatelessStack(app, "PsuStatelessStack", {
     ...props,
     stackName: calculateVersionedStackName(getConfigFromEnvVar("stackName"), props),
+    samStackName: getConfigFromEnvVar("samStackName"), // TODO: REMOVE THE NEED FOR THIS
     logRetentionInDays: getNumberConfigFromEnvVar("logRetentionInDays"),
+    logLevel: getConfigFromEnvVar("logLevel"),
+    environment: getConfigFromEnvVar("environment"),
     mutualTlsTrustStoreKey: props.isPullRequest ? undefined : getConfigFromEnvVar("trustStoreFile"),
     csocApiGatewayDestination: "arn:aws:logs:eu-west-2:693466633220:destination:api_gateway_log_destination",
     forwardCsocLogs: getBooleanConfigFromEnvVar("forwardCsocLogs"),
     deployCheckPrescriptionStatusUpdate: getBooleanConfigFromEnvVar("deployCheckPrescriptionStatusUpdate"),
-    exposeGetStatusUpdates: getBooleanConfigFromEnvVar("exposeGetStatusUpdates")
+    exposeGetStatusUpdates: getBooleanConfigFromEnvVar("exposeGetStatusUpdates"),
+    enablePostDatedNotifications: getConfigFromEnvVar("enablePostDatedNotifications", undefined, "false"),
+    requireApplicationName: getConfigFromEnvVar("requireApplicationName", undefined, "false"),
+    enableBackup: getBooleanConfigFromEnvVar("enableBackup", undefined, "false")
   })
 }
 

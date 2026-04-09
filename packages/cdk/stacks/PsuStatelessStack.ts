@@ -1,24 +1,46 @@
 import {App, Stack} from "aws-cdk-lib"
 import {nagSuppressions} from "../nagSuppressions"
 import {StandardStackProps} from "@nhsdigital/eps-cdk-constructs"
+import {Functions} from "../resources/Functions"
+// Apis will be used once StateMachines are also migrated
+// import {Apis} from "../resources/Apis"
 
 export interface PsuStatelessStackProps extends StandardStackProps {
   readonly stackName: string
+  readonly samStackName: string
   readonly logRetentionInDays: number
+  readonly logLevel: string
+  readonly environment: string
   readonly mutualTlsTrustStoreKey: string | undefined
   readonly forwardCsocLogs: boolean
   readonly csocApiGatewayDestination: string
   readonly deployCheckPrescriptionStatusUpdate: boolean
   readonly exposeGetStatusUpdates: boolean
+  readonly enablePostDatedNotifications: string
+  readonly requireApplicationName: string
+  readonly enableBackup: boolean
 }
 
 export class PsuStatelessStack extends Stack {
   public constructor(scope: App, id: string, props: PsuStatelessStackProps) {
     super(scope, id, props)
 
-    // Apis construct will be instantiated here once Functions and StateMachines are migrated:
+    new Functions(this, "Functions", {
+      stackName: props.stackName,
+      samStackName: props.samStackName,
+      version: props.version,
+      commitId: props.commitId,
+      logRetentionInDays: props.logRetentionInDays,
+      logLevel: props.logLevel,
+      environment: props.environment,
+      enablePostDatedNotifications: props.enablePostDatedNotifications,
+      requireApplicationName: props.requireApplicationName,
+      deployCheckPrescriptionStatusUpdate: props.deployCheckPrescriptionStatusUpdate,
+      enableBackup: props.enableBackup
+    })
+
+    // Apis construct will be fully wired once StateMachines are also migrated:
     //
-    // const functions = new Functions(this, "Functions", { ... })
     // const stateMachines = new StateMachines(this, "StateMachines", { ... })
     // new Apis(this, "Apis", {
     //   stackName: props.stackName,

@@ -41,6 +41,18 @@ on:
       EXPOSE_GET_STATUS_UPDATES:
         type: boolean
         required: true
+      SAM_STACK_NAME:
+        type: string
+        required: true
+      ENABLE_POST_DATED_NOTIFICATIONS:
+        type: boolean
+        required: true
+      REQUIRE_APPLICATION_NAME:
+        type: boolean
+        required: true
+      ENABLE_BACKUP:
+        type: boolean
+        required: true
       pinned_image:
         required: true
         type: string
@@ -107,6 +119,10 @@ jobs:
           CDK_CONFIG_forwardCsocLogs: "${{ inputs.FORWARD_CSOC_LOGS }}"
           CDK_CONFIG_deployCheckPrescriptionStatusUpdate: "${{ inputs.DEPLOY_CHECK_PRESCRIPTION_STATUS_UPDATE }}"
           CDK_CONFIG_exposeGetStatusUpdates: "${{ inputs.EXPOSE_GET_STATUS_UPDATES }}"
+          CDK_CONFIG_samStackName: "${{ inputs.SAM_STACK_NAME }}"
+          CDK_CONFIG_enablePostDatedNotifications: "${{ inputs.ENABLE_POST_DATED_NOTIFICATIONS }}"
+          CDK_CONFIG_requireApplicationName: "${{ inputs.REQUIRE_APPLICATION_NAME }}"
+          CDK_CONFIG_enableBackup: "${{ inputs.ENABLE_BACKUP }}"
           REQUIRE_APPROVAL: "never"
 
 # later, there will be API deployment steps c.f. https://github.com/NHSDigital/electronic-prescription-service-clinical-prescription-tracker/blob/main/.github/workflows/cdk_release_code.yml

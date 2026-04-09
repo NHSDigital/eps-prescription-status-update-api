@@ -2,6 +2,7 @@ SHELL = /bin/bash
 .SHELLFLAGS = -o pipefail -c
 export CDK_APP_NAME=PsuStatelessApp
 export CDK_CONFIG_stackName=${stack_name}
+export CDK_CONFIG_samStackName=${stack_name}
 export CDK_CONFIG_versionNumber=undefined
 export CDK_CONFIG_commitId=undefined
 export CDK_CONFIG_isPullRequest=true
@@ -12,6 +13,9 @@ export CDK_CONFIG_trustStoreFile=psu-truststore.pem
 export CDK_CONFIG_forwardCsocLogs=false
 export CDK_CONFIG_deployCheckPrescriptionStatusUpdate=true
 export CDK_CONFIG_exposeGetStatusUpdates=false
+export CDK_CONFIG_enablePostDatedNotifications=false
+export CDK_CONFIG_requireApplicationName=false
+export CDK_CONFIG_enableBackup=false
 
 guard-%:
 	@ if [ "${${*}}" = "" ]; then \

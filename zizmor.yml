@@ -7,6 +7,8 @@ rules:
       - run_package_code_and_api.yml:16:7
       - cdk_package_code.yml:25:7
       - cdk_release_code.yml:45:7
+      - cdk_release_code.yml:57:7
+      - cdk_release_code.yml:69:7
   secrets-outside-env:
     # these are ignored because they are using known secrets
     ignore:
