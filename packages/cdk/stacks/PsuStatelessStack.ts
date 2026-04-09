@@ -2,8 +2,8 @@ import {App, Stack} from "aws-cdk-lib"
 import {nagSuppressions} from "../nagSuppressions"
 import {StandardStackProps} from "@nhsdigital/eps-cdk-constructs"
 import {Functions} from "../resources/Functions"
-// Apis will be used once StateMachines are also migrated
-// import {Apis} from "../resources/Apis"
+import {StateMachines} from "../resources/StateMachines"
+import {Apis} from "../resources/Apis"
 
 export interface PsuStatelessStackProps extends StandardStackProps {
   readonly stackName: string
@@ -25,7 +25,7 @@ export class PsuStatelessStack extends Stack {
   public constructor(scope: App, id: string, props: PsuStatelessStackProps) {
     super(scope, id, props)
 
-    new Functions(this, "Functions", {
+    const functions = new Functions(this, "Functions", {
       stackName: props.stackName,
       samStackName: props.samStackName,
       version: props.version,
@@ -39,20 +39,23 @@ export class PsuStatelessStack extends Stack {
       enableBackup: props.enableBackup
     })
 
-    // Apis construct will be fully wired once StateMachines are also migrated:
-    //
-    // const stateMachines = new StateMachines(this, "StateMachines", { ... })
-    // new Apis(this, "Apis", {
-    //   stackName: props.stackName,
-    //   logRetentionInDays: props.logRetentionInDays,
-    //   mutualTlsTrustStoreKey: props.mutualTlsTrustStoreKey,
-    //   forwardCsocLogs: props.forwardCsocLogs,
-    //   csocApiGatewayDestination: props.csocApiGatewayDestination,
-    //   deployCheckPrescriptionStatusUpdate: props.deployCheckPrescriptionStatusUpdate,
-    //   exposeGetStatusUpdates: props.exposeGetStatusUpdates,
-    //   functions: functions.functions,
-    //   stateMachines: stateMachines.stateMachines,
-    // })
+    const stateMachines = new StateMachines(this, "StateMachines", {
+      stackName: props.stackName,
+      logRetentionInDays: props.logRetentionInDays,
+      functions: functions.functions
+    })
+
+    new Apis(this, "Apis", {
+      stackName: props.stackName,
+      logRetentionInDays: props.logRetentionInDays,
+      mutualTlsTrustStoreKey: props.mutualTlsTrustStoreKey,
+      forwardCsocLogs: props.forwardCsocLogs,
+      csocApiGatewayDestination: props.csocApiGatewayDestination,
+      deployCheckPrescriptionStatusUpdate: props.deployCheckPrescriptionStatusUpdate,
+      exposeGetStatusUpdates: props.exposeGetStatusUpdates,
+      functions: functions.functions,
+      stateMachines: stateMachines.stateMachines
+    })
 
     nagSuppressions(this)
   }

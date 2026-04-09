@@ -257,7 +257,17 @@ cdk-deploy:
 	npm run cdk-deploy --workspace packages/cdk
 
 cdk-synth:
-	CDK_CONFIG_stackName=psu-api \
+	CDK_CONFIG_stackName=psu-cdk \
+	CDK_CONFIG_samStackName=psu \
+	CDK_CONFIG_logRetentionInDays=30 \
+	CDK_CONFIG_logLevel=DEBUG \
+	CDK_CONFIG_environment=dev \
+	CDK_CONFIG_forwardCsocLogs=false \
+	CDK_CONFIG_deployCheckPrescriptionStatusUpdate=true \
+	CDK_CONFIG_exposeGetStatusUpdates=false \
+	CDK_CONFIG_enablePostDatedNotifications=false \
+	CDK_CONFIG_requireApplicationName=false \
+	CDK_CONFIG_enableBackup=false \
 	npm run cdk-synth --workspace packages/cdk
 
 cdk-diff:
