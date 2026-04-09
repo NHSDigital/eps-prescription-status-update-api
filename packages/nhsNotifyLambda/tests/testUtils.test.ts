@@ -28,12 +28,10 @@ const {
   mockNotifyRequestMaxItems,
   mockNotifyRequestMaxBytes
 } = vi.hoisted(() => ({
-  mockGetParametersByName: vi.fn(async () => Promise.resolve(
-    {
-      [process.env.NOTIFY_API_BASE_URL_PARAM!]: "https://example.com",
-      [process.env.MAKE_REAL_NOTIFY_REQUESTS_PARAM!]: "true"
-    }
-  )),
+  mockGetParametersByName: vi.fn(async () => ({
+    [process.env.NOTIFY_API_BASE_URL_PARAM!]: "https://example.com",
+    [process.env.MAKE_REAL_NOTIFY_REQUESTS_PARAM!]: "true"
+  })),
   mockGetSecret: vi.fn().mockImplementation(() => "secret_value"),
   mockTokenExchange: vi.fn().mockImplementation(() => Promise.resolve("bearer token")),
   mockNotifyRequestMaxItems: 5,
@@ -905,12 +903,10 @@ describe("NHS notify lambda helper functions", () => {
     })
 
     it("uses a dummy call when the MAKE_REAL_NOTIFY_REQUESTS_PARAM is false", async () => {
-      mockGetParametersByName.mockImplementation(async () => Promise.resolve(
-        {
-          [process.env.NOTIFY_API_BASE_URL_PARAM!]: TEST_URL,
-          [process.env.MAKE_REAL_NOTIFY_REQUESTS_PARAM!]: "false"
-        }
-      ))
+      mockGetParametersByName.mockImplementation(async () => ({
+        [process.env.NOTIFY_API_BASE_URL_PARAM!]: TEST_URL,
+        [process.env.MAKE_REAL_NOTIFY_REQUESTS_PARAM!]: "false"
+      }))
       const {handleNotifyRequests: fn} = await import("../src/utils")
 
       const data = [
