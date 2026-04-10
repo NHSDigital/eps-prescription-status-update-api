@@ -2,8 +2,9 @@ import {
   expect,
   describe,
   it,
-  jest
-} from "@jest/globals"
+  vi,
+  beforeEach
+} from "vitest"
 import {BundleEntry, Task} from "fhir/r4"
 
 import {
@@ -36,7 +37,7 @@ import {
 
 describe("Unit test for overall task validation", () => {
   beforeEach(() => {
-    jest.useFakeTimers().setSystemTime(DEFAULT_DATE)
+    vi.useFakeTimers().setSystemTime(DEFAULT_DATE)
   })
   it("When task is valid, should return true with no issues.", async () => {
     const expectedOutcome = {valid: true, issues: undefined}

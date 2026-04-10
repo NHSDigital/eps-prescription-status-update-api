@@ -5,15 +5,16 @@ import {
   expect,
   describe,
   it,
-  jest
-} from "@jest/globals"
+  beforeEach,
+  vi
+} from "vitest"
 
 const logger = new Logger({serviceName: "GSUL_TEST"})
 
 describe("testing dynamoDBClient", () => {
   beforeEach(() => {
-    jest.resetModules()
-    jest.clearAllMocks()
+    vi.resetModules()
+    vi.clearAllMocks()
     const mockReply = {
       Count: 1,
       Items: [
@@ -26,7 +27,7 @@ describe("testing dynamoDBClient", () => {
         }
       ]
     }
-    jest.spyOn(DynamoDBDocumentClient.prototype, "send").mockResolvedValue(mockReply as never)
+    vi.spyOn(DynamoDBDocumentClient.prototype, "send").mockResolvedValue(mockReply as never)
   })
 
   it("should call dynamo once and return expected items", async () => {
@@ -62,8 +63,8 @@ describe("testing dynamoDBClient", () => {
 
 describe("testing pagination in dynamoDBClient", () => {
   beforeEach(() => {
-    jest.resetModules()
-    jest.clearAllMocks()
+    vi.resetModules()
+    vi.clearAllMocks()
     const mockFirstReply = {
       Count: 1,
       Items: [
@@ -93,7 +94,7 @@ describe("testing pagination in dynamoDBClient", () => {
         }
       ]
     }
-    jest
+    vi
       .spyOn(DynamoDBDocumentClient.prototype, "send")
       .mockResolvedValueOnce(mockFirstReply as never)
       .mockResolvedValueOnce(mockSecondReply as never)

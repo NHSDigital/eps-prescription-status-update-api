@@ -1,5 +1,13 @@
-import {jest} from "@jest/globals"
-import {SpiedFunction} from "jest-mock"
+import {
+  vi,
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  afterAll
+} from "vitest"
+
 import nock from "nock"
 import axiosRetry from "axios-retry"
 
@@ -13,25 +21,34 @@ import {constructMessage, constructPSUDataItemMessage, mockSQSClient} from "./te
 const {mockSend: sqsMockSend} = mockSQSClient()
 
 const TEST_URL = "https://example.com"
-const mockGetParametersByName = jest.fn(async () => Promise.resolve(
-  {
-    [process.env.NOTIFY_API_BASE_URL_PARAM!]: TEST_URL,
+const {
+  mockGetParametersByName,
+  mockGetSecret,
+  mockTokenExchange,
+  mockNotifyRequestMaxItems,
+  mockNotifyRequestMaxBytes
+} = vi.hoisted(() => ({
+  mockGetParametersByName: vi.fn(async () => ({
+    [process.env.NOTIFY_API_BASE_URL_PARAM!]: "https://example.com",
     [process.env.MAKE_REAL_NOTIFY_REQUESTS_PARAM!]: "true"
-  }
-))
+  })),
+  mockGetSecret: vi.fn().mockImplementation(() => "secret_value"),
+  mockTokenExchange: vi.fn().mockImplementation(() => Promise.resolve("bearer token")),
+  mockNotifyRequestMaxItems: 5,
+  mockNotifyRequestMaxBytes: 5 * 1024 * 1024
+}))
 
-jest.unstable_mockModule(
+vi.mock(
   "@aws-lambda-powertools/parameters/ssm",
   async () => ({
     __esModule: true,
-    SSMProvider: jest.fn().mockImplementation(() => ({
+    SSMProvider: vi.fn().mockImplementation(() => ({
       getParametersByName: mockGetParametersByName
     }))
   })
 )
 
-const mockGetSecret = jest.fn().mockImplementation(() => "secret_value")
-jest.unstable_mockModule(
+vi.mock(
   "@aws-lambda-powertools/parameters/secrets",
   async () => ({
     __esModule: true,
@@ -39,8 +56,7 @@ jest.unstable_mockModule(
   })
 )
 
-const mockTokenExchange = jest.fn().mockImplementation(() => Promise.resolve("bearer token"))
-jest.unstable_mockModule(
+vi.mock(
   "../src/utils/auth",
   async () => ({
     __esModule: true,
@@ -48,9 +64,7 @@ jest.unstable_mockModule(
   })
 )
 
-let mockNotifyRequestMaxItems = 5
-let mockNotifyRequestMaxBytes = 5 * 1024 * 1024 // 5 MB
-jest.unstable_mockModule(
+vi.mock(
   "../src/utils/constants",
   async () => ({
     __esModule: true,
@@ -70,23 +84,25 @@ const {
   handleNotifyRequests
 } = await import("../src/utils")
 
+type Spy = ReturnType<typeof vi.spyOn>
+
 const ORIGINAL_ENV = {...process.env}
 
 describe("NHS notify lambda helper functions", () => {
 
   describe("drainQueue", () => {
     let logger: Logger
-    let errorSpy: SpiedFunction<(msg: string, ...meta: Array<unknown>) => void>
-    let infoSpy: SpiedFunction<(msg: string, ...meta: Array<unknown>) => void>
+    let errorSpy: Spy
+    let infoSpy: Spy
 
     beforeEach(() => {
-      jest.resetModules()
-      jest.clearAllMocks()
+      vi.resetModules()
+      vi.clearAllMocks()
 
       process.env = {...ORIGINAL_ENV}
       logger = new Logger({serviceName: "test-service"})
-      errorSpy = jest.spyOn(logger, "error")
-      infoSpy = jest.spyOn(logger, "info")
+      errorSpy = vi.spyOn(logger, "error")
+      infoSpy = vi.spyOn(logger, "info")
     })
 
     it("Does not throw an error when the SQS fetch succeeds", async () => {
@@ -266,7 +282,7 @@ describe("NHS notify lambda helper functions", () => {
       }
       sqsMockSend.mockResolvedValueOnce(duplicateMessagesResponse as never)
 
-      const warnSpy = jest.spyOn(logger, "warn")
+      const warnSpy = vi.spyOn(logger, "warn")
       const result = await drainQueue(logger)
 
       expect(result.messages).toHaveLength(1)
@@ -284,17 +300,17 @@ describe("NHS notify lambda helper functions", () => {
 
   describe("removeSQSMessages", () => {
     let logger: Logger
-    let errorSpy: SpiedFunction<(msg: string, ...meta: Array<unknown>) => void>
-    let infoSpy: SpiedFunction<(msg: string, ...meta: Array<unknown>) => void>
+    let errorSpy: Spy
+    let infoSpy: Spy
 
     beforeEach(() => {
-      jest.resetModules()
-      jest.clearAllMocks()
+      vi.resetModules()
+      vi.clearAllMocks()
 
       process.env = {...ORIGINAL_ENV}
       logger = new Logger({serviceName: "test-service"})
-      errorSpy = jest.spyOn(logger, "error")
-      infoSpy = jest.spyOn(logger, "info")
+      errorSpy = vi.spyOn(logger, "error")
+      infoSpy = vi.spyOn(logger, "info")
     })
 
     it("deletes messages in a single batch successfully", async () => {
@@ -380,20 +396,20 @@ describe("NHS notify lambda helper functions", () => {
 
   describe("addPrescriptionMessagesToNotificationStateStore", () => {
     let logger: Logger
-    let infoSpy: SpiedFunction<(msg: string, ...meta: Array<unknown>) => void>
-    let errorSpy: SpiedFunction<(msg: string, ...meta: Array<unknown>) => void>
-    let sendSpy: ReturnType<typeof jest.spyOn>
+    let infoSpy: Spy
+    let errorSpy: Spy
+    let sendSpy: Spy
 
     beforeEach(() => {
-      jest.resetModules()
-      jest.clearAllMocks()
+      vi.resetModules()
+      vi.clearAllMocks()
 
       process.env = {...ORIGINAL_ENV}
 
       logger = new Logger({serviceName: "test-service"})
-      infoSpy = jest.spyOn(logger, "info")
-      errorSpy = jest.spyOn(logger, "error")
-      sendSpy = jest.spyOn(DynamoDBDocumentClient.prototype, "send")
+      infoSpy = vi.spyOn(logger, "info")
+      errorSpy = vi.spyOn(logger, "error")
+      sendSpy = vi.spyOn(DynamoDBDocumentClient.prototype, "send") as unknown as Spy
     })
 
     it("throws and logs error if TABLE_NAME is not set", async () => {
@@ -461,20 +477,24 @@ describe("NHS notify lambda helper functions", () => {
 
   describe("checkCooldownForUpdate", () => {
     let logger: Logger
-    let infoSpy: SpiedFunction<(msg: string, ...meta: Array<unknown>) => void>
-    let errorSpy: SpiedFunction<(msg: string, ...meta: Array<unknown>) => void>
-    let sendSpy: ReturnType<typeof jest.spyOn>
+    let infoSpy: Spy
+    let errorSpy: Spy
+    let sendSpy: Spy
 
     beforeEach(async () => {
-      jest.resetModules()
-      jest.clearAllMocks()
+      vi.resetModules()
+      vi.clearAllMocks()
 
       process.env = {...ORIGINAL_ENV}
 
       logger = new Logger({serviceName: "test-service"})
-      infoSpy = jest.spyOn(logger, "info")
-      errorSpy = jest.spyOn(logger, "error")
-      sendSpy = jest.spyOn(DynamoDBDocumentClient.prototype, "send")
+      infoSpy = vi.spyOn(logger, "info")
+      errorSpy = vi.spyOn(logger, "error")
+      sendSpy = vi.spyOn(DynamoDBDocumentClient.prototype, "send") as unknown as Spy
+    })
+
+    afterEach(() => {
+      sendSpy.mockRestore()
     })
 
     afterAll(() => {
@@ -586,25 +606,29 @@ describe("NHS notify lambda helper functions", () => {
 
   describe("handleNotifyRequests", () => {
     let logger: Logger
-    let errorSpy: SpiedFunction<(msg: string, ...meta: Array<unknown>) => void>
-    let infoSpy: SpiedFunction<(msg: string, ...meta: Array<unknown>) => void>
+    let errorSpy: Spy
+    let infoSpy: Spy
 
     beforeEach(() => {
       process.env = {...ORIGINAL_ENV}
-      jest.resetModules()
-      jest.clearAllMocks()
+      vi.resetModules()
+      vi.clearAllMocks()
       nock.cleanAll()
 
       logger = new Logger({serviceName: "test-service"})
-      errorSpy = jest.spyOn(logger, "error")
-      infoSpy = jest.spyOn(logger, "info")
+      errorSpy = vi.spyOn(logger, "error")
+      infoSpy = vi.spyOn(logger, "info")
     })
 
     afterEach(() => {
       process.env = {...ORIGINAL_ENV}
 
-      jest.runOnlyPendingTimers()
-      jest.useRealTimers()
+      try {
+        vi.runOnlyPendingTimers()
+      } catch {
+        // Ignore when fake timers were not enabled in a test.
+      }
+      vi.useRealTimers()
     })
 
     it("sends a batch and maps successful messages correctly", async () => {
@@ -704,9 +728,9 @@ describe("NHS notify lambda helper functions", () => {
         .post("/comms/v1/message-batches")
         .reply(500, "Internal Server Error")
 
-      jest.useFakeTimers()
+      vi.useFakeTimers()
       // force retryDelay to 0 so retries happen immediately in tests
-      jest.spyOn(axiosRetry, "exponentialDelay").mockImplementation(() => 0)
+      vi.spyOn(axiosRetry, "exponentialDelay").mockImplementation(() => 0)
 
       const resultPromise = handleNotifyRequests(
         logger,
@@ -715,7 +739,7 @@ describe("NHS notify lambda helper functions", () => {
       )
 
       // flush retries immediately
-      await jest.runAllTimersAsync()
+      await vi.runAllTimersAsync()
       const result = await resultPromise
 
       expect(result).toMatchObject([
@@ -830,7 +854,7 @@ describe("NHS notify lambda helper functions", () => {
     })
 
     it("retries after 425/429 with Retry-After header", async () => {
-      jest.useFakeTimers({advanceTimers: true})
+      vi.useFakeTimers()
 
       const data = [
         constructPSUDataItemMessage({
@@ -876,20 +900,17 @@ describe("NHS notify lambda helper functions", () => {
         "plan-retry",
         data
       )
+      await vi.runAllTimersAsync()
       const result = await resultPromise
-      jest.runAllTicks()
-      jest.useRealTimers()
 
       expect(result).toHaveLength(2)
     })
 
     it("uses a dummy call when the MAKE_REAL_NOTIFY_REQUESTS_PARAM is false", async () => {
-      mockGetParametersByName.mockImplementation(async () => Promise.resolve(
-        {
-          [process.env.NOTIFY_API_BASE_URL_PARAM!]: TEST_URL,
-          [process.env.MAKE_REAL_NOTIFY_REQUESTS_PARAM!]: "false"
-        }
-      ))
+      mockGetParametersByName.mockImplementation(async () => ({
+        [process.env.NOTIFY_API_BASE_URL_PARAM!]: TEST_URL,
+        [process.env.MAKE_REAL_NOTIFY_REQUESTS_PARAM!]: "false"
+      }))
       const {handleNotifyRequests: fn} = await import("../src/utils")
 
       const data = [
@@ -1077,17 +1098,17 @@ describe("NHS notify lambda helper functions", () => {
 
   describe("reportQueueStatus", () => {
     let logger: Logger
-    let infoSpy: SpiedFunction<(msg: string, ...meta: Array<unknown>) => void>
-    let errorSpy: SpiedFunction<(msg: string, ...meta: Array<unknown>) => void>
+    let infoSpy: Spy
+    let errorSpy: Spy
 
     beforeEach(() => {
-      jest.resetModules()
-      jest.clearAllMocks()
+      vi.resetModules()
+      vi.clearAllMocks()
 
       process.env = {...ORIGINAL_ENV}
       logger = new Logger({serviceName: "test-service"})
-      infoSpy = jest.spyOn(logger, "info")
-      errorSpy = jest.spyOn(logger, "error")
+      infoSpy = vi.spyOn(logger, "info")
+      errorSpy = vi.spyOn(logger, "error")
     })
 
     it("logs current queue attributes when SQS returns attributes", async () => {

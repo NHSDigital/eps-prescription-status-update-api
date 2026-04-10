@@ -2,8 +2,9 @@ import {
   expect,
   describe,
   it,
-  jest
-} from "@jest/globals"
+  beforeEach,
+  vi
+} from "vitest"
 
 import {DynamoDBDocumentClient} from "@aws-sdk/lib-dynamodb"
 import {handler} from "../src/getStatusUpdates"
@@ -25,8 +26,8 @@ const dummyContext = {
 
 describe("test handler", () => {
   beforeEach(() => {
-    jest.resetModules()
-    jest.clearAllMocks()
+    vi.resetModules()
+    vi.clearAllMocks()
   })
 
   const testCases = [
@@ -153,7 +154,7 @@ describe("test handler", () => {
   testCases.forEach(({description, event, mockReply, expectedResponse}) => {
     it(description, async () => {
       if (mockReply) {
-        jest.spyOn(DynamoDBDocumentClient.prototype, "send").mockResolvedValue(mockReply as never)
+        vi.spyOn(DynamoDBDocumentClient.prototype, "send").mockResolvedValue(mockReply as never)
       }
       const response = await handler(event, dummyContext)
       expect(response).toMatchObject(expectedResponse)

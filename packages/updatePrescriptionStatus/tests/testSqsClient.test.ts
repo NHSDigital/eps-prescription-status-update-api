@@ -2,46 +2,50 @@ import {
   describe,
   it,
   expect,
-  jest
-} from "@jest/globals"
-import {SpiedFunction} from "jest-mock"
-
+  vi,
+  beforeEach
+} from "vitest"
+import type {MockInstance} from "vitest"
 import {Logger} from "@aws-lambda-powertools/logger"
-import {LogItemMessage, LogItemExtraInput} from "@aws-lambda-powertools/logger/lib/cjs/types/Logger"
 import {SendMessageBatchCommand} from "@aws-sdk/client-sqs"
 
-import {createMockDataItem, mockSQSClient} from "./utils/testUtils"
+import {createMockDataItem} from "./utils/testUtils"
 
-const {mockSend} = mockSQSClient()
-
-const mockGetSecret = jest.fn().mockImplementation(async () => {
-  return {"salt": "salt"}
-})
-jest.unstable_mockModule(
-  "@aws-lambda-powertools/parameters/secrets",
-  async () => ({
-    __esModule: true,
-    getSecret: mockGetSecret
-  })
-)
-
-export const mockGetParametersByName = jest.fn(async () => {
-  // eslint-disable-next-line max-len
-  let enabledString: string = "Internal Test System,Apotec Ltd - Apotec CRM - Production,CrxPatientApp,nhsPrescriptionApp,Titan PSU Prod"
-  return {
+const {mockSend, mockGetSecret, mockInitiatedSSMProvider} = vi.hoisted(() => {
+  const mockGetParametersByName = vi.fn(async () => ({
     [process.env.ENABLED_SITE_ODS_CODES_PARAM!]: "FA565",
-    [process.env.ENABLED_SYSTEMS_PARAM!]: enabledString,
+    // eslint-disable-next-line max-len
+    [process.env.ENABLED_SYSTEMS_PARAM!]: "Internal Test System,Apotec Ltd - Apotec CRM - Production,CrxPatientApp,nhsPrescriptionApp,Titan PSU Prod",
     [process.env.BLOCKED_SITE_ODS_CODES_PARAM!]: "B3J1Z"
+  }))
+
+  return {
+    mockSend: vi.fn(),
+    mockGetSecret: vi.fn().mockImplementation(async () => ({salt: "salt"})),
+    mockInitiatedSSMProvider: {getParametersByName: mockGetParametersByName}
   }
 })
 
-const mockInitiatedSSMProvider = {
-  getParametersByName: mockGetParametersByName
-}
+vi.mock("@aws-sdk/client-sqs", async (importOriginal: () => Promise<typeof import("@aws-sdk/client-sqs")>) => {
+  const mod = await importOriginal()
+  return {
+    ...mod,
+    SQSClient: vi.fn().mockImplementation(() => ({send: mockSend}))
+  }
+})
 
-jest.unstable_mockModule("@psu-common/utilities", async () => ({
-  initiatedSSMProvider: mockInitiatedSSMProvider
+vi.mock("@aws-lambda-powertools/parameters/secrets", async () => ({
+  __esModule: true,
+  getSecret: mockGetSecret
 }))
+
+vi.mock("@psu-common/utilities", async (importOriginal: () => Promise<typeof import("@psu-common/utilities")>) => {
+  const mod = await importOriginal()
+  return {
+    ...mod,
+    initiatedSSMProvider: mockInitiatedSSMProvider
+  }
+})
 
 const {
   pushPrescriptionToNotificationSQS,
@@ -53,22 +57,22 @@ const ORIGINAL_ENV = {...process.env}
 
 describe("Unit tests for pushPrescriptionToNotificationSQS", () => {
   let logger: Logger
-  let infoSpy: SpiedFunction<(input: LogItemMessage, ...extraInput: LogItemExtraInput) => void>
-  let errorSpy: SpiedFunction<(input: LogItemMessage, ...extraInput: LogItemExtraInput) => void>
-  let warnSpy: SpiedFunction<(input: LogItemMessage, ...extraInput: LogItemExtraInput) => void>
+  let infoSpy: MockInstance
+  let errorSpy: MockInstance
+  let warnSpy: MockInstance
 
   beforeEach(() => {
-    jest.resetModules()
-    jest.clearAllMocks()
+    vi.resetModules()
+    vi.clearAllMocks()
 
     // Reset environment
     process.env = {...ORIGINAL_ENV}
 
     // Fresh logger and spies
     logger = new Logger({serviceName: "test-service"})
-    infoSpy = jest.spyOn(logger, "info")
-    errorSpy = jest.spyOn(logger, "error")
-    warnSpy = jest.spyOn(logger, "warn")
+    infoSpy = vi.spyOn(logger, "info")
+    errorSpy = vi.spyOn(logger, "error")
+    warnSpy = vi.spyOn(logger, "warn")
   })
 
   it("throws if the SQS URL is not configured", async () => {
@@ -372,18 +376,18 @@ describe("Unit tests for pushPrescriptionToNotificationSQS", () => {
 describe("Unit tests for getSaltValue", () => {
   let getSaltValue: (logger: Logger) => Promise<string>
   let logger: Logger
-  let errorSpy: SpiedFunction<(input: LogItemMessage, ...extraInput: LogItemExtraInput) => void>
-  let warnSpy: SpiedFunction<(input: LogItemMessage, ...extraInput: LogItemExtraInput) => void>
+  let errorSpy: MockInstance
+  let warnSpy: MockInstance
   const fallbackSalt = "DEV SALT"
 
   beforeEach(async () => {
-    jest.resetModules()
-    jest.clearAllMocks()
+    vi.resetModules()
+    vi.clearAllMocks()
     process.env = {...ORIGINAL_ENV}
 
     logger = new Logger({serviceName: "test-service"})
-    errorSpy = jest.spyOn(logger, "error")
-    warnSpy = jest.spyOn(logger, "warn");
+    errorSpy = vi.spyOn(logger, "error")
+    warnSpy = vi.spyOn(logger, "warn");
 
     ({getSaltValue} = await import("../src/utils/sqsClient"))
   })
@@ -443,11 +447,11 @@ describe("Unit tests for getSaltValue", () => {
 })
 describe("Unit tests for checkSiteOrSystemIsNotifyEnabled", () => {
   let logger: Logger
-  let infoSpy: SpiedFunction<(input: LogItemMessage, ...extraInput: LogItemExtraInput) => void>
+  let infoSpy: MockInstance
   beforeEach(() => {
     // Fresh logger and spies
     logger = new Logger({serviceName: "test-service"})
-    infoSpy = jest.spyOn(logger, "info")
+    infoSpy = vi.spyOn(logger, "info")
   })
 
   it("includes an item with an enabled ODS code", async () => {
@@ -546,7 +550,7 @@ describe("Unit tests for checkSiteOrSystemIsNotifyEnabled", () => {
 
 })
 function expectLogReceivedAndAllowed(
-  infoSpy: SpiedFunction<(input: LogItemMessage, ...extraInput: LogItemExtraInput) => void>,
+  infoSpy: MockInstance,
   numItemsReceived: number,
   numItemsAllowed: number) {
   expect(infoSpy).toHaveBeenCalledWith(

@@ -70,11 +70,6 @@
     }
   ],
   "settings": {
-    "jest.disabledWorkspaceFolders": [
-      "eps-prescription-status-update-monorepo",
-      "packages/common/testing",
-      "packages/specification"
-    ],
     "files.exclude": {
       "packages/": true
     },
@@ -158,11 +153,7 @@
     ],
     "cSpell.dictionaries": ["en-GB"],
     "cSpell.ignorePaths": ["package-lock.json", "node_modules", ".vscode"],
-    "jest.jestCommandLine": "NODE_OPTIONS=--experimental-vm-modules node_modules/.bin/jest --no-cache",
-    "jest.nodeEnv": {
-      "POWERTOOLS_DEV": true
-    },
-    "typescript.tsdk": "eps-prescription-status-update-monorepo/node_modules/typescript/lib",
+    "js/ts.tsdk.path": "eps-prescription-status-update-monorepo/node_modules/typescript/lib",
     "eslint.useFlatConfig": true,
     "eslint.format.enable": true
   },
@@ -174,7 +165,7 @@
       "ms-python.flake8",
       "eamodio.gitlens",
       "github.vscode-pull-request-github",
-      "orta.vscode-jest",
+      "vitest-explorer",
       "42crunch.vscode-openapi",
       "mermade.openapi-lint",
       "redhat.vscode-yaml",
