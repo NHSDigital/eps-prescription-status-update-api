@@ -3,8 +3,8 @@ import {
   describe,
   it,
   afterEach,
-  jest
-} from "@jest/globals"
+  vi
+} from "vitest"
 
 import {Logger} from "@aws-lambda-powertools/logger"
 
@@ -21,7 +21,7 @@ async function loadBusinessLogic(
   envOverrides = {}
 ): Promise<BusinessLogicModule> {
   // Makes sure that the environment is set before import each time
-  jest.resetModules()
+  vi.resetModules()
   process.env = {...ORIGINAL_ENV, ...envOverrides}
   return import("../src/businessLogic")
 }
@@ -78,7 +78,7 @@ function createMessage(
 
 afterEach(() => {
   process.env = {...ORIGINAL_ENV}
-  jest.useRealTimers()
+  vi.useRealTimers()
 })
 
 describe("businessLogic", () => {
@@ -186,8 +186,8 @@ describe("businessLogic", () => {
     })
 
     it("should classify a message as immature when LastModified is in the future", async () => {
-      jest.useFakeTimers()
-      jest.setSystemTime(new Date("2026-01-01T12:00:00.000Z"))
+      vi.useFakeTimers()
+      vi.setSystemTime(new Date("2026-01-01T12:00:00.000Z"))
       const {determineAction} = await loadBusinessLogic()
       const logger = new Logger({serviceName: "post-dated-tests"})
       const message = createMessage({
@@ -204,8 +204,8 @@ describe("businessLogic", () => {
     })
 
     it("should classify a message as matured when LastModified is in the past", async () => {
-      jest.useFakeTimers()
-      jest.setSystemTime(new Date("2026-01-03T12:00:00.000Z"))
+      vi.useFakeTimers()
+      vi.setSystemTime(new Date("2026-01-03T12:00:00.000Z"))
       const {determineAction} = await loadBusinessLogic()
       const logger = new Logger({serviceName: "post-dated-tests"})
       const message = createMessage({
@@ -222,8 +222,8 @@ describe("businessLogic", () => {
     })
 
     it("should use the provided most recent record when determining maturity", async () => {
-      jest.useFakeTimers()
-      jest.setSystemTime(new Date("2026-01-05T12:00:00.000Z"))
+      vi.useFakeTimers()
+      vi.setSystemTime(new Date("2026-01-05T12:00:00.000Z"))
       const {determineAction} = await loadBusinessLogic()
       const logger = new Logger({serviceName: "post-dated-tests"})
       const message = createMessage({

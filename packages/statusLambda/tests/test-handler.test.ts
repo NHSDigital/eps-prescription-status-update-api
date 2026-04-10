@@ -3,11 +3,12 @@ import {Logger} from "@aws-lambda-powertools/logger"
 import axios from "axios"
 import MockAdapter from "axios-mock-adapter"
 import {
-  jest,
+  afterEach,
   expect,
   describe,
-  it
-} from "@jest/globals"
+  it,
+  vi
+} from "vitest"
 import {handler} from "../src/statusLambda"
 import {mockAPIGatewayProxyEvent, mockContext} from "@psu-common/testing"
 
@@ -51,7 +52,7 @@ describe("Unit test for status check", function () {
   })
 
   it("appends trace id's to the logger", async () => {
-    const mockAppendKeys = jest.spyOn(Logger.prototype, "appendKeys")
+    const mockAppendKeys = vi.spyOn(Logger.prototype, "appendKeys")
 
     await handler(mockAPIGatewayProxyEvent, mockContext)
 

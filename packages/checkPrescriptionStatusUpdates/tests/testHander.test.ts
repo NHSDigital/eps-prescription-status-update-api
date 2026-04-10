@@ -2,8 +2,10 @@ import {
   expect,
   describe,
   it,
-  jest
-} from "@jest/globals"
+  beforeEach,
+  vi,
+  type Mock
+} from "vitest"
 
 import {DynamoDBDocumentClient} from "@aws-sdk/lib-dynamodb"
 import {handler} from "../src/checkPrescriptionStatusUpdates"
@@ -24,13 +26,13 @@ const defaultItem = {
 
 describe("test handler", () => {
   beforeEach(() => {
-    jest.resetModules()
-    jest.clearAllMocks()
+    vi.resetModules()
+    vi.clearAllMocks()
   })
 
   it("respond with empty request and status 404 when no results returned by dynamodb", async () => {
     const mockReply = generateReply(0)
-    jest.spyOn(DynamoDBDocumentClient.prototype, "send").mockResolvedValue(mockReply as never)
+    vi.spyOn(DynamoDBDocumentClient.prototype, "send").mockResolvedValue(mockReply as never)
 
     const response = await handler(mockAPIGatewayProxyEvent, mockContext)
     expect(response.statusCode).toBe(404)
@@ -41,7 +43,7 @@ describe("test handler", () => {
 
   it("respond with success when data returned by dynamodb", async () => {
     const mockReply = generateReply(1)
-    jest.spyOn(DynamoDBDocumentClient.prototype, "send").mockResolvedValue(mockReply as never)
+    vi.spyOn(DynamoDBDocumentClient.prototype, "send").mockResolvedValue(mockReply as never)
 
     const response = await handler(mockAPIGatewayProxyEvent, mockContext)
     expect(response.statusCode).toBe(200)
@@ -52,7 +54,7 @@ describe("test handler", () => {
 
   it("respond with success and LastEvaluatedKey when paginated data returned by dynamodb", async () => {
     const mockReply = generateReply(5, false)
-    jest.spyOn(DynamoDBDocumentClient.prototype, "send").mockResolvedValue(mockReply as never)
+    vi.spyOn(DynamoDBDocumentClient.prototype, "send").mockResolvedValue(mockReply as never)
 
     const response = await handler(mockAPIGatewayProxyEvent, mockContext)
     expect(response.statusCode).toBe(200)
@@ -70,7 +72,7 @@ describe("test handler", () => {
 
   it("returns less than 5 results if that's all that's available", async () => {
     const mockReply = generateReply(3)
-    jest.spyOn(DynamoDBDocumentClient.prototype, "send").mockResolvedValue(mockReply as never)
+    vi.spyOn(DynamoDBDocumentClient.prototype, "send").mockResolvedValue(mockReply as never)
 
     const response = await handler(mockAPIGatewayProxyEvent, mockContext)
     expect(response.statusCode).toBe(200)
@@ -86,7 +88,7 @@ describe("test handler", () => {
 
   it("returns just more than 5 results", async () => {
     // 6 results in 2 calls, expecting 6 results
-    jest
+    vi
       .spyOn(DynamoDBDocumentClient.prototype, "send")
       .mockImplementationOnce(() => {
         return Promise.resolve(generateReply(3, false))
@@ -108,7 +110,7 @@ describe("test handler", () => {
   })
 
   it("returns just more than 5 results with pagination headers", async () => {
-    jest
+    vi
       .spyOn(DynamoDBDocumentClient.prototype, "send")
       .mockImplementationOnce(() => {
         const reply = generateReply(2, false)
@@ -129,7 +131,7 @@ describe("test handler", () => {
       .mockImplementationOnce(() => {
         return Promise.resolve(generateReply(2))
       })
-    const mockSend = DynamoDBDocumentClient.prototype.send as jest.Mock
+    const mockSend = DynamoDBDocumentClient.prototype.send as Mock
 
     const event = JSON.parse(JSON.stringify(mockAPIGatewayProxyEvent))
     event.headers["exclusivestartkey-prescriptionid"] = "prescriptionId1"
@@ -154,7 +156,7 @@ describe("test handler", () => {
 
   it("returns no more than 15 results", async () => {
     // >15 results (15 with pagination headers), expecting 15 results
-    jest.spyOn(DynamoDBDocumentClient.prototype, "send").mockImplementationOnce(() => {
+    vi.spyOn(DynamoDBDocumentClient.prototype, "send").mockImplementationOnce(() => {
       return Promise.resolve(generateReply(15, false))
     })
 
@@ -174,7 +176,7 @@ describe("test handler", () => {
 
   it("respond with failure when dynamodb throws exception", async () => {
     const mockReply = {}
-    jest.spyOn(DynamoDBDocumentClient.prototype, "send").mockRejectedValue(mockReply as never)
+    vi.spyOn(DynamoDBDocumentClient.prototype, "send").mockRejectedValue(mockReply as never)
 
     const response = await handler(mockAPIGatewayProxyEvent, mockContext)
     expect(response.statusCode).toBe(500)

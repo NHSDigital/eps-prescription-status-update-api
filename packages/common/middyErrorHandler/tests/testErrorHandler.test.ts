@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import {MiddyErrorHandler} from "../src/errorHandler"
 import middy from "@middy/core"
-import {expect, jest} from "@jest/globals"
+import {expect, test, vi} from "vitest"
 import {mockContext} from "@psu-common/testing"
 
 const mockEvent = {
@@ -10,7 +10,7 @@ const mockEvent = {
 
 test("Middleware logs all error details", async () => {
   type ErrorLogger = (error: any, message: string) => void
-  const mockErrorLogger: jest.MockedFunction<ErrorLogger> = jest.fn()
+  const mockErrorLogger = vi.fn<ErrorLogger>()
   const mockLogger = {
     error: mockErrorLogger
   }
@@ -37,7 +37,7 @@ test("Middleware logs all error details", async () => {
 
 test("Middleware returns specific error message on failure", async () => {
   const mockLogger = {
-    error: jest.fn(() => {})
+    error: vi.fn(() => {})
   }
   const errorResponse = {
     statusCode: 500,

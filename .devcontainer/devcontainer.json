@@ -27,7 +27,7 @@
         "ms-python.flake8",
         "eamodio.gitlens",
         "github.vscode-pull-request-github",
-        "orta.vscode-jest",
+        "vitest-explorer",
         "42crunch.vscode-openapi",
         "mermade.openapi-lint",
         "christian-kohler.npm-intellisense",

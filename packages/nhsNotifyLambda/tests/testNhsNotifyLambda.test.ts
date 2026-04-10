@@ -1,15 +1,40 @@
 import {
-  jest,
+  vi,
   describe,
   it,
+  expect,
   beforeAll,
+  beforeEach,
   afterEach
-} from "@jest/globals"
+} from "vitest"
 
 import {constructPSUDataItem, constructPSUDataItemMessage} from "./testHelpers"
 
-const mockGetParameter = jest.fn().mockImplementation(() => "parameter_value")
-jest.unstable_mockModule(
+const {
+  mockGetParameter,
+  mockAddPrescriptionMessagesToNotificationStateStore,
+  mockRemoveSQSMessages,
+  mockReportQueueStatus,
+  mockDrainQueue,
+  mockCheckCooldownForUpdate,
+  mockMakeBatchNotifyRequest,
+  mockInfo,
+  mockError,
+  mockWarn
+} = vi.hoisted(() => ({
+  mockGetParameter: vi.fn().mockImplementation(() => "parameter_value"),
+  mockAddPrescriptionMessagesToNotificationStateStore: vi.fn(),
+  mockRemoveSQSMessages: vi.fn(),
+  mockReportQueueStatus: vi.fn(),
+  mockDrainQueue: vi.fn(),
+  mockCheckCooldownForUpdate: vi.fn(),
+  mockMakeBatchNotifyRequest: vi.fn(),
+  mockInfo: vi.fn(),
+  mockError: vi.fn(),
+  mockWarn: vi.fn()
+}))
+
+vi.mock(
   "@aws-lambda-powertools/parameters/ssm",
   async () => ({
     __esModule: true,
@@ -17,14 +42,7 @@ jest.unstable_mockModule(
   })
 )
 
-const mockAddPrescriptionMessagesToNotificationStateStore = jest.fn()
-const mockRemoveSQSMessages = jest.fn()
-const mockReportQueueStatus = jest.fn()
-const mockDrainQueue = jest.fn()
-const mockCheckCooldownForUpdate = jest.fn()
-const mockMakeBatchNotifyRequest = jest.fn()
-
-jest.unstable_mockModule(
+vi.mock(
   "../src/utils",
   async () => ({
     __esModule: true,
@@ -37,14 +55,11 @@ jest.unstable_mockModule(
   })
 )
 
-const mockInfo = jest.fn()
-const mockError = jest.fn()
-const mockWarn = jest.fn()
-jest.unstable_mockModule(
+vi.mock(
   "@aws-lambda-powertools/logger",
   async () => ({
     __esModule: true,
-    Logger: jest.fn().mockImplementation(() => ({
+    Logger: vi.fn().mockImplementation(() => ({
       info: mockInfo,
       error: mockError,
       warn: mockWarn
@@ -62,11 +77,15 @@ import {mockEventBridgeEvent} from "@psu-common/testing"
 const ORIGINAL_ENV = {...process.env}
 
 describe("Unit test for NHS Notify lambda handler", () => {
+  beforeEach(() => {
+    mockGetParameter.mockReset()
+    mockGetParameter.mockImplementation(() => "parameter_value")
+  })
+
   afterEach(() => {
     process.env = {...ORIGINAL_ENV}
 
-    jest.clearAllMocks()
-    jest.restoreAllMocks()
+    vi.clearAllMocks()
   })
 
   it("When the getParameter call fails, the handler throws an error", async () => {
@@ -293,7 +312,7 @@ describe("Unit test for NHS Notify lambda handler", () => {
       Promise.resolve({messages: [msg], isEmpty: false})
     )
 
-    const nowSpy = jest.spyOn(Date, "now")
+    const nowSpy = vi.spyOn(Date, "now")
       .mockImplementationOnce(() => 0) // start time
       .mockImplementationOnce(() => (14 * 60 * 1000) + 1)
 

@@ -1,7 +1,16 @@
-import {jest} from "@jest/globals"
+import {
+  vi,
+  describe,
+  it,
+  expect,
+  beforeEach
+} from "vitest"
 
-const mockGetSecret = jest.fn<() => Promise<string | null>>()
-jest.unstable_mockModule(
+const {mockGetSecret} = vi.hoisted(() => ({
+  mockGetSecret: vi.fn<() => Promise<string | null>>()
+}))
+
+vi.mock(
   "@aws-lambda-powertools/parameters/secrets",
   async () => ({
     __esModule: true,
@@ -16,7 +25,7 @@ describe("loadSecrets", () => {
     process.env.API_KEY_SECRET = "api-key-secret-name"
     process.env.PRIVATE_KEY_SECRET = "private-key-secret-name"
     process.env.KID_SECRET = "kid-secret-name"
-    jest.clearAllMocks()
+    vi.clearAllMocks()
   })
 
   it("should load and trim secrets successfully", async () => {

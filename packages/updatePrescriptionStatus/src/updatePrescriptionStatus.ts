@@ -62,7 +62,8 @@ async function loadConfig() {
 
 // AEA-4317 AEA-4365 & AEA-5913 - Env vars for INT test prescriptions
 const INT_ENVIRONMENT = process.env.ENVIRONMENT === "int"
-// Using lazy initialization to avoid top-level await issues with Jest mocking
+// Lazy-load and cache test prescriptions to avoid top-level async work.
+// This also keeps module state predictable in tests, where resetTestPrescriptions() can clear the cache.
 export let TEST_PRESCRIPTIONS_1: Array<string> = []
 export let TEST_PRESCRIPTIONS_2: Array<string> = []
 export let TEST_PRESCRIPTIONS_3: Array<string> = []
@@ -340,10 +341,10 @@ export function handleTransactionCancelledException(
         return entryTaskId === taskId
       })
 
-      if (index !== -1) {
-        responseEntries[index] = conflictedEntry
-      } else {
+      if (index === -1) {
         responseEntries.push(conflictedEntry)
+      } else {
+        responseEntries[index] = conflictedEntry
       }
 
       taskIdSet.add(taskId)

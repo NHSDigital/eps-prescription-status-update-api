@@ -2,30 +2,29 @@ import {
   describe,
   it,
   expect,
-  jest
-} from "@jest/globals"
-import {SpiedFunction} from "jest-mock"
+  vi,
+  beforeEach
+} from "vitest"
 
 import {Logger} from "@aws-lambda-powertools/logger"
-import {LogItemMessage, LogItemExtraInput} from "@aws-lambda-powertools/logger/lib/cjs/types/Logger"
-import * as sqs from "@aws-sdk/client-sqs"
 import {PostDatedSQSMessage} from "../src/types"
 import {createMockPostModifiedDataItem} from "./testUtils"
 
-export function mockSQSClient() {
-  const mockSend = jest.fn()
-  jest.unstable_mockModule("@aws-sdk/client-sqs", () => {
-    return {
-      ...sqs,
-      SQSClient: jest.fn().mockImplementation(() => ({
-        send: mockSend
-      }))
-    }
-  })
-  return {mockSend}
-}
+type Spy = ReturnType<typeof vi.spyOn>
 
-const {mockSend} = mockSQSClient()
+const {mockSend} = vi.hoisted(() => ({
+  mockSend: vi.fn()
+}))
+
+vi.mock("@aws-sdk/client-sqs", async () => {
+  const sqs = await vi.importActual<typeof import("@aws-sdk/client-sqs")>("@aws-sdk/client-sqs")
+  return {
+    ...sqs,
+    SQSClient: vi.fn().mockImplementation(() => ({
+      send: mockSend
+    }))
+  }
+})
 
 const {
   getPostDatedQueueUrl,
@@ -40,13 +39,12 @@ const ORIGINAL_ENV = {...process.env}
 
 describe("sqs", () => {
   let logger: Logger
-  let infoSpy: SpiedFunction<(input: LogItemMessage, ...extraInput: LogItemExtraInput) => void>
-  let errorSpy: SpiedFunction<(input: LogItemMessage, ...extraInput: LogItemExtraInput) => void>
-  // let warnSpy: SpiedFunction<(input: LogItemMessage, ...extraInput: LogItemExtraInput) => void>
+  let infoSpy: Spy
+  let errorSpy: Spy
 
   beforeEach(() => {
-    jest.resetModules()
-    jest.clearAllMocks()
+    vi.resetModules()
+    vi.clearAllMocks()
 
     // Reset environment
     process.env = {...ORIGINAL_ENV}
@@ -54,9 +52,8 @@ describe("sqs", () => {
 
     // Fresh logger and spies
     logger = new Logger({serviceName: "test-service"})
-    infoSpy = jest.spyOn(logger, "info")
-    errorSpy = jest.spyOn(logger, "error")
-    // warnSpy = jest.spyOn(logger, "warn")
+    infoSpy = vi.spyOn(logger, "info")
+    errorSpy = vi.spyOn(logger, "error")
   })
 
   describe("getPostDatedQueueUrl", () => {
