@@ -1,5 +1,5 @@
 import {Fn} from "aws-cdk-lib"
-import {CfnSchedule, CfnScheduleGroup} from "aws-cdk-lib/aws-scheduler"
+import {CfnSchedule} from "aws-cdk-lib/aws-scheduler"
 import {
   ManagedPolicy,
   PolicyStatement,
@@ -296,8 +296,7 @@ export class Functions extends Construct {
       "NotifyProcessorSchedule",
       `${props.stackName}-NotifySchedule`,
       "rate(1 minute)",
-      notifyProcessor.function,
-      props.stackName
+      notifyProcessor.function
     )
 
     const postDatedNotifyLambda = new TypescriptLambdaFunction(
@@ -332,8 +331,7 @@ export class Functions extends Construct {
       "PostDatedNotifySchedule",
       `${props.stackName}-PostDatedNotifySchedule`,
       "rate(15 minutes)",
-      postDatedNotifyLambda.function,
-      props.stackName
+      postDatedNotifyLambda.function
     )
 
     // Conditional: CheckPrescriptionStatusUpdates
@@ -446,8 +444,7 @@ export class Functions extends Construct {
     id: string,
     scheduleName: string,
     scheduleExpression: string,
-    lambdaFunction: IFunction,
-    stackName: string
+    lambdaFunction: IFunction
   ): void {
     const scheduleRole = new Role(this, `${id}Role`, {
       assumedBy: new ServicePrincipal("scheduler.amazonaws.com")
@@ -470,13 +467,8 @@ export class Functions extends Construct {
       }
     ])
 
-    const scheduleGroup = new CfnScheduleGroup(this, `${id}Group`, {
-      name: `${stackName}-${id}Group`
-    })
-
     new CfnSchedule(this, id, {
       name: scheduleName,
-      groupName: scheduleGroup.name,
       scheduleExpression: scheduleExpression,
       flexibleTimeWindow: {mode: "OFF"},
       target: {
