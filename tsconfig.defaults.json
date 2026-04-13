@@ -7,14 +7,16 @@
     "sourceMap": true,
     "composite": true,
     "strict": true,
-    "moduleResolution": "node",
+    "types": [
+      "node"
+    ],
+    "moduleResolution": "bundler",
     "esModuleInterop": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
     "preserveConstEnums": true,
     "resolveJsonModule": true,
     "allowJs": true,
-    "baseUrl": ".",
     "paths": {
       "@psu-common/commonTypes": [
         "./packages/common/commonTypes/src/*"
