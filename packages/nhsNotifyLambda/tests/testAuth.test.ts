@@ -68,7 +68,9 @@ describe("tokenExchange", () => {
       },
       sign: vi.fn().mockImplementation(() => Promise.resolve("signed.jwt.token"))
     }
-    mockSignJWTConstructor.mockImplementation(() => fakeJwtInstance)
+    mockSignJWTConstructor.mockImplementation(function() {
+      return fakeJwtInstance
+    })
 
     // Mock the HTTP call
     nock(`${host}`)
@@ -101,18 +103,20 @@ describe("tokenExchange", () => {
     }
 
     mockImportPKCS8.mockImplementation(() => Promise.resolve("imported"))
-    mockSignJWTConstructor.mockImplementation(() => ({
-      setProtectedHeader() {
-        return this
-      },
-      setIssuedAt() {
-        return this
-      },
-      setExpirationTime() {
-        return this
-      },
-      sign: vi.fn().mockImplementation(() => Promise.resolve("jwt-tkn"))
-    }))
+    mockSignJWTConstructor.mockImplementation(function() {
+      return ({
+        setProtectedHeader() {
+          return this
+        },
+        setIssuedAt() {
+          return this
+        },
+        setExpirationTime() {
+          return this
+        },
+        sign: vi.fn().mockImplementation(() => Promise.resolve("jwt-tkn"))
+      })
+    })
 
     nock(`${host}`)
       .post("/oauth2/token")
@@ -131,18 +135,20 @@ describe("tokenExchange", () => {
     }
 
     mockImportPKCS8.mockImplementation(() => Promise.resolve("imported"))
-    mockSignJWTConstructor.mockImplementation(() => ({
-      setProtectedHeader() {
-        return this
-      },
-      setIssuedAt() {
-        return this
-      },
-      setExpirationTime() {
-        return this
-      },
-      sign: vi.fn().mockImplementation(() => Promise.resolve("jwt-tkn"))
-    }))
+    mockSignJWTConstructor.mockImplementation(function() {
+      return ({
+        setProtectedHeader() {
+          return this
+        },
+        setIssuedAt() {
+          return this
+        },
+        setExpirationTime() {
+          return this
+        },
+        sign: vi.fn().mockImplementation(() => Promise.resolve("jwt-tkn"))
+      })
+    })
 
     nock(`${host}`)
       .post("/oauth2/token")

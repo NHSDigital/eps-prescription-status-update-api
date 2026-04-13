@@ -42,9 +42,9 @@ vi.mock(
   "@aws-lambda-powertools/parameters/ssm",
   async () => ({
     __esModule: true,
-    SSMProvider: vi.fn().mockImplementation(() => ({
-      getParametersByName: mockGetParametersByName
-    }))
+    SSMProvider: vi.fn(class {
+      getParametersByName = mockGetParametersByName
+    })
   })
 )
 

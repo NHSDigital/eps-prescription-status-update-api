@@ -18,7 +18,9 @@ vi.mock(
     const mod = await importOriginal()
     return {
       ...mod,
-      DynamoDBClient: vi.fn().mockImplementation(() => ({send: mockSend}))
+      DynamoDBClient: vi.fn(class {
+        send = mockSend
+      })
     }
   }
 )

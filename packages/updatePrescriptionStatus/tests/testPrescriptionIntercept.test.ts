@@ -34,7 +34,9 @@ vi.mock("@aws-sdk/client-dynamodb", async (importOriginal) => {
   const mod = await importOriginal<typeof import("@aws-sdk/client-dynamodb")>()
   return {
     ...mod,
-    DynamoDBClient: vi.fn().mockImplementation(() => ({send: mockSend}))
+    DynamoDBClient: vi.fn(class {
+      send = mockSend
+    })
   }
 })
 

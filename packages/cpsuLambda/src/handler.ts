@@ -1,6 +1,6 @@
 import {APIGatewayProxyResult} from "aws-lambda"
 import middy from "@middy/core"
-import {MiddlewareGenerator} from "./middleware"
+import {MiddlewareApplicator} from "./middleware"
 import {Logger} from "@aws-lambda-powertools/logger"
 import {Result} from "pratica"
 import {Bundle, Task} from "fhir/r4"
@@ -18,7 +18,7 @@ type EventWithHeaders = {
   }
 }
 type HandlerConfig<Event, Message> = {
-  middleware: Array<MiddlewareGenerator>
+  middleware: Array<MiddlewareApplicator>
   params: HandlerParams<Event, Message>
   logger: Logger
   schema?: object
@@ -70,10 +70,10 @@ function append_headers(headers: Record<string, string>, logger: Logger) {
  *  Creates a new Lambda handler with the specified handler function and middleware.
  */
 export const newHandler = <Event extends EventWithHeaders, Message>(handlerConfig: HandlerConfig<Event, Message>) => {
-  const newHandler = middy((event: Event) => generic_handler(event, handlerConfig.params, handlerConfig.logger))
+  let newHandler = middy((event: Event) => generic_handler(event, handlerConfig.params, handlerConfig.logger))
 
-  for (const middleware_generator of handlerConfig.middleware) {
-    newHandler.use(middleware_generator(handlerConfig.logger, handlerConfig.schema))
+  for (const middleware_applicator of handlerConfig.middleware) {
+    newHandler = middleware_applicator(newHandler, handlerConfig.logger, handlerConfig.schema)
   }
 
   return newHandler
