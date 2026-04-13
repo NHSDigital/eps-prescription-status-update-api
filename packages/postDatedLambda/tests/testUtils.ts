@@ -1,4 +1,4 @@
-import {NotifyDataItem} from "packages/common/commonTypes/lib/src"
+import {NotifyDataItem} from "@psu-common/commonTypes"
 
 export function createMockPostModifiedDataItem(overrides: Partial<NotifyDataItem>): NotifyDataItem {
   return {
