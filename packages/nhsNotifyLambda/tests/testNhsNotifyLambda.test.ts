@@ -59,11 +59,11 @@ vi.mock(
   "@aws-lambda-powertools/logger",
   async () => ({
     __esModule: true,
-    Logger: vi.fn().mockImplementation(() => ({
-      info: mockInfo,
-      error: mockError,
-      warn: mockWarn
-    }))
+    Logger: vi.fn(class {
+      info = mockInfo
+      error = mockError
+      warn = mockWarn
+    })
   })
 )
 

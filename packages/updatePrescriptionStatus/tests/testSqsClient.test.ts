@@ -30,7 +30,9 @@ vi.mock("@aws-sdk/client-sqs", async (importOriginal: () => Promise<typeof impor
   const mod = await importOriginal()
   return {
     ...mod,
-    SQSClient: vi.fn().mockImplementation(() => ({send: mockSend}))
+    SQSClient: vi.fn(class {
+      send = mockSend
+    })
   }
 })
 
