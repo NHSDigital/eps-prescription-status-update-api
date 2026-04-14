@@ -79,7 +79,7 @@ export class Apis extends Construct {
     })
 
     // POST /notification-delivery-status-callback — Lambda proxy integration
-    const notificationDeliveryStatusCallbackEndpoint = new LambdaEndpoint(this, "NotificationDeliveryStatusCallbackEndpoint", {
+    const notifyCallbackEndpoint = new LambdaEndpoint(this, "NotificationDeliveryStatusCallbackEndpoint", {
       parentResource: rootResource,
       resourceName: "notification-delivery-status-callback",
       method: HttpMethod.POST,
@@ -110,7 +110,7 @@ export class Apis extends Construct {
       format1UpdatePrescriptionStatusEndpoint: format1PsuEndpoint,
       status: statusEndpoint,
       capabilityStatement: capabilityStatementEndpoint,
-      notificationDeliveryStatusCallback: notificationDeliveryStatusCallbackEndpoint,
+      notificationDeliveryStatusCallback: notifyCallbackEndpoint,
     }
 
     // GET /checkprescriptionstatusupdates — conditional Lambda proxy integration
