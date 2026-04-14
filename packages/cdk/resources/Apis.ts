@@ -23,6 +23,9 @@ export interface ApisProps {
 }
 
 export class Apis extends Construct {
+  apis: {[key: string]: RestApiGateway}
+  endpoints: {[key: string]: Construct}
+
   public constructor(scope: Construct, id: string, props: ApisProps) {
     super(scope, id)
 
@@ -63,18 +66,11 @@ export class Apis extends Construct {
           credentialsRole: apiGateway.role,
           passthroughBehavior: PassthroughBehavior.WHEN_NO_MATCH
         }
-      ),
-      {
-        methodResponses: [
-          {statusCode: "200"},
-          {statusCode: "400"},
-          {statusCode: "500"}
-        ]
-      }
+      )
     )
 
     // POST /format-1 — Format1 state machine integration
-    new StateMachineEndpoint(this, "Format1UpdatePrescriptionStatusEndpoint", {
+    const format1PsuEndpoint = new StateMachineEndpoint(this, "Format1UpdatePrescriptionStatusEndpoint", {
       parentResource: rootResource,
       resourceName: "format-1",
       method: HttpMethod.POST,
@@ -83,7 +79,7 @@ export class Apis extends Construct {
     })
 
     // POST /notification-delivery-status-callback — Lambda proxy integration
-    new LambdaEndpoint(this, "NotificationDeliveryStatusCallbackEndpoint", {
+    const notificationDeliveryStatusCallbackEndpoint = new LambdaEndpoint(this, "NotificationDeliveryStatusCallbackEndpoint", {
       parentResource: rootResource,
       resourceName: "notification-delivery-status-callback",
       method: HttpMethod.POST,
@@ -92,7 +88,7 @@ export class Apis extends Construct {
     })
 
     // GET /_status — Lambda proxy integration
-    new LambdaEndpoint(this, "StatusEndpoint", {
+    const statusEndpoint = new LambdaEndpoint(this, "StatusEndpoint", {
       parentResource: rootResource,
       resourceName: "_status",
       method: HttpMethod.GET,
@@ -101,7 +97,7 @@ export class Apis extends Construct {
     })
 
     // GET /metadata — Lambda proxy integration
-    new LambdaEndpoint(this, "CapabilityStatementEndpoint", {
+    const capabilityStatementEndpoint = new LambdaEndpoint(this, "CapabilityStatementEndpoint", {
       parentResource: rootResource,
       resourceName: "metadata",
       method: HttpMethod.GET,
@@ -109,15 +105,24 @@ export class Apis extends Construct {
       lambdaFunction: props.functions.capabilityStatement
     })
 
+    this.endpoints = {
+      rootResource,
+      format1UpdatePrescriptionStatusEndpoint: format1PsuEndpoint,
+      status: statusEndpoint,
+      capabilityStatement: capabilityStatementEndpoint,
+      notificationDeliveryStatusCallback: notificationDeliveryStatusCallbackEndpoint,
+    }
+
     // GET /checkprescriptionstatusupdates — conditional Lambda proxy integration
     if (props.deployCheckPrescriptionStatusUpdate) {
-      new LambdaEndpoint(this, "CheckPrescriptionStatusUpdatesEndpoint", {
+      const checkPsu = new LambdaEndpoint(this, "CheckPrescriptionStatusUpdatesEndpoint", {
         parentResource: rootResource,
         resourceName: "checkprescriptionstatusupdates",
         method: HttpMethod.GET,
         restApiGatewayRole: apiGateway.role,
         lambdaFunction: props.functions.checkPrescriptionStatusUpdates
       })
+      this.endpoints.checkPrescriptionStatusUpdates = checkPsu
     }
 
     // POST /get-status-updates — conditional Lambda integration (non-proxy)
@@ -146,6 +151,10 @@ export class Apis extends Construct {
           ]
         }
       )
+    }
+
+    this.apis = {
+      api: apiGateway
     }
   }
 }
