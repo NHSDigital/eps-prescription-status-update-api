@@ -4,37 +4,51 @@ import {
   expect,
   it,
   describe,
-  jest,
-  beforeEach
-} from "@jest/globals"
+  vi,
+  beforeEach,
+  afterEach
+} from "vitest"
 import {
   DEFAULT_DATE,
   FULL_URL_1,
   generateBody,
   generateExpectedItems,
   generateMockEvent,
-  mockDynamoDBClient,
   TASK_VALUES,
   getTestPrescriptions
 } from "./utils/testUtils"
 import {GetItemCommand, TransactionCanceledException, TransactWriteItemsCommand} from "@aws-sdk/client-dynamodb"
-import {LOG_MESSAGES} from "@psu-common/utilities"
 
-export const mockGetParametersByName = jest.fn(async () => {
-  return {}
+const {mockSend, mockGetParametersByName, mockInitiatedSSMProvider} = vi.hoisted(() => {
+  const mockGetParametersByName = vi.fn(async () => ({}))
+  return {
+    mockSend: vi.fn(),
+    mockGetParametersByName,
+    mockInitiatedSSMProvider: {getParametersByName: mockGetParametersByName}
+  }
 })
 
-const mockInitiatedSSMProvider = {
-  getParametersByName: mockGetParametersByName
-}
+export {mockGetParametersByName}
 
-jest.unstable_mockModule("@psu-common/utilities", async () => ({
-  initiatedSSMProvider: mockInitiatedSSMProvider,
-  getTestPrescriptions: getTestPrescriptions, // Use the mocked version defined in testUtils.ts
-  LOG_MESSAGES: LOG_MESSAGES
-}))
+vi.mock("@aws-sdk/client-dynamodb", async (importOriginal) => {
+  const mod = await importOriginal<typeof import("@aws-sdk/client-dynamodb")>()
+  return {
+    ...mod,
+    DynamoDBClient: vi.fn(class {
+      send = mockSend
+    })
+  }
+})
 
-const {mockSend} = mockDynamoDBClient()
+vi.mock("@psu-common/utilities", async (importOriginal) => {
+  const mod = await importOriginal<typeof import("@psu-common/utilities")>()
+  return {
+    ...mod,
+    initiatedSSMProvider: mockInitiatedSSMProvider,
+    getTestPrescriptions: getTestPrescriptions
+  }
+})
+
 process.env.ENVIRONMENT = "int"
 
 function resetDynamoMock() {
@@ -78,11 +92,11 @@ function expectGetItemCommand(prescriptionID: string, taskID: string) {
 
 describe("testPrescription1Intercept", () => {
   beforeEach(async () => {
-    jest.useFakeTimers().setSystemTime(DEFAULT_DATE)
+    vi.useFakeTimers().setSystemTime(DEFAULT_DATE)
     const {resetTestPrescriptions} = await import("../src/updatePrescriptionStatus")
     resetTestPrescriptions()
     resetDynamoMock()
-    jest.clearAllMocks()
+    vi.clearAllMocks()
   })
 
   it("Return 500 and write to DynamoDB when test prescription 1 is submitted for the first time", async () => {
@@ -94,7 +108,7 @@ describe("testPrescription1Intercept", () => {
     expectedItems.input.TransactItems = [expectedItems.input.TransactItems[1]]
 
     const {handler, logger} = await import("../src/updatePrescriptionStatus")
-    const loggerInfo = jest.spyOn(logger, "info")
+    const loggerInfo = vi.spyOn(logger, "info")
     const response: APIGatewayProxyResult = await handler(event, {})
 
     expect(response.statusCode).toEqual(500)
@@ -112,7 +126,7 @@ describe("testPrescription1Intercept", () => {
     const event: APIGatewayProxyEvent = generateMockEvent(body)
 
     const {handler, logger} = await import("../src/updatePrescriptionStatus")
-    const loggerInfo = jest.spyOn(logger, "info")
+    const loggerInfo = vi.spyOn(logger, "info")
     const first_submission_response: APIGatewayProxyResult = await handler(event, {})
 
     expect(first_submission_response.statusCode).toEqual(500)
@@ -136,11 +150,11 @@ describe("testPrescription1Intercept", () => {
 
 describe("testPrescription2Intercept", () => {
   beforeEach(async () => {
-    jest.useFakeTimers().setSystemTime(DEFAULT_DATE)
+    vi.useFakeTimers().setSystemTime(DEFAULT_DATE)
     const {resetTestPrescriptions} = await import("../src/updatePrescriptionStatus")
     resetTestPrescriptions()
     resetDynamoMock()
-    jest.clearAllMocks()
+    vi.clearAllMocks()
   })
 
   it("Return 500 and write to DynamoDB when test prescription 2 is submitted for the first time", async () => {
@@ -152,7 +166,7 @@ describe("testPrescription2Intercept", () => {
     expectedItems.input.TransactItems = [expectedItems.input.TransactItems[3]]
 
     const {handler, logger} = await import("../src/updatePrescriptionStatus")
-    const loggerInfo = jest.spyOn(logger, "info")
+    const loggerInfo = vi.spyOn(logger, "info")
     const response: APIGatewayProxyResult = await handler(event, {})
 
     expect(response.statusCode).toEqual(500)
@@ -172,7 +186,7 @@ describe("testPrescription2Intercept", () => {
     const event: APIGatewayProxyEvent = generateMockEvent(body)
 
     const {handler, logger} = await import("../src/updatePrescriptionStatus")
-    const loggerInfo = jest.spyOn(logger, "info")
+    const loggerInfo = vi.spyOn(logger, "info")
     const first_submission_response: APIGatewayProxyResult = await handler(event, {})
 
     expect(first_submission_response.statusCode).toEqual(500)
@@ -204,16 +218,16 @@ describe("testPrescription2Intercept", () => {
 
 describe("testPrescription3Intercept", () => {
   beforeEach(async () => {
-    jest.useFakeTimers().setSystemTime(DEFAULT_DATE)
-    jest.resetModules()
+    vi.useFakeTimers().setSystemTime(DEFAULT_DATE)
+    vi.resetModules()
     const {resetTestPrescriptions} = await import("../src/updatePrescriptionStatus")
     resetTestPrescriptions()
     resetDynamoMock()
-    jest.clearAllMocks()
+    vi.clearAllMocks()
   })
 
   afterEach(() => {
-    jest.resetModules()
+    vi.resetModules()
   })
 
   it("Return 400 when test prescription 3 is submitted", async () => {
@@ -222,7 +236,7 @@ describe("testPrescription3Intercept", () => {
     const event: APIGatewayProxyEvent = generateMockEvent(body)
 
     const {handler, logger} = await import("../src/updatePrescriptionStatus")
-    const loggerInfo = jest.spyOn(logger, "info")
+    const loggerInfo = vi.spyOn(logger, "info")
     const response: APIGatewayProxyResult = await handler(event, {})
 
     expect(response.statusCode).toEqual(400)
@@ -233,16 +247,16 @@ describe("testPrescription3Intercept", () => {
 
 describe("testPrescription4Intercept", () => {
   beforeEach(async () => {
-    jest.useFakeTimers().setSystemTime(DEFAULT_DATE)
-    jest.resetModules()
+    vi.useFakeTimers().setSystemTime(DEFAULT_DATE)
+    vi.resetModules()
     const {resetTestPrescriptions} = await import("../src/updatePrescriptionStatus")
     resetTestPrescriptions()
     resetDynamoMock()
-    jest.clearAllMocks()
+    vi.clearAllMocks()
   })
 
   afterEach(() => {
-    jest.resetModules()
+    vi.resetModules()
   })
 
   it("Return 400 when test prescription 4 is submitted", async () => {
@@ -251,7 +265,7 @@ describe("testPrescription4Intercept", () => {
     const event: APIGatewayProxyEvent = generateMockEvent(body)
 
     const {handler, logger} = await import("../src/updatePrescriptionStatus")
-    const loggerInfo = jest.spyOn(logger, "info")
+    const loggerInfo = vi.spyOn(logger, "info")
     const response: APIGatewayProxyResult = await handler(event, {})
     console.log(response)
     expect(loggerInfo).toHaveBeenCalledWith(

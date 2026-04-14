@@ -1,18 +1,20 @@
 import {
-  jest,
+  beforeEach,
   describe,
+  expect,
   it,
-  beforeAll
-} from "@jest/globals"
+  beforeAll,
+  vi
+} from "vitest"
 
 import {generateMockEvent} from "./utilities"
 import {CallbackType, ChannelStatusResponse} from "../src/types"
 
-const mockCheckSignature = jest.fn()
-const mockResponse = jest.fn()
-const mockUpdateNotificationsTable = jest.fn()
-const mockExtractStatusesAndDescriptions = jest.fn()
-jest.unstable_mockModule(
+const mockCheckSignature = vi.fn()
+const mockResponse = vi.fn()
+const mockUpdateNotificationsTable = vi.fn()
+const mockExtractStatusesAndDescriptions = vi.fn()
+vi.mock(
   "../src/helpers",
   async () => ({
     __esModule: true,
@@ -34,9 +36,9 @@ const ORIGINAL_ENV = {...process.env}
 describe("NHS Notify update callback lambda handler", () => {
   beforeEach(() => {
     process.env = {...ORIGINAL_ENV}
-    jest.clearAllMocks()
-    jest.restoreAllMocks()
-    jest.resetAllMocks()
+    vi.clearAllMocks()
+    vi.restoreAllMocks()
+    vi.resetAllMocks()
 
     // Copies the real implementation
     mockResponse.mockImplementation((...args: Array<unknown>): {statusCode: number; body: string} => {

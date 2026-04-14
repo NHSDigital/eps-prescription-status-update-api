@@ -1,29 +1,39 @@
 import inputOutputLogger from "@middy/input-output-logger"
 import httpHeaderNormalizer from "@middy/http-header-normalizer"
 import {injectLambdaContext} from "@aws-lambda-powertools/logger/middleware"
-import middy from "@middy/core"
+import {MiddyfiedHandler} from "@middy/core"
+import {APIGatewayProxyResult} from "aws-lambda"
 import {Logger} from "@aws-lambda-powertools/logger"
 import validator from "@middy/validator"
 import {transpileSchema} from "@middy/validator/transpile"
 import {validationErrorHandler} from "./errorHandler"
 
-export type MiddlewareGenerator = (logger: Logger, schema?: object) => middy.MiddlewareObj
+export type MiddlewareApplicator = <Event>(
+  handler: MiddyfiedHandler<Event, APIGatewayProxyResult>,
+  logger: Logger,
+  schema?: object
+) => MiddyfiedHandler<Event, APIGatewayProxyResult>
 
-export const MIDDLEWARE: Record<string, MiddlewareGenerator> = {
-  injectLambdaContext: (logger) => injectLambdaContext(logger, {clearState: true}),
-  httpHeaderNormalizer: () => httpHeaderNormalizer() as middy.MiddlewareObj,
-  inputOutputLogger: (logger) =>
-    inputOutputLogger({
+export const MIDDLEWARE: Record<string, MiddlewareApplicator> = {
+  injectLambdaContext: (handler, logger) =>
+    handler.use(injectLambdaContext(logger, {clearState: true})),
+  httpHeaderNormalizer: (handler) =>
+    handler.use(httpHeaderNormalizer()),
+  inputOutputLogger: (handler, logger) =>
+    handler.use(inputOutputLogger({
       logger: (request) => {
-        if (request.response) {
-          logger.debug(request)
+        const response = (request as {response?: unknown} | null | undefined)?.response
+        if (response === undefined) {
+          logger.info("inputOutputLogger request", {request})
         } else {
-          logger.info(request)
+          logger.debug("inputOutputLogger response", {response})
         }
       }
-    }),
-  validator: (logger, schema) => validator({eventSchema: transpileSchema(schema as object)}),
-  validationErrorHandler: (logger) => validationErrorHandler({logger: logger})
+    })),
+  validator: (handler, logger, schema) =>
+    handler.use(validator({eventSchema: transpileSchema(schema as object)})),
+  validationErrorHandler: (handler, logger) =>
+    handler.use(validationErrorHandler({logger: logger}))
 }
 
 export const DEFAULT_HANDLER_MIDDLEWARE = [

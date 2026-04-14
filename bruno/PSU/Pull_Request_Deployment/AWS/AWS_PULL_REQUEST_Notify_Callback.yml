@@ -1,0 +1,314 @@
+info:
+  name: AWS PULL REQUEST Notify Callback
+  type: http
+  seq: 1
+
+http:
+  method: POST
+  url: https://psu-pr-{{aws_pull_request_id}}.dev.eps.national.nhs.uk/notification-delivery-status-callback
+  headers:
+    - name: x-request-id
+      value: "{{$guid}}"
+    - name: x-correlation-id
+      value: "{{$guid}}"
+  body:
+    type: json
+    data: "{\r
+
+      \  \"data\": [\r
+
+      \    {\r
+
+      \      \"type\": \"MessageStatus\",\r
+
+      \      \"attributes\": {\r
+
+      \        \"messageId\": \"{{messageID}}\",\r
+
+      \        \"messageReference\": \"REF-ABC-123\",\r
+
+      \        \"messageStatus\": \"delivered\",\r
+
+      \        \"messageStatusDescription\": \"Message failed to be delivered\",\r
+
+      \        \"channels\": [\r
+
+      \          {\r
+
+      \            \"type\": \"nhsapp\",\r
+
+      \            \"channelStatus\": \"delivered\"\r
+
+      \          }\r
+
+      \        ],\r
+
+      \        \"timestamp\": \"{{$isoTimestamp}}\",\r
+
+      \        \"routingPlan\": {\r
+
+      \          \"id\": \"example-plan\",\r
+
+      \          \"name\": \"Example Template\",\r
+
+      \          \"version\": \"v1.0.0\",\r
+
+      \          \"createdDate\": \"2025-01-01T12:00:00Z\"\r
+
+      \        }\r
+
+      \      },\r
+
+      \      \"links\": {\r
+
+      \        \"message\": \"https://api.nhs.example.com/messages/{{messageID}}\"\r
+
+      \      },\r
+
+      \      \"meta\": {\r
+
+      \        \"idempotencyKey\": \"idemp-001-abc\"\r
+
+      \      }\r
+
+      \    }\r
+
+      \  ]\r
+
+      }\r\n"
+  auth:
+    type: apikey
+    key: apiKey
+    value: "{{NOTIFY_API_KEY}}"
+    placement: header
+
+runtime:
+  scripts:
+    - type: before-request
+      code: "// const crypto = pm.require('npm:crypto-js@4.2.0')\r
+
+        \r
+
+        const appName = bru.getEnvVar(\"NOTIFY_APP_ID\");\r
+
+        const apiKey  = bru.getEnvVar(\"NOTIFY_API_KEY\");\r
+
+        \r
+
+        if (!appName || !apiKey) {\r
+
+        \  console.error(\"Missing NOTFIY_APP_ID or NOTIFY_API_KEY in environment!\");\r
+
+        }\r
+
+        \r
+
+        const secret = `${appName}.${apiKey}`;\r
+
+        \r
+
+        let body = \"\";\r
+
+        const raw = req.getBody().raw;\r
+
+        body = bru.interpolate(raw);\r
+
+        // need to make sure the body is synced later\r
+
+        req.getBody() = body\r
+
+        \r
+
+        const signature = crypto.HmacSHA256(body, secret).toString(crypto.enc.Hex);\r
+
+        \r
+
+        // Expects both the siganture and the api key. The app name is secret?\r
+
+        req.getHeaders().upsert({\r
+
+        \  key: \"x-hmac-sha256-signature\",\r
+
+        \  value: signature\r
+
+        });"
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+
+examples:
+  - name: MessageStatus
+    request:
+      url: https://psu-pr-{{aws_pull_request_id}}.dev.eps.national.nhs.uk/notification-delivery-status-callback
+      method: POST
+      headers:
+        - name: x-request-id
+          value: "{{$guid}}"
+        - name: x-correlation-id
+          value: "{{$guid}}"
+      body:
+        type: json
+        data: "{\r
+
+          \  \"data\": [\r
+
+          \    {\r
+
+          \      \"type\": \"MessageStatus\",\r
+
+          \      \"attributes\": {\r
+
+          \        \"messageId\": \"31JwuwbJOv68kgsHuxKeq4oqpDe\",\r
+
+          \        \"messageReference\": \"1642109b-69eb-447f-8f97-ab70a74f5db4\",\r
+
+          \        \"messageStatus\": \"sending\",\r
+
+          \        \"messageStatusDescription\": \"Some description\",\r
+
+          \        \"channels\": [\r
+
+          \          {\r
+
+          \            \"type\": \"nhsapp\",\r
+
+          \            \"channelStatus\": \"delivered\"\r
+
+          \          }\r
+
+          \        ],\r
+
+          \        \"timestamp\": \"2023-11-17T14:27:51.413Z\",\r
+
+          \        \"routingPlan\": {\r
+
+          \          \"id\": \"b838b13c-f98c-4def-93f0-515d4e4f4ee1\",\r
+
+          \          \"name\": \"Plan Abc\",\r
+
+          \          \"version\": \"ztoe2qRAM8M8vS0bqajhyEBcvXacrGPp\",\r
+
+          \          \"createdDate\": \"2023-11-17T14:27:51.413Z\"\r
+
+          \        }\r
+
+          \      },\r
+
+          \      \"links\": {\r
+
+          \        \"message\": \"https://api.service.nhs.uk/comms/v1/messages/31JwuwbJOv68kgsHuxKeq4oqpDe\"\r
+
+          \      },\r
+
+          \      \"meta\": {\r
+
+          \        \"idempotencyKey\": \"2515ae6b3a08339fba3534f3b17cd57cd573c57d25b25b9aae08e42dc9f0a445\"\r
+
+          \      }\r
+
+          \    }\r
+
+          \  ]\r
+
+          }"
+    response:
+      statusText: "202"
+      headers:
+        - name: Date
+          value: Fri, 15 Aug 2025 12:05:09 GMT
+        - name: Content-Type
+          value: application/json
+        - name: Content-Length
+          value: "4"
+        - name: Connection
+          value: keep-alive
+        - name: x-amzn-RequestId
+          value: 2d10044d-f58d-487d-8ec8-fae5b76e0231
+        - name: x-amz-apigw-id
+          value: PWJSIHUvLPEEiTg=
+        - name: X-Amzn-Trace-Id
+          value: Root=1-689f2273-7619781d283c3d85130519bb
+      body:
+        type: json
+        data: '"OK"'
+  - name: ChannelStatus
+    request:
+      url: https://psu-pr-{{aws_pull_request_id}}.dev.eps.national.nhs.uk/notification-delivery-status-callback
+      method: POST
+      headers:
+        - name: x-request-id
+          value: "{{$guid}}"
+        - name: x-correlation-id
+          value: "{{$guid}}"
+      body:
+        type: json
+        data: "{\r
+
+          \    \"data\": [\r
+
+          \        {\r
+
+          \            \"type\": \"ChannelStatus\",\r
+
+          \            \"attributes\": {\r
+
+          \                \"messageId\": \"{{messageID}}\",\r
+
+          \                \"messageReference\": \"e39ec303-fa39-4f39-b8df-d9f1c0b7e7dd\",\r
+
+          \                \"cascadeType\": \"primary\",\r
+
+          \                \"cascadeOrder\": 1,\r
+
+          \                \"channel\": \"nhsapp\",\r
+
+          \                \"channelStatus\": \"sending\",\r
+
+          \                \"supplierStatus\": \"received\",\r
+
+          \                \"retryCount\": 0,\r
+
+          \                \"timestamp\": \"{{$isoTimestamp}}\"\r
+
+          \            },\r
+
+          \            \"links\": {\r
+
+          \                \"message\": \"https://int.api.service.nhs.uk/comms/v1/messages/{{messageID}}\"\r
+
+          \            },\r
+
+          \            \"meta\": {\r
+
+          \                \"idempotencyKey\": \"178e8848ae762d9921686b7cb1a97a352b7674f3bdfbac462c641d30c1d6cd1d\"\r
+
+          \            }\r
+
+          \        }\r
+
+          \    ]\r
+
+          }"
+    response:
+      statusText: "202"
+      headers:
+        - name: Date
+          value: Fri, 15 Aug 2025 12:05:16 GMT
+        - name: Content-Type
+          value: application/json
+        - name: Content-Length
+          value: "4"
+        - name: Connection
+          value: keep-alive
+        - name: x-amzn-RequestId
+          value: 669a1b73-2e90-408e-8a24-108dd13c6bd3
+        - name: x-amz-apigw-id
+          value: PWJTfGvNrPEEs4g=
+        - name: X-Amzn-Trace-Id
+          value: Root=1-689f227c-2fc1685a02f9a22f65e617aa
+      body:
+        type: json
+        data: '"OK"'

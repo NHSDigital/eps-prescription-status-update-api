@@ -2,46 +2,52 @@ import {
   describe,
   it,
   expect,
-  jest
-} from "@jest/globals"
-import {SpiedFunction} from "jest-mock"
-
+  vi,
+  beforeEach
+} from "vitest"
+import type {MockInstance} from "vitest"
 import {Logger} from "@aws-lambda-powertools/logger"
-import {LogItemMessage, LogItemExtraInput} from "@aws-lambda-powertools/logger/lib/cjs/types/Logger"
 import {SendMessageBatchCommand} from "@aws-sdk/client-sqs"
 
-import {createMockDataItem, mockSQSClient} from "./utils/testUtils"
+import {createMockDataItem} from "./utils/testUtils"
 
-const {mockSend} = mockSQSClient()
-
-const mockGetSecret = jest.fn().mockImplementation(async () => {
-  return {"salt": "salt"}
-})
-jest.unstable_mockModule(
-  "@aws-lambda-powertools/parameters/secrets",
-  async () => ({
-    __esModule: true,
-    getSecret: mockGetSecret
-  })
-)
-
-export const mockGetParametersByName = jest.fn(async () => {
-  // eslint-disable-next-line max-len
-  let enabledString: string = "Internal Test System,Apotec Ltd - Apotec CRM - Production,CrxPatientApp,nhsPrescriptionApp,Titan PSU Prod"
-  return {
+const {mockSend, mockGetSecret, mockInitiatedSSMProvider} = vi.hoisted(() => {
+  const mockGetParametersByName = vi.fn(async () => ({
     [process.env.ENABLED_SITE_ODS_CODES_PARAM!]: "FA565",
-    [process.env.ENABLED_SYSTEMS_PARAM!]: enabledString,
+    // eslint-disable-next-line max-len
+    [process.env.ENABLED_SYSTEMS_PARAM!]: "Internal Test System,Apotec Ltd - Apotec CRM - Production,CrxPatientApp,nhsPrescriptionApp,Titan PSU Prod",
     [process.env.BLOCKED_SITE_ODS_CODES_PARAM!]: "B3J1Z"
+  }))
+
+  return {
+    mockSend: vi.fn(),
+    mockGetSecret: vi.fn().mockImplementation(async () => ({salt: "salt"})),
+    mockInitiatedSSMProvider: {getParametersByName: mockGetParametersByName}
   }
 })
 
-const mockInitiatedSSMProvider = {
-  getParametersByName: mockGetParametersByName
-}
+vi.mock("@aws-sdk/client-sqs", async (importOriginal: () => Promise<typeof import("@aws-sdk/client-sqs")>) => {
+  const mod = await importOriginal()
+  return {
+    ...mod,
+    SQSClient: vi.fn(class {
+      send = mockSend
+    })
+  }
+})
 
-jest.unstable_mockModule("@psu-common/utilities", async () => ({
-  initiatedSSMProvider: mockInitiatedSSMProvider
+vi.mock("@aws-lambda-powertools/parameters/secrets", async () => ({
+  __esModule: true,
+  getSecret: mockGetSecret
 }))
+
+vi.mock("@psu-common/utilities", async (importOriginal: () => Promise<typeof import("@psu-common/utilities")>) => {
+  const mod = await importOriginal()
+  return {
+    ...mod,
+    initiatedSSMProvider: mockInitiatedSSMProvider
+  }
+})
 
 const {
   pushPrescriptionToNotificationSQS,
@@ -53,22 +59,22 @@ const ORIGINAL_ENV = {...process.env}
 
 describe("Unit tests for pushPrescriptionToNotificationSQS", () => {
   let logger: Logger
-  let infoSpy: SpiedFunction<(input: LogItemMessage, ...extraInput: LogItemExtraInput) => void>
-  let errorSpy: SpiedFunction<(input: LogItemMessage, ...extraInput: LogItemExtraInput) => void>
-  let warnSpy: SpiedFunction<(input: LogItemMessage, ...extraInput: LogItemExtraInput) => void>
+  let infoSpy: MockInstance
+  let errorSpy: MockInstance
+  let warnSpy: MockInstance
 
   beforeEach(() => {
-    jest.resetModules()
-    jest.clearAllMocks()
+    vi.resetModules()
+    vi.clearAllMocks()
 
     // Reset environment
     process.env = {...ORIGINAL_ENV}
 
     // Fresh logger and spies
     logger = new Logger({serviceName: "test-service"})
-    infoSpy = jest.spyOn(logger, "info")
-    errorSpy = jest.spyOn(logger, "error")
-    warnSpy = jest.spyOn(logger, "warn")
+    infoSpy = vi.spyOn(logger, "info")
+    errorSpy = vi.spyOn(logger, "error")
+    warnSpy = vi.spyOn(logger, "warn")
   })
 
   it("throws if the SQS URL is not configured", async () => {
@@ -82,6 +88,20 @@ describe("Unit tests for pushPrescriptionToNotificationSQS", () => {
 
     expect(errorSpy).toHaveBeenCalledWith(
       "Notifications SQS URL not found in environment variables"
+    )
+    expect(mockSend).not.toHaveBeenCalled()
+  })
+
+  it("throws if the post-dated SQS URL is not configured", async () => {
+    process.env.POST_DATED_PRESCRIPTIONS_SQS_QUEUE_URL = undefined
+    const {pushPrescriptionToNotificationSQS: tempFunc} = await import("../src/utils/sqsClient")
+
+    await expect(
+      tempFunc("req-123", [], logger)
+    ).rejects.toThrow("Post-dated Notifications SQS URL not configured")
+
+    expect(warnSpy).toHaveBeenCalledWith(
+      "Post-dated Notifications SQS URL not found in environment variables"
     )
     expect(mockSend).not.toHaveBeenCalled()
   })
@@ -114,6 +134,25 @@ describe("Unit tests for pushPrescriptionToNotificationSQS", () => {
     expect(mockSend).not.toHaveBeenCalled()
   })
 
+  it("filters out ready to collect items whose status has not changed", async () => {
+    const data = [
+      {
+        current: createMockDataItem({Status: "ready to collect"}),
+        previous: createMockDataItem({Status: "ready to collect"})
+      },
+      {
+        current: createMockDataItem({Status: "READY TO COLLECT - PARTIAL"}),
+        previous: createMockDataItem({Status: "ready to collect - partial"})
+      }
+    ]
+
+    await expect(
+      pushPrescriptionToNotificationSQS("req-no-change", data, logger)
+    ).resolves.toEqual([])
+
+    expect(mockSend).not.toHaveBeenCalled()
+  })
+
   it("sends only 'ready to collect' messages and succeeds", async () => {
     const payload = [
       {
@@ -143,7 +182,7 @@ describe("Unit tests for pushPrescriptionToNotificationSQS", () => {
     const sent = mockSend.mock.calls[0][0]
     expect(sent).toBeInstanceOf(SendMessageBatchCommand)
     if (!(sent instanceof SendMessageBatchCommand)) {
-      throw new Error("Expected a SendMessageBatchCommand")
+      throw new TypeError("Expected a SendMessageBatchCommand")
     }
     const entries = sent.input.Entries!
 
@@ -163,8 +202,55 @@ describe("Unit tests for pushPrescriptionToNotificationSQS", () => {
     })
 
     expect(infoSpy).toHaveBeenCalledWith(
-      "Successfully sent a batch of prescriptions to the notifications SQS",
-      {result: {Successful: [{}]}}
+      "Successfully sent a batch of prescriptions to the SQS",
+      {result: {Successful: [{}]}, queueUrl: process.env.NHS_NOTIFY_PRESCRIPTIONS_SQS_QUEUE_URL}
+    )
+  })
+
+  it("routes post-dated and standard notifications to their respective queues", async () => {
+    const postDatedCurrent = createMockDataItem({
+      Status: "ready to collect",
+      PatientNHSNumber: "9999999999",
+      PharmacyODSCode: "JIM123",
+      PostDatedLastModifiedSetAt: "2100-01-01T00:00:00Z"
+    })
+    const standardCurrent = createMockDataItem({
+      Status: "ready to collect - partial",
+      PatientNHSNumber: "8888888888",
+      PharmacyODSCode: "JIM123"
+    })
+    const payload = [
+      {previous: createMockDataItem({Status: "previous status"}), current: postDatedCurrent},
+      {previous: createMockDataItem({Status: "previous status"}), current: standardCurrent}
+    ]
+
+    mockSend
+      .mockImplementationOnce(() => Promise.resolve({Successful: [{MessageId: "pd-id"}]}))
+      .mockImplementationOnce(() => Promise.resolve({Successful: [{MessageId: "std-id"}]}))
+
+    const result = await pushPrescriptionToNotificationSQS("req-mixed", payload, logger)
+
+    expect(result).toEqual(["pd-id", "std-id"]) // Both have been pushed to SQS, so we get their IDs
+    expect(mockSend).toHaveBeenCalledTimes(2)
+
+    // Check that the send command was called twice, once with each SQS URL
+    const queueUrls = mockSend.mock.calls.map(call => {
+      const command = call[0]
+      expect(command).toBeInstanceOf(SendMessageBatchCommand)
+      if (!(command instanceof SendMessageBatchCommand)) {
+        throw new TypeError("Expected a SendMessageBatchCommand")
+      }
+      command.input.Entries!.forEach(entry => {
+        expect(entry.MessageGroupId).toBe("req-mixed")
+      })
+      return command.input.QueueUrl
+    })
+
+    expect(queueUrls).toEqual(
+      expect.arrayContaining([
+        process.env.POST_DATED_PRESCRIPTIONS_SQS_QUEUE_URL,
+        process.env.NHS_NOTIFY_PRESCRIPTIONS_SQS_QUEUE_URL
+      ])
     )
   })
 
@@ -184,8 +270,71 @@ describe("Unit tests for pushPrescriptionToNotificationSQS", () => {
     ).rejects.toThrow(testError)
 
     expect(errorSpy).toHaveBeenCalledWith(
-      "Failed to send a batch of prescriptions to the notifications SQS",
-      {error: testError}
+      "Failed to send a batch of prescriptions to the SQS",
+      {error: testError, queueUrl: process.env.NHS_NOTIFY_PRESCRIPTIONS_SQS_QUEUE_URL}
+    )
+  })
+
+  it("rejects when the standard queue fails but the post-dated queue succeeds", async () => {
+    const payload = [
+      {
+        previous: createMockDataItem({Status: "previous status"}),
+        current: createMockDataItem({
+          Status: "ready to collect",
+          PatientNHSNumber: "444",
+          PharmacyODSCode: "DDD",
+          PostDatedLastModifiedSetAt: "2025-05-01T00:00:00Z"
+        })
+      },
+      {
+        previous: createMockDataItem({Status: "previous status"}),
+        current: createMockDataItem({Status: "ready to collect", PatientNHSNumber: "555", PharmacyODSCode: "EEE"})
+      }
+    ]
+    const standardQueueError = new Error("Standard queue failure")
+
+    mockSend
+      .mockImplementationOnce(() => Promise.resolve({Successful: [{MessageId: "pd-ok"}]}))
+      .mockImplementationOnce(() => Promise.reject(standardQueueError))
+
+    await expect(
+      pushPrescriptionToNotificationSQS("req-failure", payload, logger)
+    ).rejects.toThrow(standardQueueError)
+
+    expect(errorSpy).toHaveBeenCalledWith(
+      "Failed to send a batch of prescriptions to the SQS",
+      {error: standardQueueError, queueUrl: process.env.NHS_NOTIFY_PRESCRIPTIONS_SQS_QUEUE_URL}
+    )
+  })
+
+  it("Rejects when the post-dated queue fails but the standard queue succeeds", async () => {
+    const payload = [
+      {
+        previous: createMockDataItem({Status: "previous status"}),
+        current: createMockDataItem({
+          Status: "ready to collect",
+          PatientNHSNumber: "777",
+          PharmacyODSCode: "GGG",
+          PostDatedLastModifiedSetAt: "2100-12-12T00:00:00Z"
+        })
+      },
+      {
+        previous: createMockDataItem({Status: "previous status"}),
+        current: createMockDataItem({Status: "ready to collect", PatientNHSNumber: "888", PharmacyODSCode: "HHH"})
+      }
+    ]
+    const postDatedQueueError = new Error("Post-dated queue failure")
+
+    mockSend
+      .mockImplementationOnce(() => Promise.reject(postDatedQueueError))
+      .mockImplementationOnce(() => Promise.resolve({Successful: [{MessageId: "std-ok"}]}))
+
+    await expect(
+      pushPrescriptionToNotificationSQS("req-failure-2", payload, logger)
+    ).rejects.toThrow(postDatedQueueError)
+    expect(errorSpy).toHaveBeenCalledWith(
+      "Failed to send a batch of prescriptions to the SQS",
+      {error: postDatedQueueError, queueUrl: process.env.POST_DATED_PRESCRIPTIONS_SQS_QUEUE_URL}
     )
   })
 
@@ -195,12 +344,11 @@ describe("Unit tests for pushPrescriptionToNotificationSQS", () => {
         previous: createMockDataItem({Status: "previous status"}),
         current: createMockDataItem({Status: "ready to collect"})
       }
-    }
-    )
+    })
 
     mockSend
-      .mockImplementationOnce(() => Promise.resolve({Successful: Array(10).fill({})}))
-      .mockImplementationOnce(() => Promise.resolve({Successful: Array(2).fill({})}))
+      .mockImplementationOnce(() => Promise.resolve({Successful: new Array(10).fill({})}))
+      .mockImplementationOnce(() => Promise.resolve({Successful: new Array(2).fill({})}))
 
     await pushPrescriptionToNotificationSQS("req-111", payload, logger)
     expect(mockSend).toHaveBeenCalledTimes(2)
@@ -208,10 +356,18 @@ describe("Unit tests for pushPrescriptionToNotificationSQS", () => {
 
   it("Uses the fallback salt value but logs a warning about it", async () => {
     mockGetSecret.mockImplementationOnce(async () => {
-      return "DEV SALT"
+      return {"salt": "DEV SALT"}
     })
 
-    await pushPrescriptionToNotificationSQS("req-123", [], logger)
+    const payload = Array.from({length: 1}, () => {
+      return {
+        previous: createMockDataItem({Status: "previous status"}),
+        current: createMockDataItem({Status: "ready to collect"})
+      }
+    })
+    mockSend.mockImplementationOnce(() => Promise.resolve({Successful: new Array(2).fill({})}))
+
+    await pushPrescriptionToNotificationSQS("req-123", payload, logger)
 
     expect(warnSpy)
       .toHaveBeenCalledWith(
@@ -222,18 +378,18 @@ describe("Unit tests for pushPrescriptionToNotificationSQS", () => {
 describe("Unit tests for getSaltValue", () => {
   let getSaltValue: (logger: Logger) => Promise<string>
   let logger: Logger
-  let errorSpy: SpiedFunction<(input: LogItemMessage, ...extraInput: LogItemExtraInput) => void>
-  let warnSpy: SpiedFunction<(input: LogItemMessage, ...extraInput: LogItemExtraInput) => void>
+  let errorSpy: MockInstance
+  let warnSpy: MockInstance
   const fallbackSalt = "DEV SALT"
 
   beforeEach(async () => {
-    jest.resetModules()
-    jest.clearAllMocks()
+    vi.resetModules()
+    vi.clearAllMocks()
     process.env = {...ORIGINAL_ENV}
 
     logger = new Logger({serviceName: "test-service"})
-    errorSpy = jest.spyOn(logger, "error")
-    warnSpy = jest.spyOn(logger, "warn");
+    errorSpy = vi.spyOn(logger, "error")
+    warnSpy = vi.spyOn(logger, "warn");
 
     ({getSaltValue} = await import("../src/utils/sqsClient"))
   })
@@ -293,11 +449,11 @@ describe("Unit tests for getSaltValue", () => {
 })
 describe("Unit tests for checkSiteOrSystemIsNotifyEnabled", () => {
   let logger: Logger
-  let infoSpy: SpiedFunction<(input: LogItemMessage, ...extraInput: LogItemExtraInput) => void>
+  let infoSpy: MockInstance
   beforeEach(() => {
     // Fresh logger and spies
     logger = new Logger({serviceName: "test-service"})
-    infoSpy = jest.spyOn(logger, "info")
+    infoSpy = vi.spyOn(logger, "info")
   })
 
   it("includes an item with an enabled ODS code", async () => {
@@ -337,7 +493,8 @@ describe("Unit tests for checkSiteOrSystemIsNotifyEnabled", () => {
     })
     const item2 = createMockDataItem({
       PharmacyODSCode: "zzz999",
-      ApplicationName: "internal test SYSTEM"
+      ApplicationName: "internal test SYSTEM",
+      ApplicationID: "550e8400-e29b-41d4-a716-446655440000"
     })
     const result = await checkSiteOrSystemIsNotifyEnabled([
       {
@@ -380,11 +537,13 @@ describe("Unit tests for checkSiteOrSystemIsNotifyEnabled", () => {
     const previous = createMockDataItem({
       PharmacyODSCode: "NOTINLIST",
       ApplicationName: "Some Other System",
+      ApplicationID: "550e8400-e29b-41d4-a716-446655441234",
       Status: "previous"
     })
     const current = createMockDataItem({
       PharmacyODSCode: "NOTINLIST",
-      ApplicationName: "Some Other System"
+      ApplicationName: "Some Other System",
+      ApplicationID: "550e8400-e29b-41d4-a716-446655441234"
     })
     const result = await checkSiteOrSystemIsNotifyEnabled([{previous, current}], logger)
     expect(result).toEqual([])
@@ -393,7 +552,7 @@ describe("Unit tests for checkSiteOrSystemIsNotifyEnabled", () => {
 
 })
 function expectLogReceivedAndAllowed(
-  infoSpy: SpiedFunction<(input: LogItemMessage, ...extraInput: LogItemExtraInput) => void>,
+  infoSpy: MockInstance,
   numItemsReceived: number,
   numItemsAllowed: number) {
   expect(infoSpy).toHaveBeenCalledWith(

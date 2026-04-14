@@ -5,7 +5,13 @@ import format_1_response_json from "./format_1/example_response.json"
 import {HandlerParams, newHandler} from "../src/handler"
 import {MIDDLEWARE} from "../src/middleware"
 import {Logger} from "@aws-lambda-powertools/logger"
-import {jest} from "@jest/globals"
+import {
+  beforeAll,
+  describe,
+  expect,
+  test,
+  vi
+} from "vitest"
 import {Ok} from "pratica"
 
 const {FORMAT_1_PARAMS, format_1_handler} = await import("../src/cpsu")
@@ -47,7 +53,7 @@ describe("generic handler", () => {
     }
 
     const logger = new Logger({serviceName: "testService"})
-    const logger_output = jest.spyOn(console, "info")
+    const logger_output = vi.spyOn(console, "info")
 
     const handler = newHandler({
       params: params,
@@ -69,7 +75,7 @@ describe("generic handler", () => {
 
 describe("format_1 handler", () => {
   beforeAll(() => {
-    jest.useFakeTimers().setSystemTime(new Date("2023-09-11T10:11:12Z"))
+    vi.useFakeTimers().setSystemTime(new Date("2023-09-11T10:11:12Z"))
   })
   test("Happy path", async () => {
     const event = {
@@ -97,7 +103,7 @@ describe("format_1 handler", () => {
 
   function mockedWarnHandler() {
     const logger = new Logger({serviceName: "testService"})
-    const logger_warn = jest.spyOn(logger, "warn")
+    const logger_warn = vi.spyOn(logger, "warn")
 
     const handler = newHandler({
       params: FORMAT_1_PARAMS,

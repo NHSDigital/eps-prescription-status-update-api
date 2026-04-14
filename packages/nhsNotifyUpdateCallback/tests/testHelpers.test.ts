@@ -1,15 +1,16 @@
 import {
-  jest,
+  vi,
   describe,
   it,
   beforeEach,
   afterEach,
-  expect
-} from "@jest/globals"
-import {createHmac} from "crypto"
+  expect,
+  type MockInstance
+} from "vitest"
+import {createHmac} from "node:crypto"
 
 // Mock the getSecret call
-const mockGetSecret = jest.fn((secretName: string) => {
+const mockGetSecret = vi.fn((secretName: string) => {
   if (secretName === process.env.APP_ID_SECRET) {
     return Promise.resolve(process.env.APP_ID)
   }
@@ -18,13 +19,12 @@ const mockGetSecret = jest.fn((secretName: string) => {
   }
   return Promise.reject(new Error("Unexpected secret"))
 })
-jest.unstable_mockModule("@aws-lambda-powertools/parameters/secrets", async () => ({
+vi.mock("@aws-lambda-powertools/parameters/secrets", async () => ({
   __esModule: true,
   getSecret: mockGetSecret
 }))
 
 import {DynamoDBDocumentClient, QueryCommand, UpdateCommand} from "@aws-sdk/lib-dynamodb"
-import type {UpdateCommandInput} from "@aws-sdk/lib-dynamodb"
 import {Logger} from "@aws-lambda-powertools/logger"
 import {MessageStatusResponse} from "../src/types"
 import {generateMockChannelStatusResponse, generateMockEvent, generateMockMessageStatusResponse} from "./utilities"
@@ -38,21 +38,22 @@ const {
 const ORIGINAL_ENV = {...process.env}
 
 describe("helpers.ts", () => {
-  let sendSpy: jest.SpiedFunction<typeof DynamoDBDocumentClient.prototype.send>
+  // Keep this broad to avoid over-constraining overloaded AWS SDK client signatures in tests.
+  let sendSpy: MockInstance<DynamoDBDocumentClient["send"]>
 
   beforeEach(() => {
-    jest.resetModules()
-    jest.clearAllMocks()
+    vi.resetModules()
+    vi.clearAllMocks()
 
     // Spy on all docClient.send calls
-    sendSpy = jest.spyOn(DynamoDBDocumentClient.prototype, "send")
+    sendSpy = vi.spyOn(DynamoDBDocumentClient.prototype, "send")
 
     // Freeze time so TTL is predictable
-    jest.spyOn(Date, "now").mockReturnValue(100_000_000) // ms
+    vi.spyOn(Date, "now").mockReturnValue(100_000_000) // ms
   })
 
   afterEach(() => {
-    jest.restoreAllMocks()
+    vi.restoreAllMocks()
   })
 
   describe("response()", () => {
@@ -141,12 +142,12 @@ describe("helpers.ts", () => {
     let logger: Logger
     beforeEach(() => {
       logger = new Logger({serviceName: "nhsNotifyUpdateCallback"})
-      jest.spyOn(logger, "error")
-      jest.spyOn(logger, "warn")
-      jest.spyOn(logger, "info")
+      vi.spyOn(logger, "error")
+      vi.spyOn(logger, "warn")
+      vi.spyOn(logger, "info")
 
-      jest.resetModules()
-      jest.clearAllMocks()
+      vi.resetModules()
+      vi.clearAllMocks()
     })
 
     it("skips update when no matching record found", async () => {
@@ -180,7 +181,7 @@ describe("helpers.ts", () => {
         NotifyMessageID: "msg-123",
         LastNotificationRequestTimestamp: lastTimestamp
       }
-      sendSpy.mockImplementation((cmd) => {
+      sendSpy.mockImplementation((cmd: unknown) => {
         if (cmd instanceof QueryCommand) {
           return Promise.resolve({Items: [mockItem]})
         }
@@ -222,7 +223,7 @@ describe("helpers.ts", () => {
 
       // First call: QueryCommand
       // Subsequent calls: UpdateCommand
-      sendSpy.mockImplementation((cmd) => {
+      sendSpy.mockImplementation((cmd: unknown) => {
         if (cmd instanceof QueryCommand) {
           return Promise.resolve({Items: [mockItem]})
         }
@@ -234,8 +235,8 @@ describe("helpers.ts", () => {
 
       await updateNotificationsTable(logger, mockResponse)
 
-      const [, [updateCmd]] = sendSpy.mock.calls
-      const input = updateCmd.input as UpdateCommandInput
+      const updateCmd = sendSpy.mock.calls[1][0] as UpdateCommand
+      const input = updateCmd.input
 
       // Note that Javascript guarantees the order of this to be preserved, so we're okay to check values like this.
       // We should have only three statuses
@@ -294,7 +295,7 @@ describe("helpers.ts", () => {
 
       // First call: QueryCommand
       // Subsequent calls: UpdateCommand
-      sendSpy.mockImplementation((cmd) => {
+      sendSpy.mockImplementation((cmd: unknown) => {
         if (cmd instanceof QueryCommand) {
           return Promise.resolve({Items: [mockItem]})
         }
@@ -306,8 +307,8 @@ describe("helpers.ts", () => {
 
       await updateNotificationsTable(logger, mockResponse)
 
-      const [, [updateCmd]] = sendSpy.mock.calls
-      const input = updateCmd.input as UpdateCommandInput
+      const updateCmd = sendSpy.mock.calls[1][0] as UpdateCommand
+      const input = updateCmd.input
 
       // Note that Javascript guarantees the order of this to be preserved, so we're okay to check values like this.
       // 5 defined key value pairs should be in there
@@ -425,8 +426,8 @@ describe("helpers.ts", () => {
   describe("fetchSecrets()", () => {
     let logger: Logger
     beforeEach(() => {
-      jest.resetModules()
-      jest.clearAllMocks()
+      vi.resetModules()
+      vi.clearAllMocks()
       process.env = {...ORIGINAL_ENV}
       logger = new Logger({serviceName: "nhsNotifyUpdateCallback"})
     })

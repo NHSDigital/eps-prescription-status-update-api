@@ -2,46 +2,34 @@ name: package code and api
 
 on:
   workflow_call:
+    inputs:
+      pinned_image:
+        required: true
+        type: string
+
+permissions: {}
 
 jobs:
   package_code_and_api:
     runs-on: ubuntu-22.04
+    container:
+      image: ${{ inputs.pinned_image }}
+      options: --user 1001:1001 --group-add 128
+    defaults:
+      run:
+        shell: bash
     permissions:
       id-token: write
       contents: read
       packages: read
     steps:
+      - name: copy .tool-versions
+        run: |
+          cp /home/vscode/.tool-versions "$HOME/.tool-versions"
       - name: Checkout code
-        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
         with:
-          ref: ${{ env.BRANCH_NAME }}
-
-      # using git commit sha for version of action to ensure we have stable version
-      - name: Get asdf version
-        id: asdf-version
-        run: echo "version=$(awk '!/^#/ && NF {print $1; exit}' .tool-versions.asdf)" >> "$GITHUB_OUTPUT"
-
-      # using git commit sha for version of action to ensure we have stable version
-      - name: Install asdf
-        uses: asdf-vm/actions/setup@b7bcd026f18772e44fe1026d729e1611cc435d47
-        with:
-          asdf_version: ${{ steps.asdf-version.outputs.version }}
-
-      - name: Cache asdf
-        uses: actions/cache@8b402f58fbc84540c8b491a91e594a4576fec3d7
-        with:
-          path: |
-            ~/.asdf
-          key: ${{ runner.os }}-asdf-${{ hashFiles('**/.tool-versions') }}-${{ steps.asdf-version.outputs.version }}
-          restore-keys: |
-            ${{ runner.os }}-asdf-${{ hashFiles('**/.tool-versions') }}-${{ steps.asdf-version.outputs.version }}
-
-      - name: Install asdf dependencies in .tool-versions
-        uses: asdf-vm/actions/install@b7bcd026f18772e44fe1026d729e1611cc435d47
-        with:
-          asdf_version: ${{ steps.asdf-version.outputs.version }}
-        env:
-          PYTHON_CONFIGURE_OPTS: --enable-shared
+          persist-credentials: false
 
       - name: Setting up .npmrc
         env:
@@ -57,7 +45,6 @@ jobs:
       - shell: bash
         name: Package code
         run: |
-          cp .tool-versions ~/
           rm -rf .aws-sam
           export PATH=$PATH:$PWD/node_modules/.bin
           make compile-specification
@@ -68,7 +55,7 @@ jobs:
           cp packages/specification/dist/eps-prescription-status-update-api.resolved.json .aws-sam/build/specification/
           cp packages/specification/dist/eps-custom-prescription-status-update-api.resolved.json .aws-sam/build/specification/
 
-      - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f
+      - uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f
         name: Upload build artifact
         with:
           name: packaged_code
@@ -80,7 +67,6 @@ jobs:
       - shell: bash
         name: Package sandbox
         run: |
-          cp .tool-versions ~/
           rm -rf .aws-sam
           export PATH=$PATH:$PWD/node_modules/.bin
           make compile-specification
@@ -92,7 +78,7 @@ jobs:
           cp packages/specification/dist/eps-custom-prescription-status-update-api.resolved.json .aws-sam/build/specification/
 
       # Readme is included to stop the action flattening the folder structure of aws-sam/build when it is the only item to upload
-      - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f
+      - uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f
         name: Upload sandbox build artifact
         with:
           name: packaged_sandbox_code

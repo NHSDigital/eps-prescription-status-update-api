@@ -43,7 +43,7 @@ export async function addPrescriptionMessagesToNotificationStateStore(
       NotifyMessageReference: data.messageReference,
       NotifyMessageBatchReference: data.messageBatchReference, // Will be undefined when request fails
       LastNotificationRequestTimestamp: new Date().toISOString(),
-      ExpiryTime: (Math.floor(+new Date() / 1000) + TTL_DELTA)
+      ExpiryTime: (Math.floor(Date.now() / 1000) + TTL_DELTA)
     }
 
     try {

@@ -1,25 +1,27 @@
-import {jest} from "@jest/globals"
-
-import * as sqs from "@aws-sdk/client-sqs"
+import {vi} from "vitest"
+import type {Message} from "@aws-sdk/client-sqs"
 
 import {PSUDataItem} from "@psu-common/commonTypes"
 import {NotifyDataItemMessage} from "../src/utils"
 
+const {mockSend} = vi.hoisted(() => ({mockSend: vi.fn()}))
+
+vi.mock("@aws-sdk/client-sqs", async (importOriginal) => {
+  const sqs = await importOriginal<typeof import("@aws-sdk/client-sqs")>()
+  return {
+    ...sqs,
+    SQSClient: vi.fn(class {
+      send = mockSend
+    })
+  }
+})
+
 // Similarly mock the SQS client
 export function mockSQSClient() {
-  const mockSend = jest.fn()
-  jest.unstable_mockModule("@aws-sdk/client-sqs", () => {
-    return {
-      ...sqs,
-      SQSClient: jest.fn().mockImplementation(() => ({
-        send: mockSend
-      }))
-    }
-  })
   return {mockSend}
 }
 
-export function constructMessage(overrides: Partial<sqs.Message> = {}): sqs.Message {
+export function constructMessage(overrides: Partial<Message> = {}): Message {
   return {
     MessageId: "messageId",
     Attributes: {
@@ -53,6 +55,7 @@ export function constructPSUDataItem(overrides: Partial<PSUDataItem> = {}): PSUD
     TaskID: "mnopqr-ghijkl-abcdef",
     TerminalStatus: "ready to collect",
     ApplicationName: "Jim's Pills",
+    ApplicationID: "550e8400-e29b-41d4-a716-446655440000",
     ExpiryTime: 123,
     ...overrides
   }

@@ -71,6 +71,13 @@ Parameters:
   DeployCheckPrescriptionStatusUpdate:
     Type: String
 
+  ExposeGetStatusUpdates:
+    Type: String
+    Default: false
+    AllowedValues:
+      - true
+      - false
+
   Environment:
     Type: String
 
@@ -88,6 +95,10 @@ Parameters:
 
   StateMachineLogLevel:
     Type: String
+    AllowedValues: # OFF is not valid for state machine type EXPRESS
+      - ALL
+      - ERROR
+      - FATAL
 
   EnableBackup:
     Type: String
@@ -118,9 +129,17 @@ Parameters:
     Type: String
     Default: " "
 
+  EnabledSupplierApplicationIDsValue:
+    Type: String
+    Default: " "
+
   BlockedSiteODSCodesValue:
     Type: String
     Default: " "
+
+  EnablePostDatedNotifications:
+    Type: String
+    Default: "false"
 
   NotifyRoutingPlanIDValue:
     Type: String
@@ -173,6 +192,7 @@ Resources:
         EnableNotificationsExternalValue: !Ref EnableNotificationsExternal
         EnabledSiteODSCodesValue: !Ref EnabledSiteODSCodesValue
         EnabledSystemsValue: !Ref EnabledSystemsValue
+        EnabledSupplierApplicationIDsValue: !Ref EnabledSupplierApplicationIDsValue
         BlockedSiteODSCodesValue: !Ref BlockedSiteODSCodesValue
         NotifyRoutingPlanIDValue: !Ref NotifyRoutingPlanIDValue
         NotifyAPIBaseURLValue: !Ref NotifyAPIBaseURLValue
@@ -215,11 +235,14 @@ Resources:
         CapabilityStatementFunctionArn: !GetAtt Functions.Outputs.CapabilityStatementFunctionArn
         CheckPrescriptionStatusUpdatesFunctionName: !GetAtt Functions.Outputs.CheckPrescriptionStatusUpdatesFunctionName
         CheckPrescriptionStatusUpdatesFunctionArn: !GetAtt Functions.Outputs.CheckPrescriptionStatusUpdatesFunctionArn
+        GetStatusUpdatesFunctionName: !GetAtt Functions.Outputs.GetStatusUpdatesFunctionName
+        GetStatusUpdatesFunctionArn: !GetAtt Functions.Outputs.GetStatusUpdatesFunctionArn
         NHSNotifyUpdateCallbackFunctionName: !GetAtt Functions.Outputs.NHSNotifyUpdateCallbackFunctionName
         NHSNotifyUpdateCallbackFunctionArn: !GetAtt Functions.Outputs.NHSNotifyUpdateCallbackFunctionArn
         LogRetentionInDays: !Ref LogRetentionInDays
         EnableSplunk: !Ref EnableSplunk
         DeployCheckPrescriptionStatusUpdate: !Ref DeployCheckPrescriptionStatusUpdate
+        ExposeGetStatusUpdates: !Ref ExposeGetStatusUpdates
         ForwardCsocLogs: !Ref ForwardCsocLogs
 
   Functions:
@@ -231,9 +254,12 @@ Resources:
         PrescriptionStatusUpdatesTableName: !GetAtt Tables.Outputs.PrescriptionStatusUpdatesTableName
         PrescriptionNotificationStatesTableName: !GetAtt Tables.Outputs.PrescriptionNotificationStatesTableName
         NHSNotifyPrescriptionsSQSQueueUrl: !GetAtt Messaging.Outputs.NHSNotifyPrescriptionsSQSQueueUrl
+        PostDatedNotificationsSQSQueueUrl: !GetAtt Messaging.Outputs.PostDatedNotificationsSQSQueueUrl
+        EnablePostDatedNotifications: !Ref EnablePostDatedNotifications
         SQSSaltSecret: !GetAtt Secrets.Outputs.SQSSaltSecret
         EnabledSiteODSCodesParam: !GetAtt Parameters.Outputs.EnabledSiteODSCodesParameterName
         EnabledSystemsParam: !GetAtt Parameters.Outputs.EnabledSystemsParameterName
+        EnabledSupplierApplicationIDsParam: !GetAtt Parameters.Outputs.EnabledSupplierApplicationIDsParameterName
         BlockedSiteODSCodesParam: !GetAtt Parameters.Outputs.BlockedSiteODSCodesParameterName
         NotifyRoutingPlanIDParam: !GetAtt Parameters.Outputs.NotifyRoutingPlanIDParameterName
         NotifyAPIBaseURLParam: !GetAtt Parameters.Outputs.NotifyAPIBaseURLParameterName

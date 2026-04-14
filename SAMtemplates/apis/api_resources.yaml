@@ -7,7 +7,7 @@ Parameters:
   AdditionalPolicies:
     Type: CommaDelimitedList
     Description: A list of additional policies to attach to the API gateway role (comma delimited).
-    Default: none
+    Default: ""
 
   ApiName:
     Type: String
@@ -30,6 +30,10 @@ Conditions:
   ShouldForwardCsocLogs: !Equals
     - true
     - !Ref ForwardCsocLogs
+  HasAdditionalPolicies: !Not
+    - !Equals
+      - !Join [",", !Ref AdditionalPolicies]
+      - ""
 
 Resources:
   ApiGwRole:
@@ -44,13 +48,16 @@ Resources:
                 - apigateway.amazonaws.com
             Action:
               - sts:AssumeRole
-      ManagedPolicyArns: !Split
-        - ","
-        - !Join
+      ManagedPolicyArns: !If
+        - HasAdditionalPolicies
+        - !Split
           - ","
-          - - !Join
-              - ","
-              - !Ref AdditionalPolicies
+          - !Join
+            - ","
+            - - !Join
+                - ","
+                - !Ref AdditionalPolicies
+        - !Ref "AWS::NoValue"
 
   ApiGwAccessLogs:
     Type: AWS::Logs::LogGroup

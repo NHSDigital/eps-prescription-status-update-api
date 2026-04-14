@@ -1,12 +1,22 @@
-import {jest} from "@jest/globals"
+import {
+  vi,
+  describe,
+  it,
+  expect,
+  beforeAll,
+  beforeEach
+} from "vitest"
 import nock from "nock"
 
 import {Logger} from "@aws-lambda-powertools/logger"
 import axios, {AxiosInstance} from "axios"
 
-const mockImportPKCS8 = jest.fn()
-const mockSignJWTConstructor = jest.fn()
-jest.unstable_mockModule("jose", async () => ({
+const {mockImportPKCS8, mockSignJWTConstructor} = vi.hoisted(() => ({
+  mockImportPKCS8: vi.fn(),
+  mockSignJWTConstructor: vi.fn()
+}))
+
+vi.mock("jose", async () => ({
   __esModule: true,
   importPKCS8: mockImportPKCS8,
   SignJWT: mockSignJWTConstructor
@@ -31,7 +41,7 @@ describe("tokenExchange", () => {
   let axiosInstance: AxiosInstance
 
   beforeEach(() => {
-    jest.clearAllMocks()
+    vi.clearAllMocks()
     logger = new Logger({serviceName: "test-service"})
 
     axiosInstance = axios.create({baseURL: host})
@@ -56,9 +66,11 @@ describe("tokenExchange", () => {
       setExpirationTime: function () {
         return this
       },
-      sign: jest.fn().mockImplementation(() => Promise.resolve("signed.jwt.token"))
+      sign: vi.fn().mockImplementation(() => Promise.resolve("signed.jwt.token"))
     }
-    mockSignJWTConstructor.mockImplementation(() => fakeJwtInstance)
+    mockSignJWTConstructor.mockImplementation(function() {
+      return fakeJwtInstance
+    })
 
     // Mock the HTTP call
     nock(`${host}`)
@@ -91,18 +103,20 @@ describe("tokenExchange", () => {
     }
 
     mockImportPKCS8.mockImplementation(() => Promise.resolve("imported"))
-    mockSignJWTConstructor.mockImplementation(() => ({
-      setProtectedHeader() {
-        return this
-      },
-      setIssuedAt() {
-        return this
-      },
-      setExpirationTime() {
-        return this
-      },
-      sign: jest.fn().mockImplementation(() => Promise.resolve("jwt-tkn"))
-    }))
+    mockSignJWTConstructor.mockImplementation(function() {
+      return ({
+        setProtectedHeader() {
+          return this
+        },
+        setIssuedAt() {
+          return this
+        },
+        setExpirationTime() {
+          return this
+        },
+        sign: vi.fn().mockImplementation(() => Promise.resolve("jwt-tkn"))
+      })
+    })
 
     nock(`${host}`)
       .post("/oauth2/token")
@@ -121,18 +135,20 @@ describe("tokenExchange", () => {
     }
 
     mockImportPKCS8.mockImplementation(() => Promise.resolve("imported"))
-    mockSignJWTConstructor.mockImplementation(() => ({
-      setProtectedHeader() {
-        return this
-      },
-      setIssuedAt() {
-        return this
-      },
-      setExpirationTime() {
-        return this
-      },
-      sign: jest.fn().mockImplementation(() => Promise.resolve("jwt-tkn"))
-    }))
+    mockSignJWTConstructor.mockImplementation(function() {
+      return ({
+        setProtectedHeader() {
+          return this
+        },
+        setIssuedAt() {
+          return this
+        },
+        setExpirationTime() {
+          return this
+        },
+        sign: vi.fn().mockImplementation(() => Promise.resolve("jwt-tkn"))
+      })
+    })
 
     nock(`${host}`)
       .post("/oauth2/token")

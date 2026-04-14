@@ -62,7 +62,8 @@ async function loadConfig() {
 
 // AEA-4317 AEA-4365 & AEA-5913 - Env vars for INT test prescriptions
 const INT_ENVIRONMENT = process.env.ENVIRONMENT === "int"
-// Using lazy initialization to avoid top-level await issues with Jest mocking
+// Lazy-load and cache test prescriptions to avoid top-level async work.
+// This also keeps module state predictable in tests, where resetTestPrescriptions() can clear the cache.
 export let TEST_PRESCRIPTIONS_1: Array<string> = []
 export let TEST_PRESCRIPTIONS_2: Array<string> = []
 export let TEST_PRESCRIPTIONS_3: Array<string> = []
@@ -106,6 +107,7 @@ const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPro
 
   const xRequestID = getXRequestID(event, responseEntries)
   const applicationName = event.headers["attribute-name"] ?? "unknown"
+  const applicationId = event.headers["nhsd-application-id"] ?? "unknown"
 
   if (!xRequestID) {
     return response(400, responseEntries)
@@ -131,7 +133,7 @@ const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPro
     return response(400, responseEntries)
   }
 
-  const dataItems = buildDataItems(requestEntries, xRequestID, applicationName)
+  const dataItems = buildDataItems(requestEntries, xRequestID, applicationName, applicationId)
 
   // If the dataItems contain any invalid ODS codes, then return an error
   const invalidODSCodes = dataItems
@@ -193,7 +195,7 @@ const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPro
     testPrescriptionForcedError = !!interceptionResponse.testPrescriptionForcedError
   }
 
-  let dataItemsWithPrev = []
+  let dataItemsWithPrev: Array<PSUDataItemWithPrevious>
   try {
     dataItemsWithPrev = await Promise.all(dataItems.map((item) => getPreviousItem(item, logger)))
   } catch (e) {
@@ -339,10 +341,10 @@ export function handleTransactionCancelledException(
         return entryTaskId === taskId
       })
 
-      if (index !== -1) {
-        responseEntries[index] = conflictedEntry
-      } else {
+      if (index === -1) {
         responseEntries.push(conflictedEntry)
+      } else {
+        responseEntries[index] = conflictedEntry
       }
 
       taskIdSet.add(taskId)
@@ -358,7 +360,8 @@ export function handleTransactionCancelledException(
 export function buildDataItems(
   requestEntries: Array<BundleEntry>,
   xRequestID: string,
-  applicationName: string
+  applicationName: string,
+  applicationId: string
 ): Array<PSUDataItem> {
   const dataItems: Array<PSUDataItem> = []
 
@@ -381,11 +384,17 @@ export function buildDataItems(
       TaskID: task.id!,
       TerminalStatus: task.status,
       ApplicationName: applicationName,
-      ExpiryTime: (Math.floor(+new Date() / 1000) + TTL_DELTA)
+      ApplicationID: applicationId,
+      ExpiryTime: (Math.floor(Date.now() / 1000) + TTL_DELTA)
     }
 
     if (task.meta?.lastUpdated) {
-      (dataItem as any).PostDatedLastModifiedSetAt = task.meta.lastUpdated
+      logger.info("Post-dated update",
+        {taskID: task.id, lastUpdated: task.meta.lastUpdated, lastModified: task.lastModified, isPostDated: true}
+      )
+      dataItem.PostDatedLastModifiedSetAt = task.meta.lastUpdated
+    } else {
+      logger.debug("No meta.lastUpdated found for task, regular update", {taskID: task.id})
     }
 
     dataItems.push(dataItem)
@@ -413,7 +422,7 @@ async function logTransitions(dataItems: Array<PSUDataItemWithPrevious>): Promis
       if (previousItem) {
         const newDate = new Date(currentItem.LastModified)
         const previousDate = new Date(previousItem.LastModified)
-        logger.info("Transitioning item status.", {
+        logger.info(LOG_MESSAGES.PSU0001, {
           prescriptionID: currentItem.PrescriptionID,
           lineItemID: currentItem.LineItemID,
           nhsNumber: currentItem.PatientNHSNumber,
@@ -424,7 +433,8 @@ async function logTransitions(dataItems: Array<PSUDataItemWithPrevious>): Promis
           newStatus: currentItem.Status,
           previousStatus: previousItem.Status,
           newTerminalStatus: currentItem.TerminalStatus,
-          previousTerminalStatus: previousItem.TerminalStatus
+          previousTerminalStatus: previousItem.TerminalStatus,
+          isPostDated: currentItem.PostDatedLastModifiedSetAt
         })
       }
     } catch (e) {
@@ -439,7 +449,7 @@ export const handler = middy(lambdaHandler)
   .use(
     inputOutputLogger({
       logger: (request) => {
-        logger.info(request)
+        logger.info("inputOutputLogger request", {request})
       }
     })
   )

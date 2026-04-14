@@ -3,17 +3,17 @@ import {
   expect,
   describe,
   it,
-  jest,
-  beforeEach
-} from "@jest/globals"
+  beforeEach,
+  vi
+} from "vitest"
 
-const mockGet = jest.fn()
+const mockGet = vi.fn()
 
 const mockInitiatedSSMProvider = {
   get: mockGet
 }
 
-jest.unstable_mockModule("../src/ssmUtil", () => ({
+vi.mock("../src/ssmUtil", () => ({
   initiatedSSMProvider: mockInitiatedSSMProvider
 }))
 
@@ -24,7 +24,7 @@ const {TestPrescriptions, getTestPrescriptions} = await import("../src/testConfi
 
 describe("Unit tests for TestPrescriptions class", () => {
   beforeEach(() => {
-    jest.clearAllMocks()
+    vi.clearAllMocks()
   })
 
   describe("getTestPrescriptions method", () => {

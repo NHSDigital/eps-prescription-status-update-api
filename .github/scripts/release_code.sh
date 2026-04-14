@@ -61,12 +61,15 @@ sam deploy \
             LogRetentionInDays="$LOG_RETENTION_DAYS" \
             Environment="$TARGET_ENVIRONMENT" \
             DeployCheckPrescriptionStatusUpdate="$DEPLOY_CHECK_PRESCRIPTION_STATUS_UPDATE" \
+            ExposeGetStatusUpdates="$EXPOSE_GET_STATUS_UPDATES" \
             EnableAlerts="$ENABLE_ALERTS" \
             StateMachineLogLevel="$STATE_MACHINE_LOG_LEVEL" \
             EnableNotificationsInternal="$ENABLE_NOTIFICATIONS_INTERNAL" \
             EnableNotificationsExternal="$ENABLE_NOTIFICATIONS_EXTERNAL" \
             EnabledSiteODSCodesValue="${ENABLED_SITE_ODS_CODES:-' '}" \
+            EnablePostDatedNotifications="$ENABLE_POST_DATED_NOTIFICATIONS" \
             EnabledSystemsValue="${ENABLED_SYSTEMS:-' '}" \
+            EnabledSupplierApplicationIDsValue="${ENABLED_SUPPLIER_APPLICATION_IDS:-' '}" \
             BlockedSiteODSCodesValue="${BLOCKED_SITE_ODS_CODES:-' '}" \
             NotifyRoutingPlanIDValue="$NOTIFY_ROUTING_PLAN_ID" \
             NotifyAPIBaseURLValue="$NOTIFY_API_BASE_URL" \

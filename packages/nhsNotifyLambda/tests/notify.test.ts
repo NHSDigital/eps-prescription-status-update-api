@@ -1,4 +1,10 @@
-import {jest, describe, it} from "@jest/globals"
+import {
+  vi,
+  describe,
+  it,
+  expect,
+  beforeEach
+} from "vitest"
 
 import {Logger} from "@aws-lambda-powertools/logger"
 import {logNotificationRequest} from "../src/utils/notify"
@@ -7,13 +13,11 @@ import {LOG_MESSAGES} from "@psu-common/utilities"
 
 // Mock crypto.randomUUID
 const mockUUID = "550e8400-e29b-41d4-a716-446655440000"
-globalThis.crypto = {
-  randomUUID: () => mockUUID
-} as unknown as Crypto
+vi.spyOn(globalThis.crypto, "randomUUID").mockReturnValue(mockUUID)
 
-const mockInfo = jest.fn()
-const mockError = jest.fn()
-const mockWarn = jest.fn()
+const mockInfo = vi.fn()
+const mockError = vi.fn()
+const mockWarn = vi.fn()
 
 describe("logNotificationRequest", () => {
   let mockLogger: Logger
@@ -46,6 +50,7 @@ describe("logNotificationRequest", () => {
     const dataItem1: NotifyDataItemMessage = {
       messageReference: "msg-ref-1",
       PSUDataItem: {
+        PrescriptionID: "presc-1",
         PatientNHSNumber: "9453740578",
         PharmacyODSCode: "FA566",
         RequestID: "req-1",
@@ -57,6 +62,7 @@ describe("logNotificationRequest", () => {
     const dataItem2: NotifyDataItemMessage = {
       messageReference: "msg-ref-2",
       PSUDataItem: {
+        PrescriptionID: "presc-2",
         PatientNHSNumber: "9912003071",
         PharmacyODSCode: "A83008",
         RequestID: "req-2",
@@ -68,7 +74,7 @@ describe("logNotificationRequest", () => {
 
     data = [dataItem1, dataItem2]
 
-    jest.clearAllMocks()
+    vi.clearAllMocks()
   })
 
   it("should log legacy notification request summary", () => {

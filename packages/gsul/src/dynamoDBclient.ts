@@ -39,15 +39,19 @@ export async function getItemsUpdatesForPrescription(
   return items.map((singleUpdate) => ({
     itemId: String(singleUpdate.LineItemID),
     latestStatus: String(singleUpdate.Status),
-    isTerminalState: String(singleUpdate.TerminalStatus) === "completed",
-    lastUpdateDateTime: String(singleUpdate.LastModified)
+    isTerminalState: String(singleUpdate.TerminalStatus).toLowerCase() === "completed",
+    lastUpdateDateTime: String(singleUpdate.LastModified),
+    ...(singleUpdate.PostDatedLastModifiedSetAt && {
+      postDatedLastModifiedSetAt: String(singleUpdate.PostDatedLastModifiedSetAt)
+    })
   }))
 }
 
 export function createQueryCommandInput(odsCode: string, prescriptionID: string): QueryCommandInput {
   return {
     TableName: tableName,
-    IndexName: "PharmacyODSCodePrescriptionIDIndex",
+    // TODO: revert to PharmacyODSCodePrescriptionIDIndex once post-dated no longer required
+    IndexName: "PharmacyODSCodePrescriptionIDIndexIncPostDated",
     KeyConditionExpression: "PrescriptionID = :inputPrescriptionID AND PharmacyODSCode = :inputPharmacyODSCode",
     ExpressionAttributeValues: {
       ":inputPharmacyODSCode": odsCode.toUpperCase(),

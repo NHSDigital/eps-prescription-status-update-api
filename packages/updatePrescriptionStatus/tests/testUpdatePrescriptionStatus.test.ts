@@ -3,8 +3,9 @@ import {
   expect,
   describe,
   it,
-  jest
-} from "@jest/globals"
+  vi,
+  beforeAll
+} from "vitest"
 
 import {BundleEntry} from "fhir/r4"
 
@@ -12,38 +13,46 @@ import {badRequest, conflictDuplicate} from "../src/utils/responses"
 import {
   DEFAULT_DATE,
   X_REQUEST_ID,
-  mockInternalDependency,
   validTask,
   getTestPrescriptions
 } from "./utils/testUtils"
 import {APIGatewayProxyEvent} from "aws-lambda"
 
-import * as content from "../src/validation/content"
 import {TransactionCanceledException} from "@aws-sdk/client-dynamodb"
-import {LOG_MESSAGES} from "@psu-common/utilities"
 
-const mockValidateEntry = mockInternalDependency("../../src/validation/content", content, "validateEntry")
+const {mockValidateEntry, mockInitiatedSSMProvider} = vi.hoisted(() => {
+  const mockGetParametersByName = vi.fn(async () => Promise.resolve(
+    {[process.env.ENABLE_NOTIFICATIONS_PARAM!]: "false"}
+  ))
+  return {
+    mockValidateEntry: vi.fn(),
+    mockInitiatedSSMProvider: {getParametersByName: mockGetParametersByName}
+  }
+})
 
-const mockGetParametersByName = jest.fn(async () => Promise.resolve(
-  {[process.env.ENABLE_NOTIFICATIONS_PARAM!]: "false"}
-))
+vi.mock("../src/validation/content", async (importOriginal) => {
+  const mod = await importOriginal<typeof import("../src/validation/content")>()
+  return {
+    ...mod,
+    validateEntry: mockValidateEntry
+  }
+})
 
-const mockInitiatedSSMProvider = {
-  getParametersByName: mockGetParametersByName
-}
-
-jest.unstable_mockModule("@psu-common/utilities", async () => ({
-  getTestPrescriptions: getTestPrescriptions,
-  initiatedSSMProvider: mockInitiatedSSMProvider,
-  LOG_MESSAGES: LOG_MESSAGES
-}))
+vi.mock("@psu-common/utilities", async (importOriginal) => {
+  const mod = await importOriginal<typeof import("@psu-common/utilities")>()
+  return {
+    ...mod,
+    getTestPrescriptions: getTestPrescriptions,
+    initiatedSSMProvider: mockInitiatedSSMProvider
+  }
+})
 
 const {castEventBody, getXRequestID, validateEntries, handleTransactionCancelledException, buildDataItems, TTL_DELTA} =
   await import("../src/updatePrescriptionStatus")
 
 describe("Unit test getXRequestID", () => {
   beforeAll(() => {
-    jest.useFakeTimers().setSystemTime(DEFAULT_DATE)
+    vi.useFakeTimers().setSystemTime(DEFAULT_DATE)
   })
 
   it("when event has x-request-id, return it and no response entry", async () => {
@@ -78,7 +87,7 @@ describe("Unit test getXRequestID", () => {
 
 describe("Unit test castEventBody", () => {
   beforeAll(() => {
-    jest.useFakeTimers().setSystemTime(DEFAULT_DATE)
+    vi.useFakeTimers().setSystemTime(DEFAULT_DATE)
   })
 
   it("when body doesn't have correct resourceType and type, return undefined and a response entry", async () => {
@@ -239,7 +248,7 @@ describe("buildDataItems", () => {
       fullUrl: ""
     }
 
-    const dataItems = buildDataItems([requestEntry], "", "")
+    const dataItems = buildDataItems([requestEntry], "", "", "")
 
     expect(dataItems[0].LineItemID).toEqual(lineItemID)
     expect(dataItems[0].PrescriptionID).toEqual(prescriptionID)
@@ -269,7 +278,7 @@ describe("buildDataItems", () => {
       fullUrl: ""
     }
 
-    const dataItems = buildDataItems([requestEntry], "", "")
+    const dataItems = buildDataItems([requestEntry], "", "", "")
 
     expect(dataItems[0].RepeatNo).toEqual(repeatNo)
   })
@@ -283,7 +292,7 @@ describe("buildDataItems", () => {
       fullUrl: ""
     }
 
-    const dataItems = buildDataItems([requestEntry], "", "")
+    const dataItems = buildDataItems([requestEntry], "", "", "")
 
     expect(dataItems[0].ExpiryTime).toBeGreaterThan(expectedExpiryTime)
   })
@@ -300,7 +309,7 @@ describe("buildDataItems", () => {
       fullUrl: ""
     }
 
-    const dataItems = buildDataItems([requestEntry], "", "")
+    const dataItems = buildDataItems([requestEntry], "", "", "")
     const first: any = dataItems[0]
     expect(first.PostDatedLastModifiedSetAt).toEqual(lastUpdated)
   })

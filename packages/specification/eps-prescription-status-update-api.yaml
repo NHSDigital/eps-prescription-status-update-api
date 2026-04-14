@@ -23,8 +23,9 @@ info:
     The Prescription Status Update API is intended for use by EPS assured dispensing PMR systems which have onboarded to the EPS Dispensing FHIR API or the legacy EPS HL7v3 API, so they can provide patient prescription status updates to enable NHS App user to track prescription readiness
     ## Related APIs
     The following APIs are related to the Prescription Status Update API:
-    * [Electronic Prescriptions Service](https://digital.nhs.uk/developer/api-catalogue/electronic-prescription-service-fhir): the national service for creating and dispensing prescriptions across health and social care.
-    * [Prescriptions for Patients](https://digital.nhs.uk/developer/api-catalogue/prescriptions-for-patients): the national service to retrieve prescriptions data for individual patients from the Electronic Prescription Service (EPS), for use in patient-facing applications.
+    * [Electronic Prescriptions Service Prescribing](https://digital.nhs.uk/developer/api-catalogue/eps-fhir-prescribing-api): the national service for creating prescriptions across health and social care.
+    * [Electronic Prescriptions Service Dispensing](https://digital.nhs.uk/developer/api-catalogue/eps-fhir-dispensing-api): the national service for dispensing prescriptions across health and social care.
+    * [Prescriptions for Patients](https://digital.nhs.uk/developer/api-catalogue/prescriptions-for-patients-fhir-api-v2): the national service to retrieve prescriptions data for individual patients from the Electronic Prescription Service (EPS), for use in patient-facing applications.
     ## API Status and Roadmap
     This API is [in development](https://digital.nhs.uk/developer/guides-and-documentation/reference-guide#statuses), meaning the API will soon be available for testing via a sandbox service or an integration environment - but we expect to make breaking changes based on developer feedback.
     ## Service Level
@@ -459,6 +460,9 @@ x-nhsd-apim:
     - name: show-all-suppliers
       required: false
       header: show-all-suppliers
+    - name: id
+      required: false
+      header: nhsd-application-id
   ratelimiting:
     proxy:
       limit: 20000

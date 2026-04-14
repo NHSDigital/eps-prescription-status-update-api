@@ -1,0 +1,85 @@
+info:
+  name: AWS custom stack psu update
+  type: http
+  seq: 1
+
+http:
+  method: POST
+  url: https://{{custom_stack_name}}.dev.eps.national.nhs.uk/
+  headers:
+    - name: x-request-id
+      value: "{{$guid}}"
+    - name: x-correlation-id
+      value: "{{$guid}}"
+  body:
+    type: json
+    data: |
+      {
+        "resourceType": "Bundle",
+        "type": "transaction",
+        "entry": [
+          {
+            "fullUrl": "urn:uuid:{{task_identifier}}",
+            "resource": {
+              "resourceType": "Task",
+              "id": "{{task_identifier}}",
+              "basedOn": [
+                {
+                  "identifier": {
+                    "system": "https://fhir.nhs.uk/Id/prescription-order-number",
+                    "value": "16B2E0-A83008-81C13H"
+                  }
+                }
+              ],
+              "status": "completed",
+              "businessStatus": {
+                "coding": [
+                  {
+                    "system": "https://fhir.nhs.uk/CodeSystem/task-businessStatus-nppt",
+                    "code": "dispatched"
+                  }
+                ]
+              },
+              "intent": "order",
+              "focus": {
+                "identifier": {
+                  "system": "https://fhir.nhs.uk/Id/prescription-order-item-number",
+                  "value": "6989b7bd-8db6-428c-a593-4022e3044c00"
+                }
+              },
+              "for": {
+                "identifier": {
+                  "system": "https://fhir.nhs.uk/Id/nhs-number",
+                  "value": "9449304130"
+                }
+              },
+              "lastModified": "2023-10-11T10:11:12Z",
+              "owner": {
+                "identifier": {
+                  "system": "https://fhir.nhs.uk/Id/ods-organization-code",
+                  "value": "C9Z1O"
+                }
+              }
+            },
+            "request": {
+              "method": "POST",
+              "url": "Task"
+            }
+          }
+        ]
+      }
+
+runtime:
+  scripts:
+    - type: before-request
+      code: "const task_identifier=bru.interpolate(\"{{$guid}}\");\r
+
+        \r
+
+        bru.setGlobalEnvVar(\"task_identifier\",task_identifier.toLowerCase());"
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

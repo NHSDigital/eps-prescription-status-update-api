@@ -1,10 +1,4 @@
-guard-%:
-	@ if [ "${${*}}" = "" ]; then \
-		echo "Environment variable $* not set"; \
-		exit 1; \
-	fi
-
-.PHONY: install build test publish release clean
+.PHONY: install build test publish release clean lint compile
 
 install: install-node install-python install-hooks
 
@@ -12,7 +6,7 @@ install-python:
 	poetry install
 
 install-node:
-	npm ci
+	npm ci --ignore-scripts
 
 install-hooks: install-python
 	poetry run pre-commit install --install-hooks --overwrite
@@ -31,18 +25,68 @@ sam-sync: guard-AWS_DEFAULT_PROFILE guard-stack_name compile
 		--stack-name $$stack_name \
 		--watch \
 		--template-file SAMtemplates/main_template.yaml \
+		--capabilities CAPABILITY_NAMED_IAM CAPABILITY_AUTO_EXPAND \
 		--parameter-overrides \
+			  TruststoreVersion=$${TRUSTSTORE_VERSION:-none} \
+			  EnableMutualTLS=$${ENABLE_MUTUAL_TLS:-false} \
 			  EnableSplunk=false \
+			  EnableDynamoDBAutoScaling=$${DYNAMODB_AUTOSCALE:-true} \
+			  VersionNumber=$${VERSION_NUMBER:-dev} \
+			  CommitId=$${COMMIT_ID:-local} \
+			  LogLevel=$${LOG_LEVEL:-INFO} \
+			  LogRetentionInDays=$${LOG_RETENTION_DAYS:-30} \
 			  DeployCheckPrescriptionStatusUpdate=true \
-			  EnableAlerts=false
+			  EnableAlerts=false \
+			  Environment=$$AWS_ENVIRONMENT \
+			  StateMachineLogLevel=$${STATE_MACHINE_LOG_LEVEL:-ALL} \
+			  RequireApplicationName=$${REQUIRE_APPLICATION_NAME:-false} \
+			  ForwardCsocLogs=$${FORWARD_CSOC_LOGS:-false} \
+			  TestPresciptionsParamValue1=$${TEST_PRESCRIPTIONS_1:-PLACEHOLDER} \
+			  TestPresciptionsParamValue2=$${TEST_PRESCRIPTIONS_2:-PLACEHOLDER} \
+			  TestPresciptionsParamValue3=$${TEST_PRESCRIPTIONS_3:-PLACEHOLDER} \
+			  TestPresciptionsParamValue4=$${TEST_PRESCRIPTIONS_4:-PLACEHOLDER} \
+			  "EnabledSystemsValue=$${ENABLED_SYSTEMS:-Internal Test System}" \
+			  "EnabledSiteODSCodesValue=$${ENABLED_SITE_ODS_CODES:-A83008,FA565}" \
+			  BlockedSiteODSCodesValue=$${BLOCKED_SITE_ODS_CODES:-XXXXX} \
+			  EnabledSupplierApplicationIDsValue=$${ENABLED_SUPPLIER_APPLICATION_IDS:-XXXXX} \
+			  NotifyRoutingPlanIDValue=$${NOTIFY_ROUTING_PLAN_ID:-e57fe5cc-0567-4854-abe2-b7dd9014a50c} \
+			  NotifyAPIBaseURLValue=$${NOTIFY_API_BASE_URL:-https://int.api.service.nhs.uk} \
+			  EnableNotificationsInternal=$${ENABLE_NOTIFICATIONS_INTERNAL:-true} \
+			  EnableNotificationsExternal=$${ENABLE_NOTIFICATIONS_EXTERNAL:-false} \
+			  EnableBackup=$${ENABLE_BACKUP:-False}
 
 sam-deploy: guard-AWS_DEFAULT_PROFILE guard-stack_name
 	sam deploy \
 		--stack-name $$stack_name \
+		--capabilities CAPABILITY_NAMED_IAM CAPABILITY_AUTO_EXPAND \
 		--parameter-overrides \
+			  TruststoreVersion=$${TRUSTSTORE_VERSION:-none} \
+			  EnableMutualTLS=$${ENABLE_MUTUAL_TLS:-false} \
 			  EnableSplunk=false \
+			  EnableDynamoDBAutoScaling=$${DYNAMODB_AUTOSCALE:-true} \
+			  VersionNumber=$${VERSION_NUMBER:-dev} \
+			  CommitId=$${COMMIT_ID:-local} \
+			  LogLevel=$${LOG_LEVEL:-INFO} \
+			  LogRetentionInDays=$${LOG_RETENTION_DAYS:-30} \
 			  DeployCheckPrescriptionStatusUpdate=true \
-			  EnableAlerts=false
+			  EnableAlerts=false \
+			  Environment=$$AWS_ENVIRONMENT \
+			  StateMachineLogLevel=$${STATE_MACHINE_LOG_LEVEL:-ALL} \
+			  RequireApplicationName=$${REQUIRE_APPLICATION_NAME:-false} \
+			  ForwardCsocLogs=$${FORWARD_CSOC_LOGS:-false} \
+			  TestPresciptionsParamValue1=$${TEST_PRESCRIPTIONS_1:-PLACEHOLDER} \
+			  TestPresciptionsParamValue2=$${TEST_PRESCRIPTIONS_2:-PLACEHOLDER} \
+			  TestPresciptionsParamValue3=$${TEST_PRESCRIPTIONS_3:-PLACEHOLDER} \
+			  TestPresciptionsParamValue4=$${TEST_PRESCRIPTIONS_4:-PLACEHOLDER} \
+			  "EnabledSystemsValue=$${ENABLED_SYSTEMS:-Internal Test System}" \
+			  "EnabledSiteODSCodesValue=$${ENABLED_SITE_ODS_CODES:-A83008,FA565}" \
+			  BlockedSiteODSCodesValue=$${BLOCKED_SITE_ODS_CODES:-XXXXX} \
+			  EnabledSupplierApplicationIDsValue=$${ENABLED_SUPPLIER_APPLICATION_IDS:-XXXXX} \
+			  NotifyRoutingPlanIDValue=$${NOTIFY_ROUTING_PLAN_ID:-e57fe5cc-0567-4854-abe2-b7dd9014a50c} \
+			  NotifyAPIBaseURLValue=$${NOTIFY_API_BASE_URL:-https://int.api.service.nhs.uk} \
+			  EnableNotificationsInternal=$${ENABLE_NOTIFICATIONS_INTERNAL:-true} \
+			  EnableNotificationsExternal=$${ENABLE_NOTIFICATIONS_EXTERNAL:-false} \
+			  EnableBackup=$${ENABLE_BACKUP:-False}
 
 sam-delete: guard-AWS_DEFAULT_PROFILE guard-stack_name
 	sam delete --stack-name $$stack_name
@@ -56,7 +100,7 @@ sam-list-resources: guard-AWS_DEFAULT_PROFILE guard-stack_name
 sam-list-outputs: guard-AWS_DEFAULT_PROFILE guard-stack_name
 	sam list stack-outputs --stack-name $$stack_name
 
-sam-validate: 
+sam-validate:
 	sam validate --template-file SAMtemplates/main_template.yaml --region eu-west-2
 	sam validate --template-file SAMtemplates/apis/main.yaml --region eu-west-2
 	sam validate --template-file SAMtemplates/apis/api_resources.yaml --region eu-west-2
@@ -120,6 +164,7 @@ lint-node: compile-node
 	npm run lint --workspace packages/cpsuLambda
 	npm run lint --workspace packages/checkPrescriptionStatusUpdates
 	npm run lint --workspace packages/nhsNotifyLambda
+	npm run lint --workspace packages/postDatedLambda
 	npm run lint --workspace packages/nhsNotifyUpdateCallback
 	npm run lint --workspace packages/common/testing
 	npm run lint --workspace packages/common/middyErrorHandler
@@ -129,19 +174,10 @@ lint-node: compile-node
 lint-specification: compile-specification
 	npm run lint --workspace packages/specification
 
-lint-samtemplates:
-	poetry run cfn-lint -I "SAMtemplates/**/*.yaml" 2>&1 | grep "Run scan"
-
 lint-python:
 	poetry run flake8 scripts/*.py --config .flake8
 
-lint-githubactions:
-	actionlint
-
-lint-githubaction-scripts:
-	shellcheck .github/scripts/*.sh
-
-lint: lint-node lint-samtemplates lint-python lint-githubactions lint-githubaction-scripts lint-specification
+lint: lint-node lint-python lint-specification
 
 test: compile
 	npm run test --workspace packages/updatePrescriptionStatus
@@ -152,6 +188,7 @@ test: compile
 	npm run test --workspace packages/cpsuLambda
 	npm run test --workspace packages/checkPrescriptionStatusUpdates
 	npm run test --workspace packages/nhsNotifyLambda
+	npm run test --workspace packages/postDatedLambda
 	npm run test --workspace packages/nhsNotifyUpdateCallback
 	npm run test --workspace packages/common/middyErrorHandler
 	npm run test --workspace packages/psuRestoreValidationLambda
@@ -172,6 +209,8 @@ clean:
 	rm -rf packages/cpsuLambda/lib
 	rm -rf packages/nhsNotifyLambda/coverage
 	rm -rf packages/nhsNotifyLambda/lib
+	rm -rf packages/postDatedLambda/coverage
+	rm -rf packages/postDatedLambda/lib
 	rm -rf packages/nhsNotifyUpdateCallback/coverage
 	rm -rf packages/nhsNotifyUpdateCallback/lib
 	rm -rf packages/checkPrescriptionStatusUpdates/lib
@@ -185,19 +224,5 @@ deep-clean: clean
 	find . -name 'node_modules' -type d -prune -exec rm -rf '{}' +
 	poetry env remove --all
 
-check-licenses: check-licenses-node check-licenses-python
-
-check-licenses-node:
-	npm run check-licenses
-
-check-licenses-python:
-	scripts/check_python_licenses.sh
-
-aws-configure:
-	aws configure sso --region eu-west-2
-
-aws-login:
-	aws sso login --sso-session sso-session
-
-cfn-guard:
-	./scripts/run_cfn_guard.sh
+%:
+	@$(MAKE) -f /usr/local/share/eps/Mk/common.mk $@

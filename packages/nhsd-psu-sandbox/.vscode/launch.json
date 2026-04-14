@@ -3,28 +3,37 @@
     "configurations": [
         {
             "type": "node",
-            "name": "vscode-jest-tests.v2",
+            "name": "vitest: all tests",
             "request": "launch",
+            "program": "${workspaceFolder}/../../node_modules/vitest/vitest.mjs",
             "args": [
-                "--runInBand",
-                "--watchAll=false",
-                "--testNamePattern",
-                "${jest.testNamePattern}",
-                "--runTestsByPath",
-                "${jest.testFile}",
+                "run",
                 "--config",
-                "${workspaceFolder}/jest.debug.config.ts"
+                "${workspaceFolder}/vitest.config.ts"
             ],
             "cwd": "${workspaceFolder}",
             "console": "integratedTerminal",
             "internalConsoleOptions": "neverOpen",
-            "program": "${workspaceFolder}/../../node_modules/.bin/jest",
-            "windows": {
-                "program": "${workspaceFolder}/node_modules/jest/bin/jest"
-            },
             "env": {
-                "POWERTOOLS_DEV": "true",
-                "NODE_OPTIONS": "--experimental-vm-modules"
+                "POWERTOOLS_DEV": "true"
+            }
+        },
+        {
+            "type": "node",
+            "name": "vitest: current file",
+            "request": "launch",
+            "program": "${workspaceFolder}/../../node_modules/vitest/vitest.mjs",
+            "args": [
+                "run",
+                "--config",
+                "${workspaceFolder}/vitest.config.ts",
+                "${file}"
+            ],
+            "cwd": "${workspaceFolder}",
+            "console": "integratedTerminal",
+            "internalConsoleOptions": "neverOpen",
+            "env": {
+                "POWERTOOLS_DEV": "true"
             }
         }
     ]

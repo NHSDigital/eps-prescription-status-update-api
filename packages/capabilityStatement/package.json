@@ -7,18 +7,18 @@
   "license": "MIT",
   "type": "module",
   "scripts": {
-    "unit": "POWERTOOLS_DEV=true NODE_OPTIONS=--experimental-vm-modules jest --no-cache --coverage",
+    "unit": "POWERTOOLS_DEV=true vitest run --config vitest.config.ts --coverage",
     "lint": "eslint  --max-warnings 0 --fix --config ../../eslint.config.mjs .",
     "compile": "tsc",
     "test": "npm run compile && npm run unit",
     "check-licenses": "license-checker --failOn GPL --failOn LGPL --start ../.."
   },
   "dependencies": {
-    "@aws-lambda-powertools/commons": "^2.30.2",
-    "@aws-lambda-powertools/logger": "^2.30.2",
-    "@middy/core": "^7.0.2",
-    "@middy/input-output-logger": "^7.0.2",
-    "@nhs/fhir-middy-error-handler": "^2.1.69"
+    "@aws-lambda-powertools/commons": "^2.31.0",
+    "@aws-lambda-powertools/logger": "^2.32.0",
+    "@middy/core": "^7.1.2",
+    "@middy/input-output-logger": "^7.2.1",
+    "@nhs/fhir-middy-error-handler": "^2.1.75"
   },
   "devDependencies": {
     "@psu-common/testing": "^1.0.0"

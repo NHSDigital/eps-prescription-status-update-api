@@ -37,18 +37,6 @@ on:
       LOG_RETENTION_DAYS:
         required: true
         type: string
-      CREATE_INT_RELEASE_NOTES:
-        type: boolean
-        default: false
-      CREATE_INT_RC_RELEASE_NOTES:
-        type: boolean
-        default: false
-      CREATE_PROD_RELEASE_NOTES:
-        type: boolean
-        default: false
-      MARK_JIRA_RELEASED:
-        type: boolean
-        default: false
       DEPLOY_APIGEE:
         type: boolean
         default: true
@@ -59,6 +47,9 @@ on:
         type: boolean
         default: true
       DEPLOY_CHECK_PRESCRIPTION_STATUS_UPDATE:
+        type: boolean
+        default: false
+      EXPOSE_GET_STATUS_UPDATES:
         type: boolean
         default: false
       ENABLE_ALERTS:
@@ -84,10 +75,17 @@ on:
         required: false
         type: boolean
         default: false
+      ENABLE_POST_DATED_NOTIFICATIONS:
+        required: false
+        type: boolean
+        default: false
       ENABLED_SYSTEMS:
         required: true
         type: string
       BLOCKED_SITE_ODS_CODES:
+        required: true
+        type: string
+      ENABLED_SUPPLIER_APPLICATION_IDS:
         required: true
         type: string
       NOTIFY_ROUTING_PLAN_ID:
@@ -120,6 +118,9 @@ on:
       FORWARD_CSOC_LOGS:
         required: true
         type: boolean
+      pinned_image:
+        required: true
+        type: string
     secrets:
       CLOUD_FORMATION_DEPLOY_ROLE:
         required: true
@@ -135,45 +136,43 @@ on:
         required: false
       REGRESSION_TESTS_PEM:
         required: true
+permissions: {}
 
 jobs:
   release_code_and_api:
     runs-on: ubuntu-22.04
     environment: ${{ inputs.AWS_ENVIRONMENT }}
+    container:
+      image: ${{ inputs.pinned_image }}
+      options: --user 1001:1001 --group-add 128
+    defaults:
+      run:
+        shell: bash
     permissions:
       id-token: write
       contents: write
 
     steps:
+      - name: copy .tool-versions
+        run: |
+          cp /home/vscode/.tool-versions "$HOME/.tool-versions"
       - name: Checkout local github actions
-        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
         with:
-          ref: ${{ env.BRANCH_NAME }}
+          persist-credentials: false
           fetch-depth: 0
           sparse-checkout: |
             .github
 
-      - name: create_int_rc_release_notes
-        uses: ./.github/actions/update_confluence_jira
-        if: ${{ inputs.CREATE_INT_RC_RELEASE_NOTES == true }}
-        with:
-          TARGET_ENVIRONMENT: int
-          RELEASE_TAG: ${{ inputs.VERSION_NUMBER }}
-          CONFLUENCE_PAGE_ID: "789747650"
-          CREATE_RC_RELEASE_NOTES: true
-          DEV_CLOUD_FORMATION_CHECK_VERSION_ROLE: ${{ secrets.DEV_CLOUD_FORMATION_CHECK_VERSION_ROLE }}
-          TARGET_CLOUD_FORMATION_CHECK_VERSION_ROLE: ${{ secrets.INT_CLOUD_FORMATION_CHECK_VERSION_ROLE }}
-          DEV_CLOUD_FORMATION_EXECUTE_LAMBDA_ROLE: ${{ secrets.DEV_CLOUD_FORMATION_EXECUTE_LAMBDA_ROLE }}
-
       - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@61815dcd50bd041e203e49132bacad1fd04d2708
+        uses: aws-actions/configure-aws-credentials@8df5847569e6427dd6c4fb1cf565c83acfa8afa7
         with:
           aws-region: eu-west-2
           role-to-assume: ${{ secrets.CLOUD_FORMATION_DEPLOY_ROLE }}
           role-session-name: psu-release-code
 
       - name: Download build artifact
-        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c
         with:
           name: ${{ inputs.BUILD_ARTIFACT }}
           path: .
@@ -190,9 +189,11 @@ jobs:
       - name: read ODS codes
         id: read
         run: |
-          INPUT_FILE="${GITHUB_WORKSPACE}/.github/cfg/ods_codes_${{ inputs.AWS_ENVIRONMENT }}.txt"
+          INPUT_FILE="${GITHUB_WORKSPACE}/.github/config/ods_codes_${AWS_ENVIRONMENT}.txt"
           CSV=$(sed ':a;N;$!ba;s/\r\?\n/,/g;s/,$//' < "$INPUT_FILE")
           echo "ods_csv=${CSV}" >> "$GITHUB_OUTPUT"
+        env:
+          AWS_ENVIRONMENT: ${{ inputs.AWS_ENVIRONMENT }}
 
       - name: release code
         shell: bash
@@ -210,15 +211,18 @@ jobs:
           VERSION_NUMBER: ${{ inputs.VERSION_NUMBER }}
           DYNAMODB_AUTOSCALE: ${{ inputs.DYNAMODB_AUTOSCALE }}
           DEPLOY_CHECK_PRESCRIPTION_STATUS_UPDATE: ${{ inputs.DEPLOY_CHECK_PRESCRIPTION_STATUS_UPDATE }}
+          EXPOSE_GET_STATUS_UPDATES: ${{ inputs.EXPOSE_GET_STATUS_UPDATES }}
           ENABLE_ALERTS: ${{ inputs.ENABLE_ALERTS }}
           STATE_MACHINE_LOG_LEVEL: ${{ inputs.STATE_MACHINE_LOG_LEVEL }}
           ENABLE_BACKUP: ${{ inputs.ENABLE_BACKUP }}
           ENABLE_NOTIFICATIONS_INTERNAL: ${{ inputs.ENABLE_NOTIFICATIONS_INTERNAL }}
           ENABLE_NOTIFICATIONS_EXTERNAL: ${{ inputs.ENABLE_NOTIFICATIONS_EXTERNAL }}
+          ENABLE_POST_DATED_NOTIFICATIONS: ${{ inputs.ENABLE_POST_DATED_NOTIFICATIONS }}
           REQUIRE_APPLICATION_NAME: ${{ inputs.REQUIRE_APPLICATION_NAME }}
           ENABLED_SITE_ODS_CODES: ${{ steps.read.outputs.ods_csv }}
           ENABLED_SYSTEMS: ${{ inputs.ENABLED_SYSTEMS }}
           BLOCKED_SITE_ODS_CODES: ${{ inputs.BLOCKED_SITE_ODS_CODES }}
+          ENABLED_SUPPLIER_APPLICATION_IDS: ${{ inputs.ENABLED_SUPPLIER_APPLICATION_IDS }}
           NOTIFY_ROUTING_PLAN_ID: ${{ inputs.NOTIFY_ROUTING_PLAN_ID }}
           NOTIFY_API_BASE_URL: ${{ inputs.NOTIFY_API_BASE_URL }}
           TEST_PRESCRIPTIONS_1: ${{ inputs.TEST_PRESCRIPTIONS_1 || 'noval' }}
@@ -240,7 +244,7 @@ jobs:
           AWS_MAX_ATTEMPTS: 20
 
       - name: Configure AWS Credentials for api release
-        uses: aws-actions/configure-aws-credentials@61815dcd50bd041e203e49132bacad1fd04d2708
+        uses: aws-actions/configure-aws-credentials@8df5847569e6427dd6c4fb1cf565c83acfa8afa7
         with:
           aws-region: eu-west-2
           role-to-assume: ${{ secrets.PROXYGEN_ROLE }}
@@ -262,6 +266,7 @@ jobs:
           PROXYGEN_KID: "eps-cli-key-1"
           DRY_RUN: false
           DEPLOY_CHECK_PRESCRIPTION_STATUS_UPDATE: ${{ inputs.DEPLOY_CHECK_PRESCRIPTION_STATUS_UPDATE }}
+          EXPOSE_GET_STATUS_UPDATES: ${{ inputs.EXPOSE_GET_STATUS_UPDATES }}
           IS_PULL_REQUEST: ${{ inputs.IS_PULL_REQUEST }}
           MTLS_KEY: ${{ inputs.MTLS_KEY }}
           ENABLE_MUTUAL_TLS: ${{ inputs.ENABLE_MUTUAL_TLS }}
@@ -283,68 +288,47 @@ jobs:
           PROXYGEN_KID: eps-cli-key-cpsu-1
           DRY_RUN: false
           DEPLOY_CHECK_PRESCRIPTION_STATUS_UPDATE: ${{ inputs.DEPLOY_CHECK_PRESCRIPTION_STATUS_UPDATE }}
+          EXPOSE_GET_STATUS_UPDATES: ${{ inputs.EXPOSE_GET_STATUS_UPDATES }}
           IS_PULL_REQUEST: ${{ inputs.IS_PULL_REQUEST }}
           MTLS_KEY: ${{ inputs.MTLS_KEY }}
           ENABLE_MUTUAL_TLS: ${{ inputs.ENABLE_MUTUAL_TLS }}
         run: ./deploy_api.sh
-
-      - name: create_int_release_notes
-        uses: ./.github/actions/update_confluence_jira
-        if: ${{ inputs.CREATE_INT_RELEASE_NOTES == true && always() && !failure() && !cancelled() }}
-        with:
-          TARGET_ENVIRONMENT: int
-          CONFLUENCE_PAGE_ID: "789747642"
-          CREATE_RC_RELEASE_NOTES: false
-          DEV_CLOUD_FORMATION_CHECK_VERSION_ROLE: ${{ secrets.DEV_CLOUD_FORMATION_CHECK_VERSION_ROLE }}
-          TARGET_CLOUD_FORMATION_CHECK_VERSION_ROLE: ${{ secrets.INT_CLOUD_FORMATION_CHECK_VERSION_ROLE }}
-          DEV_CLOUD_FORMATION_EXECUTE_LAMBDA_ROLE: ${{ secrets.DEV_CLOUD_FORMATION_EXECUTE_LAMBDA_ROLE }}
-
-      - name: create_prod_release_notes
-        uses: ./.github/actions/update_confluence_jira
-        if: ${{ inputs.CREATE_PROD_RELEASE_NOTES == true && always() && !failure() && !cancelled() }}
-        with:
-          TARGET_ENVIRONMENT: prod
-          CONFLUENCE_PAGE_ID: "789747646"
-          CREATE_RC_RELEASE_NOTES: false
-          DEV_CLOUD_FORMATION_CHECK_VERSION_ROLE: ${{ secrets.DEV_CLOUD_FORMATION_CHECK_VERSION_ROLE }}
-          TARGET_CLOUD_FORMATION_CHECK_VERSION_ROLE: ${{ secrets.PROD_CLOUD_FORMATION_CHECK_VERSION_ROLE }}
-          DEV_CLOUD_FORMATION_EXECUTE_LAMBDA_ROLE: ${{ secrets.DEV_CLOUD_FORMATION_EXECUTE_LAMBDA_ROLE }}
-
-      - name: mark_released_in_jira
-        uses: ./.github/actions/mark_jira_released
-        if: ${{ inputs.MARK_JIRA_RELEASED == true && always() && !failure() && !cancelled() }}
-        with:
-          RELEASE_TAG: ${{ inputs.VERSION_NUMBER }}
-          DEV_CLOUD_FORMATION_EXECUTE_LAMBDA_ROLE: ${{ secrets.DEV_CLOUD_FORMATION_EXECUTE_LAMBDA_ROLE }}
-
       - name: Checkout gh-pages
-        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
         with:
           ref: gh-pages
           path: gh-pages
+          persist-credentials: true
 
-      - name: Update release tag in github pages
-        if: ${{ !startsWith(inputs.STACK_NAME, 'psu-pr-') }}
+      - name: update release tag in github pages
+        if: ${{ inputs.IS_PULL_REQUEST == false }}
         run: |
           cd gh-pages
           NOW=$(date +'%Y-%m-%dT%H:%M:%S')
-          echo "tag,release_datetime" > _data/${{ inputs.APIGEE_ENVIRONMENT }}_latest.csv
-          echo "${{ inputs.VERSION_NUMBER }},${NOW}" >> _data/${{ inputs.APIGEE_ENVIRONMENT }}_latest.csv
-          echo "${{ inputs.VERSION_NUMBER }},${NOW}" >> _data/${{ inputs.APIGEE_ENVIRONMENT }}_deployments.csv
+          echo "tag,release_datetime" > "_data/${APIGEE_ENVIRONMENT}_latest.csv"
+          echo "${VERSION_NUMBER},${NOW}" >> "_data/${APIGEE_ENVIRONMENT}_latest.csv"
+          echo "${VERSION_NUMBER},${NOW}" >> "_data/${APIGEE_ENVIRONMENT}_deployments.csv"
           git config user.name github-actions
           git config user.email github-actions@github.com
-          git add _data/${{ inputs.APIGEE_ENVIRONMENT }}_latest.csv
-          git add _data/${{ inputs.APIGEE_ENVIRONMENT }}_deployments.csv
-          git commit -m 'update releases for ${{ inputs.APIGEE_ENVIRONMENT }}'
+          git add "_data/${APIGEE_ENVIRONMENT}_latest.csv"
+          git add "_data/${APIGEE_ENVIRONMENT}_deployments.csv"
+          git commit -m "update releases for ${APIGEE_ENVIRONMENT}"
           parallel --retries 10 --delay 3 ::: "git pull --rebase && git push"
+        env:
+          APIGEE_ENVIRONMENT: ${{ inputs.APIGEE_ENVIRONMENT }}
+          VERSION_NUMBER: ${{ inputs.VERSION_NUMBER }}
 
   regression_tests:
     if: ${{ inputs.RUN_REGRESSION_TEST == true && always() && !failure() && !cancelled() }}
     name: Regression Tests
     uses: ./.github/workflows/run_regression_tests.yml
     needs: release_code_and_api
+    permissions:
+      id-token: write
+      contents: write
     with:
       ENVIRONMENT: ${{ inputs.APIGEE_ENVIRONMENT }}
       VERSION_NUMBER: ${{ inputs.VERSION_NUMBER }}
+      pinned_image: "${{ inputs.pinned_image }}"
     secrets:
       REGRESSION_TESTS_PEM: ${{ secrets.REGRESSION_TESTS_PEM }}

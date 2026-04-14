@@ -1,0 +1,41 @@
+info:
+  name: AWS PULL REQUEST Test Report
+  type: http
+  seq: 1
+
+http:
+  method: POST
+  url: https://psu-pr-{{aws_pull_request_id}}.dev.eps.national.nhs.uk/test-report
+  headers:
+    - name: x-request-id
+      value: "{{$guid}}"
+    - name: x-correlation-id
+      value: "{{$guid}}"
+  body:
+    type: json
+    data: "{\r
+
+      \    \"connectingSystemName\": \"unknown\",\r
+
+      \    \"prescriptionIds\": [\r
+
+      \        \"884D85-A83008-4ECFCS\"\r
+
+      \    ]\r
+
+      }\r\n"
+
+runtime:
+  scripts:
+    - type: before-request
+      code: "const task_identifier=bru.interpolate(\"{{$guid}}\");\r
+
+        \r
+
+        bru.setGlobalEnvVar(\"task_identifier\",task_identifier.toLowerCase());"
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
