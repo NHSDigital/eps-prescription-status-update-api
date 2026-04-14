@@ -1,0 +1,128 @@
+name: cdk release code
+
+on:
+  workflow_call:
+    inputs:
+      BRANCH_NAME:
+        required: true
+        type: string
+      STACK_NAME:
+        required: true
+        type: string
+      AWS_ENVIRONMENT:
+        required: true
+        type: string
+      VERSION_NUMBER:
+        required: true
+        type: string
+      COMMIT_ID:
+        required: true
+        type: string
+      CDK_APP_NAME:
+        required: true
+        type: string
+      LOG_RETENTION_IN_DAYS:
+        required: true
+        type: string
+      LOG_LEVEL:
+        type: string
+      IS_PULL_REQUEST:
+        type: boolean
+        required: true
+      TRUSTSTORE_FILE:
+        type: string
+        required: true
+      FORWARD_CSOC_LOGS:
+        type: boolean
+        required: true
+      DEPLOY_CHECK_PRESCRIPTION_STATUS_UPDATE:
+        type: boolean
+        required: true
+      EXPOSE_GET_STATUS_UPDATES:
+        type: boolean
+        required: true
+      SAM_STACK_NAME:
+        type: string
+        required: true
+      ENABLE_POST_DATED_NOTIFICATIONS:
+        type: boolean
+        required: true
+      REQUIRE_APPLICATION_NAME:
+        type: boolean
+        required: true
+      ENABLE_BACKUP:
+        type: boolean
+        required: true
+      pinned_image:
+        required: true
+        type: string
+    secrets:
+      CLOUD_FORMATION_DEPLOY_ROLE:
+        required: true
+permissions: {}
+
+jobs:
+  release_code:
+    runs-on: ubuntu-22.04
+    environment: ${{ inputs.AWS_ENVIRONMENT }}
+    container:
+      image: ${{ inputs.pinned_image }}
+      options: --user 1001:1001 --group-add 128
+    defaults:
+      run:
+        shell: bash
+    name: deploy cdk app ${{ inputs.CDK_APP_NAME }}
+    permissions:
+      id-token: write
+      contents: read
+
+    steps:
+      - name: copy .tool-versions
+        run: |
+          cp /home/vscode/.tool-versions "$HOME/.tool-versions"
+
+      - name: build_artifact download
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c
+        with:
+          name: build_artifact
+
+      - name: extract build_artifact
+        run: tar -xf artifact.tar
+
+      - name: install dependencies
+        uses: ./.github/actions/install_dependencies
+        with:
+          npm-required: false
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Configure AWS Credentials
+        id: connect-aws-deploy
+        uses: aws-actions/configure-aws-credentials@8df5847569e6427dd6c4fb1cf565c83acfa8afa7
+        with:
+          aws-region: eu-west-2
+          role-to-assume: ${{ secrets.CLOUD_FORMATION_DEPLOY_ROLE }}
+          role-session-name: psu-deployment
+
+      - name: Deploy AWS infrastructure and code
+        run: npm run cdk-deploy --workspace packages/cdk
+        shell: bash
+        env:
+          CDK_APP_NAME: "${{ inputs.CDK_APP_NAME }}"
+          CDK_CONFIG_stackName: "${{ inputs.STACK_NAME }}"
+          CDK_CONFIG_versionNumber: "${{ inputs.VERSION_NUMBER }}"
+          CDK_CONFIG_commitId: "${{ inputs.COMMIT_ID }}"
+          CDK_CONFIG_isPullRequest: "${{ inputs.IS_PULL_REQUEST }}"
+          CDK_CONFIG_environment: "${{ inputs.AWS_ENVIRONMENT }}"
+          CDK_CONFIG_logRetentionInDays: "${{ inputs.LOG_RETENTION_IN_DAYS }}"
+          CDK_CONFIG_logLevel: "${{ inputs.LOG_LEVEL }}"
+          CDK_CONFIG_trustStoreFile: "${{ inputs.TRUSTSTORE_FILE }}"
+          CDK_CONFIG_forwardCsocLogs: "${{ inputs.FORWARD_CSOC_LOGS }}"
+          CDK_CONFIG_deployCheckPrescriptionStatusUpdate: "${{ inputs.DEPLOY_CHECK_PRESCRIPTION_STATUS_UPDATE }}"
+          CDK_CONFIG_exposeGetStatusUpdates: "${{ inputs.EXPOSE_GET_STATUS_UPDATES }}"
+          CDK_CONFIG_samStackName: "${{ inputs.SAM_STACK_NAME }}"
+          CDK_CONFIG_enablePostDatedNotifications: "${{ inputs.ENABLE_POST_DATED_NOTIFICATIONS }}"
+          CDK_CONFIG_requireApplicationName: "${{ inputs.REQUIRE_APPLICATION_NAME }}"
+          CDK_CONFIG_enableBackup: "${{ inputs.ENABLE_BACKUP }}"
+          REQUIRE_APPROVAL: "never"
+
+# later, there will be API deployment steps c.f. https://github.com/NHSDigital/electronic-prescription-service-clinical-prescription-tracker/blob/main/.github/workflows/cdk_release_code.yml

@@ -53,7 +53,48 @@ jobs:
     secrets:
       EXECUTE_JIRA_LAMBDA_ROLE: ${{ secrets.DEV_CLOUD_FORMATION_EXECUTE_LAMBDA_ROLE }}
 
-  package_code:
+  cdk_package_code:
+    needs: [get_commit_id, tag_release, get_config_values]
+    uses: ./.github/workflows/cdk_package_code.yml
+    permissions:
+      contents: read
+      packages: read
+      id-token: write
+    with:
+      BRANCH_NAME: main
+      VERSION_NUMBER: ${{ needs.tag_release.outputs.version_tag }}
+      COMMIT_ID: ${{ needs.get_commit_id.outputs.commit_id }}
+      pinned_image: ${{ needs.get_config_values.outputs.pinned_image }}
+
+  cdk_release_dev:
+    needs: [cdk_package_code, get_commit_id, tag_release, get_config_values]
+    uses: ./.github/workflows/cdk_release_code.yml
+    permissions:
+      contents: write
+      id-token: write
+    with:
+      pinned_image: ${{ needs.get_config_values.outputs.pinned_image }}
+      BRANCH_NAME: main
+      STACK_NAME: psu-cdk
+      AWS_ENVIRONMENT: dev
+      VERSION_NUMBER: ${{ needs.tag_release.outputs.version_tag }}
+      COMMIT_ID: ${{ needs.get_commit_id.outputs.commit_id }}
+      CDK_APP_NAME: PsuStatelessApp
+      LOG_RETENTION_IN_DAYS: "30"
+      LOG_LEVEL: DEBUG
+      IS_PULL_REQUEST: false
+      TRUSTSTORE_FILE: psu-truststore.pem
+      FORWARD_CSOC_LOGS: false
+      DEPLOY_CHECK_PRESCRIPTION_STATUS_UPDATE: true
+      EXPOSE_GET_STATUS_UPDATES: false
+      SAM_STACK_NAME: psu
+      ENABLE_POST_DATED_NOTIFICATIONS: true
+      REQUIRE_APPLICATION_NAME: false
+      ENABLE_BACKUP: true
+    secrets:
+      CLOUD_FORMATION_DEPLOY_ROLE: ${{ secrets.DEV_CLOUD_FORMATION_DEPLOY_ROLE }}
+
+  sam_package_code:
     needs: [tag_release, get_config_values]
     uses: ./.github/workflows/run_package_code_and_api.yml
     permissions:
@@ -64,7 +105,7 @@ jobs:
       pinned_image: ${{ needs.get_config_values.outputs.pinned_image }}
 
   release_dev:
-    needs: [tag_release, package_code, get_commit_id, get_config_values]
+    needs: [tag_release, sam_package_code, get_commit_id, get_config_values]
     uses: ./.github/workflows/run_release_code_and_api.yml
     permissions:
       contents: write
@@ -117,7 +158,7 @@ jobs:
       REGRESSION_TESTS_PEM: ${{ secrets.REGRESSION_TESTS_PEM }}
 
   release_dev_sandbox:
-    needs: [tag_release, package_code, get_commit_id, get_config_values]
+    needs: [tag_release, sam_package_code, get_commit_id, get_config_values]
     uses: ./.github/workflows/run_release_code_and_api.yml
     permissions:
       contents: write
@@ -168,7 +209,7 @@ jobs:
         tag_release,
         release_dev,
         release_dev_sandbox,
-        package_code,
+        sam_package_code,
         get_commit_id,
         get_config_values,
       ]
@@ -224,7 +265,7 @@ jobs:
         tag_release,
         release_dev,
         release_dev_sandbox,
-        package_code,
+        sam_package_code,
         get_commit_id,
         get_config_values,
       ]
@@ -276,7 +317,13 @@ jobs:
 
   release_int:
     needs:
-      [tag_release, release_qa, package_code, get_commit_id, get_config_values]
+      [
+        tag_release,
+        release_qa,
+        sam_package_code,
+        get_commit_id,
+        get_config_values,
+      ]
     uses: ./.github/workflows/run_release_code_and_api.yml
     permissions:
       contents: write
@@ -329,7 +376,13 @@ jobs:
 
   release_int_sandbox:
     needs:
-      [tag_release, release_qa, package_code, get_commit_id, get_config_values]
+      [
+        tag_release,
+        release_qa,
+        sam_package_code,
+        get_commit_id,
+        get_config_values,
+      ]
     uses: ./.github/workflows/run_release_code_and_api.yml
     permissions:
       contents: write
@@ -380,7 +433,7 @@ jobs:
         tag_release,
         release_int,
         release_int_sandbox,
-        package_code,
+        sam_package_code,
         get_commit_id,
         get_config_values,
       ]
