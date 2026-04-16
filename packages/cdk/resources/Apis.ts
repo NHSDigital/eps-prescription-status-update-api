@@ -110,7 +110,7 @@ export class Apis extends Construct {
       format1UpdatePrescriptionStatusEndpoint: format1PsuEndpoint,
       status: statusEndpoint,
       capabilityStatement: capabilityStatementEndpoint,
-      notificationDeliveryStatusCallback: notifyCallbackEndpoint,
+      notificationDeliveryStatusCallback: notifyCallbackEndpoint
     }
 
     // GET /checkprescriptionstatusupdates — conditional Lambda proxy integration

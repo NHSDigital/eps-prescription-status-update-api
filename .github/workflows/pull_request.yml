@@ -135,6 +135,39 @@ jobs:
     secrets:
       CLOUD_FORMATION_DEPLOY_ROLE: ${{ secrets.DEV_CLOUD_FORMATION_DEPLOY_ROLE }}
 
+  cdk_stateful_release_code:
+    needs:
+      [get_issue_number, cdk_package_code, get_commit_id, get_config_values]
+    uses: ./.github/workflows/cdk_stateful_release_code.yml
+    permissions:
+      contents: write
+      id-token: write
+    with:
+      pinned_image: ${{ needs.get_config_values.outputs.pinned_image }}
+      BRANCH_NAME: ${{ github.event.pull_request.head.ref }}
+      STACK_NAME: psu-cdk-pr-${{needs.get_issue_number.outputs.issue_number}}-stateful
+      AWS_ENVIRONMENT: dev
+      VERSION_NUMBER: PR-${{ needs.get_issue_number.outputs.issue_number }}
+      COMMIT_ID: ${{ needs.get_commit_id.outputs.commit_id }}
+      LOG_RETENTION_IN_DAYS: "30"
+      IS_PULL_REQUEST: true
+      ENABLE_DYNAMODB_AUTO_SCALING: false
+      ENABLE_BACKUP: false
+      ENABLED_SITE_ODS_CODES: "A83008,FA565"
+      ENABLED_SYSTEMS: "Internal Test System"
+      ENABLED_SUPPLIER_APPLICATION_IDS: "XXXXX"
+      BLOCKED_SITE_ODS_CODES: "XXXXX"
+      NOTIFY_ROUTING_PLAN_ID: "e57fe5cc-0567-4854-abe2-b7dd9014a50c"
+      NOTIFY_API_BASE_URL: "https://int.api.service.nhs.uk"
+      ENABLE_NOTIFICATIONS_EXTERNAL: "false"
+      ENABLE_NOTIFICATIONS_INTERNAL: "true"
+      TEST_PRESCRIPTIONS_1: ${{ vars.TEST_PRESCRIPTIONS_1_VALUES }}
+      TEST_PRESCRIPTIONS_2: ${{ vars.TEST_PRESCRIPTIONS_2_VALUES }}
+      TEST_PRESCRIPTIONS_3: ${{ vars.TEST_PRESCRIPTIONS_3_VALUES }}
+      TEST_PRESCRIPTIONS_4: ${{ vars.TEST_PRESCRIPTIONS_4_VALUES }}
+    secrets:
+      CLOUD_FORMATION_DEPLOY_ROLE: ${{ secrets.DEV_CLOUD_FORMATION_DEPLOY_ROLE }}
+
   sam_package_code:
     needs: [get_issue_number, get_config_values]
     uses: ./.github/workflows/run_package_code_and_api.yml
