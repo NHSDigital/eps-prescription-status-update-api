@@ -5,8 +5,9 @@ import {
   expect,
   describe,
   it,
-  jest
-} from "@jest/globals"
+  vi,
+  beforeEach
+} from "vitest"
 
 import {
   APPLICATION_NAME,
@@ -16,7 +17,6 @@ import {
   generateBody,
   generateExpectedItems,
   generateMockEvent,
-  mockDynamoDBClient,
   TASK_VALUES,
   getTestPrescriptions
 } from "./utils/testUtils"
@@ -36,29 +36,43 @@ import {
   timeoutResponse
 } from "../src/utils/responses"
 import {QueryCommand, TransactionCanceledException, TransactWriteItemsCommand} from "@aws-sdk/client-dynamodb"
-import {LOG_MESSAGES} from "@psu-common/utilities"
 
-const {mockSend: dynamoDBMockSend} = mockDynamoDBClient()
+const {dynamoDBMockSend, mockPushPrescriptionToNotificationSQS, mockGetParametersByName, mockInitiatedSSMProvider} =
+  vi.hoisted(() => {
+    const mockGetParametersByName = vi.fn(async () => Promise.resolve(
+      {[process.env.ENABLE_NOTIFICATIONS_PARAM!]: "false"}
+    ))
+    return {
+      dynamoDBMockSend: vi.fn(),
+      mockPushPrescriptionToNotificationSQS: vi.fn().mockImplementation(async () => Promise.resolve()),
+      mockGetParametersByName,
+      mockInitiatedSSMProvider: {getParametersByName: mockGetParametersByName}
+    }
+  })
 
-const mockPushPrescriptionToNotificationSQS = jest.fn().mockImplementation(async () => Promise.resolve())
-jest.unstable_mockModule("../src/utils/sqsClient", async () => ({
+vi.mock("@aws-sdk/client-dynamodb", async (importOriginal) => {
+  const mod = await importOriginal<typeof import("@aws-sdk/client-dynamodb")>()
+  return {
+    ...mod,
+    DynamoDBClient: vi.fn(class {
+      send = dynamoDBMockSend
+    })
+  }
+})
+
+vi.mock("../src/utils/sqsClient", async () => ({
   __esModule: true,
   pushPrescriptionToNotificationSQS: mockPushPrescriptionToNotificationSQS
 }))
 
-const mockGetParametersByName = jest.fn(async () => Promise.resolve(
-  {[process.env.ENABLE_NOTIFICATIONS_PARAM!]: "false"}
-))
-
-const mockInitiatedSSMProvider = {
-  getParametersByName: mockGetParametersByName
-}
-
-jest.unstable_mockModule("@psu-common/utilities", async () => ({
-  getTestPrescriptions: getTestPrescriptions,
-  initiatedSSMProvider: mockInitiatedSSMProvider,
-  LOG_MESSAGES: LOG_MESSAGES
-}))
+vi.mock("@psu-common/utilities", async (importOriginal) => {
+  const mod = await importOriginal<typeof import("@psu-common/utilities")>()
+  return {
+    ...mod,
+    getTestPrescriptions: getTestPrescriptions,
+    initiatedSSMProvider: mockInitiatedSSMProvider
+  }
+})
 
 const {handler, logger} = await import("../src/updatePrescriptionStatus")
 
@@ -68,12 +82,27 @@ const ORIGINAL_ENV = {...process.env}
 
 describe("Integration tests for updatePrescriptionStatus handler", () => {
   beforeEach(() => {
-    jest.resetModules()
+    vi.resetModules()
     process.env = {...ORIGINAL_ENV}
-    jest.clearAllMocks()
-    jest.resetAllMocks()
-    jest.clearAllTimers()
-    jest.useFakeTimers().setSystemTime(DEFAULT_DATE)
+    vi.clearAllMocks()
+    vi.clearAllTimers()
+    vi.useFakeTimers().setSystemTime(DEFAULT_DATE)
+
+    dynamoDBMockSend.mockReset()
+    dynamoDBMockSend.mockImplementation(async (command: unknown) => {
+      if (command instanceof QueryCommand) {
+        return {Items: []}
+      }
+      return {}
+    })
+
+    mockPushPrescriptionToNotificationSQS.mockReset()
+    mockPushPrescriptionToNotificationSQS.mockImplementation(async () => Promise.resolve())
+
+    mockGetParametersByName.mockReset()
+    mockGetParametersByName.mockImplementation(async () => Promise.resolve(
+      {[process.env.ENABLE_NOTIFICATIONS_PARAM!]: "false"}
+    ))
   })
 
   it("when request doesn't have correct resourceType and type, expect 400 status code and appropriate message", async () => {
@@ -267,7 +296,7 @@ describe("Integration tests for updatePrescriptionStatus handler", () => {
     const event: APIGatewayProxyEvent = generateMockEvent(requestDispatched)
     const eventHandler: Promise<APIGatewayProxyResult> = handler(event, {})
 
-    await jest.advanceTimersByTimeAsync(LAMBDA_TIMEOUT_MS)
+    await vi.advanceTimersByTimeAsync(LAMBDA_TIMEOUT_MS)
 
     const response = await eventHandler
     expect(response.statusCode).toBe(504)
@@ -427,7 +456,7 @@ describe("Integration tests for updatePrescriptionStatus handler", () => {
   it("when updates already exist for an item, logs transitions", async () => {
     const body = generateBody()
     const mockEvent: APIGatewayProxyEvent = generateMockEvent(body)
-    const loggerSpy = jest.spyOn(logger, "info")
+    const loggerSpy = vi.spyOn(logger, "info")
 
     dynamoDBMockSend.mockImplementation(
       async (command) => {

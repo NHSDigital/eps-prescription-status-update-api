@@ -5,8 +5,8 @@ import {
   expect,
   describe,
   it,
-  jest
-} from "@jest/globals"
+  vi
+} from "vitest"
 import capabilityStatement from "../src/apim-medicines-prescriptionstatusupdate.json"
 import {mockAPIGatewayProxyEvent, mockContext} from "@psu-common/testing"
 
@@ -25,7 +25,7 @@ describe("Unit test for app handler", function () {
   })
 
   it("appends trace id's to the logger", async () => {
-    const mockAppendKeys = jest.spyOn(Logger.prototype, "appendKeys")
+    const mockAppendKeys = vi.spyOn(Logger.prototype, "appendKeys")
 
     await handler(mockAPIGatewayProxyEvent, mockContext)
 
