@@ -415,7 +415,7 @@ jobs:
       ENABLE_POST_DATED_NOTIFICATIONS: false
       ENABLED_SYSTEMS: "CrxPatientApp"
       BLOCKED_SITE_ODS_CODES: "XXXXX" # Workaround empty string handling
-      ENABLED_SUPPLIER_APPLICATION_IDS: "XXXXX"
+      ENABLED_SUPPLIER_APPLICATION_IDS: "30c8d461-e875-4882-85d1-4d5d90f7f17b,f7a08809-09f5-4215-a5c8-e280705aba77,401b11d1-5608-4d6e-8359-9bbed6c90e7e,4b2d703f-d8bb-4c82-8340-b1a97481a46a,9331742d-ccc3-4081-b54b-22e8f946a1ce,ee353200-2b8f-47be-8b70-d0777e80d92f"
       NOTIFY_ROUTING_PLAN_ID: "e57fe5cc-0567-4854-abe2-b7dd9014a50c" # INT and PROD share a value
       NOTIFY_API_BASE_URL: "https://api.service.nhs.uk"
       MTLS_KEY: psu-mtls-1
