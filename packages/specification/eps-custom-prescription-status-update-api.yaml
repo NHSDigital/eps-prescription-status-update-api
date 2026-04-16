@@ -28,8 +28,7 @@ info:
     * [Electronic Prescriptions Service Dispensing](https://digital.nhs.uk/developer/api-catalogue/eps-fhir-dispensing-api): the national service for dispensing prescriptions across health and social care.
     * [Prescriptions for Patients](https://digital.nhs.uk/developer/api-catalogue/prescriptions-for-patients-fhir-api-v2): the national service to retrieve prescriptions data for individual patients from the Electronic Prescription Service (EPS), for use in patient-facing applications.
     ## API status and roadmap
-    This API is [in beta](https://digital.nhs.uk/developer/guides-and-documentation/reference-guide#statuses), which means it is being used by a small number of suppliers and could still be subject to breaking changes.
-    ## Service Level
+    This API is [in development](https://digital.nhs.uk/developer/guides-and-documentation/reference-guide#statuses), meaning the API will soon be available for testing via a sandbox service or an integration environment - but we expect to make breaking changes based on developer feedback.    ## Service Level
     This API is a silver service, meaning it is operational and supported between 8am and 6pm, Monday to Friday, but not bank holidays.
     For more details see [service levels](https://digital.nhs.uk/developer/guides-and-documentation/reference-guide#service-levels).
     ## Technology
