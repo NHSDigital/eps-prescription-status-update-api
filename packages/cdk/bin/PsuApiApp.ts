@@ -5,8 +5,8 @@ import {
   getConfigFromEnvVar,
   getNumberConfigFromEnvVar
 } from "@nhsdigital/eps-cdk-constructs"
-import {PsuStatelessStack} from "../stacks/PsuStatelessStack"
-import {PsuStatefulStack} from "../stacks/PsuStatefulStack"
+import {PsuApiStatelessStack} from "../stacks/PsuApiStatelessStack"
+import {PsuApiStatefulStack} from "../stacks/PsuApiStatefulStack"
 
 type StackMode = "stateless" | "stateful"
 
@@ -31,7 +31,7 @@ async function main() {
   const stackMode = getStackMode()
 
   if (stackMode === "stateless") {
-    new PsuStatelessStack(app, "PsuStatelessStack", {
+    new PsuApiStatelessStack(app, "PsuApiStatelessStack", {
       ...props,
       stackName: calculateVersionedStackName(getConfigFromEnvVar("stackName"), props),
       samStackName: getConfigFromEnvVar("samStackName"), // TODO: REMOVE THE NEED FOR THIS
@@ -53,7 +53,7 @@ async function main() {
   // Stateful stacks use a stable (non-versioned) stack name so that the same
   // CloudFormation stack is updated in-place on every deployment rather than
   // creating a new stack per version.
-  new PsuStatefulStack(app, "PsuStatefulStack", {
+  new PsuApiStatefulStack(app, "PsuApiStatefulStack", {
     ...props,
     stackName: getConfigFromEnvVar("stackName"),
     logRetentionInDays: getNumberConfigFromEnvVar("logRetentionInDays"),

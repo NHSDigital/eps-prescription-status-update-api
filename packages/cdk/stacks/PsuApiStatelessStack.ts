@@ -5,7 +5,7 @@ import {Functions} from "../resources/Functions"
 import {StateMachines} from "../resources/StateMachines"
 import {Apis} from "../resources/Apis"
 
-export interface PsuStatelessStackProps extends StandardStackProps {
+export interface PsuApiStatelessStackProps extends StandardStackProps {
   readonly stackName: string
   readonly samStackName: string
   readonly logRetentionInDays: number
@@ -21,8 +21,8 @@ export interface PsuStatelessStackProps extends StandardStackProps {
   readonly enableBackup: boolean
 }
 
-export class PsuStatelessStack extends Stack {
-  public constructor(scope: App, id: string, props: PsuStatelessStackProps) {
+export class PsuApiStatelessStack extends Stack {
+  public constructor(scope: App, id: string, props: PsuApiStatelessStackProps) {
     super(scope, id, props)
 
     const functions = new Functions(this, "Functions", {

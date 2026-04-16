@@ -7,8 +7,8 @@ export const nagSuppressions = (stack: Stack) => {
   safeAddNagSuppressionGroup(
     stack,
     [
-      "/PsuStatelessStack/StateMachines/UpdatePrescriptionStatusStateMachine/StateMachinePutLogsManagedPolicy/Resource",
-      "/PsuStatelessStack/StateMachines/Format1UpdatePrescriptionsStatusStateMachine/StateMachinePutLogsManagedPolicy/Resource"
+      "/PsuApiStatelessStack/StateMachines/UpdatePrescriptionStatusStateMachine/StateMachinePutLogsManagedPolicy/Resource",
+      "/PsuApiStatelessStack/StateMachines/Format1UpdatePrescriptionsStatusStateMachine/StateMachinePutLogsManagedPolicy/Resource"
     ],
     [
       {
@@ -21,7 +21,7 @@ export const nagSuppressions = (stack: Stack) => {
   // API Gateway does not use request validation — validation is handled by service logic
   safeAddNagSuppression(
     stack,
-    "/PsuStatelessStack/Apis/RestApiGateway/ApiGateway/Resource",
+    "/PsuApiStatelessStack/Apis/RestApiGateway/ApiGateway/Resource",
     [
       {
         id: "AwsSolutions-APIG2",
@@ -33,7 +33,7 @@ export const nagSuppressions = (stack: Stack) => {
   // API Gateway CloudWatch role uses AWS managed policy
   safeAddNagSuppression(
     stack,
-    "/PsuStatelessStack/Apis/RestApiGateway/ApiGateway/CloudWatchRole/Resource",
+    "/PsuApiStatelessStack/Apis/RestApiGateway/ApiGateway/CloudWatchRole/Resource",
     [
       {
         id: "AwsSolutions-IAM4",
@@ -46,7 +46,7 @@ export const nagSuppressions = (stack: Stack) => {
   // API Gateway stage is not associated with WAFv2 — WAF is managed externally via Apigee
   safeAddNagSuppression(
     stack,
-    "/PsuStatelessStack/Apis/RestApiGateway/ApiGateway/DeploymentStage.prod/Resource",
+    "/PsuApiStatelessStack/Apis/RestApiGateway/ApiGateway/DeploymentStage.prod/Resource",
     [
       {
         id: "AwsSolutions-APIG3",
@@ -59,12 +59,12 @@ export const nagSuppressions = (stack: Stack) => {
   safeAddNagSuppressionGroup(
     stack,
     [
-      "/PsuStatelessStack/Apis/RestApiGateway/ApiGateway/Default/POST/Resource",
-      "/PsuStatelessStack/Apis/RestApiGateway/ApiGateway/Default/format-1/POST/Resource",
-      "/PsuStatelessStack/Apis/RestApiGateway/ApiGateway/Default/notification-delivery-status-callback/POST/Resource",
-      "/PsuStatelessStack/Apis/RestApiGateway/ApiGateway/Default/_status/GET/Resource",
-      "/PsuStatelessStack/Apis/RestApiGateway/ApiGateway/Default/metadata/GET/Resource",
-      "/PsuStatelessStack/Apis/RestApiGateway/ApiGateway/Default/checkprescriptionstatusupdates/GET/Resource"
+      "/PsuApiStatelessStack/Apis/RestApiGateway/ApiGateway/Default/POST/Resource",
+      "/PsuApiStatelessStack/Apis/RestApiGateway/ApiGateway/Default/format-1/POST/Resource",
+      "/PsuApiStatelessStack/Apis/RestApiGateway/ApiGateway/Default/notification-delivery-status-callback/POST/Resource",
+      "/PsuApiStatelessStack/Apis/RestApiGateway/ApiGateway/Default/_status/GET/Resource",
+      "/PsuApiStatelessStack/Apis/RestApiGateway/ApiGateway/Default/metadata/GET/Resource",
+      "/PsuApiStatelessStack/Apis/RestApiGateway/ApiGateway/Default/checkprescriptionstatusupdates/GET/Resource"
     ],
     [
       {
@@ -74,6 +74,25 @@ export const nagSuppressions = (stack: Stack) => {
       {
         id: "AwsSolutions-COG4",
         reason: "This API does not use Cognito for authentication. Auth is handled via mutual TLS and the Apigee API gateway proxy."
+      }
+    ]
+  )
+
+}
+
+export const nagSuppressionsSandbox = (stack: Stack) => {
+  // Sandbox HTTP API methods do not use API Gateway authorizers — auth is external via mTLS/Apigee
+  safeAddNagSuppressionGroup(
+    stack,
+    [
+      "/PsuApiSandboxStack/HttpApiGateway/POST--/Resource",
+      "/PsuApiSandboxStack/HttpApiGateway/GET--_status/Resource",
+      "/PsuApiSandboxStack/HttpApiGateway/GET--metadata/Resource"
+    ],
+    [
+      {
+        id: "AwsSolutions-APIG4",
+        reason: "Authorization is handled externally via mutual TLS and the Apigee API gateway proxy. API Gateway methods do not require an additional authorizer."
       }
     ]
   )

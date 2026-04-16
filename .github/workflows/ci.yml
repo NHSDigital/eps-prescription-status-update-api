@@ -152,47 +152,30 @@ jobs:
       REGRESSION_TESTS_PEM: ${{ secrets.REGRESSION_TESTS_PEM }}
 
   release_sandbox_dev:
-    needs: [tag_release, sam_package_code, get_commit_id, get_config_values]
-    uses: ./.github/workflows/run_release_code_and_api.yml
+    needs: [cdk_package_code, get_commit_id, tag_release, get_config_values]
+    uses: ./.github/workflows/cdk_release_code.yml
     permissions:
       contents: write
       id-token: write
     with:
       pinned_image: ${{ needs.get_config_values.outputs.pinned_image }}
-      ARTIFACT_BUCKET_PREFIX: ${{needs.tag_release.outputs.version_tag}}-sandbox
+      BRANCH_NAME: main
+      APP_NAME: PsuApiSandboxApp
       STACK_NAME: psu-sandbox
       AWS_ENVIRONMENT: dev
-      APIGEE_ENVIRONMENT: internal-dev-sandbox
-      ENABLE_MUTUAL_TLS: true
-      BUILD_ARTIFACT: packaged_sandbox_code
-      TRUSTSTORE_FILE: psu-sandbox-truststore.pem
       VERSION_NUMBER: ${{needs.tag_release.outputs.version_tag}}
       COMMIT_ID: ${{needs.get_commit_id.outputs.commit_id}}
-      LOG_RETENTION_DAYS: 30
-      DEPLOY_APIGEE: true
-      DYNAMODB_AUTOSCALE: false
-      DEPLOY_APIGEE_CPSU: true
-      DEPLOY_CHECK_PRESCRIPTION_STATUS_UPDATE: true
-      EXPOSE_GET_STATUS_UPDATES: false
-      RUN_REGRESSION_TEST: false
-      STATE_MACHINE_LOG_LEVEL: ALL
+      LOG_RETENTION_IN_DAYS: "30"
       LOG_LEVEL: DEBUG
-      ENABLE_BACKUP: "False"
-      ENABLE_NOTIFICATIONS_INTERNAL: false
-      ENABLE_NOTIFICATIONS_EXTERNAL: false
-      ENABLE_POST_DATED_NOTIFICATIONS: true
-      ENABLED_SYSTEMS: "Internal Test System"
-      BLOCKED_SITE_ODS_CODES: "B3J1Z"
-      ENABLED_SUPPLIER_APPLICATION_IDS: "XXXXX" # Workaround empty string handling
-      NOTIFY_ROUTING_PLAN_ID: "e57fe5cc-0567-4854-abe2-b7dd9014a50c"
-      NOTIFY_API_BASE_URL: "https://int.api.service.nhs.uk"
-      MTLS_KEY: psu-mtls-1
       IS_PULL_REQUEST: false
+      TRUSTSTORE_FILE: psu-sandbox-truststore.pem
+      TRUST_STORE_VERSION: "none"
+      ENABLE_MUTUAL_TLS: true
+      ENABLE_SPLUNK: false
+      ENABLE_BACKUP: false
       FORWARD_CSOC_LOGS: false
     secrets:
-      REGRESSION_TESTS_PEM: ${{ secrets.REGRESSION_TESTS_PEM }}
       CLOUD_FORMATION_DEPLOY_ROLE: ${{ secrets.DEV_CLOUD_FORMATION_DEPLOY_ROLE }}
-      PROXYGEN_ROLE: ${{ secrets.PROXYGEN_PTL_ROLE }}
 
   release_qa:
     needs:

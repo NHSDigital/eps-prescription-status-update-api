@@ -230,44 +230,29 @@ jobs:
       PROXYGEN_ROLE: ${{ secrets.PROXYGEN_PTL_ROLE }}
       REGRESSION_TESTS_PEM: ${{ secrets.REGRESSION_TESTS_PEM }}
 
-  release_sandbox_code:
+  cdk_sandbox_release_code:
     needs:
-      [get_issue_number, sam_package_code, get_commit_id, get_config_values]
-    uses: ./.github/workflows/run_release_code_and_api.yml
+      [get_issue_number, cdk_package_code, get_commit_id, get_config_values]
+    uses: ./.github/workflows/cdk_release_code.yml
     permissions:
       contents: write
       id-token: write
     with:
       pinned_image: ${{ needs.get_config_values.outputs.pinned_image }}
+      BRANCH_NAME: ${{ github.event.pull_request.head.ref }}
+      APP_NAME: PsuApiSandboxApp
       STACK_NAME: psu-pr-${{needs.get_issue_number.outputs.issue_number}}-sandbox
-      ARTIFACT_BUCKET_PREFIX: PR-${{needs.get_issue_number.outputs.issue_number}}-sandbox
       AWS_ENVIRONMENT: dev
-      APIGEE_ENVIRONMENT: internal-dev-sandbox
-      ENABLE_MUTUAL_TLS: false
-      BUILD_ARTIFACT: packaged_sandbox_code
-      TRUSTSTORE_FILE: psu-sandbox-truststore.pem
       VERSION_NUMBER: PR-${{ needs.get_issue_number.outputs.issue_number }}
       COMMIT_ID: ${{ needs.get_commit_id.outputs.commit_id }}
-      LOG_RETENTION_DAYS: 30
-      DEPLOY_APIGEE: true
-      DYNAMODB_AUTOSCALE: false
-      DEPLOY_APIGEE_CPSU: true
-      DEPLOY_CHECK_PRESCRIPTION_STATUS_UPDATE: true
-      EXPOSE_GET_STATUS_UPDATES: false
-      RUN_REGRESSION_TEST: false
-      STATE_MACHINE_LOG_LEVEL: ALL
-      ENABLE_BACKUP: "False"
-      ENABLE_NOTIFICATIONS_INTERNAL: false
-      ENABLE_NOTIFICATIONS_EXTERNAL: false
-      ENABLED_SYSTEMS: "Internal Test System"
-      BLOCKED_SITE_ODS_CODES: "B3J1Z"
-      ENABLED_SUPPLIER_APPLICATION_IDS: "XXXXX" # Workaround empty string handling
-      NOTIFY_ROUTING_PLAN_ID: "e57fe5cc-0567-4854-abe2-b7dd9014a50c"
-      NOTIFY_API_BASE_URL: "https://int.api.service.nhs.uk"
-      MTLS_KEY: psu-mtls-1
+      LOG_RETENTION_IN_DAYS: "30"
+      LOG_LEVEL: DEBUG
       IS_PULL_REQUEST: true
+      TRUSTSTORE_FILE: psu-sandbox-truststore.pem
+      TRUST_STORE_VERSION: "none"
+      ENABLE_MUTUAL_TLS: false
+      ENABLE_SPLUNK: false
+      ENABLE_BACKUP: false
       FORWARD_CSOC_LOGS: false
     secrets:
       CLOUD_FORMATION_DEPLOY_ROLE: ${{ secrets.DEV_CLOUD_FORMATION_DEPLOY_ROLE }}
-      PROXYGEN_ROLE: ${{ secrets.PROXYGEN_PTL_ROLE }}
-      REGRESSION_TESTS_PEM: ${{ secrets.REGRESSION_TESTS_PEM }}

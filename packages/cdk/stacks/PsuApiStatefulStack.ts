@@ -5,7 +5,7 @@ import {Tables} from "../resources/Tables"
 import {Secrets} from "../resources/Secrets"
 import {Messaging} from "../resources/Messaging"
 
-export interface PsuStatefulStackProps extends StandardStackProps {
+export interface PsuApiStatefulStackProps extends StandardStackProps {
   readonly stackName: string
   readonly logRetentionInDays: number
   readonly environment: string
@@ -26,8 +26,8 @@ export interface PsuStatefulStackProps extends StandardStackProps {
   readonly testPrescriptions4: string
 }
 
-export class PsuStatefulStack extends Stack {
-  public constructor(scope: App, id: string, props: PsuStatefulStackProps) {
+export class PsuApiStatefulStack extends Stack {
+  public constructor(scope: App, id: string, props: PsuApiStatefulStackProps) {
     super(scope, id, props)
 
     new Parameters(this, "Parameters", {

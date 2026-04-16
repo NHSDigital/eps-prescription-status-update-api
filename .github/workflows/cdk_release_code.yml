@@ -22,6 +22,22 @@ on:
         required: false
         type: string
         default: "stateless"
+      APP_NAME:
+        required: false
+        type: string
+        default: "PsuApiApp"
+      TRUST_STORE_VERSION:
+        type: string
+        required: false
+        default: "none"
+      ENABLE_MUTUAL_TLS:
+        type: boolean
+        required: false
+        default: false
+      ENABLE_SPLUNK:
+        type: boolean
+        required: false
+        default: false
       LOG_RETENTION_IN_DAYS:
         required: true
         type: string
@@ -137,9 +153,9 @@ jobs:
     defaults:
       run:
         shell: bash
-    name: deploy cdk app ${{ inputs.STACK_MODE }}
+    name: deploy cdk app ${{ inputs.APP_NAME }} ${{ inputs.STACK_MODE }}
     env:
-      CDK_APP_NAME: "PsuApiApp"
+      CDK_APP_NAME: "${{ inputs.APP_NAME }}"
       CDK_CONFIG_stackMode: "${{ inputs.STACK_MODE }}"
       CDK_CONFIG_stackName: "${{ inputs.STACK_NAME }}"
       CDK_CONFIG_versionNumber: "${{ inputs.VERSION_NUMBER }}"
@@ -149,6 +165,9 @@ jobs:
       CDK_CONFIG_logRetentionInDays: "${{ inputs.LOG_RETENTION_IN_DAYS }}"
       CDK_CONFIG_logLevel: "${{ inputs.LOG_LEVEL }}"
       CDK_CONFIG_trustStoreFile: "${{ inputs.TRUSTSTORE_FILE }}"
+      CDK_CONFIG_trustStoreVersion: "${{ inputs.TRUST_STORE_VERSION }}"
+      CDK_CONFIG_enableMutualTls: "${{ inputs.ENABLE_MUTUAL_TLS }}"
+      CDK_CONFIG_enableSplunk: "${{ inputs.ENABLE_SPLUNK }}"
       CDK_CONFIG_forwardCsocLogs: "${{ inputs.FORWARD_CSOC_LOGS }}"
       CDK_CONFIG_deployCheckPrescriptionStatusUpdate: "${{ inputs.DEPLOY_CHECK_PRESCRIPTION_STATUS_UPDATE }}"
       CDK_CONFIG_exposeGetStatusUpdates: "${{ inputs.EXPOSE_GET_STATUS_UPDATES }}"

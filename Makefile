@@ -11,6 +11,9 @@ export CDK_CONFIG_environment=dev
 export CDK_CONFIG_logRetentionInDays=30
 export CDK_CONFIG_logLevel=DEBUG
 export CDK_CONFIG_trustStoreFile=psu-truststore.pem
+export CDK_CONFIG_trustStoreVersion=none
+export CDK_CONFIG_enableMutualTls=false
+export CDK_CONFIG_enableSplunk=false
 export CDK_CONFIG_forwardCsocLogs=false
 export CDK_CONFIG_deployCheckPrescriptionStatusUpdate=true
 export CDK_CONFIG_exposeGetStatusUpdates=false
@@ -257,7 +260,7 @@ cdk-deploy:
 	REQUIRE_APPROVAL="$${REQUIRE_APPROVAL:-any-change}" && \
 	npm run cdk-deploy --workspace packages/cdk
 
-cdk-synth:
+cdk-stateless-synth:
 	CDK_APP_NAME=PsuApiApp \
 	CDK_CONFIG_stackMode=stateless \
 	CDK_CONFIG_stackName=psu-cdk \
@@ -280,6 +283,19 @@ cdk-stateful-synth:
 	CDK_CONFIG_logRetentionInDays=30 \
 	CDK_CONFIG_environment=dev \
 	CDK_CONFIG_enableDynamoDBAutoScaling=false \
+	CDK_CONFIG_enableBackup=false \
+	npm run cdk-synth --workspace packages/cdk
+
+cdk-sandbox-synth:
+	CDK_APP_NAME=PsuApiSandboxApp \
+	CDK_CONFIG_stackName=psu-sandbox \
+	CDK_CONFIG_logRetentionInDays=30 \
+	CDK_CONFIG_logLevel=DEBUG \
+	CDK_CONFIG_environment=dev \
+	CDK_CONFIG_trustStoreFile=psu-sandbox-truststore.pem \
+	CDK_CONFIG_trustStoreVersion=none \
+	CDK_CONFIG_enableMutualTls=false \
+	CDK_CONFIG_enableSplunk=false \
 	CDK_CONFIG_enableBackup=false \
 	npm run cdk-synth --workspace packages/cdk
 
