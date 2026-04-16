@@ -1,18 +1,54 @@
 import {
+  calculateVersionedStackName,
   createApp,
   getBooleanConfigFromEnvVar,
   getConfigFromEnvVar,
   getNumberConfigFromEnvVar
 } from "@nhsdigital/eps-cdk-constructs"
+import {PsuStatelessStack} from "../stacks/PsuStatelessStack"
 import {PsuStatefulStack} from "../stacks/PsuStatefulStack"
+
+type StackMode = "stateless" | "stateful"
+
+function getStackMode(): StackMode {
+  const stackMode = getConfigFromEnvVar("stackMode", undefined, "stateless")
+
+  if (stackMode === "stateless" || stackMode === "stateful") {
+    return stackMode
+  }
+
+  throw new Error(`Invalid CDK_CONFIG_stackMode: ${stackMode}. Expected 'stateless' or 'stateful'.`)
+}
 
 async function main() {
   const {app, props} = createApp({
     productName: "Prescription Status Update API",
-    appName: "PsuStatefulApp",
+    appName: "PsuApiApp",
     repoName: "eps-prescription-status-update-api",
     driftDetectionGroup: "psu-api"
   })
+
+  const stackMode = getStackMode()
+
+  if (stackMode === "stateless") {
+    new PsuStatelessStack(app, "PsuStatelessStack", {
+      ...props,
+      stackName: calculateVersionedStackName(getConfigFromEnvVar("stackName"), props),
+      samStackName: getConfigFromEnvVar("samStackName"), // TODO: REMOVE THE NEED FOR THIS
+      logRetentionInDays: getNumberConfigFromEnvVar("logRetentionInDays"),
+      logLevel: getConfigFromEnvVar("logLevel"),
+      environment: getConfigFromEnvVar("environment"),
+      mutualTlsTrustStoreKey: props.isPullRequest ? undefined : getConfigFromEnvVar("trustStoreFile"),
+      csocApiGatewayDestination: "arn:aws:logs:eu-west-2:693466633220:destination:api_gateway_log_destination",
+      forwardCsocLogs: getBooleanConfigFromEnvVar("forwardCsocLogs"),
+      deployCheckPrescriptionStatusUpdate: getBooleanConfigFromEnvVar("deployCheckPrescriptionStatusUpdate"),
+      exposeGetStatusUpdates: getBooleanConfigFromEnvVar("exposeGetStatusUpdates"),
+      enablePostDatedNotifications: getConfigFromEnvVar("enablePostDatedNotifications", undefined, "false"),
+      requireApplicationName: getConfigFromEnvVar("requireApplicationName", undefined, "false"),
+      enableBackup: getBooleanConfigFromEnvVar("enableBackup", undefined, "false")
+    })
+    return
+  }
 
   // Stateful stacks use a stable (non-versioned) stack name so that the same
   // CloudFormation stack is updated in-place on every deployment rather than

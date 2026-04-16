@@ -79,7 +79,7 @@ jobs:
       AWS_ENVIRONMENT: dev
       VERSION_NUMBER: ${{ needs.tag_release.outputs.version_tag }}
       COMMIT_ID: ${{ needs.get_commit_id.outputs.commit_id }}
-      CDK_APP_NAME: PsuStatelessApp
+      STACK_MODE: stateless
       LOG_RETENTION_IN_DAYS: "30"
       LOG_LEVEL: DEBUG
       IS_PULL_REQUEST: false
@@ -96,7 +96,7 @@ jobs:
 
   cdk_stateful_release_dev:
     needs: [cdk_package_code, get_commit_id, tag_release, get_config_values]
-    uses: ./.github/workflows/cdk_stateful_release_code.yml
+    uses: ./.github/workflows/cdk_release_code.yml
     permissions:
       contents: write
       id-token: write
@@ -107,6 +107,8 @@ jobs:
       AWS_ENVIRONMENT: dev
       VERSION_NUMBER: ${{ needs.tag_release.outputs.version_tag }}
       COMMIT_ID: ${{ needs.get_commit_id.outputs.commit_id }}
+      STACK_MODE: stateful
+      RUN_DIFF: true
       LOG_RETENTION_IN_DAYS: "30"
       IS_PULL_REQUEST: false
       ENABLE_DYNAMODB_AUTO_SCALING: false
@@ -300,7 +302,7 @@ jobs:
         tag_release,
         get_config_values,
       ]
-    uses: ./.github/workflows/cdk_stateful_release_code.yml
+    uses: ./.github/workflows/cdk_release_code.yml
     permissions:
       contents: write
       id-token: write
@@ -311,6 +313,8 @@ jobs:
       AWS_ENVIRONMENT: ref
       VERSION_NUMBER: ${{ needs.tag_release.outputs.version_tag }}
       COMMIT_ID: ${{ needs.get_commit_id.outputs.commit_id }}
+      STACK_MODE: stateful
+      RUN_DIFF: true
       LOG_RETENTION_IN_DAYS: "30"
       IS_PULL_REQUEST: false
       ENABLE_DYNAMODB_AUTO_SCALING: true
@@ -395,7 +399,7 @@ jobs:
         tag_release,
         get_config_values,
       ]
-    uses: ./.github/workflows/cdk_stateful_release_code.yml
+    uses: ./.github/workflows/cdk_release_code.yml
     permissions:
       contents: write
       id-token: write
@@ -406,6 +410,8 @@ jobs:
       AWS_ENVIRONMENT: qa
       VERSION_NUMBER: ${{ needs.tag_release.outputs.version_tag }}
       COMMIT_ID: ${{ needs.get_commit_id.outputs.commit_id }}
+      STACK_MODE: stateful
+      RUN_DIFF: true
       LOG_RETENTION_IN_DAYS: "30"
       IS_PULL_REQUEST: false
       ENABLE_DYNAMODB_AUTO_SCALING: false
@@ -493,7 +499,7 @@ jobs:
         tag_release,
         get_config_values,
       ]
-    uses: ./.github/workflows/cdk_stateful_release_code.yml
+    uses: ./.github/workflows/cdk_release_code.yml
     permissions:
       contents: write
       id-token: write
@@ -504,6 +510,8 @@ jobs:
       AWS_ENVIRONMENT: int
       VERSION_NUMBER: ${{ needs.tag_release.outputs.version_tag }}
       COMMIT_ID: ${{ needs.get_commit_id.outputs.commit_id }}
+      STACK_MODE: stateful
+      RUN_DIFF: true
       LOG_RETENTION_IN_DAYS: "30"
       IS_PULL_REQUEST: false
       ENABLE_DYNAMODB_AUTO_SCALING: false
@@ -641,7 +649,7 @@ jobs:
         tag_release,
         get_config_values,
       ]
-    uses: ./.github/workflows/cdk_stateful_release_code.yml
+    uses: ./.github/workflows/cdk_release_code.yml
     permissions:
       contents: write
       id-token: write
@@ -652,6 +660,8 @@ jobs:
       AWS_ENVIRONMENT: prod
       VERSION_NUMBER: ${{ needs.tag_release.outputs.version_tag }}
       COMMIT_ID: ${{ needs.get_commit_id.outputs.commit_id }}
+      STACK_MODE: stateful
+      RUN_DIFF: true
       LOG_RETENTION_IN_DAYS: "731"
       IS_PULL_REQUEST: false
       ENABLE_DYNAMODB_AUTO_SCALING: true

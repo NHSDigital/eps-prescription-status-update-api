@@ -1,6 +1,7 @@
 SHELL = /bin/bash
 .SHELLFLAGS = -o pipefail -c
-export CDK_APP_NAME=PsuStatelessApp
+export CDK_APP_NAME=PsuApiApp
+export CDK_CONFIG_stackMode=stateless
 export CDK_CONFIG_stackName=${stack_name}
 export CDK_CONFIG_samStackName=${stack_name}
 export CDK_CONFIG_versionNumber=undefined
@@ -257,7 +258,8 @@ cdk-deploy:
 	npm run cdk-deploy --workspace packages/cdk
 
 cdk-synth:
-	CDK_APP_NAME=PsuStatelessApp \
+	CDK_APP_NAME=PsuApiApp \
+	CDK_CONFIG_stackMode=stateless \
 	CDK_CONFIG_stackName=psu-cdk \
 	CDK_CONFIG_samStackName=psu \
 	CDK_CONFIG_logRetentionInDays=30 \
@@ -272,7 +274,8 @@ cdk-synth:
 	npm run cdk-synth --workspace packages/cdk
 
 cdk-stateful-synth:
-	CDK_APP_NAME=PsuStatefulApp \
+	CDK_APP_NAME=PsuApiApp \
+	CDK_CONFIG_stackMode=stateful \
 	CDK_CONFIG_stackName=psu-cdk-stateful \
 	CDK_CONFIG_logRetentionInDays=30 \
 	CDK_CONFIG_environment=dev \

@@ -120,7 +120,7 @@ jobs:
       AWS_ENVIRONMENT: dev
       VERSION_NUMBER: PR-${{ needs.get_issue_number.outputs.issue_number }}
       COMMIT_ID: ${{ needs.get_commit_id.outputs.commit_id }}
-      CDK_APP_NAME: PsuStatelessApp
+      STACK_MODE: stateless
       LOG_RETENTION_IN_DAYS: "30"
       LOG_LEVEL: DEBUG
       IS_PULL_REQUEST: true
@@ -138,7 +138,7 @@ jobs:
   cdk_stateful_release_code:
     needs:
       [get_issue_number, cdk_package_code, get_commit_id, get_config_values]
-    uses: ./.github/workflows/cdk_stateful_release_code.yml
+    uses: ./.github/workflows/cdk_release_code.yml
     permissions:
       contents: write
       id-token: write
@@ -149,6 +149,8 @@ jobs:
       AWS_ENVIRONMENT: dev
       VERSION_NUMBER: PR-${{ needs.get_issue_number.outputs.issue_number }}
       COMMIT_ID: ${{ needs.get_commit_id.outputs.commit_id }}
+      STACK_MODE: stateful
+      RUN_DIFF: true
       LOG_RETENTION_IN_DAYS: "30"
       IS_PULL_REQUEST: true
       ENABLE_DYNAMODB_AUTO_SCALING: false

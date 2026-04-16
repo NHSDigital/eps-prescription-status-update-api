@@ -33,6 +33,7 @@ This file provides instructions for generating, reviewing, and maintaining AWS C
 - Variables: camelCase
 - Stacks: Suffix with `Stack` (e.g., `CptsApiAppStack`)
 - Entry points: Suffix with `App` (e.g., `CptsApiApp.ts`)
+- CDK app entry points must follow `<app acronym><Api|Ui>[Sandbox]App` naming (e.g., `PsuApiApp`, `PsuApiSandboxApp`)
 
 ### File Organization
 
