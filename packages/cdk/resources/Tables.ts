@@ -11,7 +11,9 @@ import {
   PolicyStatement,
   AnyPrincipal,
   AccountRootPrincipal,
-  PolicyDocument
+  PolicyDocument,
+  Role,
+  ServicePrincipal
 } from "aws-cdk-lib/aws-iam"
 import {Key, Alias} from "aws-cdk-lib/aws-kms"
 import {Duration} from "aws-cdk-lib"
@@ -36,6 +38,48 @@ export class Tables extends Construct {
     super(scope, id)
 
     const {account, region} = Stack.of(this)
+
+    const dynamoDbScalingRolePolicy = props.enableDynamoDBAutoScaling
+      ? new ManagedPolicy(this, "DynamoDbScalingRolePolicy", {
+        statements: [
+          new PolicyStatement({
+            actions: [
+              "dynamodb:DescribeTable",
+              "dynamodb:UpdateTable"
+            ],
+            resources: [
+              `arn:aws:dynamodb:${region}:${account}:table/${props.stackName}-*`
+            ]
+          }),
+          new PolicyStatement({
+            actions: [
+              "cloudwatch:PutMetricAlarm",
+              "cloudwatch:DescribeAlarms",
+              "cloudwatch:DeleteAlarms"
+            ],
+            resources: ["*"]
+          })
+        ]
+      })
+      : undefined
+
+    if (dynamoDbScalingRolePolicy) {
+      NagSuppressions.addResourceSuppressions(dynamoDbScalingRolePolicy, [
+        {
+          id: "AwsSolutions-IAM5",
+          reason:
+            "Stack-scoped wildcard is required for autoscaling permissions " +
+            "across stateful DynamoDB tables and indexes."
+        }
+      ])
+    }
+
+    const dynamoDbScalingRole = props.enableDynamoDBAutoScaling
+      ? new Role(this, "DynamoDbScalingRole", {
+        assumedBy: new ServicePrincipal("dynamodb.application-autoscaling.amazonaws.com"),
+        managedPolicies: dynamoDbScalingRolePolicy ? [dynamoDbScalingRolePolicy] : []
+      })
+      : undefined
 
     // ── Shared autoscaling IAM role ──────────────────────────────────────────
     // Used by ApplicationAutoScaling when enableDynamoDBAutoScaling is true.
@@ -204,9 +248,14 @@ export class Tables extends Construct {
     }
 
     if (props.enableDynamoDBAutoScaling) {
+      const scalingRoleOptions = dynamoDbScalingRole
+        ? {role: dynamoDbScalingRole}
+        : {}
+
       const tableWriteScaling = prescriptionStatusUpdatesTable.autoScaleWriteCapacity({
         minCapacity: MIN_WRITE_PRESCRIPTION_STATUS_UPDATES_CAPACITY,
-        maxCapacity: MAX_WRITE_PRESCRIPTION_STATUS_UPDATES_CAPACITY
+        maxCapacity: MAX_WRITE_PRESCRIPTION_STATUS_UPDATES_CAPACITY,
+        ...scalingRoleOptions
       })
       tableWriteScaling.scaleOnUtilization({
         targetUtilizationPercent: 50,
@@ -216,7 +265,8 @@ export class Tables extends Construct {
 
       const tableReadScaling = prescriptionStatusUpdatesTable.autoScaleReadCapacity({
         minCapacity: 1,
-        maxCapacity: 100
+        maxCapacity: 100,
+        ...scalingRoleOptions
       })
       tableReadScaling.scaleOnUtilization({
         targetUtilizationPercent: 70,
@@ -228,7 +278,8 @@ export class Tables extends Construct {
         prescriptionStatusUpdatesTable.autoScaleGlobalSecondaryIndexWriteCapacity(
           "PharmacyODSCodePrescriptionIDIndex", {
             minCapacity: MIN_WRITE_PRESCRIPTION_STATUS_UPDATES_CAPACITY,
-            maxCapacity: MAX_WRITE_PRESCRIPTION_STATUS_UPDATES_CAPACITY
+            maxCapacity: MAX_WRITE_PRESCRIPTION_STATUS_UPDATES_CAPACITY,
+            ...scalingRoleOptions
           })
       pharmacyIndexWriteScaling.scaleOnUtilization({
         targetUtilizationPercent: 50,
@@ -240,9 +291,62 @@ export class Tables extends Construct {
         prescriptionStatusUpdatesTable.autoScaleGlobalSecondaryIndexReadCapacity(
           "PharmacyODSCodePrescriptionIDIndex", {
             minCapacity: 1,
-            maxCapacity: 100
+            maxCapacity: 100,
+            ...scalingRoleOptions
           })
       pharmacyIndexReadScaling.scaleOnUtilization({
+        targetUtilizationPercent: 70,
+        scaleInCooldown: Duration.seconds(60),
+        scaleOutCooldown: Duration.seconds(60)
+      })
+
+      const nhsNumberIndexWriteScaling =
+        prescriptionStatusUpdatesTable.autoScaleGlobalSecondaryIndexWriteCapacity(
+          "PatientNHSNumberIndex", {
+            minCapacity: MIN_WRITE_PRESCRIPTION_STATUS_UPDATES_CAPACITY,
+            maxCapacity: MAX_WRITE_PRESCRIPTION_STATUS_UPDATES_CAPACITY,
+            ...scalingRoleOptions
+          })
+      nhsNumberIndexWriteScaling.scaleOnUtilization({
+        targetUtilizationPercent: 50,
+        scaleInCooldown: Duration.seconds(600),
+        scaleOutCooldown: Duration.seconds(0)
+      })
+
+      const nhsNumberIndexReadScaling =
+        prescriptionStatusUpdatesTable.autoScaleGlobalSecondaryIndexReadCapacity(
+          "PatientNHSNumberIndex", {
+            minCapacity: 1,
+            maxCapacity: 100,
+            ...scalingRoleOptions
+          })
+      nhsNumberIndexReadScaling.scaleOnUtilization({
+        targetUtilizationPercent: 70,
+        scaleInCooldown: Duration.seconds(60),
+        scaleOutCooldown: Duration.seconds(60)
+      })
+
+      const pharmacyIndexIncPostDatedWriteScaling =
+        prescriptionStatusUpdatesTable.autoScaleGlobalSecondaryIndexWriteCapacity(
+          "PharmacyODSCodePrescriptionIDIndexIncPostDated", {
+            minCapacity: MIN_WRITE_PRESCRIPTION_STATUS_UPDATES_CAPACITY,
+            maxCapacity: MAX_WRITE_PRESCRIPTION_STATUS_UPDATES_CAPACITY,
+            ...scalingRoleOptions
+          })
+      pharmacyIndexIncPostDatedWriteScaling.scaleOnUtilization({
+        targetUtilizationPercent: 50,
+        scaleInCooldown: Duration.seconds(600),
+        scaleOutCooldown: Duration.seconds(0)
+      })
+
+      const pharmacyIndexIncPostDatedReadScaling =
+        prescriptionStatusUpdatesTable.autoScaleGlobalSecondaryIndexReadCapacity(
+          "PharmacyODSCodePrescriptionIDIndexIncPostDated", {
+            minCapacity: 1,
+            maxCapacity: 100,
+            ...scalingRoleOptions
+          })
+      pharmacyIndexIncPostDatedReadScaling.scaleOnUtilization({
         targetUtilizationPercent: 70,
         scaleInCooldown: Duration.seconds(60),
         scaleOutCooldown: Duration.seconds(60)
@@ -417,10 +521,15 @@ export class Tables extends Construct {
     }
 
     if (props.enableDynamoDBAutoScaling) {
+      const scalingRoleOptions = dynamoDbScalingRole
+        ? {role: dynamoDbScalingRole}
+        : {}
+
       const notifStatesTableWriteScaling =
         prescriptionNotificationStatesTable.autoScaleWriteCapacity({
           minCapacity: MIN_WRITE_PRESCRIPTION_NOTIFICATION_STATES_CAPACITY,
-          maxCapacity: MAX_WRITE_PRESCRIPTION_NOTIFICATION_STATES_CAPACITY
+          maxCapacity: MAX_WRITE_PRESCRIPTION_NOTIFICATION_STATES_CAPACITY,
+          ...scalingRoleOptions
         })
       notifStatesTableWriteScaling.scaleOnUtilization({
         targetUtilizationPercent: 50,
@@ -431,7 +540,8 @@ export class Tables extends Construct {
       const notifStatesTableReadScaling =
         prescriptionNotificationStatesTable.autoScaleReadCapacity({
           minCapacity: 1,
-          maxCapacity: 100
+          maxCapacity: 100,
+          ...scalingRoleOptions
         })
       notifStatesTableReadScaling.scaleOnUtilization({
         targetUtilizationPercent: 70,
@@ -443,7 +553,8 @@ export class Tables extends Construct {
         prescriptionNotificationStatesTable.autoScaleGlobalSecondaryIndexWriteCapacity(
           "PatientPharmacyIndex", {
             minCapacity: MIN_WRITE_PRESCRIPTION_NOTIFICATION_STATES_CAPACITY,
-            maxCapacity: MAX_WRITE_PRESCRIPTION_NOTIFICATION_STATES_CAPACITY
+            maxCapacity: MAX_WRITE_PRESCRIPTION_NOTIFICATION_STATES_CAPACITY,
+            ...scalingRoleOptions
           })
       patientPharmacyIndexWriteScaling.scaleOnUtilization({
         targetUtilizationPercent: 50,
@@ -455,7 +566,8 @@ export class Tables extends Construct {
         prescriptionNotificationStatesTable.autoScaleGlobalSecondaryIndexReadCapacity(
           "PatientPharmacyIndex", {
             minCapacity: 1,
-            maxCapacity: 100
+            maxCapacity: 100,
+            ...scalingRoleOptions
           })
       patientPharmacyIndexReadScaling.scaleOnUtilization({
         targetUtilizationPercent: 70,
@@ -467,7 +579,8 @@ export class Tables extends Construct {
         prescriptionNotificationStatesTable.autoScaleGlobalSecondaryIndexWriteCapacity(
           "NotifyMessageIDIndex", {
             minCapacity: MIN_WRITE_PRESCRIPTION_NOTIFICATION_STATES_CAPACITY,
-            maxCapacity: MAX_WRITE_PRESCRIPTION_NOTIFICATION_STATES_CAPACITY
+            maxCapacity: MAX_WRITE_PRESCRIPTION_NOTIFICATION_STATES_CAPACITY,
+            ...scalingRoleOptions
           })
       notifyMessageIdIndexWriteScaling.scaleOnUtilization({
         targetUtilizationPercent: 50,
@@ -479,7 +592,8 @@ export class Tables extends Construct {
         prescriptionNotificationStatesTable.autoScaleGlobalSecondaryIndexReadCapacity(
           "NotifyMessageIDIndex", {
             minCapacity: 1,
-            maxCapacity: 100
+            maxCapacity: 100,
+            ...scalingRoleOptions
           })
       notifyMessageIdIndexReadScaling.scaleOnUtilization({
         targetUtilizationPercent: 70,
