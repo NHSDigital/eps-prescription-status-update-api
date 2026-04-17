@@ -256,8 +256,34 @@ deep-clean: clean
 	find . -name 'node_modules' -type d -prune -exec rm -rf '{}' +
 	poetry env remove --all
 
-cdk-deploy:
-	REQUIRE_APPROVAL="$${REQUIRE_APPROVAL:-any-change}" && \
+cdk-deploy: cdk-stateful-deploy cdk-stateless-deploy
+
+cdk-stateful-deploy:
+	CDK_APP_NAME=PsuApiApp \
+	CDK_CONFIG_stackMode=stateful \
+	CDK_CONFIG_stackName=psu-cdk-stateful \
+	CDK_CONFIG_logRetentionInDays=30 \
+	CDK_CONFIG_environment=dev \
+	CDK_CONFIG_enableDynamoDBAutoScaling=false \
+	CDK_CONFIG_enableBackup=false \
+	REQUIRE_APPROVAL="$${REQUIRE_APPROVAL:-any-change}" \
+	npm run cdk-deploy --workspace packages/cdk
+
+cdk-stateless-deploy:
+	CDK_APP_NAME=PsuApiApp \
+	CDK_CONFIG_stackMode=stateless \
+	CDK_CONFIG_stackName=psu-cdk \
+	CDK_CONFIG_samStackName=psu \
+	CDK_CONFIG_logRetentionInDays=30 \
+	CDK_CONFIG_logLevel=DEBUG \
+	CDK_CONFIG_environment=dev \
+	CDK_CONFIG_forwardCsocLogs=false \
+	CDK_CONFIG_deployCheckPrescriptionStatusUpdate=true \
+	CDK_CONFIG_exposeGetStatusUpdates=false \
+	CDK_CONFIG_enablePostDatedNotifications=false \
+	CDK_CONFIG_requireApplicationName=false \
+	CDK_CONFIG_enableBackup=false \
+	REQUIRE_APPROVAL="$${REQUIRE_APPROVAL:-any-change}" \
 	npm run cdk-deploy --workspace packages/cdk
 
 cdk-stateless-synth:

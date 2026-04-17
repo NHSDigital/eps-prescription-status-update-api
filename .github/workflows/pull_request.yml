@@ -108,7 +108,7 @@ jobs:
 
   cdk_release_code:
     needs:
-      [get_issue_number, cdk_package_code, get_commit_id, get_config_values]
+      [get_issue_number, cdk_package_code, get_commit_id, get_config_values, cdk_release_stateful_code]
     uses: ./.github/workflows/cdk_release_code.yml
     permissions:
       contents: write
@@ -135,7 +135,7 @@ jobs:
     secrets:
       CLOUD_FORMATION_DEPLOY_ROLE: ${{ secrets.DEV_CLOUD_FORMATION_DEPLOY_ROLE }}
 
-  cdk_stateful_release_code:
+  cdk_release_stateful_code:
     needs:
       [get_issue_number, cdk_package_code, get_commit_id, get_config_values]
     uses: ./.github/workflows/cdk_release_code.yml
