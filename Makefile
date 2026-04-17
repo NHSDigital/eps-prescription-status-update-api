@@ -1,3 +1,32 @@
+SHELL = /bin/bash
+.SHELLFLAGS = -o pipefail -c
+export CDK_APP_NAME=PsuApiApp
+export CDK_CONFIG_stackMode=stateless
+export CDK_CONFIG_stackName=${stack_name}
+export CDK_CONFIG_samStackName=${stack_name}
+export CDK_CONFIG_versionNumber=undefined
+export CDK_CONFIG_commitId=undefined
+export CDK_CONFIG_isPullRequest=true
+export CDK_CONFIG_environment=dev
+export CDK_CONFIG_logRetentionInDays=30
+export CDK_CONFIG_logLevel=DEBUG
+export CDK_CONFIG_trustStoreFile=psu-truststore.pem
+export CDK_CONFIG_trustStoreVersion=none
+export CDK_CONFIG_enableMutualTls=false
+export CDK_CONFIG_enableSplunk=false
+export CDK_CONFIG_forwardCsocLogs=false
+export CDK_CONFIG_deployCheckPrescriptionStatusUpdate=true
+export CDK_CONFIG_exposeGetStatusUpdates=false
+export CDK_CONFIG_enablePostDatedNotifications=false
+export CDK_CONFIG_requireApplicationName=false
+export CDK_CONFIG_enableBackup=false
+
+guard-%:
+	@ if [ "${${*}}" = "" ]; then \
+		echo "Environment variable $* not set"; \
+		exit 1; \
+	fi
+
 .PHONY: install build test publish release clean lint compile
 
 install: install-node install-python install-hooks
@@ -156,6 +185,7 @@ compile-specification:
 compile: compile-node compile-specification
 
 lint-node: compile-node
+	npm run lint --workspace packages/cdk
 	npm run lint --workspace packages/updatePrescriptionStatus
 	npm run lint --workspace packages/gsul
 	npm run lint --workspace packages/nhsd-psu-sandbox
@@ -217,12 +247,90 @@ clean:
 	rm -rf packages/common/testing/lib
 	rm -rf packages/common/middyErrorHandler/lib
 	rm -rf packages/common/commonTypes/lib
+	rm -rf packages/cdk/lib
 	rm -rf .aws-sam
+	rm -rf cdk.out
 
 deep-clean: clean
 	rm -rf venv
 	find . -name 'node_modules' -type d -prune -exec rm -rf '{}' +
 	poetry env remove --all
+
+cdk-deploy: cdk-stateful-deploy cdk-stateless-deploy
+
+cdk-stateful-deploy:
+	CDK_APP_NAME=PsuApiApp \
+	CDK_CONFIG_stackMode=stateful \
+	CDK_CONFIG_stackName=psu-cdk-stateful \
+	CDK_CONFIG_logRetentionInDays=30 \
+	CDK_CONFIG_environment=dev \
+	CDK_CONFIG_enableDynamoDBAutoScaling=false \
+	CDK_CONFIG_enableBackup=false \
+	REQUIRE_APPROVAL="$${REQUIRE_APPROVAL:-any-change}" \
+	npm run cdk-deploy --workspace packages/cdk
+
+cdk-stateless-deploy:
+	CDK_APP_NAME=PsuApiApp \
+	CDK_CONFIG_stackMode=stateless \
+	CDK_CONFIG_stackName=psu-cdk \
+	CDK_CONFIG_samStackName=psu \
+	CDK_CONFIG_logRetentionInDays=30 \
+	CDK_CONFIG_logLevel=DEBUG \
+	CDK_CONFIG_environment=dev \
+	CDK_CONFIG_forwardCsocLogs=false \
+	CDK_CONFIG_deployCheckPrescriptionStatusUpdate=true \
+	CDK_CONFIG_exposeGetStatusUpdates=false \
+	CDK_CONFIG_enablePostDatedNotifications=false \
+	CDK_CONFIG_requireApplicationName=false \
+	CDK_CONFIG_enableBackup=false \
+	REQUIRE_APPROVAL="$${REQUIRE_APPROVAL:-any-change}" \
+	npm run cdk-deploy --workspace packages/cdk
+
+cdk-stateless-synth:
+	CDK_APP_NAME=PsuApiApp \
+	CDK_CONFIG_stackMode=stateless \
+	CDK_CONFIG_stackName=psu-cdk \
+	CDK_CONFIG_samStackName=psu \
+	CDK_CONFIG_logRetentionInDays=30 \
+	CDK_CONFIG_logLevel=DEBUG \
+	CDK_CONFIG_environment=dev \
+	CDK_CONFIG_forwardCsocLogs=false \
+	CDK_CONFIG_deployCheckPrescriptionStatusUpdate=true \
+	CDK_CONFIG_exposeGetStatusUpdates=false \
+	CDK_CONFIG_enablePostDatedNotifications=false \
+	CDK_CONFIG_requireApplicationName=false \
+	CDK_CONFIG_enableBackup=false \
+	npm run cdk-synth --workspace packages/cdk
+
+cdk-stateful-synth:
+	CDK_APP_NAME=PsuApiApp \
+	CDK_CONFIG_stackMode=stateful \
+	CDK_CONFIG_stackName=psu-cdk-stateful \
+	CDK_CONFIG_logRetentionInDays=30 \
+	CDK_CONFIG_environment=dev \
+	CDK_CONFIG_enableDynamoDBAutoScaling=false \
+	CDK_CONFIG_enableBackup=false \
+	npm run cdk-synth --workspace packages/cdk
+
+cdk-sandbox-synth:
+	CDK_APP_NAME=PsuApiSandboxApp \
+	CDK_CONFIG_stackName=psu-sandbox \
+	CDK_CONFIG_logRetentionInDays=30 \
+	CDK_CONFIG_logLevel=DEBUG \
+	CDK_CONFIG_environment=dev \
+	CDK_CONFIG_trustStoreFile=psu-sandbox-truststore.pem \
+	CDK_CONFIG_trustStoreVersion=none \
+	CDK_CONFIG_enableMutualTls=false \
+	CDK_CONFIG_enableSplunk=false \
+	CDK_CONFIG_enableBackup=false \
+	npm run cdk-synth --workspace packages/cdk
+
+cdk-diff:
+	npm run cdk-diff --workspace packages/cdk
+
+cdk-watch:
+	REQUIRE_APPROVAL="$${REQUIRE_APPROVAL:-any-change}" && \
+	npm run cdk-watch --workspace packages/cdk
 
 %:
 	@$(MAKE) -f /usr/local/share/eps/Mk/common.mk $@
