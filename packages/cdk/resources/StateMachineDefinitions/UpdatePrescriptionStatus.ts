@@ -23,19 +23,17 @@ export class UpdatePrescriptionStatusDefinition extends Construct {
     super(scope, id)
 
     const catchAllError = new Pass(this, "CatchAllError", {
-      result: {
-        value: {
-          Payload: {
-            statusCode: 500,
-            headers: {
-              "Content-Type": "application/fhir+json",
-              "Cache-Control": "no-cache"
-            },
-            body: JSON.stringify({
-              resourceType: "OperationOutcome",
-              issue: [{severity: "error", code: "processing", diagnostics: "System error"}]
-            })
-          }
+      outputs: {
+        Payload: {
+          statusCode: 500,
+          headers: {
+            "Content-Type": "application/fhir+json",
+            "Cache-Control": "no-cache"
+          },
+          body: JSON.stringify({
+            resourceType: "OperationOutcome",
+            issue: [{severity: "error", code: "processing", diagnostics: "System error"}]
+          })
         }
       }
     })

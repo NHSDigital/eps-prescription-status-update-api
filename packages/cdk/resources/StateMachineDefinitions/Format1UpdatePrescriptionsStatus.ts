@@ -24,19 +24,17 @@ export class Format1UpdatePrescriptionsStatusDefinition extends Construct {
     super(scope, id)
 
     const catchAllError = new Pass(this, "CatchAllError", {
-      result: {
-        value: {
-          Payload: {
-            statusCode: 500,
-            headers: {
-              "Content-Type": "application/fhir+json",
-              "Cache-Control": "no-cache"
-            },
-            body: JSON.stringify({
-              resourceType: "OperationOutcome",
-              issue: [{severity: "error", code: "processing", diagnostics: "System error"}]
-            })
-          }
+      outputs: {
+        Payload: {
+          statusCode: 500,
+          headers: {
+            "Content-Type": "application/fhir+json",
+            "Cache-Control": "no-cache"
+          },
+          body: JSON.stringify({
+            resourceType: "OperationOutcome",
+            issue: [{severity: "error", code: "processing", diagnostics: "System error"}]
+          })
         }
       }
     })
@@ -79,24 +77,22 @@ export class Format1UpdatePrescriptionsStatusDefinition extends Construct {
     callUpdatePrescriptionStatus.addCatch(catchAllError)
 
     const translate409To202 = new Pass(this, "Translate 409 to 202", {
-      result: {
-        value: {
-          Payload: {
-            statusCode: 202,
-            headers: {
-              "Content-Type": "application/fhir+json",
-              "Cache-Control": "no-cache"
-            },
-            body: JSON.stringify({
-              resourceType: "OperationOutcome",
-              issue: [{
-                severity: "information",
-                code: "informational",
-                diagnostics:
-                  "Duplicate update detected. The message was valid but did not result in an update."
-              }]
-            })
-          }
+      outputs: {
+        Payload: {
+          statusCode: 202,
+          headers: {
+            "Content-Type": "application/fhir+json",
+            "Cache-Control": "no-cache"
+          },
+          body: JSON.stringify({
+            resourceType: "OperationOutcome",
+            issue: [{
+              severity: "information",
+              code: "informational",
+              diagnostics:
+                "Duplicate update detected. The message was valid but did not result in an update."
+            }]
+          })
         }
       }
     })
