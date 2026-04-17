@@ -53,82 +53,7 @@ jobs:
     secrets:
       EXECUTE_JIRA_LAMBDA_ROLE: ${{ secrets.DEV_CLOUD_FORMATION_EXECUTE_LAMBDA_ROLE }}
 
-  cdk_package_code:
-    needs: [get_commit_id, tag_release, get_config_values]
-    uses: ./.github/workflows/cdk_package_code.yml
-    permissions:
-      contents: read
-      packages: read
-      id-token: write
-    with:
-      BRANCH_NAME: main
-      VERSION_NUMBER: ${{ needs.tag_release.outputs.version_tag }}
-      COMMIT_ID: ${{ needs.get_commit_id.outputs.commit_id }}
-      pinned_image: ${{ needs.get_config_values.outputs.pinned_image }}
-
-  cdk_release_dev:
-    needs: [cdk_package_code, get_commit_id, tag_release, get_config_values]
-    uses: ./.github/workflows/cdk_release_code.yml
-    permissions:
-      contents: write
-      id-token: write
-    with:
-      pinned_image: ${{ needs.get_config_values.outputs.pinned_image }}
-      BRANCH_NAME: main
-      STACK_NAME: psu-cdk
-      AWS_ENVIRONMENT: dev
-      VERSION_NUMBER: ${{ needs.tag_release.outputs.version_tag }}
-      COMMIT_ID: ${{ needs.get_commit_id.outputs.commit_id }}
-      STACK_MODE: stateless
-      LOG_RETENTION_IN_DAYS: "30"
-      LOG_LEVEL: DEBUG
-      IS_PULL_REQUEST: false
-      TRUSTSTORE_FILE: psu-truststore.pem
-      FORWARD_CSOC_LOGS: false
-      DEPLOY_CHECK_PRESCRIPTION_STATUS_UPDATE: true
-      EXPOSE_GET_STATUS_UPDATES: false
-      SAM_STACK_NAME: psu
-      ENABLE_POST_DATED_NOTIFICATIONS: true
-      REQUIRE_APPLICATION_NAME: false
-      ENABLE_BACKUP: true
-    secrets:
-      CLOUD_FORMATION_DEPLOY_ROLE: ${{ secrets.DEV_CLOUD_FORMATION_DEPLOY_ROLE }}
-
-  cdk_stateful_release_dev:
-    needs: [cdk_package_code, get_commit_id, tag_release, get_config_values]
-    uses: ./.github/workflows/cdk_release_code.yml
-    permissions:
-      contents: write
-      id-token: write
-    with:
-      pinned_image: ${{ needs.get_config_values.outputs.pinned_image }}
-      BRANCH_NAME: main
-      STACK_NAME: psu-cdk-stateful
-      AWS_ENVIRONMENT: dev
-      VERSION_NUMBER: ${{ needs.tag_release.outputs.version_tag }}
-      COMMIT_ID: ${{ needs.get_commit_id.outputs.commit_id }}
-      STACK_MODE: stateful
-      RUN_DIFF: true
-      LOG_RETENTION_IN_DAYS: "30"
-      IS_PULL_REQUEST: false
-      ENABLE_DYNAMODB_AUTO_SCALING: false
-      ENABLE_BACKUP: true
-      ENABLED_SITE_ODS_CODES: "A83008,FA565"
-      ENABLED_SYSTEMS: "Internal Test System"
-      ENABLED_SUPPLIER_APPLICATION_IDS: "XXXXX"
-      BLOCKED_SITE_ODS_CODES: "XXXXX"
-      NOTIFY_ROUTING_PLAN_ID: "e57fe5cc-0567-4854-abe2-b7dd9014a50c"
-      NOTIFY_API_BASE_URL: "https://int.api.service.nhs.uk"
-      ENABLE_NOTIFICATIONS_EXTERNAL: "false"
-      ENABLE_NOTIFICATIONS_INTERNAL: "false"
-      TEST_PRESCRIPTIONS_1: ${{ vars.TEST_PRESCRIPTIONS_1_VALUES }}
-      TEST_PRESCRIPTIONS_2: ${{ vars.TEST_PRESCRIPTIONS_2_VALUES }}
-      TEST_PRESCRIPTIONS_3: ${{ vars.TEST_PRESCRIPTIONS_3_VALUES }}
-      TEST_PRESCRIPTIONS_4: ${{ vars.TEST_PRESCRIPTIONS_4_VALUES }}
-    secrets:
-      CLOUD_FORMATION_DEPLOY_ROLE: ${{ secrets.DEV_CLOUD_FORMATION_DEPLOY_ROLE }}
-
-  sam_package_code:
+  package_code:
     needs: [tag_release, get_config_values]
     uses: ./.github/workflows/run_package_code_and_api.yml
     permissions:
@@ -139,7 +64,7 @@ jobs:
       pinned_image: ${{ needs.get_config_values.outputs.pinned_image }}
 
   release_dev:
-    needs: [tag_release, sam_package_code, get_commit_id, get_config_values]
+    needs: [tag_release, package_code, get_commit_id, get_config_values]
     uses: ./.github/workflows/run_release_code_and_api.yml
     permissions:
       contents: write
@@ -192,30 +117,50 @@ jobs:
       REGRESSION_TESTS_PEM: ${{ secrets.REGRESSION_TESTS_PEM }}
 
   release_dev_sandbox:
-    needs: [cdk_package_code, get_commit_id, tag_release, get_config_values]
-    uses: ./.github/workflows/cdk_release_code.yml
+    needs: [tag_release, package_code, get_commit_id, get_config_values]
+    uses: ./.github/workflows/run_release_code_and_api.yml
     permissions:
       contents: write
       id-token: write
     with:
       pinned_image: ${{ needs.get_config_values.outputs.pinned_image }}
-      BRANCH_NAME: main
-      APP_NAME: PsuApiSandboxApp
+      ARTIFACT_BUCKET_PREFIX: ${{needs.tag_release.outputs.version_tag}}-sandbox
       STACK_NAME: psu-sandbox
       AWS_ENVIRONMENT: dev
+      APIGEE_ENVIRONMENT: internal-dev-sandbox
+      ENABLE_MUTUAL_TLS: true
+      BUILD_ARTIFACT: packaged_sandbox_code
+      TRUSTSTORE_FILE: psu-sandbox-truststore.pem
       VERSION_NUMBER: ${{needs.tag_release.outputs.version_tag}}
       COMMIT_ID: ${{needs.get_commit_id.outputs.commit_id}}
-      LOG_RETENTION_IN_DAYS: "30"
-      LOG_LEVEL: DEBUG
+      LOG_RETENTION_DAYS: 30
+      DEPLOY_APIGEE: true
+      DYNAMODB_AUTOSCALE: false
+      DEPLOY_APIGEE_CPSU: true
+      DEPLOY_CHECK_PRESCRIPTION_STATUS_UPDATE: true
+      EXPOSE_GET_STATUS_UPDATES: false
+      RUN_REGRESSION_TEST: false
+      STATE_MACHINE_LOG_LEVEL: ALL
+      ENABLE_BACKUP: "False"
+      ENABLE_NOTIFICATIONS_INTERNAL: false
+      ENABLE_NOTIFICATIONS_EXTERNAL: false
+      ENABLE_POST_DATED_NOTIFICATIONS: false
+      ENABLED_SYSTEMS: "Internal Test System"
+      BLOCKED_SITE_ODS_CODES: "B3J1Z"
+      ENABLED_SUPPLIER_APPLICATION_IDS: "XXXXX"
+      NOTIFY_ROUTING_PLAN_ID: "e57fe5cc-0567-4854-abe2-b7dd9014a50c"
+      NOTIFY_API_BASE_URL: "https://int.api.service.nhs.uk"
+      MTLS_KEY: psu-mtls-1
       IS_PULL_REQUEST: false
-      TRUSTSTORE_FILE: psu-sandbox-truststore.pem
-      TRUST_STORE_VERSION: "none"
-      ENABLE_MUTUAL_TLS: true
-      ENABLE_SPLUNK: false
-      ENABLE_BACKUP: false
+      TEST_PRESCRIPTIONS_1: ${{ vars.TEST_PRESCRIPTIONS_1_VALUES }}
+      TEST_PRESCRIPTIONS_2: ${{ vars.TEST_PRESCRIPTIONS_2_VALUES }}
+      TEST_PRESCRIPTIONS_3: ${{ vars.TEST_PRESCRIPTIONS_3_VALUES }}
+      TEST_PRESCRIPTIONS_4: ${{ vars.TEST_PRESCRIPTIONS_4_VALUES }}
       FORWARD_CSOC_LOGS: false
     secrets:
       CLOUD_FORMATION_DEPLOY_ROLE: ${{ secrets.DEV_CLOUD_FORMATION_DEPLOY_ROLE }}
+      PROXYGEN_ROLE: ${{ secrets.PROXYGEN_PTL_ROLE }}
+      REGRESSION_TESTS_PEM: ${{ secrets.REGRESSION_TESTS_PEM }}
 
   release_ref:
     needs:
@@ -223,7 +168,7 @@ jobs:
         tag_release,
         release_dev,
         release_dev_sandbox,
-        sam_package_code,
+        package_code,
         get_commit_id,
         get_config_values,
       ]
@@ -273,54 +218,13 @@ jobs:
       PROXYGEN_ROLE: ${{ secrets.PROXYGEN_PTL_ROLE }}
       REGRESSION_TESTS_PEM: ${{ secrets.REGRESSION_TESTS_PEM }}
 
-  cdk_stateful_release_ref:
-    needs:
-      [
-        cdk_stateful_release_dev,
-        cdk_package_code,
-        get_commit_id,
-        tag_release,
-        get_config_values,
-      ]
-    uses: ./.github/workflows/cdk_release_code.yml
-    permissions:
-      contents: write
-      id-token: write
-    with:
-      pinned_image: ${{ needs.get_config_values.outputs.pinned_image }}
-      BRANCH_NAME: main
-      STACK_NAME: psu-cdk-stateful
-      AWS_ENVIRONMENT: ref
-      VERSION_NUMBER: ${{ needs.tag_release.outputs.version_tag }}
-      COMMIT_ID: ${{ needs.get_commit_id.outputs.commit_id }}
-      STACK_MODE: stateful
-      RUN_DIFF: true
-      LOG_RETENTION_IN_DAYS: "30"
-      IS_PULL_REQUEST: false
-      ENABLE_DYNAMODB_AUTO_SCALING: true
-      ENABLE_BACKUP: false
-      ENABLED_SITE_ODS_CODES: "A83008,FA565"
-      ENABLED_SYSTEMS: "Internal Test System, Apotec Ltd - Apotec CRM - Production, CrxPatientApp, nhsPrescriptionApp, Titan PSU Prod"
-      ENABLED_SUPPLIER_APPLICATION_IDS: "XXXXX"
-      BLOCKED_SITE_ODS_CODES: "B3J1Z"
-      NOTIFY_ROUTING_PLAN_ID: "e57fe5cc-0567-4854-abe2-b7dd9014a50c"
-      NOTIFY_API_BASE_URL: "https://int.api.service.nhs.uk"
-      ENABLE_NOTIFICATIONS_EXTERNAL: "false"
-      ENABLE_NOTIFICATIONS_INTERNAL: "false"
-      TEST_PRESCRIPTIONS_1: ${{ vars.TEST_PRESCRIPTIONS_1_VALUES }}
-      TEST_PRESCRIPTIONS_2: ${{ vars.TEST_PRESCRIPTIONS_2_VALUES }}
-      TEST_PRESCRIPTIONS_3: ${{ vars.TEST_PRESCRIPTIONS_3_VALUES }}
-      TEST_PRESCRIPTIONS_4: ${{ vars.TEST_PRESCRIPTIONS_4_VALUES }}
-    secrets:
-      CLOUD_FORMATION_DEPLOY_ROLE: ${{ secrets.REF_CLOUD_FORMATION_DEPLOY_ROLE }}
-
   release_qa:
     needs:
       [
         tag_release,
         release_dev,
         release_dev_sandbox,
-        sam_package_code,
+        package_code,
         get_commit_id,
         get_config_values,
       ]
@@ -370,56 +274,9 @@ jobs:
       PROXYGEN_ROLE: ${{ secrets.PROXYGEN_PTL_ROLE }}
       REGRESSION_TESTS_PEM: ${{ secrets.REGRESSION_TESTS_PEM }}
 
-  cdk_stateful_release_qa:
-    needs:
-      [
-        cdk_stateful_release_dev,
-        cdk_package_code,
-        get_commit_id,
-        tag_release,
-        get_config_values,
-      ]
-    uses: ./.github/workflows/cdk_release_code.yml
-    permissions:
-      contents: write
-      id-token: write
-    with:
-      pinned_image: ${{ needs.get_config_values.outputs.pinned_image }}
-      BRANCH_NAME: main
-      STACK_NAME: psu-cdk-stateful
-      AWS_ENVIRONMENT: qa
-      VERSION_NUMBER: ${{ needs.tag_release.outputs.version_tag }}
-      COMMIT_ID: ${{ needs.get_commit_id.outputs.commit_id }}
-      STACK_MODE: stateful
-      RUN_DIFF: true
-      LOG_RETENTION_IN_DAYS: "30"
-      IS_PULL_REQUEST: false
-      ENABLE_DYNAMODB_AUTO_SCALING: false
-      ENABLE_BACKUP: false
-      ENABLED_SITE_ODS_CODES: "A83008,FA565"
-      ENABLED_SYSTEMS: "Internal Test System, Apotec Ltd - Apotec CRM - Production, CrxPatientApp, nhsPrescriptionApp, Titan PSU Prod"
-      ENABLED_SUPPLIER_APPLICATION_IDS: "XXXXX"
-      BLOCKED_SITE_ODS_CODES: "B3J1Z"
-      NOTIFY_ROUTING_PLAN_ID: "e57fe5cc-0567-4854-abe2-b7dd9014a50c"
-      NOTIFY_API_BASE_URL: "https://int.api.service.nhs.uk"
-      ENABLE_NOTIFICATIONS_EXTERNAL: "false"
-      ENABLE_NOTIFICATIONS_INTERNAL: "false"
-      TEST_PRESCRIPTIONS_1: ${{ vars.TEST_PRESCRIPTIONS_1_VALUES }}
-      TEST_PRESCRIPTIONS_2: ${{ vars.TEST_PRESCRIPTIONS_2_VALUES }}
-      TEST_PRESCRIPTIONS_3: ${{ vars.TEST_PRESCRIPTIONS_3_VALUES }}
-      TEST_PRESCRIPTIONS_4: ${{ vars.TEST_PRESCRIPTIONS_4_VALUES }}
-    secrets:
-      CLOUD_FORMATION_DEPLOY_ROLE: ${{ secrets.QA_CLOUD_FORMATION_DEPLOY_ROLE }}
-
   release_int:
     needs:
-      [
-        tag_release,
-        release_qa,
-        sam_package_code,
-        get_commit_id,
-        get_config_values,
-      ]
+      [tag_release, release_qa, package_code, get_commit_id, get_config_values]
     uses: ./.github/workflows/run_release_code_and_api.yml
     permissions:
       contents: write
@@ -470,79 +327,52 @@ jobs:
       PROXYGEN_ROLE: ${{ secrets.PROXYGEN_PROD_ROLE }}
       REGRESSION_TESTS_PEM: ${{ secrets.REGRESSION_TESTS_PEM }}
 
-  cdk_stateful_release_int:
+  release_int_sandbox:
     needs:
-      [
-        cdk_stateful_release_qa,
-        cdk_package_code,
-        get_commit_id,
-        tag_release,
-        get_config_values,
-      ]
-    uses: ./.github/workflows/cdk_release_code.yml
+      [tag_release, release_qa, package_code, get_commit_id, get_config_values]
+    uses: ./.github/workflows/run_release_code_and_api.yml
     permissions:
       contents: write
       id-token: write
     with:
       pinned_image: ${{ needs.get_config_values.outputs.pinned_image }}
-      BRANCH_NAME: main
-      STACK_NAME: psu-cdk-stateful
+      ARTIFACT_BUCKET_PREFIX: ${{needs.tag_release.outputs.version_tag}}-sandbox
+      STACK_NAME: psu-sandbox
       AWS_ENVIRONMENT: int
-      VERSION_NUMBER: ${{ needs.tag_release.outputs.version_tag }}
-      COMMIT_ID: ${{ needs.get_commit_id.outputs.commit_id }}
-      STACK_MODE: stateful
-      RUN_DIFF: true
-      LOG_RETENTION_IN_DAYS: "30"
-      IS_PULL_REQUEST: false
-      ENABLE_DYNAMODB_AUTO_SCALING: false
-      ENABLE_BACKUP: true
-      ENABLED_SITE_ODS_CODES: "A83008,FA565"
-      ENABLED_SYSTEMS: "CrxPatientApp"
+      APIGEE_ENVIRONMENT: sandbox
+      ENABLE_MUTUAL_TLS: true
+      BUILD_ARTIFACT: packaged_sandbox_code
+      TRUSTSTORE_FILE: psu-sandbox-truststore.pem
+      VERSION_NUMBER: ${{needs.tag_release.outputs.version_tag}}
+      COMMIT_ID: ${{needs.get_commit_id.outputs.commit_id}}
+      LOG_RETENTION_DAYS: 30
+      DEPLOY_APIGEE: true
+      DYNAMODB_AUTOSCALE: false
+      DEPLOY_APIGEE_CPSU: true
+      DEPLOY_CHECK_PRESCRIPTION_STATUS_UPDATE: true
+      EXPOSE_GET_STATUS_UPDATES: false
+      RUN_REGRESSION_TEST: false
+      STATE_MACHINE_LOG_LEVEL: ALL
+      ENABLE_BACKUP: "False"
+      ENABLE_NOTIFICATIONS_INTERNAL: false
+      ENABLE_NOTIFICATIONS_EXTERNAL: false
+      ENABLE_POST_DATED_NOTIFICATIONS: false
+      ENABLED_SYSTEMS: "Internal Test System, Apotec Ltd - Apotec CRM - Production, CrxPatientApp, nhsPrescriptionApp, Titan PSU Prod"
+      BLOCKED_SITE_ODS_CODES: "B3J1Z"
       ENABLED_SUPPLIER_APPLICATION_IDS: "XXXXX"
-      BLOCKED_SITE_ODS_CODES: "XXXXX"
       NOTIFY_ROUTING_PLAN_ID: "e57fe5cc-0567-4854-abe2-b7dd9014a50c"
       NOTIFY_API_BASE_URL: "https://int.api.service.nhs.uk"
-      ENABLE_NOTIFICATIONS_EXTERNAL: "true"
-      ENABLE_NOTIFICATIONS_INTERNAL: "true"
+      MTLS_KEY: psu-mtls-1
+      IS_PULL_REQUEST: false
       TEST_PRESCRIPTIONS_1: ${{ vars.TEST_PRESCRIPTIONS_1_VALUES }}
       TEST_PRESCRIPTIONS_2: ${{ vars.TEST_PRESCRIPTIONS_2_VALUES }}
       TEST_PRESCRIPTIONS_3: ${{ vars.TEST_PRESCRIPTIONS_3_VALUES }}
       TEST_PRESCRIPTIONS_4: ${{ vars.TEST_PRESCRIPTIONS_4_VALUES }}
-    secrets:
-      CLOUD_FORMATION_DEPLOY_ROLE: ${{ secrets.INT_CLOUD_FORMATION_DEPLOY_ROLE }}
-
-  release_int_sandbox:
-    needs:
-      [
-        cdk_package_code,
-        tag_release,
-        release_qa,
-        get_commit_id,
-        get_config_values,
-      ]
-    uses: ./.github/workflows/cdk_release_code.yml
-    permissions:
-      contents: write
-      id-token: write
-    with:
-      pinned_image: ${{ needs.get_config_values.outputs.pinned_image }}
-      BRANCH_NAME: main
-      APP_NAME: PsuApiSandboxApp
-      STACK_NAME: psu-sandbox
-      AWS_ENVIRONMENT: int
-      VERSION_NUMBER: ${{needs.tag_release.outputs.version_tag}}
-      COMMIT_ID: ${{needs.get_commit_id.outputs.commit_id}}
-      LOG_RETENTION_IN_DAYS: "30"
-      LOG_LEVEL: DEBUG
-      IS_PULL_REQUEST: false
-      TRUSTSTORE_FILE: psu-sandbox-truststore.pem
-      TRUST_STORE_VERSION: "none"
-      ENABLE_MUTUAL_TLS: true
-      ENABLE_SPLUNK: false
-      ENABLE_BACKUP: false
       FORWARD_CSOC_LOGS: false
     secrets:
       CLOUD_FORMATION_DEPLOY_ROLE: ${{ secrets.INT_CLOUD_FORMATION_DEPLOY_ROLE }}
+      PROXYGEN_ROLE: ${{ secrets.PROXYGEN_PROD_ROLE }}
+      REGRESSION_TESTS_PEM: ${{ secrets.REGRESSION_TESTS_PEM }}
 
   release_prod:
     needs:
@@ -550,7 +380,7 @@ jobs:
         tag_release,
         release_int,
         release_int_sandbox,
-        sam_package_code,
+        package_code,
         get_commit_id,
         get_config_values,
       ]
@@ -599,40 +429,3 @@ jobs:
       DEV_CLOUD_FORMATION_EXECUTE_LAMBDA_ROLE: ${{ secrets.DEV_CLOUD_FORMATION_EXECUTE_LAMBDA_ROLE }}
       PROXYGEN_ROLE: ${{ secrets.PROXYGEN_PROD_ROLE }}
       REGRESSION_TESTS_PEM: ${{ secrets.REGRESSION_TESTS_PEM }}
-
-  cdk_stateful_release_prod:
-    needs:
-      [
-        cdk_stateful_release_int,
-        cdk_package_code,
-        get_commit_id,
-        tag_release,
-        get_config_values,
-      ]
-    uses: ./.github/workflows/cdk_release_code.yml
-    permissions:
-      contents: write
-      id-token: write
-    with:
-      pinned_image: ${{ needs.get_config_values.outputs.pinned_image }}
-      BRANCH_NAME: main
-      STACK_NAME: psu-cdk-stateful
-      AWS_ENVIRONMENT: prod
-      VERSION_NUMBER: ${{ needs.tag_release.outputs.version_tag }}
-      COMMIT_ID: ${{ needs.get_commit_id.outputs.commit_id }}
-      STACK_MODE: stateful
-      RUN_DIFF: true
-      LOG_RETENTION_IN_DAYS: "731"
-      IS_PULL_REQUEST: false
-      ENABLE_DYNAMODB_AUTO_SCALING: true
-      ENABLE_BACKUP: true
-      ENABLED_SITE_ODS_CODES: "A83008,FA565"
-      ENABLED_SYSTEMS: "CrxPatientApp"
-      ENABLED_SUPPLIER_APPLICATION_IDS: "XXXXX"
-      BLOCKED_SITE_ODS_CODES: "XXXXX"
-      NOTIFY_ROUTING_PLAN_ID: "e57fe5cc-0567-4854-abe2-b7dd9014a50c"
-      NOTIFY_API_BASE_URL: "https://api.service.nhs.uk"
-      ENABLE_NOTIFICATIONS_EXTERNAL: "true"
-      ENABLE_NOTIFICATIONS_INTERNAL: "true"
-    secrets:
-      CLOUD_FORMATION_DEPLOY_ROLE: ${{ secrets.PROD_CLOUD_FORMATION_DEPLOY_ROLE }}
