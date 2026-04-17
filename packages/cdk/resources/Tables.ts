@@ -152,7 +152,9 @@ export class Tables extends Construct {
       tableName: prescriptionStatusUpdatesTableName,
       partitionKey: {name: "PrescriptionID", type: AttributeType.STRING},
       sortKey: {name: "TaskID", type: AttributeType.STRING},
-      pointInTimeRecovery: true,
+      pointInTimeRecoverySpecification: {
+        pointInTimeRecoveryEnabled: true
+      },
       encryption: TableEncryption.CUSTOMER_MANAGED,
       encryptionKey: prescriptionStatusUpdatesKey,
       timeToLiveAttribute: "ExpiryTime",
@@ -469,7 +471,9 @@ export class Tables extends Construct {
         tableName: prescriptionNotificationStatesTableName,
         partitionKey: {name: "NHSNumber", type: AttributeType.STRING},
         sortKey: {name: "RequestId", type: AttributeType.STRING},
-        pointInTimeRecovery: true,
+        pointInTimeRecoverySpecification: {
+          pointInTimeRecoveryEnabled: true
+        },
         encryption: TableEncryption.CUSTOMER_MANAGED,
         encryptionKey: prescriptionNotificationStatesKey,
         timeToLiveAttribute: "ExpiryTime",
