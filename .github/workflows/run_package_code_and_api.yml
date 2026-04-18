@@ -55,7 +55,7 @@ jobs:
           cp packages/specification/dist/eps-prescription-status-update-api.resolved.json .aws-sam/build/specification/
           cp packages/specification/dist/eps-custom-prescription-status-update-api.resolved.json .aws-sam/build/specification/
 
-      - uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         name: Upload build artifact
         with:
           name: packaged_code
@@ -78,7 +78,7 @@ jobs:
           cp packages/specification/dist/eps-custom-prescription-status-update-api.resolved.json .aws-sam/build/specification/
 
       # Readme is included to stop the action flattening the folder structure of aws-sam/build when it is the only item to upload
-      - uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         name: Upload sandbox build artifact
         with:
           name: packaged_sandbox_code
