@@ -1,5 +1,5 @@
 ignore:
   # path-to-regexp - dependency of aws-sdk-client-mock
   - vulnerability: GHSA-j3q9-mxjg-w52f
-  # protobufjs - dependency of redocly
+  # protobufjs - dependency of @redocly/cli
   - vulnerability: GHSA-xq3m-2v4x-88gg
