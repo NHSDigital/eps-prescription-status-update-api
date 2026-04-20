@@ -93,7 +93,84 @@ jobs:
         run: |
           echo "commit_id=${{ github.sha }}" >> "$GITHUB_OUTPUT"
 
-  package_code:
+  cdk_package_code:
+    needs: [get_issue_number, get_commit_id, get_config_values]
+    uses: ./.github/workflows/cdk_package_code.yml
+    permissions:
+      contents: read
+      packages: read
+      id-token: write
+    with:
+      pinned_image: ${{ needs.get_config_values.outputs.pinned_image }}
+      BRANCH_NAME: ${{ github.event.pull_request.head.ref }}
+      VERSION_NUMBER: PR-${{ needs.get_issue_number.outputs.issue_number }}
+      COMMIT_ID: ${{ needs.get_commit_id.outputs.commit_id }}
+
+  cdk_release_code:
+    needs:
+      [get_issue_number, cdk_package_code, get_commit_id, get_config_values, cdk_release_stateful_code]
+    uses: ./.github/workflows/cdk_release_code.yml
+    permissions:
+      contents: write
+      id-token: write
+    with:
+      pinned_image: ${{ needs.get_config_values.outputs.pinned_image }}
+      BRANCH_NAME: ${{ github.event.pull_request.head.ref }}
+      STACK_NAME: psu-cdk-pr-${{needs.get_issue_number.outputs.issue_number}}
+      AWS_ENVIRONMENT: dev
+      VERSION_NUMBER: PR-${{ needs.get_issue_number.outputs.issue_number }}
+      COMMIT_ID: ${{ needs.get_commit_id.outputs.commit_id }}
+      STACK_MODE: stateless
+      LOG_RETENTION_IN_DAYS: "30"
+      LOG_LEVEL: DEBUG
+      IS_PULL_REQUEST: true
+      TRUSTSTORE_FILE: psu-truststore.pem
+      FORWARD_CSOC_LOGS: false
+      DEPLOY_CHECK_PRESCRIPTION_STATUS_UPDATE: true
+      EXPOSE_GET_STATUS_UPDATES: false
+      SAM_STACK_NAME: psu-pr-${{needs.get_issue_number.outputs.issue_number}}
+      ENABLE_POST_DATED_NOTIFICATIONS: true
+      REQUIRE_APPLICATION_NAME: false
+      ENABLE_BACKUP: false
+    secrets:
+      CLOUD_FORMATION_DEPLOY_ROLE: ${{ secrets.DEV_CLOUD_FORMATION_DEPLOY_ROLE }}
+
+  cdk_release_stateful_code:
+    needs:
+      [get_issue_number, cdk_package_code, get_commit_id, get_config_values]
+    uses: ./.github/workflows/cdk_release_code.yml
+    permissions:
+      contents: write
+      id-token: write
+    with:
+      pinned_image: ${{ needs.get_config_values.outputs.pinned_image }}
+      BRANCH_NAME: ${{ github.event.pull_request.head.ref }}
+      STACK_NAME: psu-cdk-pr-${{needs.get_issue_number.outputs.issue_number}}-stateful
+      AWS_ENVIRONMENT: dev
+      VERSION_NUMBER: PR-${{ needs.get_issue_number.outputs.issue_number }}
+      COMMIT_ID: ${{ needs.get_commit_id.outputs.commit_id }}
+      STACK_MODE: stateful
+      RUN_DIFF: true
+      LOG_RETENTION_IN_DAYS: "30"
+      IS_PULL_REQUEST: true
+      ENABLE_DYNAMODB_AUTO_SCALING: false
+      ENABLE_BACKUP: false
+      ENABLED_SITE_ODS_CODES: "A83008,FA565"
+      ENABLED_SYSTEMS: "Internal Test System"
+      ENABLED_SUPPLIER_APPLICATION_IDS: "XXXXX"
+      BLOCKED_SITE_ODS_CODES: "XXXXX"
+      NOTIFY_ROUTING_PLAN_ID: "e57fe5cc-0567-4854-abe2-b7dd9014a50c"
+      NOTIFY_API_BASE_URL: "https://int.api.service.nhs.uk"
+      ENABLE_NOTIFICATIONS_EXTERNAL: "false"
+      ENABLE_NOTIFICATIONS_INTERNAL: "true"
+      TEST_PRESCRIPTIONS_1: ${{ vars.TEST_PRESCRIPTIONS_1_VALUES }}
+      TEST_PRESCRIPTIONS_2: ${{ vars.TEST_PRESCRIPTIONS_2_VALUES }}
+      TEST_PRESCRIPTIONS_3: ${{ vars.TEST_PRESCRIPTIONS_3_VALUES }}
+      TEST_PRESCRIPTIONS_4: ${{ vars.TEST_PRESCRIPTIONS_4_VALUES }}
+    secrets:
+      CLOUD_FORMATION_DEPLOY_ROLE: ${{ secrets.DEV_CLOUD_FORMATION_DEPLOY_ROLE }}
+
+  sam_package_code:
     needs: [get_issue_number, get_config_values]
     uses: ./.github/workflows/run_package_code_and_api.yml
     permissions:
@@ -103,8 +180,9 @@ jobs:
     with:
       pinned_image: ${{ needs.get_config_values.outputs.pinned_image }}
 
-  release_code:
-    needs: [get_issue_number, package_code, get_commit_id, get_config_values]
+  sam_release_code:
+    needs:
+      [get_issue_number, sam_package_code, get_commit_id, get_config_values]
     uses: ./.github/workflows/run_release_code_and_api.yml
     permissions:
       contents: write
@@ -152,43 +230,29 @@ jobs:
       PROXYGEN_ROLE: ${{ secrets.PROXYGEN_PTL_ROLE }}
       REGRESSION_TESTS_PEM: ${{ secrets.REGRESSION_TESTS_PEM }}
 
-  release_sandbox_code:
-    needs: [get_issue_number, package_code, get_commit_id, get_config_values]
-    uses: ./.github/workflows/run_release_code_and_api.yml
+  cdk_sandbox_release_code:
+    needs:
+      [get_issue_number, cdk_package_code, get_commit_id, get_config_values]
+    uses: ./.github/workflows/cdk_release_code.yml
     permissions:
       contents: write
       id-token: write
     with:
       pinned_image: ${{ needs.get_config_values.outputs.pinned_image }}
+      BRANCH_NAME: ${{ github.event.pull_request.head.ref }}
+      APP_NAME: PsuApiSandboxApp
       STACK_NAME: psu-pr-${{needs.get_issue_number.outputs.issue_number}}-sandbox
-      ARTIFACT_BUCKET_PREFIX: PR-${{needs.get_issue_number.outputs.issue_number}}-sandbox
       AWS_ENVIRONMENT: dev
-      APIGEE_ENVIRONMENT: internal-dev-sandbox
-      ENABLE_MUTUAL_TLS: false
-      BUILD_ARTIFACT: packaged_sandbox_code
-      TRUSTSTORE_FILE: psu-sandbox-truststore.pem
       VERSION_NUMBER: PR-${{ needs.get_issue_number.outputs.issue_number }}
       COMMIT_ID: ${{ needs.get_commit_id.outputs.commit_id }}
-      LOG_RETENTION_DAYS: 30
-      DEPLOY_APIGEE: true
-      DYNAMODB_AUTOSCALE: false
-      DEPLOY_APIGEE_CPSU: true
-      DEPLOY_CHECK_PRESCRIPTION_STATUS_UPDATE: true
-      EXPOSE_GET_STATUS_UPDATES: false
-      RUN_REGRESSION_TEST: false
-      STATE_MACHINE_LOG_LEVEL: ALL
-      ENABLE_BACKUP: "False"
-      ENABLE_NOTIFICATIONS_INTERNAL: false
-      ENABLE_NOTIFICATIONS_EXTERNAL: false
-      ENABLED_SYSTEMS: "Internal Test System"
-      BLOCKED_SITE_ODS_CODES: "B3J1Z"
-      ENABLED_SUPPLIER_APPLICATION_IDS: "XXXXX" # Workaround empty string handling
-      NOTIFY_ROUTING_PLAN_ID: "e57fe5cc-0567-4854-abe2-b7dd9014a50c"
-      NOTIFY_API_BASE_URL: "https://int.api.service.nhs.uk"
-      MTLS_KEY: psu-mtls-1
+      LOG_RETENTION_IN_DAYS: "30"
+      LOG_LEVEL: DEBUG
       IS_PULL_REQUEST: true
+      TRUSTSTORE_FILE: psu-sandbox-truststore.pem
+      TRUST_STORE_VERSION: "none"
+      ENABLE_MUTUAL_TLS: false
+      ENABLE_SPLUNK: false
+      ENABLE_BACKUP: false
       FORWARD_CSOC_LOGS: false
     secrets:
       CLOUD_FORMATION_DEPLOY_ROLE: ${{ secrets.DEV_CLOUD_FORMATION_DEPLOY_ROLE }}
-      PROXYGEN_ROLE: ${{ secrets.PROXYGEN_PTL_ROLE }}
-      REGRESSION_TESTS_PEM: ${{ secrets.REGRESSION_TESTS_PEM }}

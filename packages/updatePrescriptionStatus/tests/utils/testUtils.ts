@@ -77,7 +77,7 @@ export const TASK_VALUES = [
 ]
 
 export function deepCopy(toCopy: object) {
-  return JSON.parse(JSON.stringify(toCopy))
+  return structuredClone(toCopy)
 }
 
 export function validTask(): Task {
