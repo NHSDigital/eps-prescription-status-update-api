@@ -9,3 +9,5 @@ ignore:
     reason: "We don't use NO_PROXY rules, so we're not vulnerable to this issue."
   - vulnerability: GHSA-j965-2qgj-vjmq
     reason: "We use v3 packages already, so we're not vulnerable to this issue."
+  # protobufjs - dependency of @redocly/cli
+  - vulnerability: GHSA-xq3m-2v4x-88gg
