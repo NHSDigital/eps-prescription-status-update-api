@@ -406,7 +406,7 @@ jobs:
       ENABLE_NOTIFICATIONS_EXTERNAL: true
       ENABLE_POST_DATED_NOTIFICATIONS: false
       BLOCKED_SITE_ODS_CODES: "XXXXX" # Workaround empty string handling
-      ENABLED_SUPPLIER_APPLICATION_IDS: ee353200-2b8f-47be-8b70-d0777e80d92f"
+      ENABLED_SUPPLIER_APPLICATION_IDS: "ee353200-2b8f-47be-8b70-d0777e80d92f"
       NOTIFY_ROUTING_PLAN_ID: "e57fe5cc-0567-4854-abe2-b7dd9014a50c" # INT and PROD share a value
       NOTIFY_API_BASE_URL: "https://api.service.nhs.uk"
       MTLS_KEY: psu-mtls-1
