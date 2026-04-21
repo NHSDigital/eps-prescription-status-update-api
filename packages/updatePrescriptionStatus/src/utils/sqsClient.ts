@@ -144,10 +144,7 @@ export function saltedHash(
 export async function getSaltValue(logger: Logger): Promise<string> {
   let sqsSalt: string
 
-  if (!process.env.SQS_SALT) {
-    // No secret name configured at all, so fall back
-    sqsSalt = fallbackSalt
-  } else {
+  if (process.env.SQS_SALT) {
     try {
       // grab the secret, expecting JSON like { "salt": "string" }
       const secretJson = await getSecret(process.env.SQS_SALT, {transform: "json"})
@@ -172,6 +169,9 @@ export async function getSaltValue(logger: Logger): Promise<string> {
       logger.error("Failed to fetch SQS_SALT from Secrets Manager, using DEV SALT", {error})
       sqsSalt = fallbackSalt
     }
+  } else {
+    // No secret name configured at all, so fall back
+    sqsSalt = fallbackSalt
   }
 
   if (sqsSalt === fallbackSalt) {

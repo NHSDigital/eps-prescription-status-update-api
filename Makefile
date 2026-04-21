@@ -45,7 +45,6 @@ sam-sync: guard-AWS_DEFAULT_PROFILE guard-stack_name compile
 			  TestPresciptionsParamValue2=$${TEST_PRESCRIPTIONS_2:-PLACEHOLDER} \
 			  TestPresciptionsParamValue3=$${TEST_PRESCRIPTIONS_3:-PLACEHOLDER} \
 			  TestPresciptionsParamValue4=$${TEST_PRESCRIPTIONS_4:-PLACEHOLDER} \
-			  "EnabledSystemsValue=$${ENABLED_SYSTEMS:-Internal Test System}" \
 			  "EnabledSiteODSCodesValue=$${ENABLED_SITE_ODS_CODES:-A83008,FA565}" \
 			  BlockedSiteODSCodesValue=$${BLOCKED_SITE_ODS_CODES:-XXXXX} \
 			  EnabledSupplierApplicationIDsValue=$${ENABLED_SUPPLIER_APPLICATION_IDS:-XXXXX} \
@@ -78,7 +77,6 @@ sam-deploy: guard-AWS_DEFAULT_PROFILE guard-stack_name
 			  TestPresciptionsParamValue2=$${TEST_PRESCRIPTIONS_2:-PLACEHOLDER} \
 			  TestPresciptionsParamValue3=$${TEST_PRESCRIPTIONS_3:-PLACEHOLDER} \
 			  TestPresciptionsParamValue4=$${TEST_PRESCRIPTIONS_4:-PLACEHOLDER} \
-			  "EnabledSystemsValue=$${ENABLED_SYSTEMS:-Internal Test System}" \
 			  "EnabledSiteODSCodesValue=$${ENABLED_SITE_ODS_CODES:-A83008,FA565}" \
 			  BlockedSiteODSCodesValue=$${BLOCKED_SITE_ODS_CODES:-XXXXX} \
 			  EnabledSupplierApplicationIDsValue=$${ENABLED_SUPPLIER_APPLICATION_IDS:-XXXXX} \

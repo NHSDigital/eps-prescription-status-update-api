@@ -2,7 +2,7 @@ name: merge to main workflow
 
 on:
   push:
-    branches: [main]
+    branches: [ main ]
 
 permissions: {}
 
@@ -18,7 +18,7 @@ jobs:
 
   quality_checks:
     uses: NHSDigital/eps-common-workflows/.github/workflows/quality-checks-devcontainer.yml@8399c1f015c1304e40771cbd8ccc24c7ed48fdbc
-    needs: [get_config_values]
+    needs: [ get_config_values ]
     permissions:
       contents: read
       id-token: write
@@ -39,7 +39,7 @@ jobs:
           echo "commit_id=${{ github.sha }}" >> "$GITHUB_OUTPUT"
 
   tag_release:
-    needs: [quality_checks, get_commit_id, get_config_values]
+    needs: [ quality_checks, get_commit_id, get_config_values ]
     uses: NHSDigital/eps-common-workflows/.github/workflows/tag-release-devcontainer.yml@e798d5aee897de6f7dc387dd5623fcd9ba4c8929
     permissions:
       id-token: write
@@ -52,7 +52,7 @@ jobs:
       tag_format: ${{ needs.get_config_values.outputs.tag_format }}
 
   package_code:
-    needs: [tag_release, get_config_values]
+    needs: [ tag_release, get_config_values ]
     uses: ./.github/workflows/run_package_code_and_api.yml
     permissions:
       contents: read
@@ -62,7 +62,7 @@ jobs:
       pinned_image: ${{ needs.get_config_values.outputs.pinned_image }}
 
   release_dev:
-    needs: [tag_release, package_code, get_commit_id, get_config_values]
+    needs: [ tag_release, package_code, get_commit_id, get_config_values ]
     uses: ./.github/workflows/run_release_code_and_api.yml
     permissions:
       contents: write
@@ -93,7 +93,6 @@ jobs:
       ENABLE_NOTIFICATIONS_INTERNAL: true
       ENABLE_NOTIFICATIONS_EXTERNAL: false
       ENABLE_POST_DATED_NOTIFICATIONS: true
-      ENABLED_SYSTEMS: "Internal Test System"
       BLOCKED_SITE_ODS_CODES: "B3J1Z"
       ENABLED_SUPPLIER_APPLICATION_IDS: "XXXXX"
       NOTIFY_ROUTING_PLAN_ID: "e57fe5cc-0567-4854-abe2-b7dd9014a50c"
@@ -111,7 +110,7 @@ jobs:
       REGRESSION_TESTS_PEM: ${{ secrets.REGRESSION_TESTS_PEM }}
 
   release_sandbox_dev:
-    needs: [tag_release, package_code, get_commit_id, get_config_values]
+    needs: [ tag_release, package_code, get_commit_id, get_config_values ]
     uses: ./.github/workflows/run_release_code_and_api.yml
     permissions:
       contents: write
@@ -140,7 +139,6 @@ jobs:
       ENABLE_NOTIFICATIONS_INTERNAL: false
       ENABLE_NOTIFICATIONS_EXTERNAL: false
       ENABLE_POST_DATED_NOTIFICATIONS: true
-      ENABLED_SYSTEMS: "Internal Test System"
       BLOCKED_SITE_ODS_CODES: "B3J1Z"
       ENABLED_SUPPLIER_APPLICATION_IDS: "XXXXX" # Workaround empty string handling
       NOTIFY_ROUTING_PLAN_ID: "e57fe5cc-0567-4854-abe2-b7dd9014a50c"
@@ -154,8 +152,7 @@ jobs:
       PROXYGEN_ROLE: ${{ secrets.PROXYGEN_PTL_ROLE }}
 
   release_qa:
-    needs:
-      [tag_release, release_dev, package_code, get_commit_id, get_config_values]
+    needs: [ tag_release, release_dev, package_code, get_commit_id, get_config_values ]
     uses: ./.github/workflows/run_release_code_and_api.yml
     permissions:
       contents: write
@@ -185,7 +182,6 @@ jobs:
       ENABLE_NOTIFICATIONS_INTERNAL: false
       ENABLE_NOTIFICATIONS_EXTERNAL: false
       ENABLE_POST_DATED_NOTIFICATIONS: true
-      ENABLED_SYSTEMS: "Internal Test System"
       BLOCKED_SITE_ODS_CODES: "B3J1Z"
       ENABLED_SUPPLIER_APPLICATION_IDS: "XXXXX" # Workaround empty string handling
       NOTIFY_ROUTING_PLAN_ID: "e57fe5cc-0567-4854-abe2-b7dd9014a50c"
