@@ -186,11 +186,22 @@ jobs:
       - name: read ODS codes
         id: read
         run: |
-          INPUT_FILE="${GITHUB_WORKSPACE}/.github/config/ods_codes_${AWS_ENVIRONMENT}.txt"
-          CSV=$(sed ':a;N;$!ba;s/\r\?\n/,/g;s/,$//' < "$INPUT_FILE")
-          echo "ods_csv=${CSV}" >> "$GITHUB_OUTPUT"
+          set -euo pipefail
+          ENABLED_INPUT_FILE="${GITHUB_WORKSPACE}/.github/config/ods_codes_${AWS_ENVIRONMENT}.txt"
+          ENABLED_CSV=$(sed ':a;N;$!ba;s/\r\?\n/,/g;s/,$//' < "$ENABLED_INPUT_FILE")
+
+          BLOCKED_INPUT_FILE="${GITHUB_WORKSPACE}/.github/config/blocked_ods_codes_${AWS_ENVIRONMENT}.txt"
+          if [[ -f "$BLOCKED_INPUT_FILE" ]]; then
+            BLOCKED_CSV=$(sed ':a;N;$!ba;s/\r\?\n/,/g;s/,$//' < "$BLOCKED_INPUT_FILE")
+          else
+            BLOCKED_CSV="${BLOCKED_SITE_ODS_CODES_INPUT}"
+          fi
+
+          echo "ods_csv=${ENABLED_CSV}" >> "$GITHUB_OUTPUT"
+          echo "blocked_ods_csv=${BLOCKED_CSV}" >> "$GITHUB_OUTPUT"
         env:
           AWS_ENVIRONMENT: ${{ inputs.AWS_ENVIRONMENT }}
+          BLOCKED_SITE_ODS_CODES_INPUT: ${{ inputs.BLOCKED_SITE_ODS_CODES }}
 
       - name: release code
         shell: bash
@@ -217,7 +228,7 @@ jobs:
           ENABLE_POST_DATED_NOTIFICATIONS: ${{ inputs.ENABLE_POST_DATED_NOTIFICATIONS }}
           REQUIRE_APPLICATION_NAME: ${{ inputs.REQUIRE_APPLICATION_NAME }}
           ENABLED_SITE_ODS_CODES: ${{ steps.read.outputs.ods_csv }}
-          BLOCKED_SITE_ODS_CODES: ${{ inputs.BLOCKED_SITE_ODS_CODES }}
+          BLOCKED_SITE_ODS_CODES: ${{ steps.read.outputs.blocked_ods_csv }}
           ENABLED_SUPPLIER_APPLICATION_IDS: ${{ inputs.ENABLED_SUPPLIER_APPLICATION_IDS }}
           NOTIFY_ROUTING_PLAN_ID: ${{ inputs.NOTIFY_ROUTING_PLAN_ID }}
           NOTIFY_API_BASE_URL: ${{ inputs.NOTIFY_API_BASE_URL }}
