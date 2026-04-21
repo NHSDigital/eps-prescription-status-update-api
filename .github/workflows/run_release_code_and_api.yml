@@ -189,6 +189,7 @@ jobs:
       - name: read ODS codes
         id: read
         run: |
+          set -euo pipefail
           ENABLED_INPUT_FILE="${GITHUB_WORKSPACE}/.github/config/ods_codes_${AWS_ENVIRONMENT}.txt"
           ENABLED_CSV=$(sed ':a;N;$!ba;s/\r\?\n/,/g;s/,$//' < "$ENABLED_INPUT_FILE")
 
