@@ -306,9 +306,10 @@ jobs:
       ENABLE_NOTIFICATIONS_INTERNAL: true
       ENABLE_NOTIFICATIONS_EXTERNAL: true
       ENABLE_POST_DATED_NOTIFICATIONS: true
-      ENABLED_SYSTEMS: "CrxPatientApp"
+      ENABLED_SYSTEMS: "CrxPatientApp,nhsPrescriptionApp"
       BLOCKED_SITE_ODS_CODES: "XXXXX" # Workaround empty string handling
-      ENABLED_SUPPLIER_APPLICATION_IDS: "XXXXX"
+      # See https://nhsd-confluence.digital.nhs.uk/spaces/APIMC/pages/1345218865/Mapping+of+Suppliers+to+APIM+Onboarding+Portal+Apps
+      ENABLED_SUPPLIER_APPLICATION_IDS: "XXXXX,YYYYY"
       NOTIFY_ROUTING_PLAN_ID: "e57fe5cc-0567-4854-abe2-b7dd9014a50c"
       NOTIFY_API_BASE_URL: "https://int.api.service.nhs.uk"
       MTLS_KEY: psu-mtls-1
@@ -413,9 +414,10 @@ jobs:
       ENABLE_NOTIFICATIONS_INTERNAL: true
       ENABLE_NOTIFICATIONS_EXTERNAL: true
       ENABLE_POST_DATED_NOTIFICATIONS: false
-      ENABLED_SYSTEMS: "CrxPatientApp"
+      ENABLED_SYSTEMS: "CrxPatientApp,nhsPrescriptionApp"
       BLOCKED_SITE_ODS_CODES: "XXXXX" # Workaround empty string handling
-      ENABLED_SUPPLIER_APPLICATION_IDS: "XXXXX"
+      # See https://nhsd-confluence.digital.nhs.uk/spaces/APIMC/pages/1345218865/Mapping+of+Suppliers+to+APIM+Onboarding+Portal+Apps
+      ENABLED_SUPPLIER_APPLICATION_IDS: "ee353200-2b8f-47be-8b70-d0777e80d92f,30c8d461-e875-4882-85d1-4d5d90f7f17b"
       NOTIFY_ROUTING_PLAN_ID: "e57fe5cc-0567-4854-abe2-b7dd9014a50c" # INT and PROD share a value
       NOTIFY_API_BASE_URL: "https://api.service.nhs.uk"
       MTLS_KEY: psu-mtls-1
