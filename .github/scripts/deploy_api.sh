@@ -1,6 +1,33 @@
 #!/usr/bin/env bash
 set -eu pipefail
 
+invoke_lambda_with_retry() {
+    local function_name="$1"
+    local payload_file="$2"
+    local max_attempts=3
+    local delay=30
+
+    for attempt in $(seq 1 "$max_attempts"); do
+        echo "Invoking ${function_name} (attempt ${attempt} of ${max_attempts})"
+        aws lambda invoke --function-name "${function_name}" --cli-binary-format raw-in-base64-out --payload "file://${payload_file}" out.txt > response.json
+
+        if ! eval "cat response.json | jq -e '.FunctionError' >/dev/null"; then
+            return 0
+        fi
+
+        echo "Error calling lambda (attempt ${attempt} of ${max_attempts})"
+        cat out.txt
+
+        if [ "$attempt" -lt "$max_attempts" ]; then
+            echo "Retrying in ${delay} seconds..."
+            sleep "$delay"
+        fi
+    done
+
+    echo "Lambda ${function_name} failed after ${max_attempts} attempts"
+    return 1
+}
+
 echo "API type: ${API_TYPE}"
 echo "Specification path: ${SPEC_PATH}"
 echo "Specification version: ${VERSION_NUMBER}"
@@ -31,7 +58,7 @@ put_secret_lambda=lambda-resources-ProxygenPTLMTLSSecretPut
 instance_put_lambda=lambda-resources-ProxygenPTLInstancePut
 spec_publish_lambda=lambda-resources-ProxygenPTLSpecPublish
 
-if [[ "$APIGEE_ENVIRONMENT" =~ ^(int|sandbox|prod)$ ]]; then 
+if [[ "$APIGEE_ENVIRONMENT" =~ ^(int|sandbox|prod)$ ]]; then
     put_secret_lambda=lambda-resources-ProxygenProdMTLSSecretPut
     instance_put_lambda=lambda-resources-ProxygenProdInstancePut
     spec_publish_lambda=lambda-resources-ProxygenProdSpecPublish
@@ -71,7 +98,7 @@ if [[ "${IS_PULL_REQUEST}" == "true" ]]; then
     jq '."x-nhsd-apim".temporary = true' "${SPEC_PATH}" > temp.json && mv temp.json "${SPEC_PATH}"
 fi
 
-# Find and replace the specification version number 
+# Find and replace the specification version number
 jq --arg version "${VERSION_NUMBER}" '.info.version = $version' "${SPEC_PATH}" > temp.json && mv temp.json "${SPEC_PATH}"
 
 # Find and replace the x-nhsd-apim.target.url value
@@ -138,12 +165,7 @@ if [[ "${ENABLE_MUTUAL_TLS}" == "true" ]]; then
             --arg proxygenSecretName "${proxygen_private_key_arn}" \
             '{apiName: $apiName, environment: $environment, secretName: $secretName, secretKey: $secretKey, secretCert: $secretCert, kid, $kid, proxygenSecretName: $proxygenSecretName}' > payload.json
 
-        aws lambda invoke --function-name "${put_secret_lambda}" --cli-binary-format raw-in-base64-out --payload file://payload.json out.txt > response.json
-        if eval "cat response.json | jq -e '.FunctionError' >/dev/null"; then
-            echo 'Error calling lambda'
-            cat out.txt
-            exit 1
-        fi
+        invoke_lambda_with_retry "${put_secret_lambda}" payload.json
         echo "Secret stored successfully"
 
     else
@@ -163,13 +185,7 @@ if [[ "${DRY_RUN}" == "false" ]]; then
         --arg proxygenSecretName "${proxygen_private_key_arn}" \
         '{apiName: $apiName, environment: $environment, specDefinition: $spec, instance: $instance, kid: $kid, proxygenSecretName: $proxygenSecretName}' > payload.json
 
-    aws lambda invoke --function-name "${instance_put_lambda}" --cli-binary-format raw-in-base64-out --payload file://payload.json out.txt > response.json
-
-    if eval "cat response.json | jq -e '.FunctionError' >/dev/null"; then
-        echo 'Error calling lambda'
-        cat out.txt
-        exit 1
-    fi
+    invoke_lambda_with_retry "${instance_put_lambda}" payload.json
     echo "Instance deployed"
 else
     echo "Would call ${instance_put_lambda}"
@@ -187,13 +203,7 @@ if [[ "${APIGEE_ENVIRONMENT}" == "int" ]]; then
             --arg proxygenSecretName "${proxygen_private_key_arn}" \
             '{apiName: $apiName, environment: $environment, specDefinition: $spec, instance: $instance, kid: $kid, proxygenSecretName: $proxygenSecretName}' > payload.json
 
-        aws lambda invoke --function-name "${spec_publish_lambda}" --cli-binary-format raw-in-base64-out --payload file://payload.json out.txt > response.json
-
-        if eval "cat response.json | jq -e '.FunctionError' >/dev/null"; then
-            echo 'Error calling lambda'
-            cat out.txt
-            exit 1
-        fi
+        invoke_lambda_with_retry "${spec_publish_lambda}" payload.json
         echo "Spec deployed"
     else
         echo "Would call ${spec_publish_lambda}"
@@ -212,13 +222,7 @@ if [[ "${APIGEE_ENVIRONMENT}" == "internal-dev" && "${IS_PULL_REQUEST}" == "fals
             --arg proxygenSecretName "${proxygen_private_key_arn}" \
             '{apiName: $apiName, environment: $environment, specDefinition: $spec, instance: $instance, kid: $kid, proxygenSecretName: $proxygenSecretName}' > payload.json
 
-        aws lambda invoke --function-name "${spec_publish_lambda}" --cli-binary-format raw-in-base64-out --payload file://payload.json out.txt > response.json
-
-        if eval "cat response.json | jq -e '.FunctionError' >/dev/null"; then
-            echo 'Error calling lambda'
-            cat out.txt
-            exit 1
-        fi
+        invoke_lambda_with_retry "${spec_publish_lambda}" payload.json
         echo "Spec deployed"
     else
         echo "Would call ${spec_publish_lambda}"
