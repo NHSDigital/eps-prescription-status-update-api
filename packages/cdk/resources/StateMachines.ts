@@ -9,11 +9,17 @@ import {Format1UpdatePrescriptionsStatusDefinition} from "./StateMachineDefiniti
 export interface StateMachinesProps {
   readonly stackName: string
   readonly logRetentionInDays: number
-  readonly functions: {[key: string]: TypescriptLambdaFunction}
+  readonly functions: {
+    readonly updatePrescriptionStatus: TypescriptLambdaFunction
+    readonly convertRequestToFhirFormat: TypescriptLambdaFunction
+  }
 }
 
 export class StateMachines extends Construct {
-  stateMachines: {[key: string]: ExpressStateMachine}
+  public readonly stateMachines: {
+    readonly updatePrescriptionStatus: ExpressStateMachine
+    readonly format1UpdatePrescriptionsStatus: ExpressStateMachine
+  }
 
   public constructor(scope: Construct, id: string, props: StateMachinesProps) {
     super(scope, id)

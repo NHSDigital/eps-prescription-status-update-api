@@ -18,13 +18,31 @@ export interface ApisProps {
   readonly csocApiGatewayDestination: string
   readonly deployCheckPrescriptionStatusUpdate: boolean
   readonly exposeGetStatusUpdates: boolean
-  functions: {[key: string]: TypescriptLambdaFunction}
-  stateMachines: {[key: string]: ExpressStateMachine}
+  readonly functions: {
+    readonly status: TypescriptLambdaFunction
+    readonly capabilityStatement: TypescriptLambdaFunction
+    readonly nhsNotifyUpdateCallback: TypescriptLambdaFunction
+    readonly getStatusUpdates: TypescriptLambdaFunction
+    readonly checkPrescriptionStatusUpdates?: TypescriptLambdaFunction
+  }
+  readonly stateMachines: {
+    readonly updatePrescriptionStatus: ExpressStateMachine
+    readonly format1UpdatePrescriptionsStatus: ExpressStateMachine
+  }
 }
 
 export class Apis extends Construct {
-  apis: {[key: string]: RestApiGateway}
-  endpoints: {[key: string]: Construct}
+  public readonly apis: {
+    readonly api: RestApiGateway
+  }
+  public readonly endpoints: {
+    readonly rootResource: Construct
+    readonly format1UpdatePrescriptionStatusEndpoint: StateMachineEndpoint
+    readonly status: LambdaEndpoint
+    readonly capabilityStatement: LambdaEndpoint
+    readonly notificationDeliveryStatusCallback: LambdaEndpoint
+    readonly checkPrescriptionStatusUpdates?: LambdaEndpoint
+  }
 
   public constructor(scope: Construct, id: string, props: ApisProps) {
     super(scope, id)
@@ -105,24 +123,25 @@ export class Apis extends Construct {
       lambdaFunction: props.functions.capabilityStatement
     })
 
-    this.endpoints = {
-      rootResource,
-      format1UpdatePrescriptionStatusEndpoint: format1PsuEndpoint,
-      status: statusEndpoint,
-      capabilityStatement: capabilityStatementEndpoint,
-      notificationDeliveryStatusCallback: notifyCallbackEndpoint
-    }
-
     // GET /checkprescriptionstatusupdates — conditional Lambda proxy integration
+    let checkPsu : LambdaEndpoint | undefined
     if (props.deployCheckPrescriptionStatusUpdate) {
-      const checkPsu = new LambdaEndpoint(this, "CheckPrescriptionStatusUpdatesEndpoint", {
+      checkPsu = new LambdaEndpoint(this, "CheckPrescriptionStatusUpdatesEndpoint", {
         parentResource: rootResource,
         resourceName: "checkprescriptionstatusupdates",
         method: HttpMethod.GET,
         restApiGatewayRole: apiGateway.role,
         lambdaFunction: props.functions.checkPrescriptionStatusUpdates
       })
-      this.endpoints.checkPrescriptionStatusUpdates = checkPsu
+    }
+
+    this.endpoints = {
+      rootResource,
+      format1UpdatePrescriptionStatusEndpoint: format1PsuEndpoint,
+      status: statusEndpoint,
+      capabilityStatement: capabilityStatementEndpoint,
+      notificationDeliveryStatusCallback: notifyCallbackEndpoint,
+      checkPrescriptionStatusUpdates: checkPsu
     }
 
     // POST /get-status-updates — conditional Lambda integration (non-proxy)

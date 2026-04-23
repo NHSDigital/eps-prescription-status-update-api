@@ -23,7 +23,40 @@ export class Format1UpdatePrescriptionsStatusDefinition extends Construct {
   ) {
     super(scope, id)
 
-    const catchAllError = new Pass(this, "CatchAllError", {
+    const catchAllError = this.createCatchAllError()
+    const callConvertRequestToFhirFormat = this.createCallConvertRequestToFhirFormat(
+      props.convertRequestToFhirFormatFunction,
+      catchAllError
+    )
+    const callUpdatePrescriptionStatus = this.createCallUpdatePrescriptionStatus(
+      props.updatePrescriptionStatusFunction,
+      catchAllError
+    )
+
+    this.definition = Chain
+      .start(callConvertRequestToFhirFormat)
+      .next(
+        new Choice(this, "Convert Request to FHIR result")
+          .when(
+            Condition.jsonata("{% $convertStatusCode != 200 %}"),
+            this.createFailedConvertRequestToFhir()
+          )
+          .otherwise(
+            callUpdatePrescriptionStatus
+              .next(
+                new Choice(this, "Check Update Prescription Status Result")
+                  .when(
+                    Condition.jsonata("{% $updateStatusCode = 409 %}"),
+                    this.createTranslate409To202()
+                  )
+                  .otherwise(new Pass(this, "End State"))
+              )
+          )
+      )
+  }
+
+  private createCatchAllError(): Pass {
+    return new Pass(this, "CatchAllError", {
       outputs: {
         Payload: {
           statusCode: 500,
@@ -38,10 +71,17 @@ export class Format1UpdatePrescriptionsStatusDefinition extends Construct {
         }
       }
     })
+  }
 
+  private createCallConvertRequestToFhirFormat(
+    convertRequestToFhirFormatFunction: IFunction,
+    catchAllError: Pass
+  ): LambdaInvoke {
     const callConvertRequestToFhirFormat = new LambdaInvoke(
-      this, "Call Convert Request To Fhir Format", {
-        lambdaFunction: props.convertRequestToFhirFormatFunction,
+      this,
+      "Call Convert Request To Fhir Format",
+      {
+        lambdaFunction: convertRequestToFhirFormatFunction,
         assign: {
           convertStatusCode: "{% $states.result.Payload.statusCode %}",
           convertHeaders: "{% $states.result.Payload.headers %}",
@@ -50,8 +90,11 @@ export class Format1UpdatePrescriptionsStatusDefinition extends Construct {
       }
     )
     callConvertRequestToFhirFormat.addCatch(catchAllError)
+    return callConvertRequestToFhirFormat
+  }
 
-    const failedConvertRequestToFhir = new Pass(this, "Failed Convert Request to FHIR", {
+  private createFailedConvertRequestToFhir(): Pass {
+    return new Pass(this, "Failed Convert Request to FHIR", {
       outputs: {
         Payload: {
           statusCode: "{% $convertStatusCode %}",
@@ -60,10 +103,17 @@ export class Format1UpdatePrescriptionsStatusDefinition extends Construct {
         }
       }
     })
+  }
 
+  private createCallUpdatePrescriptionStatus(
+    updatePrescriptionStatusFunction: IFunction,
+    catchAllError: Pass
+  ): LambdaInvoke {
     const callUpdatePrescriptionStatus = new LambdaInvoke(
-      this, "Call Update Prescription Status", {
-        lambdaFunction: props.updatePrescriptionStatusFunction,
+      this,
+      "Call Update Prescription Status",
+      {
+        lambdaFunction: updatePrescriptionStatusFunction,
         payload: TaskInput.fromObject({
           body: "{% $string($convertBody) %}",
           headers: "{% $convertHeaders %}"
@@ -75,8 +125,11 @@ export class Format1UpdatePrescriptionsStatusDefinition extends Construct {
       }
     )
     callUpdatePrescriptionStatus.addCatch(catchAllError)
+    return callUpdatePrescriptionStatus
+  }
 
-    const translate409To202 = new Pass(this, "Translate 409 to 202", {
+  private createTranslate409To202(): Pass {
+    return new Pass(this, "Translate 409 to 202", {
       outputs: {
         Payload: {
           statusCode: 202,
@@ -96,28 +149,5 @@ export class Format1UpdatePrescriptionsStatusDefinition extends Construct {
         }
       }
     })
-
-    const endState = new Pass(this, "End State")
-
-    const checkConvertResult = new Choice(this, "Convert Request to FHIR result")
-    const convertNotOk = Condition.jsonata("{% $convertStatusCode != 200 %}")
-
-    const checkUpdateResult = new Choice(this, "Check Update Prescription Status Result")
-    const updateIs409 = Condition.jsonata("{% $updateStatusCode = 409 %}")
-
-    this.definition = Chain
-      .start(callConvertRequestToFhirFormat)
-      .next(
-        checkConvertResult
-          .when(convertNotOk, failedConvertRequestToFhir)
-          .otherwise(
-            callUpdatePrescriptionStatus
-              .next(
-                checkUpdateResult
-                  .when(updateIs409, translate409To202)
-                  .otherwise(endState)
-              )
-          )
-      )
   }
 }

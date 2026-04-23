@@ -22,7 +22,30 @@ export class UpdatePrescriptionStatusDefinition extends Construct {
   ) {
     super(scope, id)
 
-    const catchAllError = new Pass(this, "CatchAllError", {
+    const catchAllError = this.createCatchAllError()
+    const callFhirValidation = this.createCallFhirValidation(
+      props.fhirValidationFunction,
+      catchAllError
+    )
+    const callUpdatePrescriptionStatus = this.createCallUpdatePrescriptionStatus(
+      props.updatePrescriptionStatusFunction,
+      catchAllError
+    )
+
+    this.definition = Chain
+      .start(callFhirValidation)
+      .next(
+        new Choice(this, "Do FHIR Validation Errors Exist")
+          .when(
+            Condition.jsonata("{% $fhirValidationErrorCount > 0 %}"),
+            this.createReturnFailedFhirValidationErrors()
+          )
+          .otherwise(callUpdatePrescriptionStatus)
+      )
+  }
+
+  private createCatchAllError(): Pass {
+    return new Pass(this, "CatchAllError", {
       outputs: {
         Payload: {
           statusCode: 500,
@@ -37,9 +60,11 @@ export class UpdatePrescriptionStatusDefinition extends Construct {
         }
       }
     })
+  }
 
+  private createCallFhirValidation(fhirValidationFunction: IFunction, catchAllError: Pass): LambdaInvoke {
     const callFhirValidation = new LambdaInvoke(this, "Call FHIR Validation", {
-      lambdaFunction: props.fhirValidationFunction,
+      lambdaFunction: fhirValidationFunction,
       assign: {
         fhirValidationResponse: "{% $states.result.Payload %}",
         fhirValidationErrorCount:
@@ -47,8 +72,11 @@ export class UpdatePrescriptionStatusDefinition extends Construct {
       }
     })
     callFhirValidation.addCatch(catchAllError)
+    return callFhirValidation
+  }
 
-    const returnFailedFhirValidationErrors = new Pass(this, "Return Failed FHIR Validation Errors", {
+  private createReturnFailedFhirValidationErrors(): Pass {
+    return new Pass(this, "Return Failed FHIR Validation Errors", {
       outputs: {
         Payload: {
           statusCode: 400,
@@ -60,23 +88,20 @@ export class UpdatePrescriptionStatusDefinition extends Construct {
         }
       }
     })
+  }
 
+  private createCallUpdatePrescriptionStatus(
+    updatePrescriptionStatusFunction: IFunction,
+    catchAllError: Pass
+  ): LambdaInvoke {
     const callUpdatePrescriptionStatus = new LambdaInvoke(
-      this, "Call Update Prescription Status", {
-        lambdaFunction: props.updatePrescriptionStatusFunction
+      this,
+      "Call Update Prescription Status",
+      {
+        lambdaFunction: updatePrescriptionStatusFunction
       }
     )
     callUpdatePrescriptionStatus.addCatch(catchAllError)
-
-    const doFhirValidationErrorsExist = new Choice(this, "Do FHIR Validation Errors Exist")
-    const hasErrors = Condition.jsonata("{% $fhirValidationErrorCount > 0 %}")
-
-    this.definition = Chain
-      .start(callFhirValidation)
-      .next(
-        doFhirValidationErrorsExist
-          .when(hasErrors, returnFailedFhirValidationErrors)
-          .otherwise(callUpdatePrescriptionStatus)
-      )
+    return callUpdatePrescriptionStatus
   }
 }
