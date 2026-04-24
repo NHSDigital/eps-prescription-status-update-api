@@ -16,7 +16,7 @@ jobs:
       verify_published_from_main_image: true
   quality_checks:
     uses: NHSDigital/eps-common-workflows/.github/workflows/quality-checks-devcontainer.yml@8399c1f015c1304e40771cbd8ccc24c7ed48fdbc
-    needs: [get_config_values]
+    needs: [ get_config_values ]
     permissions:
       contents: read
       id-token: write
@@ -37,7 +37,7 @@ jobs:
           echo "commit_id=${{ github.sha }}" >> "$GITHUB_OUTPUT"
 
   tag_release:
-    needs: [quality_checks, get_commit_id, get_config_values]
+    needs: [ quality_checks, get_commit_id, get_config_values ]
     uses: NHSDigital/eps-common-workflows/.github/workflows/tag-release-devcontainer.yml@e798d5aee897de6f7dc387dd5623fcd9ba4c8929
     permissions:
       id-token: write
@@ -54,7 +54,7 @@ jobs:
       EXECUTE_JIRA_LAMBDA_ROLE: ${{ secrets.DEV_CLOUD_FORMATION_EXECUTE_LAMBDA_ROLE }}
 
   package_code:
-    needs: [tag_release, get_config_values]
+    needs: [ tag_release, get_config_values ]
     uses: ./.github/workflows/run_package_code_and_api.yml
     permissions:
       contents: read
@@ -64,7 +64,7 @@ jobs:
       pinned_image: ${{ needs.get_config_values.outputs.pinned_image }}
 
   release_dev:
-    needs: [tag_release, package_code, get_commit_id, get_config_values]
+    needs: [ tag_release, package_code, get_commit_id, get_config_values ]
     uses: ./.github/workflows/run_release_code_and_api.yml
     permissions:
       contents: write
@@ -95,7 +95,6 @@ jobs:
       ENABLE_NOTIFICATIONS_INTERNAL: false
       ENABLE_NOTIFICATIONS_EXTERNAL: false
       ENABLE_POST_DATED_NOTIFICATIONS: true
-      ENABLED_SYSTEMS: "Internal Test System"
       BLOCKED_SITE_ODS_CODES: "XXXXX" # Workaround empty string handling
       ENABLED_SUPPLIER_APPLICATION_IDS: "XXXXX"
       NOTIFY_ROUTING_PLAN_ID: "e57fe5cc-0567-4854-abe2-b7dd9014a50c"
@@ -117,7 +116,7 @@ jobs:
       REGRESSION_TESTS_PEM: ${{ secrets.REGRESSION_TESTS_PEM }}
 
   release_dev_sandbox:
-    needs: [tag_release, package_code, get_commit_id, get_config_values]
+    needs: [ tag_release, package_code, get_commit_id, get_config_values ]
     uses: ./.github/workflows/run_release_code_and_api.yml
     permissions:
       contents: write
@@ -145,7 +144,6 @@ jobs:
       ENABLE_NOTIFICATIONS_INTERNAL: false
       ENABLE_NOTIFICATIONS_EXTERNAL: false
       ENABLE_POST_DATED_NOTIFICATIONS: false
-      ENABLED_SYSTEMS: "Internal Test System"
       BLOCKED_SITE_ODS_CODES: "B3J1Z"
       ENABLED_SUPPLIER_APPLICATION_IDS: "XXXXX"
       NOTIFY_ROUTING_PLAN_ID: "e57fe5cc-0567-4854-abe2-b7dd9014a50c"
@@ -201,7 +199,6 @@ jobs:
       ENABLE_NOTIFICATIONS_INTERNAL: false
       ENABLE_NOTIFICATIONS_EXTERNAL: false
       ENABLE_POST_DATED_NOTIFICATIONS: false
-      ENABLED_SYSTEMS: "Internal Test System, Apotec Ltd - Apotec CRM - Production, CrxPatientApp, nhsPrescriptionApp, Titan PSU Prod"
       BLOCKED_SITE_ODS_CODES: "B3J1Z"
       ENABLED_SUPPLIER_APPLICATION_IDS: "XXXXX"
       NOTIFY_ROUTING_PLAN_ID: "e57fe5cc-0567-4854-abe2-b7dd9014a50c"
@@ -257,7 +254,6 @@ jobs:
       ENABLE_NOTIFICATIONS_INTERNAL: false
       ENABLE_NOTIFICATIONS_EXTERNAL: false
       ENABLE_POST_DATED_NOTIFICATIONS: true
-      ENABLED_SYSTEMS: "Internal Test System, Apotec Ltd - Apotec CRM - Production, CrxPatientApp, nhsPrescriptionApp, Titan PSU Prod"
       BLOCKED_SITE_ODS_CODES: "B3J1Z"
       ENABLED_SUPPLIER_APPLICATION_IDS: "XXXXX"
       NOTIFY_ROUTING_PLAN_ID: "e57fe5cc-0567-4854-abe2-b7dd9014a50c"
@@ -275,8 +271,7 @@ jobs:
       REGRESSION_TESTS_PEM: ${{ secrets.REGRESSION_TESTS_PEM }}
 
   release_int:
-    needs:
-      [tag_release, release_qa, package_code, get_commit_id, get_config_values]
+    needs: [ tag_release, release_qa, package_code, get_commit_id, get_config_values ]
     uses: ./.github/workflows/run_release_code_and_api.yml
     permissions:
       contents: write
@@ -306,7 +301,6 @@ jobs:
       ENABLE_NOTIFICATIONS_INTERNAL: true
       ENABLE_NOTIFICATIONS_EXTERNAL: true
       ENABLE_POST_DATED_NOTIFICATIONS: true
-      ENABLED_SYSTEMS: "CrxPatientApp,nhsPrescriptionApp"
       BLOCKED_SITE_ODS_CODES: "XXXXX" # Workaround empty string handling
       # See https://nhsd-confluence.digital.nhs.uk/spaces/APIMC/pages/1345218865/Mapping+of+Suppliers+to+APIM+Onboarding+Portal+Apps
       ENABLED_SUPPLIER_APPLICATION_IDS: "XXXXX,YYYYY"
@@ -329,8 +323,7 @@ jobs:
       REGRESSION_TESTS_PEM: ${{ secrets.REGRESSION_TESTS_PEM }}
 
   release_int_sandbox:
-    needs:
-      [tag_release, release_qa, package_code, get_commit_id, get_config_values]
+    needs: [ tag_release, release_qa, package_code, get_commit_id, get_config_values ]
     uses: ./.github/workflows/run_release_code_and_api.yml
     permissions:
       contents: write
@@ -358,7 +351,6 @@ jobs:
       ENABLE_NOTIFICATIONS_INTERNAL: false
       ENABLE_NOTIFICATIONS_EXTERNAL: false
       ENABLE_POST_DATED_NOTIFICATIONS: false
-      ENABLED_SYSTEMS: "Internal Test System, Apotec Ltd - Apotec CRM - Production, CrxPatientApp, nhsPrescriptionApp, Titan PSU Prod"
       BLOCKED_SITE_ODS_CODES: "B3J1Z"
       ENABLED_SUPPLIER_APPLICATION_IDS: "XXXXX"
       NOTIFY_ROUTING_PLAN_ID: "e57fe5cc-0567-4854-abe2-b7dd9014a50c"
@@ -414,10 +406,10 @@ jobs:
       ENABLE_NOTIFICATIONS_INTERNAL: true
       ENABLE_NOTIFICATIONS_EXTERNAL: true
       ENABLE_POST_DATED_NOTIFICATIONS: false
-      ENABLED_SYSTEMS: "CrxPatientApp,nhsPrescriptionApp"
       BLOCKED_SITE_ODS_CODES: "XXXXX" # Workaround empty string handling
       # See https://nhsd-confluence.digital.nhs.uk/spaces/APIMC/pages/1345218865/Mapping+of+Suppliers+to+APIM+Onboarding+Portal+Apps
-      ENABLED_SUPPLIER_APPLICATION_IDS: "ee353200-2b8f-47be-8b70-d0777e80d92f,30c8d461-e875-4882-85d1-4d5d90f7f17b"
+      ENABLED_SUPPLIER_APPLICATION_IDS: "ee353200-2b8f-47be-8b70-d0777e80d92f,30c8d46\
+        1-e875-4882-85d1-4d5d90f7f17b"
       NOTIFY_ROUTING_PLAN_ID: "e57fe5cc-0567-4854-abe2-b7dd9014a50c" # INT and PROD share a value
       NOTIFY_API_BASE_URL: "https://api.service.nhs.uk"
       MTLS_KEY: psu-mtls-1

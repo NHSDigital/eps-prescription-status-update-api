@@ -24,10 +24,6 @@ Parameters:
     Type: String
     Default: " "
 
-  EnabledSystemsValue:
-    Type: String
-    Default: " "
-
   EnabledSupplierApplicationIDsValue:
     Type: String
     Default: " "
@@ -64,14 +60,6 @@ Resources:
       Description: "List of site ODS codes for which notifications are enabled"
       Type: String
       Value: !Ref EnabledSiteODSCodesValue
-
-  EnabledSystemsParameter:
-    Type: AWS::SSM::Parameter
-    Properties:
-      Name: !Sub ${StackName}-PSUNotifyEnabledSystems
-      Description: "List of application names for which notifications are enabled"
-      Type: String
-      Value: !Ref EnabledSystemsValue
 
   EnabledSupplierApplicationIDsParameter:
     Type: AWS::SSM::Parameter
@@ -166,7 +154,6 @@ Resources:
               - ssm:GetParameters
             Resource:
               - !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${StackName}-PSUNotifyEnabledSiteODSCodes
-              - !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${StackName}-PSUNotifyEnabledSystems
               - !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${StackName}-PSUNotifyEnabledSupplierApplicationIDs
               - !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${StackName}-PSUNotifyBlockedSiteODSCodes
               - !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${StackName}-PSUNotifyRoutingPlanID
@@ -185,12 +172,6 @@ Outputs:
     Value: !Ref EnabledSiteODSCodesParameter
     Export:
       Name: !Sub ${StackName}-PSUNotifyEnabledSiteODSCodesParam
-
-  EnabledSystemsParameterName:
-    Description: "Name of the SSM parameter holding enabled system names"
-    Value: !Ref EnabledSystemsParameter
-    Export:
-      Name: !Sub ${StackName}-PSUNotifyEnabledSystemsParam
 
   EnabledSupplierApplicationIDsParameterName:
     Description: "Name of the SSM parameter holding enabled supplier apigee application IDs"

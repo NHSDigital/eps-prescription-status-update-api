@@ -79,9 +79,6 @@ on:
         required: false
         type: boolean
         default: false
-      ENABLED_SYSTEMS:
-        required: true
-        type: string
       BLOCKED_SITE_ODS_CODES:
         required: true
         type: string
@@ -231,7 +228,6 @@ jobs:
           ENABLE_POST_DATED_NOTIFICATIONS: ${{ inputs.ENABLE_POST_DATED_NOTIFICATIONS }}
           REQUIRE_APPLICATION_NAME: ${{ inputs.REQUIRE_APPLICATION_NAME }}
           ENABLED_SITE_ODS_CODES: ${{ steps.read.outputs.ods_csv }}
-          ENABLED_SYSTEMS: ${{ inputs.ENABLED_SYSTEMS }}
           BLOCKED_SITE_ODS_CODES: ${{ steps.read.outputs.blocked_ods_csv }}
           ENABLED_SUPPLIER_APPLICATION_IDS: ${{ inputs.ENABLED_SUPPLIER_APPLICATION_IDS }}
           NOTIFY_ROUTING_PLAN_ID: ${{ inputs.NOTIFY_ROUTING_PLAN_ID }}
@@ -264,7 +260,8 @@ jobs:
       - name: Deploy PSU API
         shell: bash
         working-directory: .github/scripts
-        if: ${{ inputs.DEPLOY_APIGEE == true && always() && !failure() && !cancelled() }}
+        if: ${{ inputs.DEPLOY_APIGEE == true && always() && !failure() && !cancelled()
+          }}
         env:
           API_TYPE: standard
           VERSION_NUMBER: ${{ inputs.VERSION_NUMBER }}
@@ -286,7 +283,8 @@ jobs:
       - name: Deploy CPSU API
         shell: bash
         working-directory: .github/scripts
-        if: ${{ inputs.DEPLOY_APIGEE_CPSU == true && always() && !failure() && !cancelled() }}
+        if: ${{ inputs.DEPLOY_APIGEE_CPSU == true && always() && !failure() &&
+          !cancelled() }}
         env:
           API_TYPE: custom
           VERSION_NUMBER: ${{ inputs.VERSION_NUMBER }}
@@ -330,7 +328,8 @@ jobs:
           VERSION_NUMBER: ${{ inputs.VERSION_NUMBER }}
 
   regression_tests:
-    if: ${{ inputs.RUN_REGRESSION_TEST == true && always() && !failure() && !cancelled() }}
+    if: ${{ inputs.RUN_REGRESSION_TEST == true && always() && !failure() &&
+      !cancelled() }}
     name: Regression Tests
     uses: ./.github/workflows/run_regression_tests.yml
     needs: release_code_and_api

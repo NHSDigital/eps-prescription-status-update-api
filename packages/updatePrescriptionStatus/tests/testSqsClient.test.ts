@@ -14,9 +14,8 @@ import {createMockDataItem} from "./utils/testUtils"
 const {mockSend, mockGetSecret, mockInitiatedSSMProvider} = vi.hoisted(() => {
   const mockGetParametersByName = vi.fn(async () => ({
     [process.env.ENABLED_SITE_ODS_CODES_PARAM!]: "FA565",
-    // eslint-disable-next-line max-len
-    [process.env.ENABLED_SYSTEMS_PARAM!]: "Internal Test System,Apotec Ltd - Apotec CRM - Production,CrxPatientApp,nhsPrescriptionApp,Titan PSU Prod",
-    [process.env.BLOCKED_SITE_ODS_CODES_PARAM!]: "B3J1Z"
+    [process.env.BLOCKED_SITE_ODS_CODES_PARAM!]: "B3J1Z",
+    [process.env.ENABLED_APPLICATION_IDS_PARAM!]: "550e8400-e29b-41d4-a716-446655440000"
   }))
 
   return {
