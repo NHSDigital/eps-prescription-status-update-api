@@ -121,6 +121,10 @@ on:
       pinned_image:
         required: true
         type: string
+      PSU_EXECUTE_LAMBDA_ROLE_ARN:
+        required: false
+        type: string
+        default: ""
     secrets:
       CLOUD_FORMATION_DEPLOY_ROLE:
         required: true
@@ -241,6 +245,7 @@ jobs:
           TEST_PRESCRIPTIONS_3: ${{ inputs.TEST_PRESCRIPTIONS_3 || 'noval' }}
           TEST_PRESCRIPTIONS_4: ${{ inputs.TEST_PRESCRIPTIONS_4 || 'noval' }}
           FORWARD_CSOC_LOGS: ${{ inputs.FORWARD_CSOC_LOGS }}
+          PSU_EXECUTE_LAMBDA_ROLE_ARN: ${{ inputs.PSU_EXECUTE_LAMBDA_ROLE_ARN }}
         run: ./release_code.sh
 
       - name: get mtls secrets
@@ -340,6 +345,7 @@ jobs:
     with:
       ENVIRONMENT: ${{ inputs.APIGEE_ENVIRONMENT }}
       VERSION_NUMBER: ${{ inputs.VERSION_NUMBER }}
+      PSU_EXECUTE_LAMBDA_ROLE_ARN: ${{ inputs.PSU_EXECUTE_LAMBDA_ROLE_ARN }}
       pinned_image: "${{ inputs.pinned_image }}"
     secrets:
       REGRESSION_TESTS_PEM: ${{ secrets.REGRESSION_TESTS_PEM }}

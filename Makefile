@@ -53,6 +53,7 @@ sam-sync: guard-AWS_DEFAULT_PROFILE guard-stack_name compile
 			  NotifyAPIBaseURLValue=$${NOTIFY_API_BASE_URL:-https://int.api.service.nhs.uk} \
 			  EnableNotificationsInternal=$${ENABLE_NOTIFICATIONS_INTERNAL:-true} \
 			  EnableNotificationsExternal=$${ENABLE_NOTIFICATIONS_EXTERNAL:-false} \
+			  PsuExecuteLambdaRoleArn=$${PSU_EXECUTE_LAMBDA_ROLE_ARN:-none} \
 			  EnableBackup=$${ENABLE_BACKUP:-False}
 
 sam-deploy: guard-AWS_DEFAULT_PROFILE guard-stack_name
@@ -86,6 +87,7 @@ sam-deploy: guard-AWS_DEFAULT_PROFILE guard-stack_name
 			  NotifyAPIBaseURLValue=$${NOTIFY_API_BASE_URL:-https://int.api.service.nhs.uk} \
 			  EnableNotificationsInternal=$${ENABLE_NOTIFICATIONS_INTERNAL:-true} \
 			  EnableNotificationsExternal=$${ENABLE_NOTIFICATIONS_EXTERNAL:-false} \
+			  PsuExecuteLambdaRoleArn=$${PSU_EXECUTE_LAMBDA_ROLE_ARN:-none} \
 			  EnableBackup=$${ENABLE_BACKUP:-False}
 
 sam-delete: guard-AWS_DEFAULT_PROFILE guard-stack_name
