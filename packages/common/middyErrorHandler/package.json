@@ -17,7 +17,7 @@
     "@aws-lambda-powertools/logger": "^2.32.0"
   },
   "devDependencies": {
-    "@middy/core": "^7.1.2",
+    "@middy/core": "^7.2.3",
     "@psu-common/testing": "^1.0.0"
   }
 }
