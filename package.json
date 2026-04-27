@@ -36,8 +36,8 @@
     "@types/aws-lambda": "^8.10.161",
     "@types/node": "^25.5.2",
     "@vitest/coverage-v8": "^4.1.2",
-    "@typescript-eslint/eslint-plugin": "^8.57.2",
-    "@typescript-eslint/parser": "^8.57.1",
+    "@typescript-eslint/eslint-plugin": "^8.58.2",
+    "@typescript-eslint/parser": "^8.58.2",
     "aws-lambda": "^1.0.7",
     "eslint": "^10.2.0",
     "eslint-config-prettier": "^10.1.8",
@@ -48,7 +48,7 @@
     "vite-tsconfig-paths": "^6.1.1",
     "vitest": "^4.1.2",
     "typescript": "^6.0.2",
-    "typescript-eslint": "^8.57.2"
+    "typescript-eslint": "^8.58.2"
   },
   "dependencies": {
     "@aws-sdk/lib-dynamodb": "^3.1019.0",
