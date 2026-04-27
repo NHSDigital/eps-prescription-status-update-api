@@ -13,9 +13,9 @@
     "check-licenses": "license-checker --failOn GPL --failOn LGPL --start ../.."
   },
   "dependencies": {
-    "@aws-lambda-powertools/logger": "^2.32.0",
-    "@middy/core": "^7.3.0",
-    "@middy/input-output-logger": "^7.2.1",
-    "@nhs/fhir-middy-error-handler": "^2.1.75"
+    "@aws-lambda-powertools/logger": "^2.33.0",
+    "@middy/core": "^7.3.3",
+    "@middy/input-output-logger": "^7.3.3",
+    "@nhs/fhir-middy-error-handler": "^2.1.82"
   }
 }
