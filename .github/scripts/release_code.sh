@@ -6,16 +6,15 @@ export AWS_MAX_ATTEMPTS
 echo "$COMMIT_ID"
 
 CF_LONDON_EXPORTS=$(aws cloudformation list-exports --region eu-west-2 --output json)
-artifact_bucket_arn=$(echo "$CF_LONDON_EXPORTS" | \
-    jq \
-    --arg EXPORT_NAME "account-resources:ArtifactsBucket" \
-    -r '.Exports[] | select(.Name == $EXPORT_NAME) | .Value')
-artifact_bucket=$(echo "$artifact_bucket_arn" | cut -d: -f6 | cut -d/ -f1)
+artifact_bucket=$(echo "$CF_LONDON_EXPORTS" | \
+   jq \
+   --arg EXPORT_NAME "account-resources-cdk-uk:Bucket:ArtifactsBucket:Arn" \
+   -r '.Exports[] | select(.Name == $EXPORT_NAME) | .Value')
 export artifact_bucket
 
 cloud_formation_execution_role=$(echo "$CF_LONDON_EXPORTS" | \
     jq \
-    --arg EXPORT_NAME "ci-resources:CloudFormationExecutionRole" \
+    --arg EXPORT_NAME "iam-cdk:IAM:CloudFormationExecutionRole:Arn" \
     -r '.Exports[] | select(.Name == $EXPORT_NAME) | .Value')
 
 if [ -z "${cloud_formation_execution_role}" ]; then
@@ -23,8 +22,10 @@ if [ -z "${cloud_formation_execution_role}" ]; then
     exit 1
 fi
 export cloud_formation_execution_role
-
-TRUSTSTORE_BUCKET_ARN=$(aws cloudformation describe-stacks --stack-name account-resources --query "Stacks[0].Outputs[?OutputKey=='TrustStoreBucket'].OutputValue" --output text)
+TRUSTSTORE_BUCKET_ARN=$(echo "$CF_LONDON_EXPORTS" | \
+    jq \
+    --arg EXPORT_NAME "account-resources-cdk-uk:Bucket:TrustStoreBucket:Arn" \
+    -r '.Exports[] | select(.Name == $EXPORT_NAME) | .Value')
 TRUSTSTORE_BUCKET_NAME=$(echo "${TRUSTSTORE_BUCKET_ARN}" | cut -d ":" -f 6)
 LATEST_TRUSTSTORE_VERSION=$(aws s3api list-object-versions --bucket "${TRUSTSTORE_BUCKET_NAME}" --prefix "${TRUSTSTORE_FILE}" --query 'Versions[?IsLatest].[VersionId]' --output text)
 export LATEST_TRUSTSTORE_VERSION
