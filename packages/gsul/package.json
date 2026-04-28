@@ -20,7 +20,7 @@
     "@aws-sdk/lib-dynamodb": "^3.1019.0",
     "@aws-sdk/util-dynamodb": "^3.991.0",
     "@middy/core": "^7.3.0",
-    "@middy/input-output-logger": "^7.2.1",
+    "@middy/input-output-logger": "^7.3.1",
     "@middy/validator": "6.4.1",
     "@psu-common/middyErrorHandler": "^1.0.0",
     "json-schema-to-ts": "^3.1.1"
