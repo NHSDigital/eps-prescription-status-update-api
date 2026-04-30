@@ -151,7 +151,7 @@ jobs:
     secrets:
       CLOUD_FORMATION_DEPLOY_ROLE: ${{ secrets.DEV_CLOUD_FORMATION_DEPLOY_ROLE }}
 
-  sam_package_code:
+  package_code:
     needs: [get_issue_number, get_config_values]
     uses: ./.github/workflows/run_package_code_and_api.yml
     permissions:
@@ -161,9 +161,9 @@ jobs:
     with:
       pinned_image: ${{ needs.get_config_values.outputs.pinned_image }}
 
-  sam_release_code:
+  release_code:
     needs:
-      [get_issue_number, sam_package_code, get_commit_id, get_config_values]
+      [get_issue_number, package_code, get_commit_id, get_config_values]
     uses: ./.github/workflows/run_release_code_and_api.yml
     permissions:
       contents: write
