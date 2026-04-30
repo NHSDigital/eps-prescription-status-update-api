@@ -257,6 +257,10 @@ deep-clean: clean
 	poetry env remove --all
 
 cdk-deploy: cdk-stateful-deploy cdk-stateless-deploy
+	@true
+
+cdk-synth: cdk-stateful-synth cdk-stateless-synth
+	@true
 
 cdk-stateful-deploy:
 	CDK_APP_NAME=PsuApiApp \
