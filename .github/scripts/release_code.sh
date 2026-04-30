@@ -75,6 +75,7 @@ sam deploy \
             NotifyAPIBaseURLValue="$NOTIFY_API_BASE_URL" \
             RequireApplicationName="$REQUIRE_APPLICATION_NAME" \
             EnableBackup="$ENABLE_BACKUP" \
+            PsuExecuteLambdaRoleArn="${PSU_EXECUTE_LAMBDA_ROLE_ARN:-none}" \
             TestPresciptionsParamValue1="$TEST_PRESCRIPTIONS_1" \
             TestPresciptionsParamValue2="$TEST_PRESCRIPTIONS_2" \
             TestPresciptionsParamValue3="$TEST_PRESCRIPTIONS_3" \

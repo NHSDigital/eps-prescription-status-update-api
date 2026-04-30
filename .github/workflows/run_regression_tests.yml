@@ -9,6 +9,10 @@ on:
       VERSION_NUMBER:
         required: true
         type: string
+      PSU_EXECUTE_LAMBDA_ROLE_ARN:
+        required: false
+        type: string
+        default: ""
       REGRESSION_TESTS_PEM:
         type: string
       pinned_image:
@@ -57,14 +61,15 @@ jobs:
           TARGET_ENVIRONMENT: ${{ inputs.ENVIRONMENT }}
           VERSION_NUMBER: ${{ inputs.VERSION_NUMBER }}
           GITHUB-TOKEN: ${{ steps.generate-token.outputs.token }}
+          PSU_EXECUTE_LAMBDA_ROLE_ARN: ${{ inputs.PSU_EXECUTE_LAMBDA_ROLE_ARN }}
         run: |
           if [[ "$TARGET_ENVIRONMENT" != "prod" && "$TARGET_ENVIRONMENT" != "ref" ]]; then
             # this should be the tag of the tests you want to run
-            REGRESSION_TEST_REPO_TAG=v3.10.9
+            REGRESSION_TEST_REPO_TAG=aea-6055-gsul-boto-lambda-invoke #v3.10.9
 
             # this should be the tag of the regression test workflow you want to run
             # This will normally be the same as REGRESSION_TEST_REPO_TAG
-            REGRESSION_TEST_WORKFLOW_TAG=v3.10.9
+            REGRESSION_TEST_WORKFLOW_TAG=aea-6055-gsul-boto-lambda-invoke #v3.10.9
 
             curl https://raw.githubusercontent.com/NHSDigital/electronic-prescription-service-api-regression-tests/refs/tags/${REGRESSION_TEST_WORKFLOW_TAG}/scripts/run_regression_tests.py -o run_regression_tests.py
             poetry install
@@ -76,5 +81,6 @@ jobs:
             --is_called_from_github=true \
             --product=PSU \
             --regression_test_repo_tag "${REGRESSION_TEST_REPO_TAG}" \
-            --regression_test_workflow_tag "${REGRESSION_TEST_WORKFLOW_TAG}"
+            --regression_test_workflow_tag "${REGRESSION_TEST_WORKFLOW_TAG}" \
+            --psu_execute_lambda_role_arn "${PSU_EXECUTE_LAMBDA_ROLE_ARN}"
           fi

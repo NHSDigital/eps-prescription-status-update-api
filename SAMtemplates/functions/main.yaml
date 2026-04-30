@@ -99,6 +99,10 @@ Parameters:
   EnableBackup:
     Type: String
 
+  PsuExecuteLambdaRoleArn:
+    Type: String
+    Default: none
+
   TestPrescriptionsParamName1:
     Type: String
 
@@ -119,6 +123,11 @@ Conditions:
   EnableBackupCondition: !Equals
     - "True"
     - !Ref EnableBackup
+
+  ShouldGrantPsuExecuteLambdaInvoke: !Not
+    - !Equals
+      - !Ref PsuExecuteLambdaRoleArn
+      - none
 
 Resources:
   UpdatePrescriptionStatus:
@@ -278,6 +287,25 @@ Resources:
         EnableSplunk: !Ref EnableSplunk
         SplunkSubscriptionFilterRole: !ImportValue lambda-resources:SplunkSubscriptionFilterRole
         SplunkDeliveryStreamArn: !ImportValue lambda-resources:SplunkDeliveryStream
+
+  GetStatusUpdatesInvokePolicyForRegressionRole:
+    Condition: ShouldGrantPsuExecuteLambdaInvoke
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      Roles:
+        - !Select
+          - 1
+          - !Split
+            - "role/"
+            - !Ref PsuExecuteLambdaRoleArn
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action:
+              - lambda:InvokeFunction
+            Resource:
+              - !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:${StackName}-GetStatusUpdates*
 
   Status:
     Type: AWS::Serverless::Function
