@@ -37,7 +37,7 @@ async function main() {
   const modeAwareStackName = mergeStackModeIntoStackName(baseStackName, stackMode)
 
   if (stackMode === "stateless") {
-    new PsuApiStatelessStack(app, "PsuApiStatelessStack", {
+    const psuApiStatelessStack = new PsuApiStatelessStack(app, "PsuApiStatelessStack", {
       ...props,
       stackName: calculateVersionedStackName(modeAwareStackName, props),
       samStackName: getConfigFromEnvVar("samStackName"), // TODO: REMOVE THE NEED FOR THIS
@@ -53,13 +53,13 @@ async function main() {
       requireApplicationName: getConfigFromEnvVar("requireApplicationName", undefined, "false"),
       enableBackup: getBooleanConfigFromEnvVar("enableBackup", undefined, "false")
     })
-    return
+    return psuApiStatelessStack
   }
 
   // Stateful stacks use a stable (non-versioned) stack name so that the same
   // CloudFormation stack is updated in-place on every deployment rather than
   // creating a new stack per version.
-  new PsuApiStatefulStack(app, "PsuApiStatefulStack", {
+  const psuApiStatefulStack = new PsuApiStatefulStack(app, "PsuApiStatefulStack", {
     ...props,
     stackName: modeAwareStackName,
     logRetentionInDays: getNumberConfigFromEnvVar("logRetentionInDays"),
@@ -79,6 +79,7 @@ async function main() {
     testPrescriptions3: getConfigFromEnvVar("testPrescriptions3", undefined, "PLACEHOLDER"),
     testPrescriptions4: getConfigFromEnvVar("testPrescriptions4", undefined, "PLACEHOLDER")
   })
+  return psuApiStatefulStack
 }
 
 main().catch((error) => {

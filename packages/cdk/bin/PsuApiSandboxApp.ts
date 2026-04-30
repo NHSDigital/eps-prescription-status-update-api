@@ -14,7 +14,7 @@ async function main() {
     driftDetectionGroup: "psu-api"
   })
 
-  new PsuApiSandboxStack(app, "PsuApiSandboxStack", {
+  const psuApiSandboxStack = new PsuApiSandboxStack(app, "PsuApiSandboxStack", {
     ...props,
     stackName: getConfigFromEnvVar("stackName"),
     logRetentionInDays: getNumberConfigFromEnvVar("logRetentionInDays"),
@@ -25,6 +25,7 @@ async function main() {
     enableMutualTls: getBooleanConfigFromEnvVar("enableMutualTls", undefined, "false"),
     enableSplunk: getBooleanConfigFromEnvVar("enableSplunk", undefined, "false")
   })
+  return psuApiSandboxStack
 }
 
 main().catch((error) => {
