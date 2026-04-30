@@ -10,6 +10,10 @@ import {PsuApiStatefulStack} from "../stacks/PsuApiStatefulStack"
 
 type StackMode = "stateless" | "stateful"
 
+function mergeStackModeIntoStackName(baseStackName: string, stackMode: StackMode): string {
+  return `${baseStackName}-${stackMode}`
+}
+
 function getStackMode(): StackMode {
   const stackMode = getConfigFromEnvVar("stackMode", undefined, "stateless")
 
@@ -29,11 +33,13 @@ async function main() {
   })
 
   const stackMode = getStackMode()
+  const baseStackName = getConfigFromEnvVar("stackName")
+  const modeAwareStackName = mergeStackModeIntoStackName(baseStackName, stackMode)
 
   if (stackMode === "stateless") {
     new PsuApiStatelessStack(app, "PsuApiStatelessStack", {
       ...props,
-      stackName: calculateVersionedStackName(getConfigFromEnvVar("stackName"), props),
+      stackName: calculateVersionedStackName(modeAwareStackName, props),
       samStackName: getConfigFromEnvVar("samStackName"), // TODO: REMOVE THE NEED FOR THIS
       logRetentionInDays: getNumberConfigFromEnvVar("logRetentionInDays"),
       logLevel: getConfigFromEnvVar("logLevel"),
@@ -55,7 +61,7 @@ async function main() {
   // creating a new stack per version.
   new PsuApiStatefulStack(app, "PsuApiStatefulStack", {
     ...props,
-    stackName: getConfigFromEnvVar("stackName"),
+    stackName: modeAwareStackName,
     logRetentionInDays: getNumberConfigFromEnvVar("logRetentionInDays"),
     environment: getConfigFromEnvVar("environment"),
     enableDynamoDBAutoScaling: getBooleanConfigFromEnvVar("enableDynamoDBAutoScaling", undefined, "false"),

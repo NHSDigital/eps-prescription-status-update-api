@@ -2,8 +2,10 @@ SHELL = /bin/bash
 .SHELLFLAGS = -o pipefail -c
 export CDK_APP_NAME=PsuApiApp
 export CDK_CONFIG_stackMode=stateless
-export CDK_CONFIG_stackName=${stack_name}
-export CDK_CONFIG_samStackName=${stack_name}
+CDK_CONFIG_stackName ?= ${stack_name}
+export CDK_CONFIG_stackName
+CDK_CONFIG_samStackName ?= ${stack_name}
+export CDK_CONFIG_samStackName
 export CDK_CONFIG_versionNumber=undefined
 export CDK_CONFIG_commitId=undefined
 export CDK_CONFIG_isPullRequest=true
@@ -265,7 +267,7 @@ cdk-synth: cdk-stateful-synth cdk-stateless-synth
 cdk-stateful-deploy:
 	CDK_APP_NAME=PsuApiApp \
 	CDK_CONFIG_stackMode=stateful \
-	CDK_CONFIG_stackName=psu-cdk-stateful \
+	CDK_CONFIG_stackName="$${CDK_CONFIG_stackName:-$${stack_name:-psu-cdk}}" \
 	CDK_CONFIG_logRetentionInDays=30 \
 	CDK_CONFIG_environment=dev \
 	CDK_CONFIG_enableDynamoDBAutoScaling=false \
@@ -276,8 +278,8 @@ cdk-stateful-deploy:
 cdk-stateless-deploy:
 	CDK_APP_NAME=PsuApiApp \
 	CDK_CONFIG_stackMode=stateless \
-	CDK_CONFIG_stackName=psu-cdk \
-	CDK_CONFIG_samStackName=psu \
+	CDK_CONFIG_stackName="$${CDK_CONFIG_stackName:-$${stack_name:-psu-cdk}}" \
+	CDK_CONFIG_samStackName="$${CDK_CONFIG_samStackName:-$${CDK_CONFIG_stackName:-$${stack_name:-psu-cdk}}}" \
 	CDK_CONFIG_logRetentionInDays=30 \
 	CDK_CONFIG_logLevel=DEBUG \
 	CDK_CONFIG_environment=dev \
@@ -293,8 +295,8 @@ cdk-stateless-deploy:
 cdk-stateless-synth:
 	CDK_APP_NAME=PsuApiApp \
 	CDK_CONFIG_stackMode=stateless \
-	CDK_CONFIG_stackName=psu-cdk \
-	CDK_CONFIG_samStackName=psu \
+	CDK_CONFIG_stackName="$${CDK_CONFIG_stackName:-$${stack_name:-psu-cdk}}" \
+	CDK_CONFIG_samStackName="$${CDK_CONFIG_samStackName:-$${CDK_CONFIG_stackName:-$${stack_name:-psu-cdk}}}" \
 	CDK_CONFIG_logRetentionInDays=30 \
 	CDK_CONFIG_logLevel=DEBUG \
 	CDK_CONFIG_environment=dev \
@@ -309,7 +311,7 @@ cdk-stateless-synth:
 cdk-stateful-synth:
 	CDK_APP_NAME=PsuApiApp \
 	CDK_CONFIG_stackMode=stateful \
-	CDK_CONFIG_stackName=psu-cdk-stateful \
+	CDK_CONFIG_stackName="$${CDK_CONFIG_stackName:-$${stack_name:-psu-cdk}}" \
 	CDK_CONFIG_logRetentionInDays=30 \
 	CDK_CONFIG_environment=dev \
 	CDK_CONFIG_enableDynamoDBAutoScaling=false \

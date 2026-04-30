@@ -87,7 +87,7 @@ jobs:
       VERSION_NUMBER: PR-${{ needs.get_issue_number.outputs.issue_number }}
       COMMIT_ID: ${{ needs.get_commit_id.outputs.commit_id }}
 
-  cdk_release_code:
+  cdk_release_stateless_code:
     needs:
       [get_issue_number, cdk_package_code, get_commit_id, get_config_values, cdk_release_stateful_code]
     uses: ./.github/workflows/cdk_release_code.yml
@@ -97,7 +97,7 @@ jobs:
     with:
       pinned_image: ${{ needs.get_config_values.outputs.pinned_image }}
       BRANCH_NAME: ${{ github.event.pull_request.head.ref }}
-      STACK_NAME: psu-cdk-pr-${{needs.get_issue_number.outputs.issue_number}}
+      STACK_NAME: psu-api-pr-${{needs.get_issue_number.outputs.issue_number}}
       AWS_ENVIRONMENT: dev
       VERSION_NUMBER: PR-${{ needs.get_issue_number.outputs.issue_number }}
       COMMIT_ID: ${{ needs.get_commit_id.outputs.commit_id }}
@@ -109,7 +109,7 @@ jobs:
       FORWARD_CSOC_LOGS: false
       DEPLOY_CHECK_PRESCRIPTION_STATUS_UPDATE: true
       EXPOSE_GET_STATUS_UPDATES: false
-      SAM_STACK_NAME: psu-pr-${{needs.get_issue_number.outputs.issue_number}}
+      SAM_STACK_NAME: psu-api-pr-${{needs.get_issue_number.outputs.issue_number}}
       ENABLE_POST_DATED_NOTIFICATIONS: true
       REQUIRE_APPLICATION_NAME: false
       ENABLE_BACKUP: false
@@ -126,7 +126,7 @@ jobs:
     with:
       pinned_image: ${{ needs.get_config_values.outputs.pinned_image }}
       BRANCH_NAME: ${{ github.event.pull_request.head.ref }}
-      STACK_NAME: psu-cdk-pr-${{needs.get_issue_number.outputs.issue_number}}-stateful
+      STACK_NAME: psu-api-pr-${{needs.get_issue_number.outputs.issue_number}}
       AWS_ENVIRONMENT: dev
       VERSION_NUMBER: PR-${{ needs.get_issue_number.outputs.issue_number }}
       COMMIT_ID: ${{ needs.get_commit_id.outputs.commit_id }}
@@ -222,7 +222,7 @@ jobs:
       pinned_image: ${{ needs.get_config_values.outputs.pinned_image }}
       BRANCH_NAME: ${{ github.event.pull_request.head.ref }}
       APP_NAME: PsuApiSandboxApp
-      STACK_NAME: psu-pr-${{needs.get_issue_number.outputs.issue_number}}-sandbox
+      STACK_NAME: psu-api-pr-${{needs.get_issue_number.outputs.issue_number}}-sandbox
       AWS_ENVIRONMENT: dev
       VERSION_NUMBER: PR-${{ needs.get_issue_number.outputs.issue_number }}
       COMMIT_ID: ${{ needs.get_commit_id.outputs.commit_id }}
