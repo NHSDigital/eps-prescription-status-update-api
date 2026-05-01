@@ -212,6 +212,7 @@ lint-python:
 lint: lint-node lint-python lint-specification
 
 test: compile
+	npm run test --workspace packages/cdk
 	npm run test --workspace packages/updatePrescriptionStatus
 	npm run test --workspace packages/gsul
 	npm run test --workspace packages/nhsd-psu-sandbox
@@ -227,6 +228,8 @@ test: compile
 	npm run test --workspace packages/common/utilities
 
 clean:
+	rm -rf packages/cdk/coverage
+	rm -rf packages/cdk/lib
 	rm -rf packages/updatePrescriptionStatus/coverage
 	rm -rf packages/updatePrescriptionStatus/lib
 	rm -rf packages/nhsd-psu-sandbox/coverage
