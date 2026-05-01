@@ -14,6 +14,10 @@ function mergeStackModeIntoStackName(baseStackName: string, stackMode: StackMode
   return `${baseStackName}-${stackMode}`
 }
 
+function ensureStatefulSuffix(stackName: string): string {
+  return stackName.endsWith("-stateful") ? stackName : `${stackName}-stateful`
+}
+
 function getStackMode(): StackMode {
   const stackMode = getConfigFromEnvVar("stackMode", undefined, "stateless")
 
@@ -40,7 +44,7 @@ async function main() {
     const psuApiStatelessStack = new PsuApiStatelessStack(app, "PsuApiStatelessStack", {
       ...props,
       stackName: calculateVersionedStackName(modeAwareStackName, props),
-      samStackName: getConfigFromEnvVar("samStackName"), // TODO: REMOVE THE NEED FOR THIS
+      samStackName: ensureStatefulSuffix(getConfigFromEnvVar("samStackName")),
       logRetentionInDays: getNumberConfigFromEnvVar("logRetentionInDays"),
       logLevel: getConfigFromEnvVar("logLevel"),
       environment: getConfigFromEnvVar("environment"),
