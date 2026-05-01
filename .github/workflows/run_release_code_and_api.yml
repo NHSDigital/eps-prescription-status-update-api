@@ -260,8 +260,7 @@ jobs:
       - name: Deploy PSU API
         shell: bash
         working-directory: .github/scripts
-        if: ${{ inputs.DEPLOY_APIGEE == true && always() && !failure() && !cancelled()
-          }}
+        if: ${{ inputs.DEPLOY_APIGEE == true }}
         env:
           API_TYPE: standard
           VERSION_NUMBER: ${{ inputs.VERSION_NUMBER }}
@@ -283,8 +282,7 @@ jobs:
       - name: Deploy CPSU API
         shell: bash
         working-directory: .github/scripts
-        if: ${{ inputs.DEPLOY_APIGEE_CPSU == true && always() && !failure() &&
-          !cancelled() }}
+        if: ${{ inputs.DEPLOY_APIGEE_CPSU == true }}
         env:
           API_TYPE: custom
           VERSION_NUMBER: ${{ inputs.VERSION_NUMBER }}
@@ -328,8 +326,7 @@ jobs:
           VERSION_NUMBER: ${{ inputs.VERSION_NUMBER }}
 
   regression_tests:
-    if: ${{ inputs.RUN_REGRESSION_TEST == true && always() && !failure() &&
-      !cancelled() }}
+    if: ${{ inputs.RUN_REGRESSION_TEST == true }}
     name: Regression Tests
     uses: ./.github/workflows/run_regression_tests.yml
     needs: release_code_and_api
