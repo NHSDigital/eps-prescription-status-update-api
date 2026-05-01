@@ -14,9 +14,8 @@ import {createMockDataItem} from "./utils/testUtils"
 const {mockSend, mockGetSecret, mockInitiatedSSMProvider} = vi.hoisted(() => {
   const mockGetParametersByName = vi.fn(async () => ({
     [process.env.ENABLED_SITE_ODS_CODES_PARAM!]: "FA565",
-    // eslint-disable-next-line max-len
-    [process.env.ENABLED_SYSTEMS_PARAM!]: "Internal Test System,Apotec Ltd - Apotec CRM - Production,CrxPatientApp,nhsPrescriptionApp,Titan PSU Prod",
-    [process.env.BLOCKED_SITE_ODS_CODES_PARAM!]: "B3J1Z"
+    [process.env.BLOCKED_SITE_ODS_CODES_PARAM!]: "B3J1Z",
+    [process.env.ENABLED_APPLICATION_IDS_PARAM!]: "550e8400-e29b-41d4-a716-446655440000"
   }))
 
   return {
@@ -459,42 +458,41 @@ describe("Unit tests for checkSiteOrSystemIsNotifyEnabled", () => {
   it("includes an item with an enabled ODS code", async () => {
     const previous = createMockDataItem({
       PharmacyODSCode: "FA565",
-      ApplicationName: "not a real test supplier",
+      ApplicationID: "00000000-0000-0000-0000-000000000000",
       Status: "previous"
     })
     const current = createMockDataItem({
       PharmacyODSCode: "FA565",
-      ApplicationName: "not a real test supplier"
+      ApplicationID: "00000000-0000-0000-0000-000000000000"
     })
     const result = await checkSiteOrSystemIsNotifyEnabled([{previous, current}], logger)
     expect(result).toStrictEqual([{previous, current}])
     expectLogReceivedAndAllowed(infoSpy, 1, 1)
   })
 
-  it("includes an item with an enabled ApplicationName", async () => {
+  it("includes an item with an enabled ApplicationID", async () => {
     const previous = createMockDataItem({
       PharmacyODSCode: "ZZZ999",
-      ApplicationName: "Internal Test System",
+      ApplicationID: "550e8400-e29b-41d4-a716-446655440000",
       Status: "previous"
     })
     const current = createMockDataItem({
       PharmacyODSCode: "ZZZ999",
-      ApplicationName: "Internal Test System"
+      ApplicationID: "550e8400-e29b-41d4-a716-446655440000"
     })
     const result = await checkSiteOrSystemIsNotifyEnabled([{previous, current}], logger)
     expect(result).toEqual([{previous, current}])
     expectLogReceivedAndAllowed(infoSpy, 1, 1)
   })
 
-  it("is case insensitive for both ODS code and ApplicationName", async () => {
+  it("is case insensitive for both ODS code and ApplicationID", async () => {
     const item1 = createMockDataItem({
       PharmacyODSCode: "fa565",
-      ApplicationName: "not a real test supplier"
+      ApplicationID: "00000000-0000-0000-0000-000000000000"
     })
     const item2 = createMockDataItem({
       PharmacyODSCode: "zzz999",
-      ApplicationName: "internal test SYSTEM",
-      ApplicationID: "550e8400-e29b-41d4-a716-446655440000"
+      ApplicationID: "550E8400-E29B-41D4-A716-446655440000"
     })
     const result = await checkSiteOrSystemIsNotifyEnabled([
       {
@@ -521,12 +519,12 @@ describe("Unit tests for checkSiteOrSystemIsNotifyEnabled", () => {
   it("excludes an item when its ODS code is blocked, even if otherwise enabled", async () => {
     const previous = createMockDataItem({
       PharmacyODSCode: "b3j1z",
-      ApplicationName: "Internal Test System",
+      ApplicationID: "550e8400-e29b-41d4-a716-446655440000",
       Status: "previous"
     })
     const current = createMockDataItem({
       PharmacyODSCode: "b3j1z",
-      ApplicationName: "Internal Test System"
+      ApplicationID: "550e8400-e29b-41d4-a716-446655440000"
     })
     const result = await checkSiteOrSystemIsNotifyEnabled([{previous, current}], logger)
     expect(result).toEqual([])
@@ -536,13 +534,11 @@ describe("Unit tests for checkSiteOrSystemIsNotifyEnabled", () => {
   it("excludes items that are neither enabled nor blocked", async () => {
     const previous = createMockDataItem({
       PharmacyODSCode: "NOTINLIST",
-      ApplicationName: "Some Other System",
       ApplicationID: "550e8400-e29b-41d4-a716-446655441234",
       Status: "previous"
     })
     const current = createMockDataItem({
       PharmacyODSCode: "NOTINLIST",
-      ApplicationName: "Some Other System",
       ApplicationID: "550e8400-e29b-41d4-a716-446655441234"
     })
     const result = await checkSiteOrSystemIsNotifyEnabled([{previous, current}], logger)

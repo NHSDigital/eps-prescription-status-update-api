@@ -2,12 +2,7 @@ import {PSUDataItemWithPrevious} from "@psu-common/commonTypes"
 import {initiatedSSMProvider} from "@psu-common/utilities"
 import {Logger} from "@aws-lambda-powertools/logger"
 
-const USE_APP_ID_FOR_NOTIFICATIONS_FILTERING =
-  (process.env.USE_APP_ID_FOR_NOTIFICATIONS_FILTERING || "false")
-    .toLowerCase() === "true"
-
-function str2set(value: string | undefined): Set<string> {
-  const raw = value ?? ""
+function str2set(raw = ""): Set<string> {
   return new Set(raw
     .split(",")
     .map((s) => s.trim().toLowerCase())
@@ -17,26 +12,22 @@ function str2set(value: string | undefined): Set<string> {
 
 async function loadConfig(): Promise<{
   enabledSiteODSCodes: Set<string>,
-  enabledSystemAppNames: Set<string>,
   enabledSystemAppIds: Set<string>,
   blockedSiteODSCodes: Set<string>
 }> {
   const paramNames = {
     [process.env.ENABLED_SITE_ODS_CODES_PARAM!]: {maxAge: 5},
-    [process.env.ENABLED_SYSTEMS_PARAM!]: {maxAge: 5},
     [process.env.ENABLED_APPLICATION_IDS_PARAM!]: {maxAge: 5},
     [process.env.BLOCKED_SITE_ODS_CODES_PARAM!]: {maxAge: 5}
   }
   const all = await initiatedSSMProvider.getParametersByName(paramNames)
 
   const enabledSiteODSCodes = str2set(all[process.env.ENABLED_SITE_ODS_CODES_PARAM!] as string)
-  const enabledSystemAppNames = str2set(all[process.env.ENABLED_SYSTEMS_PARAM!] as string)
   const enabledSystemAppIds = str2set(all[process.env.ENABLED_APPLICATION_IDS_PARAM!] as string)
   const blockedSiteODSCodes = str2set(all[process.env.BLOCKED_SITE_ODS_CODES_PARAM!] as string)
 
   return {
     enabledSiteODSCodes,
-    enabledSystemAppNames,
     enabledSystemAppIds,
     blockedSiteODSCodes
   }
@@ -56,13 +47,12 @@ export async function checkSiteOrSystemIsNotifyEnabled(
   logger?: Logger
 ): Promise<Array<PSUDataItemWithPrevious>> {
   // Get the configuration from either the cache or SSM
-  const {enabledSiteODSCodes, enabledSystemAppNames, enabledSystemAppIds, blockedSiteODSCodes} = await loadConfig()
+  const {enabledSiteODSCodes, enabledSystemAppIds, blockedSiteODSCodes} = await loadConfig()
   const unfilteredItemCount = data.length
 
   logger?.info("Filtering items based on enabled sites and systems configuration",
     {
       enabledSystemAppIds: Array.from(enabledSystemAppIds),
-      enabledSystemAppNames: Array.from(enabledSystemAppNames),
       enabledODSCodes: Array.from(enabledSiteODSCodes),
       blockedODSCodes: Array.from(blockedSiteODSCodes)
     }
@@ -78,19 +68,10 @@ export async function checkSiteOrSystemIsNotifyEnabled(
       {appId, appName, odsCode}
     )
 
-    // Is this item supplier enabled?
-    if (USE_APP_ID_FOR_NOTIFICATIONS_FILTERING) {
-      logger?.info("Using application ID for notifications filtering")
-      const isEnabledApplication = enabledSiteODSCodes.has(odsCode) || enabledSystemAppIds.has(appId)
-      if (!isEnabledApplication) {
-        return false
-      }
-    } else {
-      logger?.info("Using application name for notifications filtering")
-      const isEnabledSystem = enabledSiteODSCodes.has(odsCode) || enabledSystemAppNames.has(appName)
-      if (!isEnabledSystem) {
-        return false
-      }
+    // Is this item's supplier enabled?
+    const isEnabledApplication = enabledSiteODSCodes.has(odsCode) || enabledSystemAppIds.has(appId)
+    if (!isEnabledApplication) {
+      return false
     }
 
     // Cannot have a blocked ODS code
