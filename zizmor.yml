@@ -5,6 +5,11 @@ rules:
       - run_release_code_and_api.yml:146:18
       - run_regression_tests.yml:26:18
       - run_package_code_and_api.yml:16:18
+      - cdk_package_code.yml:25:18
+      - cdk_release_code.yml:45:18
+      - cdk_release_code.yml:57:18
+      - cdk_release_code.yml:69:18
+      - cdk_release_code.yml:151:18
   secrets-outside-env:
     # these are ignored because they are using known secrets
     ignore:

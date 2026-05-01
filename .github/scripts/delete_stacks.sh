@@ -6,11 +6,12 @@
 REPO_NAME=eps-prescription-status-update-api
 
 # this should be a regex used in jq command that parses the output from aws cloudformation list-stacks and just captures stacks we are interested in
-CAPTURE_REGEX="^psu-pr-(\\d+)(-sandbox)?$"
+CAPTURE_REGEX="^psu-(cdk-)?pr-([0-9]+)(-sandbox|-stateful)?$"
 
+# TODO: no longer needed?
 # this should be a regex that is used to get the pull request id from the cloud formation stack name
 # this is used in a replace command to replace the stack name so what is left is just the pull request id
-PULL_REQUEST_STACK_REGEX=psu-pr-
+#PULL_REQUEST_STACK_REGEX=psu-pr-
 
 CNAME_QUERY=psu-pr-
 
@@ -29,8 +30,9 @@ delete_cloudformation_stacks() {
   for i in "${ACTIVE_STACKS_ARRAY[@]}"
   do 
     echo "Checking if stack $i has open pull request"
-    PULL_REQUEST=${i//${PULL_REQUEST_STACK_REGEX}/}
-    PULL_REQUEST=${PULL_REQUEST//-sandbox/}
+    # Extract PR number from stack names like psu-pr-123, psu-pr-123-sandbox,
+    # psu-cdk-pr-123, or psu-cdk-pr-123-stateful
+    PULL_REQUEST=$(echo "${i}" | sed 's/.*-pr-//' | sed 's/-.*//')
     echo "Checking pull request id ${PULL_REQUEST}"
     URL="https://api.github.com/repos/NHSDigital/${REPO_NAME}/pulls/${PULL_REQUEST}"
     RESPONSE=$(curl "${URL}" 2>/dev/null)

@@ -5,6 +5,10 @@
       "path": ".."
     },
     {
+      "name": "packages/cdk",
+      "path": "../packages/cdk"
+    },
+    {
       "name": "packages/gsul",
       "path": "../packages/gsul"
     },
@@ -151,8 +155,14 @@
       "versionable",
       "whens"
     ],
-    "cSpell.dictionaries": ["en-GB"],
-    "cSpell.ignorePaths": ["package-lock.json", "node_modules", ".vscode"],
+    "cSpell.dictionaries": [
+      "en-GB"
+    ],
+    "cSpell.ignorePaths": [
+      "package-lock.json",
+      "node_modules",
+      ".vscode"
+    ],
     "js/ts.tsdk.path": "eps-prescription-status-update-monorepo/node_modules/typescript/lib",
     "eslint.useFlatConfig": true,
     "eslint.format.enable": true

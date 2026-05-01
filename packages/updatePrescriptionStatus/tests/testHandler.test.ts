@@ -39,12 +39,10 @@ import {QueryCommand, TransactionCanceledException, TransactWriteItemsCommand} f
 
 const {dynamoDBMockSend, mockPushPrescriptionToNotificationSQS, mockGetParametersByName, mockInitiatedSSMProvider} =
   vi.hoisted(() => {
-    const mockGetParametersByName = vi.fn(async () => Promise.resolve(
-      {[process.env.ENABLE_NOTIFICATIONS_PARAM!]: "false"}
-    ))
+    const mockGetParametersByName = vi.fn(async () => ({[process.env.ENABLE_NOTIFICATIONS_PARAM!]: "false"}))
     return {
       dynamoDBMockSend: vi.fn(),
-      mockPushPrescriptionToNotificationSQS: vi.fn().mockImplementation(async () => Promise.resolve()),
+      mockPushPrescriptionToNotificationSQS: vi.fn().mockImplementation(async () => {}),
       mockGetParametersByName,
       mockInitiatedSSMProvider: {getParametersByName: mockGetParametersByName}
     }
@@ -97,12 +95,10 @@ describe("Integration tests for updatePrescriptionStatus handler", () => {
     })
 
     mockPushPrescriptionToNotificationSQS.mockReset()
-    mockPushPrescriptionToNotificationSQS.mockImplementation(async () => Promise.resolve())
+    mockPushPrescriptionToNotificationSQS.mockImplementation(async () => {})
 
     mockGetParametersByName.mockReset()
-    mockGetParametersByName.mockImplementation(async () => Promise.resolve(
-      {[process.env.ENABLE_NOTIFICATIONS_PARAM!]: "false"}
-    ))
+    mockGetParametersByName.mockImplementation(async () => ({[process.env.ENABLE_NOTIFICATIONS_PARAM!]: "false"}))
   })
 
   it("when request doesn't have correct resourceType and type, expect 400 status code and appropriate message", async () => {
@@ -277,7 +273,7 @@ describe("Integration tests for updatePrescriptionStatus handler", () => {
 
   it("when dynamo call fails, expect 500 status code and internal server error message", async () => {
     const event = generateMockEvent(requestDispatched)
-    dynamoDBMockSend.mockRejectedValue(new Error() as never)
+    dynamoDBMockSend.mockRejectedValue(new Error() as never) // NOSONAR
 
     const response: APIGatewayProxyResult = await handler(event, {})
 
@@ -532,7 +528,9 @@ describe("Integration tests for updatePrescriptionStatus handler", () => {
   })
 
   it("When the get parameter call throws an error, the request succeeds and the sqs queue is untouched", async () => {
-    mockGetParametersByName.mockImplementation(async () => Promise.reject(new Error("Failed")))
+    mockGetParametersByName.mockImplementation(async () => {
+      throw new Error("Failed")
+    })
     const {handler: tmpfn} = await import("../src/updatePrescriptionStatus")
 
     const rejected_event: APIGatewayProxyEvent = generateMockEvent(requestDispatched)

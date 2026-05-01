@@ -144,7 +144,7 @@ describe("Unit test persistDataItems", () => {
       ApplicationID: "550e8400-e29b-41d4-a716-446655440000",
       ExpiryTime: 10
     }
-    const dataItems = Array(150).fill(dataItem)
+    const dataItems = new Array(150).fill(dataItem)
 
     const loggerSpy = vi.spyOn(logger, "error")
 
@@ -367,7 +367,7 @@ describe("Unit test rollbackDataItems", () => {
     const items = [makeItem(), makeItem({PrescriptionID: "PrescriptionID_2", TaskID: "TaskID_2"})]
 
     // success for each conditioned delete
-    mockSend.mockImplementation(async () => Promise.resolve())
+    mockSend.mockImplementation(async () => {})
 
     const loggerWarn = vi.spyOn(logger, "warn")
     const loggerError = vi.spyOn(logger, "error")
@@ -384,14 +384,14 @@ describe("Unit test rollbackDataItems", () => {
 
     // First delete succeeds, second hits conditional check failure (skip it)
     mockSend
-      .mockImplementationOnce(async () => Promise.resolve())
-      .mockImplementationOnce(async () => Promise.reject(
-        new TransactionCanceledException({
+      .mockImplementationOnce(async () => {})
+      .mockImplementationOnce(async () => {
+        throw new TransactionCanceledException({
           $metadata: {},
           message: "Conditional check failed",
           CancellationReasons: [{Code: "ConditionalCheckFailedException"}]
         })
-      ))
+      })
 
     const loggerWarn = vi.spyOn(logger, "warn")
     const loggerError = vi.spyOn(logger, "error")
@@ -406,7 +406,9 @@ describe("Unit test rollbackDataItems", () => {
   it("returns false when an unexpected error occurs", async () => {
     const items = [makeItem()]
 
-    mockSend.mockImplementationOnce(async () => Promise.reject(new Error("error")))
+    mockSend.mockImplementationOnce(async () => {
+      throw new Error("error")
+    })
 
     const loggerError = vi.spyOn(logger, "error")
 
@@ -420,15 +422,15 @@ describe("Unit test rollbackDataItems", () => {
     const items = [makeItem({TaskID: "A"}), makeItem({TaskID: "B"}), makeItem({TaskID: "C"})]
 
     mockSend
-      .mockImplementationOnce(async () => Promise.resolve()) // A: delete ok
-      .mockImplementationOnce(async () => Promise.reject( // B: condition failure -> skip
-        new TransactionCanceledException({
+      .mockImplementationOnce(async () => {}) // A: delete ok
+      .mockImplementationOnce(async () => { // B: condition failure -> skip
+        throw new TransactionCanceledException({
           $metadata: {},
           message: "Conditional check failed",
           CancellationReasons: [{Code: "ConditionalCheckFailedException"}]
         })
-      ))
-      .mockImplementationOnce(async () => Promise.resolve()) // C: delete ok
+      })
+      .mockImplementationOnce(async () => {}) // C: delete ok
 
     const loggerWarn = vi.spyOn(logger, "warn")
     const loggerError = vi.spyOn(logger, "error")
