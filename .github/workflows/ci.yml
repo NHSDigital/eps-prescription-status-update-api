@@ -2,7 +2,7 @@ name: merge to main workflow
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
 
 permissions: {}
 
@@ -52,7 +52,7 @@ jobs:
       tag_format: ${{ needs.get_config_values.outputs.tag_format }}
 
   package_code:
-    needs: [ tag_release, get_config_values ]
+    needs: [tag_release, get_config_values]
     uses: ./.github/workflows/run_package_code_and_api.yml
     permissions:
       contents: read
@@ -62,7 +62,7 @@ jobs:
       pinned_image: ${{ needs.get_config_values.outputs.pinned_image }}
 
   release_dev:
-    needs: [ tag_release, package_code, get_commit_id, get_config_values ]
+    needs: [tag_release, package_code, get_commit_id, get_config_values]
     uses: ./.github/workflows/run_release_code_and_api.yml
     permissions:
       contents: write
@@ -110,7 +110,7 @@ jobs:
       REGRESSION_TESTS_PEM: ${{ secrets.REGRESSION_TESTS_PEM }}
 
   release_sandbox_dev:
-    needs: [ tag_release, package_code, get_commit_id, get_config_values ]
+    needs: [tag_release, package_code, get_commit_id, get_config_values]
     uses: ./.github/workflows/run_release_code_and_api.yml
     permissions:
       contents: write
@@ -152,7 +152,7 @@ jobs:
       PROXYGEN_ROLE: ${{ secrets.PROXYGEN_PTL_ROLE }}
 
   release_qa:
-    needs: [ tag_release, release_dev, package_code, get_commit_id, get_config_values ]
+    needs: [tag_release, release_dev, package_code, get_commit_id, get_config_values]
     uses: ./.github/workflows/run_release_code_and_api.yml
     permissions:
       contents: write
