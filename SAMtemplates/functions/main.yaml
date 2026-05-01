@@ -179,10 +179,10 @@ Resources:
             - Fn::ImportValue: !Sub ${StackName}-GetSQSSaltSecretPolicy
             - Fn::ImportValue: !Sub ${StackName}-GetNotificationsParameterPolicy
         LogRetentionInDays: !Ref LogRetentionInDays
-        CloudWatchKMSKeyId: !ImportValue account-resources:CloudwatchLogsKmsKeyArn
+        CloudWatchKMSKeyId: !ImportValue account-resources-cdk-uk:KMS:CloudwatchLogsKmsKey:Arn
         EnableSplunk: !Ref EnableSplunk
-        SplunkSubscriptionFilterRole: !ImportValue lambda-resources:SplunkSubscriptionFilterRole
-        SplunkDeliveryStreamArn: !ImportValue lambda-resources:SplunkDeliveryStream
+        SplunkSubscriptionFilterRole: !ImportValue account-resources-cdk-uk:IAM:SplunkSubscriptionFilterRole:Arn
+        SplunkDeliveryStreamArn: !ImportValue account-resources-cdk-uk:Firehose:SplunkDeliveryStream:Arn
 
   ConvertRequestToFhirFormat:
     Type: AWS::Serverless::Function
@@ -220,10 +220,10 @@ Resources:
         LambdaArn: !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:${StackName}-ConvertRequestToFhirFormat
         IncludeAdditionalPolicies: false
         LogRetentionInDays: !Ref LogRetentionInDays
-        CloudWatchKMSKeyId: !ImportValue account-resources:CloudwatchLogsKmsKeyArn
+        CloudWatchKMSKeyId: !ImportValue account-resources-cdk-uk:KMS:CloudwatchLogsKmsKey:Arn
         EnableSplunk: !Ref EnableSplunk
-        SplunkSubscriptionFilterRole: !ImportValue lambda-resources:SplunkSubscriptionFilterRole
-        SplunkDeliveryStreamArn: !ImportValue lambda-resources:SplunkDeliveryStream
+        SplunkSubscriptionFilterRole: !ImportValue account-resources-cdk-uk:IAM:SplunkSubscriptionFilterRole:Arn
+        SplunkDeliveryStreamArn: !ImportValue account-resources-cdk-uk:Firehose:SplunkDeliveryStream:Arn
 
   GetStatusUpdates:
     Type: AWS::Serverless::Function
@@ -266,10 +266,10 @@ Resources:
           - - Fn::ImportValue: !Sub ${StackName}:tables:${PrescriptionStatusUpdatesTableName}:TableReadPolicyArn
             - Fn::ImportValue: !Sub ${StackName}:tables:UsePrescriptionStatusUpdatesKMSKeyPolicyArn
         LogRetentionInDays: !Ref LogRetentionInDays
-        CloudWatchKMSKeyId: !ImportValue account-resources:CloudwatchLogsKmsKeyArn
+        CloudWatchKMSKeyId: !ImportValue account-resources-cdk-uk:KMS:CloudwatchLogsKmsKey:Arn
         EnableSplunk: !Ref EnableSplunk
-        SplunkSubscriptionFilterRole: !ImportValue lambda-resources:SplunkSubscriptionFilterRole
-        SplunkDeliveryStreamArn: !ImportValue lambda-resources:SplunkDeliveryStream
+        SplunkSubscriptionFilterRole: !ImportValue account-resources-cdk-uk:IAM:SplunkSubscriptionFilterRole:Arn
+        SplunkDeliveryStreamArn: !ImportValue account-resources-cdk-uk:Firehose:SplunkDeliveryStream:Arn
 
   Status:
     Type: AWS::Serverless::Function
@@ -309,12 +309,12 @@ Resources:
         IncludeAdditionalPolicies: true
         AdditionalPolicies: !Join
           - ","
-          - - !ImportValue account-resources:LambdaAccessSecretsPolicy
+          - - !ImportValue secrets-cdk:IAM:LambdaAccessSecretsPolicy:Arn
         LogRetentionInDays: !Ref LogRetentionInDays
-        CloudWatchKMSKeyId: !ImportValue account-resources:CloudwatchLogsKmsKeyArn
+        CloudWatchKMSKeyId: !ImportValue account-resources-cdk-uk:KMS:CloudwatchLogsKmsKey:Arn
         EnableSplunk: !Ref EnableSplunk
-        SplunkSubscriptionFilterRole: !ImportValue lambda-resources:SplunkSubscriptionFilterRole
-        SplunkDeliveryStreamArn: !ImportValue lambda-resources:SplunkDeliveryStream
+        SplunkSubscriptionFilterRole: !ImportValue account-resources-cdk-uk:IAM:SplunkSubscriptionFilterRole:Arn
+        SplunkDeliveryStreamArn: !ImportValue account-resources-cdk-uk:Firehose:SplunkDeliveryStream:Arn
 
   CapabilityStatement:
     Type: AWS::Serverless::Function
@@ -348,10 +348,10 @@ Resources:
         LambdaName: !Sub ${StackName}-CapabilityStatement
         LambdaArn: !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:${StackName}-CapabilityStatement
         LogRetentionInDays: !Ref LogRetentionInDays
-        CloudWatchKMSKeyId: !ImportValue account-resources:CloudwatchLogsKmsKeyArn
+        CloudWatchKMSKeyId: !ImportValue account-resources-cdk-uk:KMS:CloudwatchLogsKmsKey:Arn
         EnableSplunk: !Ref EnableSplunk
-        SplunkSubscriptionFilterRole: !ImportValue lambda-resources:SplunkSubscriptionFilterRole
-        SplunkDeliveryStreamArn: !ImportValue lambda-resources:SplunkDeliveryStream
+        SplunkSubscriptionFilterRole: !ImportValue account-resources-cdk-uk:IAM:SplunkSubscriptionFilterRole:Arn
+        SplunkDeliveryStreamArn: !ImportValue account-resources-cdk-uk:Firehose:SplunkDeliveryStream:Arn
 
   CheckPrescriptionStatusUpdates:
     Condition: ShouldDeployCheckPrescriptionStatusUpdate
@@ -397,10 +397,10 @@ Resources:
           - - Fn::ImportValue: !Sub ${StackName}:tables:${PrescriptionStatusUpdatesTableName}:TableReadPolicyArn
             - Fn::ImportValue: !Sub ${StackName}:tables:UsePrescriptionStatusUpdatesKMSKeyPolicyArn
         LogRetentionInDays: !Ref LogRetentionInDays
-        CloudWatchKMSKeyId: !ImportValue account-resources:CloudwatchLogsKmsKeyArn
+        CloudWatchKMSKeyId: !ImportValue account-resources-cdk-uk:KMS:CloudwatchLogsKmsKey:Arn
         EnableSplunk: !Ref EnableSplunk
-        SplunkSubscriptionFilterRole: !ImportValue lambda-resources:SplunkSubscriptionFilterRole
-        SplunkDeliveryStreamArn: !ImportValue lambda-resources:SplunkDeliveryStream
+        SplunkSubscriptionFilterRole: !ImportValue account-resources-cdk-uk:IAM:SplunkSubscriptionFilterRole:Arn
+        SplunkDeliveryStreamArn: !ImportValue account-resources-cdk-uk:Firehose:SplunkDeliveryStream:Arn
 
   NotifyProcessorScheduleEventRole:
     Type: AWS::IAM::Role
@@ -483,10 +483,10 @@ Resources:
         LambdaName: !Sub ${StackName}-NotifyProcessor
         LambdaArn: !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:${StackName}-NotifyProcessor
         LogRetentionInDays: !Ref LogRetentionInDays
-        CloudWatchKMSKeyId: !ImportValue account-resources:CloudwatchLogsKmsKeyArn
+        CloudWatchKMSKeyId: !ImportValue account-resources-cdk-uk:KMS:CloudwatchLogsKmsKey:Arn
         EnableSplunk: !Ref EnableSplunk
-        SplunkSubscriptionFilterRole: !ImportValue lambda-resources:SplunkSubscriptionFilterRole
-        SplunkDeliveryStreamArn: !ImportValue lambda-resources:SplunkDeliveryStream
+        SplunkSubscriptionFilterRole: !ImportValue account-resources-cdk-uk:IAM:SplunkSubscriptionFilterRole:Arn
+        SplunkDeliveryStreamArn: !ImportValue account-resources-cdk-uk:Firehose:SplunkDeliveryStream:Arn
         IncludeAdditionalPolicies: true
         AdditionalPolicies: !Join
           - ","
@@ -575,10 +575,10 @@ Resources:
         LambdaName: !Sub ${StackName}-postDatedNotifyLambda
         LambdaArn: !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:${StackName}-postDatedNotifyLambda
         LogRetentionInDays: !Ref LogRetentionInDays
-        CloudWatchKMSKeyId: !ImportValue account-resources:CloudwatchLogsKmsKeyArn
+        CloudWatchKMSKeyId: !ImportValue account-resources-cdk-uk:KMS:CloudwatchLogsKmsKey:Arn
         EnableSplunk: !Ref EnableSplunk
-        SplunkSubscriptionFilterRole: !ImportValue lambda-resources:SplunkSubscriptionFilterRole
-        SplunkDeliveryStreamArn: !ImportValue lambda-resources:SplunkDeliveryStream
+        SplunkSubscriptionFilterRole: !ImportValue account-resources-cdk-uk:IAM:SplunkSubscriptionFilterRole:Arn
+        SplunkDeliveryStreamArn: !ImportValue account-resources-cdk-uk:Firehose:SplunkDeliveryStream:Arn
         IncludeAdditionalPolicies: true
         AdditionalPolicies: !Join
           - ","
@@ -640,10 +640,10 @@ Resources:
             - Fn::ImportValue: !Sub ${StackName}-GetPSUSecretPolicy
             - Fn::ImportValue: !Sub ${StackName}-UsePSUSecretsKMSKeyPolicyArn
         LogRetentionInDays: !Ref LogRetentionInDays
-        CloudWatchKMSKeyId: !ImportValue account-resources:CloudwatchLogsKmsKeyArn
+        CloudWatchKMSKeyId: !ImportValue account-resources-cdk-uk:KMS:CloudwatchLogsKmsKey:Arn
         EnableSplunk: !Ref EnableSplunk
-        SplunkSubscriptionFilterRole: !ImportValue lambda-resources:SplunkSubscriptionFilterRole
-        SplunkDeliveryStreamArn: !ImportValue lambda-resources:SplunkDeliveryStream
+        SplunkSubscriptionFilterRole: !ImportValue account-resources-cdk-uk:IAM:SplunkSubscriptionFilterRole:Arn
+        SplunkDeliveryStreamArn: !ImportValue account-resources-cdk-uk:Firehose:SplunkDeliveryStream:Arn
 
   PsuRestoreValidationPolicy:
     Condition: EnableBackupCondition
@@ -704,10 +704,10 @@ Resources:
         LambdaName: !Sub ${StackName}-PsuRestoreValidation
         LambdaArn: !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:${StackName}-PsuRestoreValidation
         LogRetentionInDays: !Ref LogRetentionInDays
-        CloudWatchKMSKeyId: !ImportValue account-resources:CloudwatchLogsKmsKeyArn
+        CloudWatchKMSKeyId: !ImportValue account-resources-cdk-uk:KMS:CloudwatchLogsKmsKey:Arn
         EnableSplunk: !Ref EnableSplunk
-        SplunkSubscriptionFilterRole: !ImportValue lambda-resources:SplunkSubscriptionFilterRole
-        SplunkDeliveryStreamArn: !ImportValue lambda-resources:SplunkDeliveryStream
+        SplunkSubscriptionFilterRole: !ImportValue account-resources-cdk-uk:IAM:SplunkSubscriptionFilterRole:Arn
+        SplunkDeliveryStreamArn: !ImportValue account-resources-cdk-uk:Firehose:SplunkDeliveryStream:Arn
         IncludeAdditionalPolicies: true
         AdditionalPolicies: !Join
           - ","

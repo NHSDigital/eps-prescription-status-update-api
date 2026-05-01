@@ -66,11 +66,11 @@ Resources:
       TreatMissingData: notBreaching
       ActionsEnabled: !Ref EnableAlerts
       AlarmActions:
-        - !ImportValue lambda-resources:SlackAlertsSnsTopicArn
+        - !ImportValue account-resources-cdk-uk:SNS:SlackAlertsSnsTopicArn:Arn
       InsufficientDataActions:
-        - !ImportValue lambda-resources:SlackAlertsSnsTopicArn
+        - !ImportValue account-resources-cdk-uk:SNS:SlackAlertsSnsTopicArn:Arn
       OKActions:
-        - !ImportValue lambda-resources:SlackAlertsSnsTopicArn
+        - !ImportValue account-resources-cdk-uk:SNS:SlackAlertsSnsTopicArn:Arn
 
   GetStatusUpdatesUnhandledErrorsAlarm:
     Type: AWS::CloudWatch::Alarm
@@ -91,11 +91,11 @@ Resources:
       TreatMissingData: notBreaching
       ActionsEnabled: !Ref EnableAlerts
       AlarmActions:
-        - !ImportValue lambda-resources:SlackAlertsSnsTopicArn
+        - !ImportValue account-resources-cdk-uk:SNS:SlackAlertsSnsTopicArn:Arn
       InsufficientDataActions:
-        - !ImportValue lambda-resources:SlackAlertsSnsTopicArn
+        - !ImportValue account-resources-cdk-uk:SNS:SlackAlertsSnsTopicArn:Arn
       OKActions:
-        - !ImportValue lambda-resources:SlackAlertsSnsTopicArn
+        - !ImportValue account-resources-cdk-uk:SNS:SlackAlertsSnsTopicArn:Arn
 
   PrescriptionStatusUpdateErrorsLogsMetricFilter:
     Type: AWS::Logs::MetricFilter
@@ -172,11 +172,11 @@ Resources:
       TreatMissingData: notBreaching
       ActionsEnabled: !Ref EnableAlerts
       AlarmActions:
-        - !ImportValue lambda-resources:SlackAlertsSnsTopicArn
+        - !ImportValue account-resources-cdk-uk:SNS:SlackAlertsSnsTopicArn:Arn
       InsufficientDataActions:
-        - !ImportValue lambda-resources:SlackAlertsSnsTopicArn
+        - !ImportValue account-resources-cdk-uk:SNS:SlackAlertsSnsTopicArn:Arn
       OKActions:
-        - !ImportValue lambda-resources:SlackAlertsSnsTopicArn
+        - !ImportValue account-resources-cdk-uk:SNS:SlackAlertsSnsTopicArn:Arn
 
   PrescriptionStatusUpdateUnhandledErrorsAlarm:
     Type: AWS::CloudWatch::Alarm
@@ -197,11 +197,11 @@ Resources:
       TreatMissingData: notBreaching
       ActionsEnabled: !Ref EnableAlerts
       AlarmActions:
-        - !ImportValue lambda-resources:SlackAlertsSnsTopicArn
+        - !ImportValue account-resources-cdk-uk:SNS:SlackAlertsSnsTopicArn:Arn
       InsufficientDataActions:
-        - !ImportValue lambda-resources:SlackAlertsSnsTopicArn
+        - !ImportValue account-resources-cdk-uk:SNS:SlackAlertsSnsTopicArn:Arn
       OKActions:
-        - !ImportValue lambda-resources:SlackAlertsSnsTopicArn
+        - !ImportValue account-resources-cdk-uk:SNS:SlackAlertsSnsTopicArn:Arn
 
   DynamoDBSystemErrorsAlarm:
     Type: AWS::CloudWatch::Alarm
@@ -222,11 +222,11 @@ Resources:
       TreatMissingData: notBreaching
       ActionsEnabled: !Ref EnableAlerts
       AlarmActions:
-        - !ImportValue lambda-resources:SlackAlertsSnsTopicArn
+        - !ImportValue account-resources-cdk-uk:SNS:SlackAlertsSnsTopicArn:Arn
       InsufficientDataActions:
-        - !ImportValue lambda-resources:SlackAlertsSnsTopicArn
+        - !ImportValue account-resources-cdk-uk:SNS:SlackAlertsSnsTopicArn:Arn
       OKActions:
-        - !ImportValue lambda-resources:SlackAlertsSnsTopicArn
+        - !ImportValue account-resources-cdk-uk:SNS:SlackAlertsSnsTopicArn:Arn
 
   DynamoDBWriteConsumptionAlarm:
     Type: AWS::CloudWatch::Alarm
@@ -235,11 +235,11 @@ Resources:
       AlarmName: !Sub "${AWS::StackName}_DynamoDB_ConsumedWriteCapacity"
       ActionsEnabled: !Ref EnableAlerts
       AlarmActions:
-        - !ImportValue lambda-resources:SlackAlertsSnsTopicArn
+        - !ImportValue account-resources-cdk-uk:SNS:SlackAlertsSnsTopicArn:Arn
       InsufficientDataActions:
-        - !ImportValue lambda-resources:SlackAlertsSnsTopicArn
+        - !ImportValue account-resources-cdk-uk:SNS:SlackAlertsSnsTopicArn:Arn
       OKActions:
-        - !ImportValue lambda-resources:SlackAlertsSnsTopicArn
+        - !ImportValue account-resources-cdk-uk:SNS:SlackAlertsSnsTopicArn:Arn
       EvaluationPeriods: 1
       Threshold: !Ref DynamoDBUtilizationPercentageThreshold
       ComparisonOperator: GreaterThanOrEqualToThreshold
@@ -307,11 +307,11 @@ Resources:
       TreatMissingData: notBreaching
       ActionsEnabled: !Ref EnableAlerts
       AlarmActions:
-        - !ImportValue lambda-resources:SlackAlertsSnsTopicArn
+        - !ImportValue account-resources-cdk-uk:SNS:SlackAlertsSnsTopicArn:Arn
       InsufficientDataActions:
-        - !ImportValue lambda-resources:SlackAlertsSnsTopicArn
+        - !ImportValue account-resources-cdk-uk:SNS:SlackAlertsSnsTopicArn:Arn
       OKActions:
-        - !ImportValue lambda-resources:SlackAlertsSnsTopicArn
+        - !ImportValue account-resources-cdk-uk:SNS:SlackAlertsSnsTopicArn:Arn
 
   NotifyProcessorTimeoutsMetricFilter:
     Type: AWS::Logs::MetricFilter
@@ -344,11 +344,11 @@ Resources:
       TreatMissingData: notBreaching
       ActionsEnabled: !Ref EnableAlerts
       AlarmActions:
-        - !ImportValue lambda-resources:SlackAlertsSnsTopicArn
+        - !ImportValue account-resources-cdk-uk:SNS:SlackAlertsSnsTopicArn:Arn
       InsufficientDataActions:
-        - !ImportValue lambda-resources:SlackAlertsSnsTopicArn
+        - !ImportValue account-resources-cdk-uk:SNS:SlackAlertsSnsTopicArn:Arn
       OKActions:
-        - !ImportValue lambda-resources:SlackAlertsSnsTopicArn
+        - !ImportValue account-resources-cdk-uk:SNS:SlackAlertsSnsTopicArn:Arn
 
   NHSNotifyPrescriptionsDeadLetterQueueMessagesAlarm:
     Type: AWS::CloudWatch::Alarm
@@ -370,8 +370,8 @@ Resources:
       TreatMissingData: notBreaching
       ActionsEnabled: !Ref EnableAlerts
       AlarmActions:
-        - !ImportValue lambda-resources:SlackAlertsSnsTopicArn
+        - !ImportValue account-resources-cdk-uk:SNS:SlackAlertsSnsTopicArn:Arn
       InsufficientDataActions:
-        - !ImportValue lambda-resources:SlackAlertsSnsTopicArn
+        - !ImportValue account-resources-cdk-uk:SNS:SlackAlertsSnsTopicArn:Arn
       OKActions:
-        - !ImportValue lambda-resources:SlackAlertsSnsTopicArn
+        - !ImportValue account-resources-cdk-uk:SNS:SlackAlertsSnsTopicArn:Arn
