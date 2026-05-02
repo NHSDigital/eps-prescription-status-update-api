@@ -15,7 +15,7 @@
   },
   "dependencies": {
     "@aws-lambda-powertools/logger": "^2.33.0",
-    "@aws-sdk/client-backup": "^3.1019.0",
+    "@aws-sdk/client-backup": "^3.1037.0",
     "@aws-sdk/client-dynamodb": "^3.1032.0",
     "@aws-sdk/lib-dynamodb": "^3.1033.0",
     "@middy/input-output-logger": "^7.3.3",
